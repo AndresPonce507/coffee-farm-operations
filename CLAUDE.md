@@ -19,7 +19,8 @@ no backend. See `README.md` for the design system and `HANDOFF.md` to resume the
   there is no CI, no database, and no employer infra here. The **methodology** carries over; the
   **infrastructure-specific rules do not**.
 - **Quality gate = local.** Before any merge to `main`, the gate is: `npm run build` green
-  (and, once logic/tests exist, the test suite green) **run locally**. That replaces CI.
+  **and** `npm run test` green — every PR now ships tests (see below), so the suite is never empty —
+  **run locally**. That replaces CI. Enforced by discipline, not a git hook (Andres's call, 2026-06-20).
 
 ## Git workflow (carried from TradelyHQ, adapted for solo + no-CI)
 - Work on a **feature branch**, open a **PR**, merge to **`main`** (squash or merge — your call).
@@ -35,8 +36,17 @@ no backend. See `README.md` for the design system and `HANDOFF.md` to resume the
 - **Liquid glass:** world-class, buttery-smooth, performance-optimized. Real `backdrop-blur`
   only on floating chrome; content cards use no-blur "glass-lite". GPU-only transforms,
   `prefers-reduced-motion`, mostly Server Components for a tiny JS bundle.
-- **TDD for new logic** (the method, tool-independent). The app is currently a UI prototype with
-  mock data; when persistence/logic lands, build it test-first with local tests.
+- **TDD test-first on EVERY PR — no exemptions** (standing rule, set 2026-06-20). Every PR ships at
+  least one test, written **before** the code it covers:
+  - **Logic** (mappers, persistence, validation, calcs, seed gen): full red→green→refactor — write one
+    failing test, watch it fail for the *right* reason, minimum code to green, refactor on green.
+  - **Pure UI / glass / copy / config:** at minimum a **render/smoke test** (component mounts, key
+    content/structure renders, no throw). A Tailwind/glass tweak still ships a test asserting the
+    element renders. The old "UI prototype is exempt" carve-out is **gone**.
+  - **Bug fix:** regression test that FAILS on the pre-fix code, same commit.
+  No production/UI code without a failing test demanding it; test behavior through the public surface,
+  not implementation detail. Prereq: render/smoke tests need jsdom + @testing-library/react (vitest env
+  is currently `node`) — set up before the first UI PR under this rule.
 - **Massive parallelism:** fan out **50+ agents** (or the max possible) for substantive work via the
   Workflow tool — file-disjoint writers, one author for shared/contract files, reviewer pass to close.
 - Tests + docs ship with the feature; bug → regression test in the same commit.
