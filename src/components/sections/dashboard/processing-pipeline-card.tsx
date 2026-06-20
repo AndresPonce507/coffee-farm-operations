@@ -1,0 +1,212 @@
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { batches } from "@/lib/data/processing";
+import { kg } from "@/lib/utils";
+import type { BatchStage } from "@/lib/types";
+import {
+  Cherry,
+  FlaskConical,
+  Sun,
+  Layers,
+  Cog,
+  Sprout,
+  ArrowRight,
+} from "lucide-react";
+
+type IconType = React.ComponentType<{ className?: string }>;
+
+/** Ordered pipeline definition — label + icon per stage, in flow order. */
+const STAGES: { key: BatchStage; label: string; icon: IconType }[] = [
+  { key: "cherry", label: "Cherry", icon: Cherry },
+  { key: "fermentation", label: "Fermentation", icon: FlaskConical },
+  { key: "drying", label: "Drying", icon: Sun },
+  { key: "parchment", label: "Parchment", icon: Layers },
+  { key: "milled", label: "Milled", icon: Cog },
+  { key: "green", label: "Green", icon: Sprout },
+];
+
+/** Stage rank used to find the batches closest to the "green" finish line. */
+const STAGE_RANK: Record<BatchStage, number> = {
+  cherry: 0,
+  fermentation: 1,
+  drying: 2,
+  parchment: 3,
+  milled: 4,
+  green: 5,
+};
+
+/**
+ * ProcessingPipelineCard — wet-mill → drying → green stepper for the dashboard.
+ * Server component (pure render over mock data; no hooks or handlers).
+ */
+export function ProcessingPipelineCard() {
+  // Aggregate batch count + total weight at each stage.
+  const byStage = STAGES.map((stage) => {
+    const inStage = batches.filter((b) => b.stage === stage.key);
+    const totalKg = inStage.reduce((sum, b) => sum + b.currentKg, 0);
+    return {
+      ...stage,
+      count: inStage.length,
+      totalKg,
+      active: inStage.length > 0,
+    };
+  });
+
+  const activeStages = byStage.filter((s) => s.active).length;
+  const inFlightKg = byStage.reduce((sum, s) => sum + s.totalKg, 0);
+
+  // Two batches closest to green: not yet green, highest stage rank first,
+  // then furthest-along progress as the tiebreaker.
+  const nearingGreen = [...batches]
+    .filter((b) => b.stage !== "green")
+    .sort(
+      (a, b) =>
+        STAGE_RANK[b.stage] - STAGE_RANK[a.stage] ||
+        b.progressPct - a.progressPct
+    )
+    .slice(0, 2);
+
+  const stageLabel = (key: BatchStage): string =>
+    STAGES.find((s) => s.key === key)?.label ?? key;
+
+  return (
+    <Card className="animate-rise">
+      <CardHeader>
+        <div>
+          <CardTitle>Processing pipeline</CardTitle>
+          <CardDescription>
+            {batches.length} batches in process · {kg(inFlightKg)} on the beds
+          </CardDescription>
+        </div>
+        <Badge tone="forest" dot>
+          {activeStages} of {STAGES.length} stages active
+        </Badge>
+      </CardHeader>
+
+      <CardContent className="pt-4">
+        {/* Horizontal stepper — scrolls on narrow screens, never squashes. */}
+        <div className="-mx-1 overflow-x-auto pb-1">
+          <ol
+            className="flex min-w-max items-stretch gap-1 px-1"
+            aria-label="Processing stages from cherry to green coffee"
+          >
+            {byStage.map((stage, i) => {
+              const Icon = stage.icon;
+              const isLast = i === byStage.length - 1;
+              return (
+                <li
+                  key={stage.key}
+                  className="flex items-center"
+                  aria-label={`${stage.label}: ${stage.count} ${
+                    stage.count === 1 ? "batch" : "batches"
+                  }, ${kg(stage.totalKg)}`}
+                >
+                  <div
+                    className={[
+                      "flex w-[112px] flex-col items-center gap-2 rounded-2xl border px-3 py-4 text-center transition-colors",
+                      stage.active
+                        ? "border-forest-300 bg-forest-100"
+                        : "border-line bg-paper-2",
+                    ].join(" ")}
+                  >
+                    <span
+                      className={[
+                        "flex h-10 w-10 items-center justify-center rounded-full ring-card",
+                        stage.active
+                          ? "bg-forest text-paper"
+                          : "bg-card text-muted-fg",
+                      ].join(" ")}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </span>
+
+                    <span
+                      className={[
+                        "font-display text-sm font-semibold",
+                        stage.active ? "text-forest" : "text-muted-fg",
+                      ].join(" ")}
+                    >
+                      {stage.label}
+                    </span>
+
+                    <span
+                      className={[
+                        "text-lg font-semibold leading-none tabular-nums",
+                        stage.active ? "text-ink" : "text-muted-fg/70",
+                      ].join(" ")}
+                    >
+                      {stage.count}
+                    </span>
+
+                    <span className="text-xs tabular-nums text-muted-fg">
+                      {stage.active ? kg(stage.totalKg) : "—"}
+                    </span>
+                  </div>
+
+                  {!isLast && (
+                    <span
+                      aria-hidden="true"
+                      className="flex w-7 items-center justify-center"
+                    >
+                      <span className="relative flex items-center">
+                        <span
+                          className={[
+                            "h-px w-7",
+                            stage.active && byStage[i + 1].active
+                              ? "bg-forest-300"
+                              : "bg-line-strong",
+                          ].join(" ")}
+                        />
+                        <ArrowRight
+                          className={[
+                            "absolute -right-1 h-3 w-3",
+                            stage.active && byStage[i + 1].active
+                              ? "text-forest-300"
+                              : "text-muted-fg/50",
+                          ].join(" ")}
+                        />
+                      </span>
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+
+        {/* Closest to the finish line. */}
+        {nearingGreen.length > 0 && (
+          <div className="mt-6 border-t border-line pt-4">
+            <p className="font-display text-xs font-semibold uppercase tracking-wide text-muted-fg">
+              Closest to green
+            </p>
+            <ul className="mt-3 space-y-2">
+              {nearingGreen.map((batch) => (
+                <li
+                  key={batch.id}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper-2 px-3 py-2.5"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-display text-sm font-semibold text-ink">
+                        {batch.lotCode}
+                      </span>
+                      <span className="truncate text-xs text-muted-fg">
+                        {batch.variety} · {batch.method}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-xs text-muted-fg">
+                      {stageLabel(batch.stage)} · {batch.patio} ·{" "}
+                      {kg(batch.currentKg)}
+                    </p>
+                  </div>
+                  <Badge tone="honey">{batch.progressPct}%</Badge>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

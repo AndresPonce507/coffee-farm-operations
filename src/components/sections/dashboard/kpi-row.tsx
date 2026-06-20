@@ -1,0 +1,73 @@
+import { Coffee, Users, FlaskConical, Target } from "lucide-react";
+
+import { StatCard } from "@/components/ui/stat-card";
+import { workers } from "@/lib/data/workers";
+import { batches } from "@/lib/data/processing";
+import { dailyCherries, SEASON } from "@/lib/data/trends";
+import { kg, num, pct } from "@/lib/utils";
+
+/**
+ * KpiRow — the four headline metrics at the top of the Farm Operations
+ * dashboard. Pure server component: every figure is derived from the canonical
+ * mock data at module scope, so it renders identically on server and client.
+ */
+export function KpiRow() {
+  // 1) Today's cherries — last 7 days of daily intake drive the sparkline,
+  //    and the start→end change drives the delta chip.
+  const last7 = dailyCherries.slice(-7);
+  const spark = last7.map((p) => p.value);
+  const first = spark[0];
+  const latest = spark[spark.length - 1];
+  const changePct = first > 0 ? ((latest - first) / first) * 100 : 0;
+
+  // 2) Pickers present out of the full picker roster.
+  const allPickers = workers.filter((w) => w.role === "Picker");
+  const pickersPresent = allPickers.filter((w) => w.attendance === "present").length;
+
+  // 3) Batches currently on the drying beds.
+  const dryingBatches = batches.filter((b) => b.stage === "drying").length;
+
+  // 4) Season-to-date harvest against the full-season target.
+  const seasonPct = SEASON.targetKg > 0 ? (SEASON.harvestedKg / SEASON.targetKg) * 100 : 0;
+
+  return (
+    <section
+      aria-label="Key farm metrics"
+      className="grid animate-rise gap-4 sm:grid-cols-2 xl:grid-cols-4"
+    >
+      <StatCard
+        label="Today's cherries"
+        value={kg(SEASON.todayKg)}
+        icon={Coffee}
+        accent="forest"
+        delta={{ value: `${pct(changePct)} vs 7d ago`, dir: "up" }}
+        hint="received today"
+        spark={spark}
+      />
+
+      <StatCard
+        label="Pickers present"
+        value={num(pickersPresent)}
+        icon={Users}
+        accent="honey"
+        hint={`of ${num(allPickers.length)} pickers`}
+      />
+
+      <StatCard
+        label="Drying batches"
+        value={num(dryingBatches)}
+        icon={FlaskConical}
+        accent="coffee"
+        hint="on the beds now"
+      />
+
+      <StatCard
+        label="Season to date"
+        value={kg(SEASON.harvestedKg)}
+        icon={Target}
+        accent="cherry"
+        hint={`${pct(seasonPct)} of target`}
+      />
+    </section>
+  );
+}

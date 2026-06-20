@@ -1,0 +1,235 @@
+@import "tailwindcss";
+
+/*
+  Janson Coffee — Coffee Farm Operations · LIQUID GLASS design system
+  Brand palette from jansoncoffee.com: forest #00291D, coffee #45361F, cream paper, cherry & honey accents.
+  Performance contract: real backdrop-blur is reserved for floating chrome (sidebar/topbar/overlays).
+  Content cards use "glass-card" — translucent gloss with NO per-card blur, so scrolling stays at 60fps.
+*/
+
+@theme {
+  /* fonts (wired to next/font css variables in src/app/layout.tsx) */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-quicksand), var(--font-inter), ui-sans-serif, sans-serif;
+
+  /* surfaces */
+  --color-paper: #faf7f1;
+  --color-paper-2: #f3ede2;
+  --color-ink: #1b1712;
+  --color-card: #ffffff;
+  --color-muted: #f2ece2;
+  --color-muted-fg: #6c6155;
+  --color-line: #e7ded0;
+  --color-line-strong: #d8cdba;
+
+  /* brand */
+  --color-forest: #00291d;
+  --color-forest-700: #093b2a;
+  --color-forest-600: #0d4d37;
+  --color-forest-500: #1a6b4d;
+  --color-forest-300: #6fae97;
+  --color-forest-100: #d7e8e0;
+
+  --color-coffee: #45361f;
+  --color-coffee-400: #8a6f48;
+  --color-coffee-200: #d8c7ad;
+
+  /* accents (coffee cherry red + honey gold + sky for water/weather) */
+  --color-cherry: #b5482e;
+  --color-cherry-100: #f6ddd4;
+  --color-honey: #c8922e;          /* fills, charts, icons */
+  --color-honey-700: #8a5a12;      /* darker — for honey TEXT on light bg (WCAG AA) */
+  --color-honey-100: #f6e7c8;
+  --color-sky: #3b6ea5;
+  --color-sky-100: #d8e4f0;
+
+  /* status */
+  --color-ok: #1a6b4d;
+  --color-warn: #8a5a12;
+  --color-danger: #b5482e;
+
+  /* radii */
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+
+  /* motion */
+  --ease-glass: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-forest-100);
+    color: var(--color-forest);
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  ::-webkit-scrollbar { width: 11px; height: 11px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line-strong);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-coffee-200); background-clip: content-box; }
+}
+
+@layer utilities {
+  /* ============================================================
+     LIQUID GLASS SURFACES
+     ============================================================ */
+
+  /* Floating chrome — true frosted glass. Use sparingly (topbar, overlays, sidebar accents). */
+  .glass {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.55));
+    -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.7),
+      0 8px 30px -12px rgba(27, 23, 18, 0.22);
+  }
+
+  /* Content cards — glass-LITE: reads as glass with NO blur (stays smooth at scale). */
+  .glass-card {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 252, 247, 0.7));
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.85),
+      0 1px 2px rgba(27, 23, 18, 0.04),
+      0 16px 32px -20px rgba(27, 23, 18, 0.22);
+  }
+
+  /* Deep forest glass — for the sidebar / dark surfaces. */
+  .glass-forest {
+    background: linear-gradient(180deg, #0a3526 0%, #00291d 55%, #042217 100%);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+      inset -1px 0 0 0 rgba(255, 255, 255, 0.05);
+  }
+
+  /* Hover lift — GPU transform only. Apply to interactive/feature cards. */
+  .glass-hover {
+    transition: transform 0.35s var(--ease-glass), box-shadow 0.35s var(--ease-glass);
+  }
+  .glass-hover:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+      0 1px 2px rgba(27, 23, 18, 0.05),
+      0 28px 52px -24px rgba(27, 23, 18, 0.32);
+  }
+
+  /* Specular sheen sweep on hover — the "liquid" light. Apply to feature/hero surfaces only. */
+  .glass-sheen { position: relative; overflow: hidden; isolation: isolate; }
+  .glass-sheen::after {
+    content: "";
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.5) 48%, transparent 66%);
+    transform: translateX(-130%);
+    transition: transform 0.8s var(--ease-glass);
+    pointer-events: none;
+  }
+  .glass-sheen:hover::after { transform: translateX(130%); }
+
+  /* ============================================================
+     LIVING BACKGROUND (drifting aurora blobs + frosted grain)
+     ============================================================ */
+  .aurora-blob {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(72px);
+    will-change: transform;
+  }
+  .aurora-1 {
+    width: 46rem; height: 46rem; top: -16rem; right: -12rem;
+    background: radial-gradient(circle at center, rgba(26, 107, 77, 0.28), transparent 68%);
+    animation: drift-1 26s ease-in-out infinite alternate;
+  }
+  .aurora-2 {
+    width: 40rem; height: 40rem; bottom: -18rem; left: -10rem;
+    background: radial-gradient(circle at center, rgba(138, 111, 72, 0.22), transparent 68%);
+    animation: drift-2 32s ease-in-out infinite alternate;
+  }
+  .aurora-3 {
+    width: 32rem; height: 32rem; top: 30%; left: 42%;
+    background: radial-gradient(circle at center, rgba(200, 146, 46, 0.14), transparent 70%);
+    animation: drift-3 38s ease-in-out infinite alternate;
+  }
+  .aurora-grain {
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.28'/%3E%3C/svg%3E");
+    opacity: 0.4;
+    mix-blend-mode: soft-light;
+  }
+
+  /* ============================================================
+     MOTION
+     ============================================================ */
+  .animate-rise { animation: rise 0.5s var(--ease-glass) both; }
+
+  /* Staggered entrance for grids/lists — children rise in sequence. */
+  .stagger > * { animation: rise 0.55s var(--ease-glass) both; }
+  .stagger > *:nth-child(1) { animation-delay: 0.03s; }
+  .stagger > *:nth-child(2) { animation-delay: 0.08s; }
+  .stagger > *:nth-child(3) { animation-delay: 0.13s; }
+  .stagger > *:nth-child(4) { animation-delay: 0.18s; }
+  .stagger > *:nth-child(5) { animation-delay: 0.23s; }
+  .stagger > *:nth-child(6) { animation-delay: 0.28s; }
+  .stagger > *:nth-child(7) { animation-delay: 0.33s; }
+  .stagger > *:nth-child(8) { animation-delay: 0.38s; }
+  .stagger > *:nth-child(n+9) { animation-delay: 0.42s; }
+
+  /* ============================================================
+     PERFORMANCE HELPERS
+     ============================================================ */
+  .perf-contain { contain: content; }
+  .cv-auto { content-visibility: auto; contain-intrinsic-size: auto 640px; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes drift-1 {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-4rem, 3rem, 0) scale(1.12); }
+}
+@keyframes drift-2 {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(5rem, -3rem, 0) scale(1.15); }
+}
+@keyframes drift-3 {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-3rem, -4rem, 0) scale(1.2); }
+}
+
+/* Respect reduced motion — kill drifts, sheens, and entrances. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .aurora-blob { animation: none !important; }
+}
