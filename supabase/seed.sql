@@ -149,4 +149,27 @@ insert into farm_season_config (id, target_kg, ytd_revenue_usd) values
 insert into reserve_zones (id, name, kind, geom, area_ha, notes) values
   ('rz-quetzal', 'Quetzal Cloud-Forest Reserve', 'reserve', '{"type":"Polygon","coordinates":[[[-82.682228,8.829605],[-82.669372,8.829605],[-82.669372,8.842395],[-82.682228,8.842395],[-82.682228,8.829605]]]}'::jsonb, 200.9, 'PLACEHOLDER outline pending the real traced reserve boundary (human/family gate).');
 
+-- ── S5: GreenLot inventory + ATP seed (the first money-shaped slice) ──────────
+-- A milled SOURCE node with declared mass, then a green lot materialized FROM it
+-- via the only writer (materialize_green_lot — links a conserved 'process' edge),
+-- with a reservation + a shipment seeded so /inventory shows a live ATP meter
+-- (committed vs available). The source/green codes use the JC-NNN format
+-- (lots_code_format CHECK is digits-only). materialize_green_lot is idempotent on
+-- the green code, so re-seeding never double-routes mass.
+insert into lots (code, stage, variety, origin_kg, current_kg, is_single_origin, minted_at) values
+  ('JC-700', 'milled', 'Geisha',   620, 620, true, '2026-06-15T08:00:00Z'),
+  ('JC-710', 'milled', 'Caturra',  900, 900, true, '2026-06-16T08:00:00Z')
+  on conflict (code) do nothing;
+
+select materialize_green_lot('JC-700', 'JC-701', 600, 89.5, 'Volcán Warehouse · Bin A3', '2026-06-18T10:00:00Z');
+select materialize_green_lot('JC-710', 'JC-711', 880, 86.0, 'Volcán Warehouse · Bin B1', '2026-06-19T10:00:00Z');
+
+-- Claims against the green lots (append-only). JC-701: 600 kg green, 250 committed
+-- (150 reserved + 100 shipped) → ATP 350. JC-711: 880 kg green, 300 reserved → ATP 580.
+insert into lot_reservations (green_lot_code, buyer, kg) values
+  ('JC-701', 'Onyx Coffee Lab',        150),
+  ('JC-711', 'Sey Coffee (Brooklyn)',  300);
+insert into lot_shipments (green_lot_code, destination, kg) values
+  ('JC-701', 'Port of Balboa → Oakland', 100);
+
 commit;

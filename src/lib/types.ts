@@ -202,3 +202,63 @@ export interface LotGenealogy {
   nodes: LotNode[];
   edges: LotEdge[];
 }
+
+/* ====================================================================== */
+/* S5 — GreenLot inventory + ATP (the first money-shaped slice). camelCase  */
+/* domain mirror of migration 20260621093500_green_inventory.sql:          */
+/* the `green_lots` detail row, the append-only claim rows                  */
+/* (`lot_reservations`/`lot_shipments`), and the DERIVED `green_lots_atp`    */
+/* available-to-promise view (atp = current_kg − Σreserved − Σshipped).     */
+/* ====================================================================== */
+
+/** The four SCA grade bands the `green_lots.sca_grade` generated column emits
+ *  (D-INV-3) — derived from the cupping score, never disagreeing with it. */
+export type ScaGrade =
+  | "Presidential"
+  | "Specialty"
+  | "Premium"
+  | "Below Specialty";
+
+/** A GreenLot detail row — the green-specific columns keyed by the lot node code.
+ *  The same `lots` node at stage='green' carries the graph identity (LotNode); this
+ *  is the grade-input + location detail. `scaGrade` is the GENERATED band (D-INV-3),
+ *  never stored independently of the cupping score it bands. */
+export interface GreenLot {
+  lotCode: string; // green_lots.lot_code — the PK the EUDR slice (S8) references un-FK'd
+  cuppingScore: number; // green_lots.cupping_score — the measured grade input (0–100)
+  scaGrade: ScaGrade | string; // green_lots.sca_grade — GENERATED band from cuppingScore
+  location: string; // green_lots.location — warehouse / storage location
+  gradedAt: ISODate | string; // green_lots.graded_at (timestamptz)
+}
+
+/** An append-only reservation claim against a green lot's ATP (`lot_reservations`).
+ *  Reservations are never updated/deleted by clients — they accrete; ATP is derived. */
+export interface Reservation {
+  id: number; // lot_reservations.id (identity)
+  greenLotCode: string; // lot_reservations.green_lot_code → green_lots.lot_code
+  buyer: string; // lot_reservations.buyer
+  kg: number; // lot_reservations.kg — committed mass (> 0)
+  createdAt: ISODate | string; // lot_reservations.created_at (timestamptz, server-stamped)
+}
+
+/** An append-only shipment claim against a green lot's ATP (`lot_shipments`). */
+export interface Shipment {
+  id: number; // lot_shipments.id (identity)
+  greenLotCode: string; // lot_shipments.green_lot_code → green_lots.lot_code
+  destination: string; // lot_shipments.destination
+  kg: number; // lot_shipments.kg — committed mass (> 0)
+  createdAt: ISODate | string; // lot_shipments.created_at (timestamptz, server-stamped)
+}
+
+/** A row of the DERIVED `green_lots_atp` view — available-to-promise per green lot.
+ *  `atp = currentKg − reservedKg − shippedKg` is computed in the view (never a
+ *  stored counter), so it can never disagree with the claim rows it sums. */
+export interface GreenLotAtp {
+  greenLotCode: string; // green_lots_atp.green_lot_code
+  scaGrade: ScaGrade | string; // green_lots_atp.sca_grade
+  location: string; // green_lots_atp.location
+  currentKg: number; // green_lots_atp.current_kg — the green node's sellable mass
+  reservedKg: number; // green_lots_atp.reserved_kg — Σ reservations
+  shippedKg: number; // green_lots_atp.shipped_kg — Σ shipments
+  atp: number; // green_lots_atp.atp — currentKg − reservedKg − shippedKg
+}
