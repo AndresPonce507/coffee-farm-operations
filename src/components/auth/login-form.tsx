@@ -22,8 +22,12 @@ export function LoginForm() {
     setPending(true);
     setError(null);
 
+    // Accept a bare username (e.g. "ponce507") or a full email address.
+    const loginEmail = email.includes("@")
+      ? email.trim()
+      : `${email.trim()}@jansoncoffee.com`;
     const { error: signInError } = await createClient().auth.signInWithPassword({
-      email,
+      email: loginEmail,
       password,
     });
 
@@ -41,16 +45,16 @@ export function LoginForm() {
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       <div className="space-y-1.5">
         <label htmlFor="email" className="text-xs font-medium text-muted-fg">
-          Email
+          Username or email
         </label>
         <input
           id="email"
-          type="email"
-          autoComplete="email"
+          type="text"
+          autoComplete="username"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
+          placeholder="ponce507"
           className={FIELD}
         />
       </div>
