@@ -26,11 +26,20 @@ vi.mock("@/lib/db/processing", () => ({
   ),
 }));
 
+// BatchRowActions imports the Server Actions; stub them so the table renders
+// without pulling in next/cache or the Supabase client.
+vi.mock("@/lib/actions/processing", () => ({
+  createBatch: vi.fn(),
+  updateBatch: vi.fn(),
+  deleteBatch: vi.fn(),
+  IDLE: { status: "idle" },
+}));
+
 import { BatchTable } from "@/components/sections/processing/batch-table";
 
 describe("BatchTable (smoke)", () => {
   it("renders the card header, columns, and batch rows without throwing", async () => {
-    const ui = await BatchTable();
+    const ui = await BatchTable({ lots: ["JC-552", "JC-561", "JC-564"] });
     render(ui);
 
     // Card title + a stable column header.

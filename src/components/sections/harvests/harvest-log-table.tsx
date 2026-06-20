@@ -1,8 +1,10 @@
+import type { Plot, Worker } from "@/lib/types";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/data-table";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { getHarvests } from "@/lib/db/harvests";
 import { kg, num, longDate, shortDate } from "@/lib/utils";
+import { HarvestRowActions } from "./harvest-actions";
 
 /** How many of the most-recent picking records to surface in the log. */
 const ROW_LIMIT = 16;
@@ -25,7 +27,15 @@ function ripenessTone(pct: number): BadgeTone {
  * harvest records sorted by date descending, each row carrying its lot code,
  * source plot, picker, weight, ripeness quality, and average Brix.
  */
-export async function HarvestLogTable() {
+export async function HarvestLogTable({
+  plots,
+  pickers,
+  lots,
+}: {
+  plots: Plot[];
+  pickers: Worker[];
+  lots: string[];
+}) {
   const harvests = await getHarvests();
   const rows = [...harvests]
     .sort((a, b) => b.date.localeCompare(a.date))
@@ -53,6 +63,7 @@ export async function HarvestLogTable() {
               <TH className="text-right">Cherries</TH>
               <TH>Ripeness</TH>
               <TH className="text-right">Brix</TH>
+              <TH className="text-right">Actions</TH>
             </TR>
           </THead>
           <TBody>
@@ -80,6 +91,14 @@ export async function HarvestLogTable() {
                 </TD>
                 <TD className="whitespace-nowrap text-right tabular-nums text-ink">
                   {h.brixAvg.toFixed(1)}
+                </TD>
+                <TD className="text-right">
+                  <HarvestRowActions
+                    harvest={h}
+                    plots={plots}
+                    pickers={pickers}
+                    lots={lots}
+                  />
                 </TD>
               </TR>
             ))}

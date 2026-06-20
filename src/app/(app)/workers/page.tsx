@@ -3,6 +3,7 @@ import { WorkerSummary } from "@/components/sections/workers/worker-summary";
 import { AttendanceCard } from "@/components/sections/workers/attendance-card";
 import { CrewBoard } from "@/components/sections/workers/crew-board";
 import { WorkerRosterTable } from "@/components/sections/workers/worker-roster-table";
+import { AddWorkerButton } from "@/components/sections/workers/worker-actions";
 
 /**
  * Workers route ("/workers") — crews, daily attendance and payroll for the farm.
@@ -15,7 +16,9 @@ export default function WorkersPage() {
       <PageHeader
         title="Workers"
         subtitle="Crews, attendance and daily payroll"
-      />
+      >
+        <AddWorkerButton />
+      </PageHeader>
 
       <WorkerSummary />
 

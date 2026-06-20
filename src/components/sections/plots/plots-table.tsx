@@ -1,5 +1,6 @@
 import type { CoffeeVariety, Plot, PlotStatus } from "@/lib/types";
 import { getPlots } from "@/lib/db/plots";
+import { PlotRowActions } from "./plot-actions";
 import {
   Card,
   CardContent,
@@ -69,6 +70,7 @@ export async function PlotsTable() {
               <TH className="text-right">Established</TH>
               <TH>Status</TH>
               <TH className="text-right">Harvested</TH>
+              <TH className="text-right">Actions</TH>
             </TR>
           </THead>
           <TBody>
@@ -112,6 +114,9 @@ export async function PlotsTable() {
                     <div className="text-xs text-muted-fg">
                       {pct(share)} of expected
                     </div>
+                  </TD>
+                  <TD className="text-right">
+                    <PlotRowActions plot={plot} />
                   </TD>
                 </TR>
               );
