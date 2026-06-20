@@ -124,12 +124,27 @@ const SHOW_MOISTURE: Record<BatchStage, boolean> = {
   green: true,
 };
 
+/**
+ * The single lot furthest along the pipeline — the hero of the board. It earns the
+ * one specular sheen sweep in this file (the lot closest to export-ready green).
+ */
+const HERO_BATCH_ID = batches.reduce<ProcessingBatch | null>(
+  (lead, b) => (lead === null || b.progressPct > lead.progressPct ? b : lead),
+  null,
+)?.id;
+
 function BatchTile({ batch }: { batch: ProcessingBatch }) {
   const accent = STAGE_ACCENT[batch.stage];
   const showMoisture = SHOW_MOISTURE[batch.stage];
+  const isHero = batch.id === HERO_BATCH_ID;
 
   return (
-    <article className="rounded-xl border border-line bg-card p-3.5 ring-card transition-shadow hover:ring-card-lg">
+    <article
+      className={cn(
+        "glass-card glass-hover rounded-xl p-3.5",
+        isHero && "glass-sheen",
+      )}
+    >
       <div className="flex items-start justify-between gap-2">
         <span className="font-mono text-sm font-semibold tracking-tight text-ink">
           {batch.lotCode}
@@ -185,7 +200,7 @@ function StageColumn({ stage }: { stage: BatchStage }) {
   return (
     <section
       className={cn(
-        "flex min-w-[230px] flex-1 flex-col rounded-2xl border border-line p-3",
+        "flex min-w-[230px] flex-1 flex-col rounded-2xl border border-white/60 p-3 shadow-[0_8px_24px_-12px_rgba(31,41,37,0.18)]",
         accent.column
       )}
       aria-label={`${STAGE_LABEL[stage]} stage`}
@@ -209,11 +224,11 @@ function StageColumn({ stage }: { stage: BatchStage }) {
         />
       </header>
 
-      <div className="flex flex-col gap-2.5">
+      <div className="cv-auto flex flex-col gap-2.5">
         {items.length > 0 ? (
           items.map((b) => <BatchTile key={b.id} batch={b} />)
         ) : (
-          <p className="rounded-xl border border-dashed border-line px-3 py-6 text-center text-xs text-muted-fg">
+          <p className="rounded-xl border border-dashed border-white/60 bg-white/40 px-3 py-6 text-center text-xs text-muted-fg">
             No lots in this stage
           </p>
         )}
@@ -240,7 +255,7 @@ export function StagePipeline() {
       </div>
 
       <div className="-mx-1 overflow-x-auto px-1 pb-2">
-        <div className="flex min-w-max gap-3">
+        <div className="stagger perf-contain flex min-w-max gap-3">
           {STAGE_ORDER.map((stage) => (
             <StageColumn key={stage} stage={stage} />
           ))}

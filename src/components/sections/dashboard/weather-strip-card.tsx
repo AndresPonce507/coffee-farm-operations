@@ -51,14 +51,14 @@ export function WeatherStripCard() {
       </CardHeader>
 
       <CardContent className="pt-4">
-        <ul className="grid grid-cols-5 gap-2 sm:gap-3">
+        <ul className="stagger grid grid-cols-5 gap-2 sm:gap-3">
           {weather.map((day) => {
             const Icon = ICON_BY_CONDITION[day.icon];
             const iconColor = ICON_COLOR_BY_CONDITION[day.icon];
             return (
               <li
                 key={day.day}
-                className="flex flex-col items-center gap-2 rounded-xl border border-line bg-paper-2 px-1.5 py-3 text-center sm:px-2"
+                className="glass-hover flex flex-col items-center gap-2 rounded-xl border border-white/60 bg-white/55 px-1.5 py-3 text-center sm:px-2"
               >
                 <span className="font-display text-xs font-semibold text-ink sm:text-sm">
                   {day.day}

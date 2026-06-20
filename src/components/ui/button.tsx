@@ -10,13 +10,16 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const BASE =
-  "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-100 disabled:opacity-50 disabled:pointer-events-none";
+  "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all duration-200 ease-out will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-100 active:scale-[.98] disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100";
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: "bg-forest text-paper hover:bg-forest-700",
-  secondary: "bg-coffee text-paper hover:bg-coffee/90",
-  outline: "border border-line bg-card text-ink hover:bg-paper-2",
-  ghost: "text-muted-fg hover:bg-paper-2 hover:text-ink",
+  primary:
+    "bg-forest text-paper shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18),0_1px_2px_0_rgba(0,41,29,0.25)] hover:bg-forest-700 hover:-translate-y-px hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.22),0_8px_20px_-6px_rgba(0,41,29,0.4)]",
+  secondary:
+    "bg-coffee text-paper shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_1px_2px_0_rgba(0,0,0,0.2)] hover:bg-coffee/90 hover:-translate-y-px hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18),0_8px_20px_-6px_rgba(0,0,0,0.32)]",
+  outline:
+    "border border-white/60 bg-white/60 text-ink shadow-[inset_0_1px_0_0_rgba(255,255,255,0.6)] hover:bg-white/75 hover:border-white/70 hover:-translate-y-px hover:shadow-[0_8px_20px_-8px_rgba(0,41,29,0.18)]",
+  ghost: "text-muted-fg hover:bg-white/55 hover:text-ink",
 };
 
 const SIZES: Record<ButtonSize, string> = {

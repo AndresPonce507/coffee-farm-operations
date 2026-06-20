@@ -46,7 +46,7 @@ export function HarvestTrendCard() {
   );
 
   return (
-    <Card className="animate-rise">
+    <Card className="animate-rise glass-hover glass-sheen">
       <CardHeader>
         <CardTitle>Daily harvest (kg)</CardTitle>
         {best ? (
@@ -60,11 +60,11 @@ export function HarvestTrendCard() {
           </div>
         ) : null}
       </CardHeader>
-      <CardContent>
+      <CardContent className="pb-6 pt-2">
         {days.length > 0 ? (
           <BarMini data={days} color={BAR_COLOR} height={156} />
         ) : (
-          <p className="py-8 text-center text-sm text-muted-fg">
+          <p className="py-10 text-center text-sm text-muted-fg">
             No harvest recorded yet.
           </p>
         )}

@@ -86,9 +86,9 @@ export function TaskTable() {
         </div>
       </CardHeader>
       <CardContent className="pt-2">
-        <Table>
+        <Table className="cv-auto">
           <THead>
-            <TR>
+            <TR className="hover:bg-transparent">
               <TH>Task</TH>
               <TH>Category</TH>
               <TH>Plot</TH>

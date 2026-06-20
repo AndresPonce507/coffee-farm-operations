@@ -51,7 +51,7 @@ export function AttendanceCard() {
   }));
 
   return (
-    <Card className="animate-rise">
+    <Card className="glass-hover glass-sheen animate-rise">
       <CardHeader>
         <CardTitle>Attendance</CardTitle>
       </CardHeader>
@@ -66,14 +66,14 @@ export function AttendanceCard() {
             className="shrink-0"
           />
 
-          <ul className="flex w-full flex-col gap-3 sm:w-auto sm:min-w-[10rem]">
+          <ul className="stagger flex w-full flex-col gap-2.5 sm:w-auto sm:min-w-[11rem]">
             {SLICES.map((s) => {
               const count = counts[s.status];
               const share = total > 0 ? Math.round((count / total) * 100) : 0;
               return (
                 <li
                   key={s.status}
-                  className="flex items-center justify-between gap-4"
+                  className="flex items-center justify-between gap-4 rounded-xl border border-white/60 bg-white/55 px-3 py-2"
                 >
                   <span className="flex items-center gap-2.5">
                     <span

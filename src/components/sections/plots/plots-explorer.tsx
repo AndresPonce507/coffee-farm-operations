@@ -81,9 +81,9 @@ function PlotCard({ plot }: PlotCardProps) {
   const progress = harvestPct(plot);
 
   return (
-    <Card className="group flex flex-col overflow-hidden transition hover:ring-card-lg">
+    <Card className="group glass-hover glass-sheen flex flex-col overflow-hidden">
       {/* Header band */}
-      <div className="bg-canopy flex items-start justify-between gap-3 border-b border-line px-5 pt-5 pb-4">
+      <div className="flex items-start justify-between gap-3 border-b border-white/50 bg-forest-100/50 px-5 pt-5 pb-4">
         <div className="min-w-0">
           <div className="flex items-center gap-1.5 text-xs font-medium text-muted-fg">
             <MapPin className="h-3.5 w-3.5 text-forest-500" aria-hidden="true" />
@@ -138,11 +138,11 @@ function PlotRow({ plot }: PlotRowProps) {
   const progress = harvestPct(plot);
 
   return (
-    <div className="flex flex-col gap-3 px-5 py-4 transition hover:bg-paper-2 sm:flex-row sm:items-center sm:gap-5">
+    <div className="flex flex-col gap-3 px-5 py-4 transition-colors duration-200 hover:bg-white/45 sm:flex-row sm:items-center sm:gap-5">
       {/* Identity */}
       <div className="flex min-w-0 flex-1 items-start gap-3">
         <span
-          className="bg-canopy mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-forest-500"
+          className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/60 bg-white/55 text-forest-500"
           aria-hidden="true"
         >
           <Sprout className="h-4 w-4" />
@@ -266,14 +266,14 @@ export function PlotsExplorer() {
 
       {/* Body */}
       {view === "grid" ? (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="stagger perf-contain grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((plot) => (
             <PlotCard key={plot.id} plot={plot} />
           ))}
         </div>
       ) : (
-        <Card className={cn("overflow-hidden")}>
-          <div className="divide-y divide-line">
+        <Card className={cn("cv-auto overflow-hidden")}>
+          <div className="divide-y divide-white/50">
             {filtered.map((plot) => (
               <PlotRow key={plot.id} plot={plot} />
             ))}

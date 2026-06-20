@@ -40,7 +40,7 @@ function PlotHealthRow({ plot }: { plot: Plot }) {
       : 0;
 
   return (
-    <li className="flex items-center gap-4 py-3.5 first:pt-0 last:pb-0">
+    <li className="glass-hover -mx-2 flex items-center gap-4 rounded-xl px-2 py-3.5 transition-colors hover:bg-white/55">
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-3">
           <p className="truncate text-sm font-medium text-ink">{plot.name}</p>
@@ -92,13 +92,13 @@ export function PlotHealthCard() {
         <CardTitle>Plot health</CardTitle>
         <a
           href="/plots"
-          className="text-xs font-medium text-muted-fg transition-colors hover:text-ink"
+          className="rounded text-xs font-medium text-muted-fg transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-300"
         >
           View all
         </a>
       </CardHeader>
       <CardContent>
-        <ul className="divide-y divide-line">
+        <ul className="stagger divide-y divide-line/70">
           {ranked.map((plot) => (
             <PlotHealthRow key={plot.id} plot={plot} />
           ))}

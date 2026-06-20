@@ -51,7 +51,7 @@ function harvestedShare(plot: Plot): number {
  */
 export function PlotsTable() {
   return (
-    <Card className="animate-rise overflow-hidden">
+    <Card className="animate-rise cv-auto overflow-hidden">
       <CardHeader>
         <CardTitle>All plots</CardTitle>
       </CardHeader>

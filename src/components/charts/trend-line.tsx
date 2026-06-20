@@ -32,8 +32,10 @@ export function TrendLine({
 }: TrendLineProps) {
   const points = data.length;
 
-  // A unique gradient id avoids collisions when several charts share one page.
-  const gradientId = `trendline-gradient-${color.replace(/[^a-zA-Z0-9]/g, "")}`;
+  // Unique ids avoid collisions when several charts share one page.
+  const safeColor = color.replace(/[^a-zA-Z0-9]/g, "");
+  const gradientId = `trendline-gradient-${safeColor}`;
+  const glowId = `trendline-glow-${safeColor}`;
 
   const values = data.map((d) => d.value);
   const max = points > 0 ? Math.max(...values) : 0;
@@ -51,6 +53,17 @@ export function TrendLine({
     plotBottom - ((value - min) / span) * plotHeight;
 
   const coords = data.map((d, i) => ({ x: xAt(i), y: yAt(d.value) }));
+
+  // The final plotted point, expressed as percentages of the box. The endpoint
+  // dot is drawn as an HTML overlay (not an SVG <circle>) so it stays perfectly
+  // round under the chart's non-uniform `preserveAspectRatio="none"` stretch.
+  const lastPoint =
+    coords.length > 0
+      ? {
+          left: `${((coords[coords.length - 1].x / VB_WIDTH) * 100).toFixed(3)}%`,
+          top: `${((coords[coords.length - 1].y / VB_HEIGHT) * 100).toFixed(3)}%`,
+        }
+      : null;
 
   const linePath = coords
     .map((c, i) => `${i === 0 ? "M" : "L"}${c.x.toFixed(2)} ${c.y.toFixed(2)}`)
@@ -78,55 +91,110 @@ export function TrendLine({
 
   return (
     <div className={cn("w-full", className)}>
-      <svg
-        role="img"
-        aria-label={ariaSummary}
-        viewBox={`0 0 ${VB_WIDTH} ${VB_HEIGHT}`}
-        preserveAspectRatio="none"
-        width="100%"
-        height={height}
-        className="block overflow-visible"
-      >
-        <defs>
-          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity={0.18} />
-            <stop offset="100%" stopColor={color} stopOpacity={0} />
-          </linearGradient>
-        </defs>
+      <div className="relative" style={{ height }}>
+        <svg
+          role="img"
+          aria-label={ariaSummary}
+          viewBox={`0 0 ${VB_WIDTH} ${VB_HEIGHT}`}
+          preserveAspectRatio="none"
+          width="100%"
+          height={height}
+          className="block overflow-visible"
+        >
+          <defs>
+            {/* Richer vertical fill: a bright lip just under the line that melts
+                into the baseline through a soft mid-tone, for real glassy depth. */}
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.32} />
+              <stop offset="38%" stopColor={color} stopOpacity={0.14} />
+              <stop offset="100%" stopColor={color} stopOpacity={0} />
+            </linearGradient>
+            {/* Soft glow blooming beneath the stroke. */}
+            <filter
+              id={glowId}
+              x="-5%"
+              y="-20%"
+              width="110%"
+              height="140%"
+              colorInterpolationFilters="sRGB"
+            >
+              <feGaussianBlur stdDeviation={3} result="blur" />
+              <feComponentTransfer in="blur" result="softGlow">
+                <feFuncA type="linear" slope={0.45} />
+              </feComponentTransfer>
+            </filter>
+          </defs>
 
-        {/* Faint horizontal gridlines */}
-        {GRIDLINES.map((g) => {
-          const y = plotTop + g * plotHeight;
-          return (
-            <line
-              key={g}
-              x1={0}
-              y1={y}
-              x2={VB_WIDTH}
-              y2={y}
-              stroke="currentColor"
-              strokeWidth={1}
-              vectorEffect="non-scaling-stroke"
-              className="text-line"
-              opacity={0.6}
+          {/* Faint horizontal gridlines */}
+          {GRIDLINES.map((g) => {
+            const y = plotTop + g * plotHeight;
+            return (
+              <line
+                key={g}
+                x1={0}
+                y1={y}
+                x2={VB_WIDTH}
+                y2={y}
+                stroke="currentColor"
+                strokeWidth={1}
+                vectorEffect="non-scaling-stroke"
+                className="text-line"
+                opacity={0.6}
+              />
+            );
+          })}
+
+          {areaPath && (
+            <path d={areaPath} fill={`url(#${gradientId})`} stroke="none" />
+          )}
+
+          {/* Glow: a blurred echo of the line, sitting beneath the crisp stroke. */}
+          {linePath && (
+            <path
+              d={linePath}
+              fill="none"
+              stroke={color}
+              strokeWidth={3}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter={`url(#${glowId})`}
+              opacity={0.7}
             />
-          );
-        })}
+          )}
 
-        {areaPath && <path d={areaPath} fill={`url(#${gradientId})`} stroke="none" />}
+          {linePath && (
+            <path
+              d={linePath}
+              fill="none"
+              stroke={color}
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          )}
+        </svg>
 
-        {linePath && (
-          <path
-            d={linePath}
-            fill="none"
-            stroke={color}
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            vectorEffect="non-scaling-stroke"
-          />
+        {/* Endpoint marker — an HTML overlay so it renders as a true circle
+            (a soft halo + a crisp white-ringed dot) over the non-uniformly
+            stretched SVG, tracking the most recent data point. */}
+        {lastPoint && (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+            style={{ left: lastPoint.left, top: lastPoint.top }}
+          >
+            <span
+              className="absolute left-1/2 top-1/2 block h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-20"
+              style={{ backgroundColor: color }}
+            />
+            <span
+              className="relative block h-[7px] w-[7px] rounded-full ring-2 ring-white/90"
+              style={{ backgroundColor: color }}
+            />
+          </span>
         )}
-      </svg>
+      </div>
 
       {axisLabels.length > 0 && (
         <div className="mt-2 flex justify-between text-[10px] text-muted-fg">

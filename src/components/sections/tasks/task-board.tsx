@@ -62,7 +62,7 @@ function TaskTile({ task }: { task: FarmTask }) {
   const overdue = isOverdue(task);
 
   return (
-    <article className="group rounded-xl border border-line bg-card p-3.5 ring-card transition-shadow hover:ring-card-lg">
+    <article className="glass-card glass-hover group rounded-2xl p-3.5">
       <div className="mb-2.5 flex items-start justify-between gap-2">
         <Badge tone={CATEGORY_TONE[task.category]}>
           <Icon className="h-3 w-3" />
@@ -80,7 +80,7 @@ function TaskTile({ task }: { task: FarmTask }) {
         <p className="mt-1 text-xs text-muted-fg">{task.plotName}</p>
       )}
 
-      <div className="mt-3.5 flex items-center justify-between gap-2 border-t border-line pt-3">
+      <div className="mt-3.5 flex items-center justify-between gap-2 border-t border-white/60 pt-3">
         <div className="flex min-w-0 items-center gap-2">
           <Avatar name={task.assignee} size="sm" />
           <span className="truncate text-xs font-medium text-ink">{task.assignee}</span>
@@ -101,24 +101,24 @@ function TaskTile({ task }: { task: FarmTask }) {
 /* ---- Kanban board: the centerpiece of the tasks page ---- */
 export function TaskBoard() {
   return (
-    <section className="animate-rise" aria-label="Task board by status">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="animate-rise cv-auto" aria-label="Task board by status">
+      <div className="perf-contain grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {COLUMNS.map(({ status, title }) => {
           const columnTasks = tasks.filter((t) => t.status === status);
 
           return (
             <div
               key={status}
-              className="flex flex-col rounded-2xl bg-paper-2 p-3 ring-card"
+              className="glass-card flex flex-col rounded-2xl p-3"
             >
               <header className="mb-3 flex items-center justify-between px-1">
                 <h3 className="font-display text-sm font-semibold text-ink">{title}</h3>
-                <span className="grid h-6 min-w-6 place-items-center rounded-full bg-card px-2 text-xs font-semibold text-muted-fg ring-card">
+                <span className="grid h-6 min-w-6 place-items-center rounded-full border border-white/60 bg-white/55 px-2 text-xs font-semibold text-muted-fg">
                   {columnTasks.length}
                 </span>
               </header>
 
-              <div className="flex flex-col gap-2.5">
+              <div className="stagger flex flex-col gap-2.5">
                 {columnTasks.length > 0 ? (
                   columnTasks.map((task) => <TaskTile key={task.id} task={task} />)
                 ) : (

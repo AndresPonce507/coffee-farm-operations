@@ -45,8 +45,8 @@ export function HarvestSummary() {
   const avgBrix = avg(harvests.map((h) => h.brixAvg));
 
   return (
-    <Card className="overflow-hidden animate-rise">
-      <div className="grid grid-cols-1 divide-y divide-line sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4 lg:divide-x">
+    <Card className="overflow-hidden animate-rise perf-contain">
+      <div className="stagger grid grid-cols-1 divide-y divide-line/70 sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4 lg:divide-x">
         <Tile
           label="Today"
           value={kg(todayKg)}
@@ -60,7 +60,7 @@ export function HarvestSummary() {
           sub="Trailing-week cherry intake"
           accent="coffee"
           icon={Droplets}
-          className="sm:border-l sm:border-line lg:border-l-0"
+          className="sm:border-l sm:border-line/70 lg:border-l-0"
         />
         <Tile
           label="Avg ripeness"
@@ -75,7 +75,7 @@ export function HarvestSummary() {
           sub="Sugar content at picking"
           accent="cherry"
           icon={FlaskConical}
-          className="sm:border-l sm:border-line"
+          className="sm:border-l sm:border-line/70"
         />
       </div>
     </Card>

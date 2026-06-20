@@ -20,7 +20,10 @@ export interface BarMiniProps {
 
 /**
  * Mini bar chart built from HTML/CSS (not SVG) for crisp, responsive bars.
- * The trailing (most recent) bar is rendered at full opacity to draw the eye;
+ * Each bar is a vertical gradient (lighter at the top, deepening to the base
+ * color) with a softly rounded crown, a subtle drop shadow, and a specular
+ * gloss that brightens on hover — pure transform/opacity, so it stays 60fps.
+ * The trailing (most recent) bar is rendered at full strength to draw the eye;
  * earlier bars are dimmed. Heights are scaled to the maximum value in the set.
  */
 export function BarMini({
@@ -37,6 +40,11 @@ export function BarMini({
       ? `Bar chart of ${data.length} values, from ${data[0].label} (${data[0].value}) to ${data[lastIndex].label} (${data[lastIndex].value}).`
       : "Bar chart with no data.";
 
+  // Vertical gradient: a lighter tint of the bar color up top, deepening to
+  // the base color at the foot. color-mix keeps this correct for any hex the
+  // caller passes (forest, coffee, honey…) without hardcoding a second color.
+  const barGradient = `linear-gradient(to top, ${color} 0%, color-mix(in srgb, ${color} 82%, white) 62%, color-mix(in srgb, ${color} 64%, white) 100%)`;
+
   return (
     <div className={cn("flex flex-col", className)}>
       <div
@@ -52,13 +60,29 @@ export function BarMini({
             <div key={`${d.label}-${i}`} className="flex flex-1 items-end">
               <div
                 title={`${d.label}: ${d.value}`}
-                className="w-full rounded-t-md transition-[height] duration-500"
+                className={cn(
+                  "group/bar relative w-full origin-bottom rounded-t-lg",
+                  "shadow-[0_2px_6px_-1px_rgba(9,59,42,0.28)] ring-1 ring-inset ring-white/25",
+                  "transition-[transform,box-shadow] duration-500 ease-out",
+                  "will-change-transform hover:-translate-y-0.5",
+                  "hover:shadow-[0_8px_18px_-4px_rgba(9,59,42,0.4)]",
+                )}
                 style={{
                   height: `${heightPct}%`,
-                  backgroundColor: color,
-                  opacity: isLast ? 1 : 0.55,
+                  backgroundImage: barGradient,
+                  opacity: isLast ? 1 : 0.58,
                 }}
-              />
+              >
+                {/* Top specular cap — a soft sheen that brightens on hover. */}
+                <span
+                  aria-hidden
+                  className={cn(
+                    "pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-lg",
+                    "bg-gradient-to-b from-white/40 to-transparent",
+                    "opacity-70 transition-opacity duration-300 group-hover/bar:opacity-100",
+                  )}
+                />
+              </div>
             </div>
           );
         })}

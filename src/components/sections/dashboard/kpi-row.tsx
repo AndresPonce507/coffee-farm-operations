@@ -33,7 +33,7 @@ export function KpiRow() {
   return (
     <section
       aria-label="Key farm metrics"
-      className="grid animate-rise gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      className="stagger perf-contain grid animate-rise gap-4 sm:grid-cols-2 xl:grid-cols-4"
     >
       <StatCard
         label="Today's cherries"

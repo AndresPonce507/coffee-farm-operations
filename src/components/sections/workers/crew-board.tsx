@@ -40,11 +40,11 @@ export function CrewBoard() {
       </CardHeader>
 
       <CardContent>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="stagger perf-contain grid grid-cols-1 gap-4 sm:grid-cols-2">
           {crews.map(({ crew, members, present, total, allIn }) => (
             <div
               key={crew}
-              className="flex flex-col gap-4 rounded-xl border border-line bg-paper-2 p-4"
+              className="glass-card glass-hover flex flex-col gap-4 rounded-2xl p-4"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -68,8 +68,8 @@ export function CrewBoard() {
                       name={member.name}
                       className={
                         member.attendance === "present"
-                          ? "ring-2 ring-card"
-                          : "opacity-40 ring-2 ring-card"
+                          ? "ring-2 ring-white/60"
+                          : "opacity-40 ring-2 ring-white/60"
                       }
                     />
                   ))}

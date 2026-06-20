@@ -51,17 +51,26 @@ export function SeasonHero() {
 
   return (
     <section
-      className="animate-rise relative isolate overflow-hidden rounded-2xl bg-forest text-paper ring-card-lg"
+      className="animate-rise glass-forest glass-hover glass-sheen relative isolate overflow-hidden rounded-2xl text-paper shadow-[0_30px_60px_-28px_rgba(0,41,29,0.55)] ring-1 ring-inset ring-white/10"
       aria-labelledby="season-hero-heading"
     >
-      {/* Layered warm wash + canopy texture for depth. */}
-      <div className="bg-canopy pointer-events-none absolute inset-0" aria-hidden="true" />
+      {/* Layered warm wash + canopy depth — deep forest gradient with a honey
+          glow up top and a cool forest pool below, all behind the content. */}
       <div
-        className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-honey-100/15 blur-3xl"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_15%_0%,rgba(26,107,77,0.45),transparent_55%),radial-gradient(90%_80%_at_100%_120%,rgba(9,59,42,0.7),transparent_60%)]"
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-forest-500/30 blur-3xl"
+        className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-honey-100/20 blur-3xl"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-forest-500/40 blur-3xl"
+        aria-hidden="true"
+      />
+      {/* Specular top-edge highlight — the glass catching light. */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"
         aria-hidden="true"
       />
 
@@ -100,7 +109,7 @@ export function SeasonHero() {
           </div>
 
           {/* Inline supporting stats */}
-          <div className="mt-8 grid gap-5 border-t border-paper/10 pt-6 sm:grid-cols-3">
+          <div className="stagger perf-contain mt-8 grid gap-5 border-t border-paper/10 pt-6 sm:grid-cols-3">
             <HeroStat
               label="Harvested YTD"
               value={kg(SEASON.harvestedKg)}
@@ -122,10 +131,16 @@ export function SeasonHero() {
           </div>
         </div>
 
-        {/* Right — progress ring on a lighter inset surface for contrast */}
+        {/* Right — progress ring on a luminous glass surface for contrast */}
         <div className="flex justify-center lg:justify-end">
-          <div className="flex flex-col items-center gap-4 rounded-2xl bg-paper px-7 py-7 text-center ring-card-lg">
+          <div className="glass-card glass-hover relative flex flex-col items-center gap-4 overflow-hidden rounded-2xl px-7 py-7 text-center">
+            {/* Honey glow halo — makes the ring feel luminous. */}
+            <div
+              className="pointer-events-none absolute left-1/2 top-[5.75rem] h-44 w-44 -translate-x-1/2 rounded-full bg-honey-100/70 blur-2xl"
+              aria-hidden="true"
+            />
             <StatRing
+              className="relative drop-shadow-[0_8px_18px_rgba(200,146,46,0.28)]"
               value={seasonPct}
               size={168}
               label="Season target"
@@ -133,7 +148,7 @@ export function SeasonHero() {
               color="#C8922E"
               track="#E7DED0"
             />
-            <p className="max-w-[12rem] text-xs leading-relaxed text-muted-fg">
+            <p className="relative max-w-[12rem] text-xs leading-relaxed text-muted-fg">
               On pace toward this season&apos;s cherry goal across all plots.
             </p>
           </div>

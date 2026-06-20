@@ -85,9 +85,9 @@ export function ProcessingPipelineCard() {
 
       <CardContent className="pt-4">
         {/* Horizontal stepper — scrolls on narrow screens, never squashes. */}
-        <div className="-mx-1 overflow-x-auto pb-1">
+        <div className="cv-auto -mx-1 overflow-x-auto pb-1">
           <ol
-            className="flex min-w-max items-stretch gap-1 px-1"
+            className="stagger flex min-w-max items-stretch gap-1 px-1"
             aria-label="Processing stages from cherry to green coffee"
           >
             {byStage.map((stage, i) => {
@@ -103,18 +103,18 @@ export function ProcessingPipelineCard() {
                 >
                   <div
                     className={[
-                      "flex w-[112px] flex-col items-center gap-2 rounded-2xl border px-3 py-4 text-center transition-colors",
+                      "glass-hover flex w-[112px] flex-col items-center gap-2 rounded-2xl border px-3 py-4 text-center",
                       stage.active
-                        ? "border-forest-300 bg-forest-100"
-                        : "border-line bg-paper-2",
+                        ? "border-forest-300/70 bg-forest-100/70"
+                        : "border-white/60 bg-white/55",
                     ].join(" ")}
                   >
                     <span
                       className={[
-                        "flex h-10 w-10 items-center justify-center rounded-full ring-card",
+                        "flex h-10 w-10 items-center justify-center rounded-full",
                         stage.active
-                          ? "bg-forest text-paper"
-                          : "bg-card text-muted-fg",
+                          ? "bg-forest text-paper shadow-sm shadow-forest/20"
+                          : "border border-white/70 bg-white/70 text-muted-fg",
                       ].join(" ")}
                     >
                       <Icon className="h-5 w-5" />
@@ -180,11 +180,11 @@ export function ProcessingPipelineCard() {
             <p className="font-display text-xs font-semibold uppercase tracking-wide text-muted-fg">
               Closest to green
             </p>
-            <ul className="mt-3 space-y-2">
-              {nearingGreen.map((batch) => (
+            <ul className="stagger mt-3 space-y-2">
+              {nearingGreen.map((batch, i) => (
                 <li
                   key={batch.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper-2 px-3 py-2.5"
+                  className="glass-hover flex items-center justify-between gap-3 rounded-xl border border-white/60 bg-white/55 px-3 py-2.5"
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">

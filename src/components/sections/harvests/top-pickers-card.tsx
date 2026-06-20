@@ -32,17 +32,20 @@ export function TopPickersCard() {
       </CardHeader>
 
       <CardContent>
-        <ol className="space-y-4">
+        <ol className="stagger space-y-2.5 perf-contain">
           {active.map((picker, index) => (
-            <li key={picker.id} className="flex items-center gap-3">
+            <li
+              key={picker.id}
+              className="glass-hover flex items-center gap-3 rounded-xl border border-white/60 bg-white/55 px-3 py-2.5"
+            >
               <span
-                className="w-4 shrink-0 text-right text-xs font-semibold tabular-nums text-muted-fg"
+                className="w-4 shrink-0 text-right text-xs font-semibold tabular-nums text-honey-700"
                 aria-hidden="true"
               >
                 {index + 1}
               </span>
 
-              <Avatar name={picker.name} size="md" />
+              <Avatar name={picker.name} size="md" className="ring-white/60" />
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-3">
@@ -69,11 +72,14 @@ export function TopPickersCard() {
             <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-fg">
               Off today
             </p>
-            <ul className="mt-3 space-y-3">
+            <ul className="mt-3 space-y-2">
               {idle.map((picker) => (
-                <li key={picker.id} className="flex items-center gap-3 opacity-50">
+                <li
+                  key={picker.id}
+                  className="flex items-center gap-3 rounded-xl border border-white/50 bg-white/40 px-3 py-2 opacity-60"
+                >
                   <span className="w-4 shrink-0" aria-hidden="true" />
-                  <Avatar name={picker.name} size="md" />
+                  <Avatar name={picker.name} size="md" className="ring-white/60" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-ink">{picker.name}</p>
                     <p className="text-xs text-muted-fg">{picker.crew}</p>

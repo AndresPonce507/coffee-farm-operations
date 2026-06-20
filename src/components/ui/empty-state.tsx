@@ -20,7 +20,7 @@ export function EmptyState({
       {Icon ? (
         <div
           aria-hidden="true"
-          className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-muted text-muted-fg"
+          className="mx-auto grid h-12 w-12 place-items-center rounded-2xl border border-white/60 bg-white/55 text-muted-fg shadow-sm"
         >
           <Icon className="h-6 w-6" />
         </div>

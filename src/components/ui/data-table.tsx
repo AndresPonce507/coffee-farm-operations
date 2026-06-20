@@ -13,7 +13,7 @@ export function Table({
   ...props
 }: TableHTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-line bg-card ring-card">
+    <div className="glass-card cv-auto overflow-x-auto rounded-2xl">
       <table className={cn("w-full text-sm", className)} {...props}>
         {children}
       </table>
@@ -29,7 +29,7 @@ export function THead({
 }: HTMLAttributes<HTMLTableSectionElement>) {
   return (
     <thead
-      className={cn("border-b border-line bg-paper-2/40", className)}
+      className={cn("border-b border-white/60 bg-white/40", className)}
       {...props}
     >
       {children}
@@ -59,7 +59,7 @@ export function TR({
   return (
     <tr
       className={cn(
-        "border-b border-line last:border-0 transition-colors hover:bg-paper-2/60",
+        "border-b border-white/40 last:border-0 transition-colors hover:bg-white/50",
         className,
       )}
       {...props}
