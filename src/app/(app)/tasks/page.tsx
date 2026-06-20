@@ -1,27 +1,30 @@
 import { PageHeader } from "@/components/ui/page-header";
-import { Button } from "@/components/ui/button";
+import { getPlots } from "@/lib/db/plots";
+import { getWorkers } from "@/lib/db/workers";
 import { TaskSummary } from "@/components/sections/tasks/task-summary";
 import { TaskBoard } from "@/components/sections/tasks/task-board";
 import { TaskTable } from "@/components/sections/tasks/task-table";
+import { AddTaskButton } from "@/components/sections/tasks/task-actions";
 
 /**
  * /tasks — Agronomy work across the Janson Coffee farm.
  *
- * Server component: composes the page header, the at-a-glance summary tiles,
- * the kanban-style task board, and the full task table. All sections render
- * over static mock data and require no props. The "New task" action in the
- * header is decorative for this build.
+ * Server component: fetches the plot + worker lists once (for the create/edit
+ * forms) and composes the header (with the live "New task" action), summary
+ * tiles, kanban board, and the editable task table.
  */
-export default function TasksPage() {
+export default async function TasksPage() {
+  const [plots, workers] = await Promise.all([getPlots(), getWorkers()]);
+
   return (
     <div className="space-y-6">
       <PageHeader title="Tasks" subtitle="Agronomy work across the farm">
-        <Button variant="primary">New task</Button>
+        <AddTaskButton plots={plots} workers={workers} />
       </PageHeader>
 
       <TaskSummary />
       <TaskBoard />
-      <TaskTable />
+      <TaskTable plots={plots} workers={workers} />
     </div>
   );
 }
