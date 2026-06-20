@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { getSupabase } from "@/lib/supabase/server";
 import type { CoffeeVariety, TrendPoint, VarietyShare } from "@/lib/types";
 
@@ -11,23 +13,23 @@ export function mapTrend(r: TrendRow): TrendPoint {
   return { label: r.label, value: Number(r.value) };
 }
 
-export async function getDailyCherries(): Promise<TrendPoint[]> {
+export const getDailyCherries = cache(async (): Promise<TrendPoint[]> => {
   const { data, error } = await getSupabase()
     .from("daily_cherries")
     .select("*")
     .order("sort_order");
   if (error) throw new Error(`getDailyCherries: ${error.message}`);
   return (data as TrendRow[]).map(mapTrend);
-}
+});
 
-export async function getWeeklyHarvest(): Promise<TrendPoint[]> {
+export const getWeeklyHarvest = cache(async (): Promise<TrendPoint[]> => {
   const { data, error } = await getSupabase()
     .from("weekly_harvest")
     .select("*")
     .order("sort_order");
   if (error) throw new Error(`getWeeklyHarvest: ${error.message}`);
   return (data as TrendRow[]).map(mapTrend);
-}
+});
 
 /* ---------------- Variety shares ---------------- */
 export interface VarietyShareRow {
@@ -38,14 +40,14 @@ export function mapVarietyShare(r: VarietyShareRow): VarietyShare {
   return { variety: r.variety, kg: Number(r.kg) };
 }
 
-export async function getVarietyShares(): Promise<VarietyShare[]> {
+export const getVarietyShares = cache(async (): Promise<VarietyShare[]> => {
   const { data, error } = await getSupabase()
     .from("variety_shares")
     .select("*")
     .order("kg", { ascending: false });
   if (error) throw new Error(`getVarietyShares: ${error.message}`);
   return (data as VarietyShareRow[]).map(mapVarietyShare);
-}
+});
 
 /* ---------------- Season summary (singleton) ---------------- */
 export interface SeasonRow {
@@ -71,7 +73,7 @@ export function mapSeason(r: SeasonRow): Season {
   };
 }
 
-export async function getSeason(): Promise<Season> {
+export const getSeason = cache(async (): Promise<Season> => {
   const { data, error } = await getSupabase()
     .from("season_summary")
     .select("*")
@@ -79,4 +81,4 @@ export async function getSeason(): Promise<Season> {
     .single();
   if (error) throw new Error(`getSeason: ${error.message}`);
   return mapSeason(data as SeasonRow);
-}
+});

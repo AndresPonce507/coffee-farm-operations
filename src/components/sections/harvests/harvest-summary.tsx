@@ -7,11 +7,17 @@ import { kg, num, pct } from "@/lib/utils";
 
 const TODAY = "2026-06-20";
 
-/** The seven-day window ending today (inclusive), as ISO date strings. */
+/**
+ * The seven-day window ending today (inclusive), as ISO date strings.
+ *
+ * Anchored at UTC midnight (`T00:00:00Z`) and walked with `setUTCDate`/`getUTCDate`
+ * so that parse and serialize both happen in UTC. A locale-local anchor would shift
+ * the whole window by a day on hosts east of UTC, silently dropping today's intake.
+ */
 const LAST_7_DAYS: ReadonlySet<string> = new Set(
   Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(TODAY + "T00:00:00");
-    d.setDate(d.getDate() - i);
+    const d = new Date(TODAY + "T00:00:00Z");
+    d.setUTCDate(d.getUTCDate() - i);
     return d.toISOString().slice(0, 10);
   })
 );

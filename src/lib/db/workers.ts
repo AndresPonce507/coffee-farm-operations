@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { getSupabase } from "@/lib/supabase/server";
 import type { AttendanceStatus, Worker, WorkerRole } from "@/lib/types";
 
@@ -27,17 +29,17 @@ export function mapWorker(r: WorkerRow): Worker {
   };
 }
 
-export async function getWorkers(): Promise<Worker[]> {
+export const getWorkers = cache(async (): Promise<Worker[]> => {
   const { data, error } = await getSupabase()
     .from("workers")
     .select("*")
     .order("id");
   if (error) throw new Error(`getWorkers: ${error.message}`);
   return (data as WorkerRow[]).map(mapWorker);
-}
+});
 
 /** Pickers only — mirrors the `pickers` export from the mock data. */
-export async function getPickers(): Promise<Worker[]> {
+export const getPickers = cache(async (): Promise<Worker[]> => {
   const { data, error } = await getSupabase()
     .from("workers")
     .select("*")
@@ -45,4 +47,4 @@ export async function getPickers(): Promise<Worker[]> {
     .order("id");
   if (error) throw new Error(`getPickers: ${error.message}`);
   return (data as WorkerRow[]).map(mapWorker);
-}
+});

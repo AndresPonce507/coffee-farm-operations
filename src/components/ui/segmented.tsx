@@ -17,7 +17,8 @@ export interface SegmentedProps {
 export function Segmented({ options, value, onChange, className }: SegmentedProps) {
   return (
     <div
-      role="tablist"
+      role="group"
+      aria-label="View mode"
       className={cn(
         "inline-flex rounded-xl border border-white/60 bg-white/50 p-1",
         className,
@@ -29,8 +30,7 @@ export function Segmented({ options, value, onChange, className }: SegmentedProp
           <button
             key={option.id}
             type="button"
-            role="tab"
-            aria-selected={isActive}
+            aria-pressed={isActive}
             onClick={() => onChange(option.id)}
             className={cn(
               "rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-300",

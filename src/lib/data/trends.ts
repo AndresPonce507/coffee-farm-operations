@@ -29,7 +29,7 @@ export const dailyCherries: TrendPoint[] = [
   { label: "Jun 17", value: 597 },
   { label: "Jun 18", value: 631 },
   { label: "Jun 19", value: 688 },
-  { label: "Jun 20", value: 642 },
+  { label: "Jun 20", value: 644 },
 ];
 
 /**
@@ -70,6 +70,6 @@ export const varietyShares: VarietyShare[] = [
 export const SEASON = {
   targetKg: 190000,
   harvestedKg: 122240,
-  todayKg: 642,
+  todayKg: 644,
   ytdRevenueUsd: 486500,
 } as const;

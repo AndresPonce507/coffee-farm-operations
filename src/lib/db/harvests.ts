@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { getSupabase } from "@/lib/supabase/server";
 import type { Harvest } from "@/lib/types";
 
@@ -28,7 +30,7 @@ export function mapHarvest(r: HarvestRow): Harvest {
   };
 }
 
-export async function getHarvests(): Promise<Harvest[]> {
+export const getHarvests = cache(async (): Promise<Harvest[]> => {
   const { data, error } = await getSupabase()
     .from("harvests_view")
     .select("*")
@@ -36,4 +38,4 @@ export async function getHarvests(): Promise<Harvest[]> {
     .order("id");
   if (error) throw new Error(`getHarvests: ${error.message}`);
   return (data as HarvestRow[]).map(mapHarvest);
-}
+});

@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { getSupabase } from "@/lib/supabase/server";
 import type {
   BatchStage,
@@ -36,7 +38,7 @@ export function mapBatch(r: BatchRow): ProcessingBatch {
   };
 }
 
-export async function getBatches(): Promise<ProcessingBatch[]> {
+export const getBatches = cache(async (): Promise<ProcessingBatch[]> => {
   // Pipeline order: earliest stage first, newest within a stage — matches the source.
   const { data, error } = await getSupabase()
     .from("processing_batches")
@@ -45,4 +47,4 @@ export async function getBatches(): Promise<ProcessingBatch[]> {
     .order("started_date", { ascending: false });
   if (error) throw new Error(`getBatches: ${error.message}`);
   return (data as BatchRow[]).map(mapBatch);
-}
+});

@@ -21,18 +21,18 @@ insert into plots (id, ord, name, block, variety, area_ha, altitude_masl, trees,
 insert into workers (id, name, role, daily_rate_usd, attendance, started_year, phone, today_kg, crew) values
   ('w-01', 'Miguel Janson', 'Supervisor', 42, 'present', 2009, '+507 6500-1209', 0, 'Field Ops'),
   ('w-02', 'Janette Janson', 'Agronomist', 48, 'present', 2011, '+507 6500-3382', 0, 'Field Ops'),
-  ('w-03', 'Eduardo Pérez', 'Picker', 22, 'present', 2015, '+507 6612-7741', 78, 'Crew Norte'),
-  ('w-04', 'Rosa Quintero', 'Picker', 22, 'present', 2016, '+507 6633-1180', 91, 'Crew Norte'),
+  ('w-03', 'Eduardo Pérez', 'Picker', 22, 'present', 2015, '+507 6612-7741', 92, 'Crew Norte'),
+  ('w-04', 'Rosa Quintero', 'Picker', 22, 'present', 2016, '+507 6633-1180', 84, 'Crew Norte'),
   ('w-05', 'Tomás Atencio', 'Picker', 22, 'present', 2018, '+507 6644-9921', 64, 'Crew Tizingal'),
   ('w-06', 'Lucía Morales', 'Picker', 22, 'present', 2019, '+507 6655-2210', 88, 'Crew Tizingal'),
   ('w-07', 'Carlos Beker', 'Picker', 22, 'rest-day', 2014, '+507 6677-4456', 0, 'Crew Norte'),
-  ('w-08', 'Ana Serrano', 'Picker', 22, 'present', 2020, '+507 6688-0034', 73, 'Crew Tizingal'),
-  ('w-09', 'Pedro Caballero', 'Picker', 22, 'absent', 2017, '+507 6699-7712', 0, 'Crew Norte'),
+  ('w-08', 'Ana Serrano', 'Picker', 22, 'present', 2020, '+507 6688-0034', 76, 'Crew Tizingal'),
+  ('w-09', 'Pedro Caballero', 'Picker', 22, 'present', 2017, '+507 6699-7712', 90, 'Crew Norte'),
   ('w-10', 'Néstor Gómez', 'Mill Operator', 30, 'present', 2013, '+507 6701-5589', 0, 'Crew Mill'),
   ('w-11', 'Yarisel Pitti', 'Mill Operator', 30, 'present', 2018, '+507 6712-3301', 0, 'Crew Mill'),
   ('w-12', 'Raúl Santamaría', 'Driver', 28, 'present', 2012, '+507 6723-8890', 0, 'Field Ops'),
-  ('w-13', 'Iris Castillo', 'Picker', 22, 'present', 2021, '+507 6734-1145', 69, 'Crew Tizingal'),
-  ('w-14', 'Félix Rodríguez', 'Picker', 22, 'present', 2016, '+507 6745-6622', 82, 'Crew Norte');
+  ('w-13', 'Iris Castillo', 'Picker', 22, 'present', 2021, '+507 6734-1145', 71, 'Crew Tizingal'),
+  ('w-14', 'Félix Rodríguez', 'Picker', 22, 'present', 2016, '+507 6745-6622', 79, 'Crew Norte');
 
 insert into lots (code) values
   ('JC-541'),
@@ -138,7 +138,7 @@ insert into daily_cherries (sort_order, label, value) values
   (10, 'Jun 17', 597),
   (11, 'Jun 18', 631),
   (12, 'Jun 19', 688),
-  (13, 'Jun 20', 642);
+  (13, 'Jun 20', 644);
 
 insert into weekly_harvest (sort_order, label, value) values
   (0, 'Wk 1', 2040),
@@ -158,6 +158,6 @@ insert into variety_shares (variety, kg) values
   ('Pacamara', 11200);
 
 insert into season_summary (id, target_kg, harvested_kg, today_kg, ytd_revenue_usd) values
-  (1, 190000, 122240, 642, 486500);
+  (1, 190000, 122240, 644, 486500);
 
 commit;

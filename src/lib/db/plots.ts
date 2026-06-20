@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { getSupabase } from "@/lib/supabase/server";
 import type { CoffeeVariety, Plot, PlotStatus } from "@/lib/types";
 
@@ -38,21 +40,23 @@ export function mapPlot(r: PlotRow): Plot {
   };
 }
 
-export async function getPlots(): Promise<Plot[]> {
+export const getPlots = cache(async (): Promise<Plot[]> => {
   const { data, error } = await getSupabase()
     .from("plots")
     .select("*")
     .order("ord");
   if (error) throw new Error(`getPlots: ${error.message}`);
   return (data as PlotRow[]).map(mapPlot);
-}
+});
 
-export async function getPlotById(id: string): Promise<Plot | undefined> {
-  const { data, error } = await getSupabase()
-    .from("plots")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
-  if (error) throw new Error(`getPlotById: ${error.message}`);
-  return data ? mapPlot(data as PlotRow) : undefined;
-}
+export const getPlotById = cache(
+  async (id: string): Promise<Plot | undefined> => {
+    const { data, error } = await getSupabase()
+      .from("plots")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw new Error(`getPlotById: ${error.message}`);
+    return data ? mapPlot(data as PlotRow) : undefined;
+  },
+);

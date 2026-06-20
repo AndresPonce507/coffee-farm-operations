@@ -61,6 +61,7 @@ vi.mock("@/lib/db/trends", () => ({
 }));
 
 import { KpiRow } from "@/components/sections/dashboard/kpi-row";
+import { getDailyCherries } from "@/lib/db/trends";
 
 // vitest config has no globals, so RTL's auto afterEach(cleanup) isn't registered;
 // register it explicitly so each test renders into a fresh document body.
@@ -87,5 +88,28 @@ describe("KpiRow (smoke)", () => {
     expect(screen.getByText("of 2 pickers")).toBeInTheDocument();
     // Season to date = harvestedKg = 60,000 kg.
     expect(screen.getByText("60,000 kg")).toBeInTheDocument();
+  });
+
+  it("shows a DOWN delta when the 7-day cherry trend is falling", async () => {
+    // Falling series: first (1000) > latest (700) → changePct = -30% (NEGATIVE).
+    // mockResolvedValueOnce is consumed by this render only; the default
+    // factory implementation stands for every other test.
+    vi.mocked(getDailyCherries).mockResolvedValueOnce([
+      { label: "Mon", value: 1000 },
+      { label: "Tue", value: 850 },
+      { label: "Wed", value: 700 },
+    ] satisfies TrendPoint[]);
+
+    const ui = await KpiRow();
+    const { container } = render(ui);
+
+    // Sanity: the delta chip shows the negative percentage it computed.
+    expect(screen.getByText("-30% vs 7d ago")).toBeInTheDocument();
+
+    // Direction is derived, not hardcoded: StatCard renders dir="down" as a
+    // lucide ArrowDownRight icon (class "lucide-arrow-down-right"), NOT the
+    // ArrowUpRight ("lucide-arrow-up-right") it would render for dir="up".
+    expect(container.querySelector(".lucide-arrow-down-right")).not.toBeNull();
+    expect(container.querySelector(".lucide-arrow-up-right")).toBeNull();
   });
 });

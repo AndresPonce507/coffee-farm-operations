@@ -13,6 +13,7 @@ export function Topbar() {
         <Search className="pointer-events-none absolute left-3 h-4 w-4 text-muted-fg" />
         <input
           type="search"
+          aria-label="Search plots, lots, and workers"
           placeholder="Search plots, lots, workers…"
           className="h-9 w-full rounded-xl border border-line bg-card pl-9 pr-3 text-sm text-ink placeholder:text-muted-fg/70 outline-none transition focus:border-forest-300 focus:ring-2 focus:ring-forest-100"
         />

@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { getSupabase } from "@/lib/supabase/server";
 import type { WeatherDay } from "@/lib/types";
 
@@ -20,11 +22,11 @@ export function mapWeather(r: WeatherRow): WeatherDay {
   };
 }
 
-export async function getWeather(): Promise<WeatherDay[]> {
+export const getWeather = cache(async (): Promise<WeatherDay[]> => {
   const { data, error } = await getSupabase()
     .from("weather")
     .select("*")
     .order("sort_order");
   if (error) throw new Error(`getWeather: ${error.message}`);
   return (data as WeatherRow[]).map(mapWeather);
-}
+});

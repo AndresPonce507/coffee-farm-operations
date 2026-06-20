@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { getSupabase } from "@/lib/supabase/server";
 import type { FarmTask, Priority, TaskCategory, TaskStatus } from "@/lib/types";
 
@@ -28,7 +30,7 @@ export function mapTask(r: TaskRow): FarmTask {
   };
 }
 
-export async function getTasks(): Promise<FarmTask[]> {
+export const getTasks = cache(async (): Promise<FarmTask[]> => {
   // Overdue-first then by due date — matches the curated source order.
   const { data, error } = await getSupabase()
     .from("tasks_view")
@@ -37,4 +39,4 @@ export async function getTasks(): Promise<FarmTask[]> {
     .order("id");
   if (error) throw new Error(`getTasks: ${error.message}`);
   return (data as TaskRow[]).map(mapTask);
-}
+});

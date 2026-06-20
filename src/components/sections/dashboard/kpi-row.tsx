@@ -12,10 +12,12 @@ import { kg, num, pct } from "@/lib/utils";
  * mock data at module scope, so it renders identically on server and client.
  */
 export async function KpiRow() {
-  const workers = await getWorkers();
-  const batches = await getBatches();
-  const dailyCherries = await getDailyCherries();
-  const SEASON = await getSeason();
+  const [workers, batches, dailyCherries, SEASON] = await Promise.all([
+    getWorkers(),
+    getBatches(),
+    getDailyCherries(),
+    getSeason(),
+  ]);
 
   // 1) Today's cherries — last 7 days of daily intake drive the sparkline,
   //    and the start→end change drives the delta chip.
@@ -24,6 +26,9 @@ export async function KpiRow() {
   const first = spark[0];
   const latest = spark[spark.length - 1];
   const changePct = first > 0 ? ((latest - first) / first) * 100 : 0;
+  // Arrow direction follows the computed change, not a hardcoded "up" — a
+  // falling trend must show the down (cherry) arrow, never a green up-arrow.
+  const deltaDir = changePct > 0 ? "up" : changePct < 0 ? "down" : "flat";
 
   // 2) Pickers present out of the full picker roster.
   const allPickers = workers.filter((w) => w.role === "Picker");
@@ -45,7 +50,7 @@ export async function KpiRow() {
         value={kg(SEASON.todayKg)}
         icon={Coffee}
         accent="forest"
-        delta={{ value: `${pct(changePct)} vs 7d ago`, dir: "up" }}
+        delta={{ value: `${pct(changePct)} vs 7d ago`, dir: deltaDir }}
         hint="received today"
         spark={spark}
       />

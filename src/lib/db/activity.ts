@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { getSupabase } from "@/lib/supabase/server";
 import type { ActivityItem } from "@/lib/types";
 
@@ -12,7 +14,7 @@ export function mapActivity(r: ActivityRow): ActivityItem {
   return { id: r.id, at: r.at, kind: r.kind, text: r.text };
 }
 
-export async function getActivity(): Promise<ActivityItem[]> {
+export const getActivity = cache(async (): Promise<ActivityItem[]> => {
   const { data, error } = await getSupabase()
     .from("activity")
     .select("*")
@@ -20,4 +22,4 @@ export async function getActivity(): Promise<ActivityItem[]> {
     .order("id");
   if (error) throw new Error(`getActivity: ${error.message}`);
   return (data as ActivityRow[]).map(mapActivity);
-}
+});
