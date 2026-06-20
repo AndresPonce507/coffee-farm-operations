@@ -43,7 +43,7 @@ export function HarvestLogTable() {
 
       <CardContent className="px-0 pb-0 pt-4">
         <Table className="border-0 ring-0">
-          <THead>
+          <THead className="bg-white/70">
             <TR>
               <TH>Date</TH>
               <TH>Lot</TH>

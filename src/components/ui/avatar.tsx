@@ -32,6 +32,7 @@ export function Avatar({ name, size = "sm", className }: AvatarProps) {
       aria-hidden="true"
       className={cn(
         "grid shrink-0 place-items-center rounded-full font-semibold text-paper",
+        "ring-1 ring-white/60 shadow-sm shadow-ink/10",
         sizeClasses[size],
         palette[colorIndex],
         className,

@@ -24,15 +24,15 @@ const highPriorityCount = tasks.filter(
  */
 export function TaskSummary() {
   return (
-    <Card className="overflow-hidden">
-      <div className="grid grid-cols-1 divide-y divide-line sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4">
+    <Card className="animate-rise overflow-hidden glass-hover glass-sheen">
+      <div className="stagger perf-contain grid grid-cols-1 divide-y divide-white/60 sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4">
         <Tile
           label="Open"
           value={num(openCount)}
           sub="Awaiting a start"
           accent="forest"
           icon={ListChecks}
-          className="sm:border-r sm:border-line"
+          className="sm:border-r sm:border-white/60"
         />
         <Tile
           label="In progress"
@@ -40,7 +40,7 @@ export function TaskSummary() {
           sub="Underway in the field"
           accent="honey"
           icon={Loader}
-          className="lg:border-r lg:border-line"
+          className="lg:border-r lg:border-white/60"
         />
         <Tile
           label="Overdue"
@@ -48,7 +48,7 @@ export function TaskSummary() {
           sub="Past due, not done"
           accent="cherry"
           icon={TriangleAlert}
-          className="sm:border-r sm:border-line"
+          className="sm:border-r sm:border-white/60"
         />
         <Tile
           label="High priority"

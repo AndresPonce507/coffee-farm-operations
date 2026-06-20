@@ -35,7 +35,7 @@ export function WorkerRosterTable() {
         </div>
       </CardHeader>
 
-      <CardContent className="px-0 pb-0 pt-4">
+      <CardContent className="cv-auto px-0 pb-0 pt-4">
         <Table className="border-0">
           <THead>
             <TR className="hover:bg-transparent">

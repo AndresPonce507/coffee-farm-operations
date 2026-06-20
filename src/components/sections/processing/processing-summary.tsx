@@ -34,14 +34,14 @@ export function ProcessingSummary() {
   return (
     <Card className="animate-rise overflow-hidden">
       <CardContent className="p-0">
-        <div className="grid grid-cols-2 divide-y divide-line lg:grid-cols-4 lg:divide-x lg:divide-y-0">
+        <div className="stagger grid grid-cols-2 divide-y divide-white/50 lg:grid-cols-4 lg:divide-x lg:divide-y-0">
           <Tile
             label="Active batches"
             value={num(activeCount)}
             sub="in the pipeline"
             accent="forest"
             icon={FlaskConical}
-            className="border-r border-line lg:border-r-0"
+            className="glass-hover border-r border-white/50 lg:border-r-0"
           />
           <Tile
             label="On drying beds"
@@ -51,6 +51,7 @@ export function ProcessingSummary() {
             } resting`}
             accent="honey"
             icon={Sun}
+            className="glass-hover"
           />
           <Tile
             label="Avg moisture"
@@ -58,7 +59,7 @@ export function ProcessingSummary() {
             sub="across drying beds"
             accent="sky"
             icon={Droplets}
-            className="border-r border-line lg:border-r-0"
+            className="glass-hover border-r border-white/50 lg:border-r-0"
           />
           <Tile
             label="Green ready"
@@ -66,6 +67,7 @@ export function ProcessingSummary() {
             sub="cleared for export"
             accent="coffee"
             icon={PackageCheck}
+            className="glass-hover"
           />
         </div>
       </CardContent>

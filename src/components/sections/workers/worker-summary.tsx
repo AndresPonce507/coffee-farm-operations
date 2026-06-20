@@ -20,13 +20,14 @@ export function WorkerSummary() {
 
   return (
     <Card className="animate-rise overflow-hidden">
-      <div className="grid grid-cols-1 divide-y divide-line sm:grid-cols-2 sm:divide-y-0 sm:divide-x lg:grid-cols-4">
+      <div className="stagger perf-contain grid grid-cols-1 divide-y divide-white/60 sm:grid-cols-2 sm:divide-y-0 sm:divide-x lg:grid-cols-4">
         <Tile
           label="Headcount"
           value={num(headcount)}
           sub="On the payroll"
           accent="forest"
           icon={Users}
+          className="glass-hover rounded-2xl"
         />
         <Tile
           label="Present today"
@@ -34,6 +35,7 @@ export function WorkerSummary() {
           sub={`${num(headcount - presentCount)} off`}
           accent="honey"
           icon={UserCheck}
+          className="glass-hover rounded-2xl"
         />
         <Tile
           label="Daily payroll"
@@ -41,6 +43,7 @@ export function WorkerSummary() {
           sub="Present workers"
           accent="coffee"
           icon={DollarSign}
+          className="glass-hover rounded-2xl"
         />
         <Tile
           label="Crews"
@@ -48,6 +51,7 @@ export function WorkerSummary() {
           sub="Active teams"
           accent="sky"
           icon={Layers}
+          className="glass-hover rounded-2xl"
         />
       </div>
     </Card>

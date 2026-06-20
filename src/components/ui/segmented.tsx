@@ -18,7 +18,10 @@ export function Segmented({ options, value, onChange, className }: SegmentedProp
   return (
     <div
       role="tablist"
-      className={cn("inline-flex rounded-xl bg-muted p-1", className)}
+      className={cn(
+        "inline-flex rounded-xl border border-white/60 bg-white/50 p-1",
+        className,
+      )}
     >
       {options.map((option) => {
         const isActive = option.id === value;
@@ -30,9 +33,9 @@ export function Segmented({ options, value, onChange, className }: SegmentedProp
             aria-selected={isActive}
             onClick={() => onChange(option.id)}
             className={cn(
-              "rounded-lg px-3 py-1.5 text-xs font-medium transition",
+              "rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-300",
               isActive
-                ? "bg-card text-ink ring-card"
+                ? "glass-card text-ink shadow-sm"
                 : "text-muted-fg hover:text-ink",
             )}
           >

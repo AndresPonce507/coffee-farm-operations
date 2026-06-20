@@ -83,9 +83,9 @@ export function BatchTable() {
 
           <TBody>
             {batches.map((batch) => (
-              <TR key={batch.id}>
+              <TR key={batch.id} className="group">
                 <TD>
-                  <span className="font-mono text-sm font-medium text-ink">
+                  <span className="font-mono text-sm font-medium text-ink transition-colors group-hover:text-forest-700">
                     {batch.lotCode}
                   </span>
                 </TD>

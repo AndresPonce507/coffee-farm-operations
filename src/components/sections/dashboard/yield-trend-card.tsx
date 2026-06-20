@@ -19,7 +19,7 @@ export function YieldTrendCard() {
   const avgPerDay = days > 0 ? Math.round(totalKg / days) : 0;
 
   return (
-    <Card className="animate-rise">
+    <Card className="animate-rise glass-hover">
       <CardHeader>
         <div>
           <CardTitle>Daily cherry intake</CardTitle>
@@ -34,7 +34,9 @@ export function YieldTrendCard() {
         </div>
       </CardHeader>
       <CardContent>
-        <TrendLine data={dailyCherries} color={LINE_COLOR} height={200} />
+        <div className="pt-1">
+          <TrendLine data={dailyCherries} color={LINE_COLOR} height={200} />
+        </div>
       </CardContent>
     </Card>
   );

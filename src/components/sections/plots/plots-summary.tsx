@@ -20,7 +20,7 @@ export function PlotsSummary() {
 
   return (
     <Card className="animate-rise overflow-hidden">
-      <div className="grid grid-cols-2 divide-x divide-line md:grid-cols-4">
+      <div className="stagger grid grid-cols-2 divide-x divide-y divide-white/60 md:grid-cols-4 md:divide-y-0">
         <Tile
           label="Total area"
           value={num(totalAreaHa, 1)}

@@ -37,7 +37,7 @@ export function VarietyMixCard() {
   }));
 
   return (
-    <Card className="animate-rise">
+    <Card className="glass-hover animate-rise">
       <CardHeader>
         <CardTitle>Variety mix</CardTitle>
       </CardHeader>
@@ -56,7 +56,7 @@ export function VarietyMixCard() {
             {rows.map((r) => (
               <li
                 key={r.variety}
-                className="flex items-center gap-3 rounded-xl px-1 py-0.5"
+                className="flex items-center gap-3 rounded-xl px-2 py-1 transition-colors duration-200 hover:bg-white/55"
               >
                 <span
                   aria-hidden="true"

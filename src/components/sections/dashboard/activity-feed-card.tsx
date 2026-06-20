@@ -40,11 +40,14 @@ export function ActivityFeedCard() {
         <CardTitle>Recent activity</CardTitle>
       </CardHeader>
       <CardContent className="pt-2">
-        <ul className="divide-y divide-line">
+        <ul className="stagger -mx-2 divide-y divide-line">
           {activity.map((item) => {
             const Icon = KIND_ICON[item.kind];
             return (
-              <li key={item.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+              <li
+                key={item.id}
+                className="flex items-start gap-3 rounded-xl px-2 py-3 transition-colors duration-200 first:pt-0 last:pb-0 hover:bg-white/55"
+              >
                 <span
                   className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${KIND_CHIP[item.kind]}`}
                   aria-hidden="true"
