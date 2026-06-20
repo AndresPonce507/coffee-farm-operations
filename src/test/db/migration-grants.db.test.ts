@@ -115,18 +115,25 @@ describe("AD-8 migration grant/RLS static guard", () => {
     });
   });
 
-  // (c) Every SECURITY DEFINER function must have an explicit
-  //     `grant execute ... to authenticated` (no definer fns exist yet).
-  describe("(c) security definer functions grant execute to authenticated", () => {
+  // (c) Every caller-facing SECURITY DEFINER function must have an explicit
+  //     `grant execute ... to authenticated`. Internal/seed helpers — by the
+  //     leading-underscore convention (e.g. `_seed_activity_event`) — are
+  //     owner/seed-only and must NOT be granted (finding #1): they run from
+  //     triggers/seed.sql as the owner, never from the REST API; granting them
+  //     would open a forge door for any signed-in user.
+  describe("(c) caller-facing security definer functions grant execute to authenticated", () => {
     for (const m of migrations) {
       // crude fn-name capture: `create ... function <name>(...)` that is security definer
       const definerFns = [
         ...m.sql.matchAll(
           /create\s+(?:or\s+replace\s+)?function\s+([a-z0-9_."]+)\s*\([^)]*\)[^;]*?security\s+definer/g,
         ),
-      ].map((x) => x[1].replace(/"/g, "").split(".").pop()!);
+      ]
+        .map((x) => x[1].replace(/"/g, "").split(".").pop()!)
+        // leading-underscore = internal/seed helper; not a caller-facing RPC.
+        .filter((fn) => !fn.startsWith("_"));
 
-      it(`${m.name}: each security definer fn grants execute to authenticated`, () => {
+      it(`${m.name}: each caller-facing security definer fn grants execute to authenticated`, () => {
         for (const fn of definerFns) {
           const granted = new RegExp(
             `grant\\s+execute\\s+on\\s+function\\s+(?:public\\.)?"?${fn}"?\\b[^;]*\\bto\\b[^;]*\\bauthenticated\\b`,
@@ -139,6 +146,36 @@ describe("AD-8 migration grant/RLS static guard", () => {
         }
         // when there are no definer fns this asserts nothing (passes), which is
         // the current state.
+        expect(definerFns).toBeDefined();
+      });
+    }
+  });
+
+  // (d) finding #1 hardening: every SECURITY DEFINER function in a migration AFTER
+  //     grant_hygiene must `revoke execute ... from public`, because Postgres grants
+  //     PUBLIC EXECUTE on every new function by default — and these definer fns run
+  //     as the table owner (bypassing RLS), so a leftover PUBLIC grant lets the
+  //     unauthenticated `anon` key call them. Fail-closed per AD-8.
+  describe("(d) post-hygiene security definer functions revoke execute from public", () => {
+    const afterHygiene = migrations.filter((m) => m.name > GRANT_HYGIENE);
+    for (const m of afterHygiene) {
+      const definerFns = [
+        ...m.sql.matchAll(
+          /create\s+(?:or\s+replace\s+)?function\s+([a-z0-9_."]+)\s*\([^)]*\)[^;]*?security\s+definer/g,
+        ),
+      ].map((x) => x[1].replace(/"/g, "").split(".").pop()!);
+
+      it(`${m.name}: each security definer fn revokes execute from public`, () => {
+        for (const fn of definerFns) {
+          const revoked = new RegExp(
+            `revoke\\s+execute\\s+on\\s+function\\s+(?:public\\.)?"?${fn}"?\\b[^;]*\\bfrom\\b[^;]*\\bpublic\\b`,
+          ).test(m.sql);
+          expect(
+            revoked,
+            `${m.name} defines SECURITY DEFINER fn "${fn}" but never revokes EXECUTE ` +
+              `from public — anon could call it (PUBLIC EXECUTE is the Postgres default).`,
+          ).toBe(true);
+        }
         expect(definerFns).toBeDefined();
       });
     }

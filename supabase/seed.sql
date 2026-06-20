@@ -4,7 +4,12 @@
 
 begin;
 
-truncate table plots, workers, lots, harvests, processing_batches, tasks, activity, weather, daily_cherries, weekly_harvest, variety_shares, season_summary, reserve_zones restart identity cascade;
+-- S3: `activity` is now a security_invoker VIEW over the append-only lot_event
+-- ledger (not a table), so it is no longer truncatable/insertable directly. The
+-- ledger is immutable (no DELETE), so the activity feed is re-seeded idempotently
+-- via the _seed_activity_event() command RPC below (keyed per row → re-running this
+-- seed file is a no-op for already-recorded events).
+truncate table plots, workers, lots, harvests, processing_batches, tasks, weather, daily_cherries, weekly_harvest, variety_shares, season_summary, reserve_zones restart identity cascade;
 
 insert into plots (id, ord, name, block, variety, area_ha, altitude_masl, trees, shade_pct, established_year, status, last_inspected, expected_yield_kg, harvested_kg, geom, centroid) values
   ('p-tizingal-alto', 0, 'Tizingal Alto', 'Block A', 'Geisha', 4.2, 1690, 14800, 55, 2014, 'healthy', '2026-06-18', 18600, 12120, '{"type":"Polygon","coordinates":[[[-82.641276,8.776908],[-82.639413,8.776908],[-82.639413,8.778761],[-82.641276,8.778761],[-82.641276,8.776908]]]}'::jsonb, '{"type":"Point","coordinates":[-82.640344,8.777835]}'::jsonb),
@@ -106,16 +111,18 @@ insert into tasks (id, title, category, plot_id, worker_id, due, status, priorit
   ('t-13', 'Hang broca alcohol-and-water traps farm-wide', 'Pest Control', null, 'w-02', '2026-06-29', 'todo', 'high'),
   ('t-14', 'Clear and grade the Block C access road', 'Weeding', 'p-paso-ancho', 'w-12', '2026-06-30', 'todo', 'low');
 
-insert into activity (id, at, kind, text) values
-  ('act-01', '2026-06-20', 'harvest', 'Talamanca delivered 84 kg cherries — Rosa Quintero, lot JC-552'),
-  ('act-02', '2026-06-20', 'harvest', 'Barú Vista delivered 64 kg cherries — Tomás Atencio, lot JC-541'),
-  ('act-03', '2026-06-20', 'labor', 'Crew Norte clocked in — 644 kg picked across 8 lots today'),
-  ('act-04', '2026-06-20', 'processing', 'Lot JC-602 Geisha started anaerobic ferment — Néstor Gómez (Patio 1)'),
-  ('act-05', '2026-06-20', 'task', 'Shade pruning started on Talamanca — Miguel Janson thinning guabo canopy'),
-  ('act-06', '2026-06-19', 'processing', 'Lot JC-552 Geisha moved to drying (Bed 7) — moisture at 13.5%'),
-  ('act-07', '2026-06-19', 'shipment', 'Green export lot JC-541 staged for shipment — Raúl Santamaría loading'),
-  ('act-08', '2026-06-19', 'harvest', 'Las Lagunas delivered 68 kg cherries — Iris Castillo, lot JC-602'),
-  ('act-09', '2026-06-19', 'task', 'Broca (berry borer) scouting underway on Paso Ancho — Janette Janson');
+-- Activity feed → lot_event projection (the `activity` view reads these back as the
+-- frozen (id, at, kind, text) shape, newest-first). Recorded via the idempotent
+-- _seed_activity_event RPC so the immutable ledger is never written twice.
+select _seed_activity_event('act-01', '2026-06-20', 'harvest',    'Talamanca delivered 84 kg cherries — Rosa Quintero, lot JC-552');
+select _seed_activity_event('act-02', '2026-06-20', 'harvest',    'Barú Vista delivered 64 kg cherries — Tomás Atencio, lot JC-541');
+select _seed_activity_event('act-03', '2026-06-20', 'labor',      'Crew Norte clocked in — 644 kg picked across 8 lots today');
+select _seed_activity_event('act-04', '2026-06-20', 'processing', 'Lot JC-602 Geisha started anaerobic ferment — Néstor Gómez (Patio 1)');
+select _seed_activity_event('act-05', '2026-06-20', 'task',       'Shade pruning started on Talamanca — Miguel Janson thinning guabo canopy');
+select _seed_activity_event('act-06', '2026-06-19', 'processing', 'Lot JC-552 Geisha moved to drying (Bed 7) — moisture at 13.5%');
+select _seed_activity_event('act-07', '2026-06-19', 'shipment',   'Green export lot JC-541 staged for shipment — Raúl Santamaría loading');
+select _seed_activity_event('act-08', '2026-06-19', 'harvest',    'Las Lagunas delivered 68 kg cherries — Iris Castillo, lot JC-602');
+select _seed_activity_event('act-09', '2026-06-19', 'task',       'Broca (berry borer) scouting underway on Paso Ancho — Janette Janson');
 
 insert into weather (sort_order, day, hi, lo, rain_pct, icon) values
   (0, 'Today', 22, 14, 65, 'rain'),

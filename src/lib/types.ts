@@ -137,3 +137,68 @@ export interface WeatherDay {
   rainPct: number;
   icon: "sun" | "cloud" | "rain" | "fog";
 }
+
+/* ====================================================================== */
+/* S3 — Event spine (ADR-001 event-log-as-SSOT, ADR-002 command RPCs,     */
+/* ADR-003 derived views). camelCase domain mirror of the migration       */
+/* 20260621092000_event_log_units_lot_graph.sql.                          */
+/* ====================================================================== */
+
+/* ---------------- Units (UCUM-lite; what convert_qty operates over) ---------------- */
+/** A row of the `units` table — declares a unit's dimension and factor to its base unit. */
+export type UnitDimension =
+  | "mass"
+  | "volume"
+  | "area"
+  | "temperature"
+  | "ratio"
+  | "dimensionless";
+
+export interface Unit {
+  code: string; // UCUM code: 'kg','g','[brix]','%','m2','ha','Cel','L','count'
+  dimension: UnitDimension;
+  toBase: number; // multiply a value in `code` by this to get the dimension's base unit
+  display: string; // human label, e.g. "°C", "°Bx"
+}
+
+/* ---------------- Lot event (append-only, hash-chained ledger) ---------------- */
+/** One row of the `lot_event` ledger (ADR-001). `payload` is the event's JSONB body.
+ *  `chainVerified` is a projection-side annotation (from verify_chain), not a stored column. */
+export interface LotEvent {
+  id: ID; // event_uid (uuid)
+  streamKey: string; // stream_key — one stream per lot (or 'activity')
+  kind: string; // event kind, e.g. 'cherry_intake', 'stage_advance'
+  occurredAt: ISODate | string; // occurred_at — field wall-clock (timestamptz)
+  recordedAt: ISODate | string; // recorded_at — server accept clock (timestamptz)
+  deviceId: string; // device_id
+  deviceSeq: number; // device_seq — monotonic per device (D4 replay safety)
+  payload: Record<string, unknown>; // JSONB event body
+  chainVerified?: boolean; // derived: verify_chain(stream) result, when computed
+}
+
+/* ---------------- Lot graph (genealogy DAG over promoted `lots`) ---------------- */
+/** A node in the lot genealogy — the graph-node columns added to `lots` in S3. */
+export interface LotNode {
+  code: string; // lots.code — JC-NNN traceability code
+  stage: BatchStage | string; // lots.stage
+  variety: CoffeeVariety; // lots.variety
+  originKg: number; // lots.origin_kg — mass at mint
+  currentKg: number; // lots.current_kg — mass at current stage
+  isSingleOrigin: boolean; // lots.is_single_origin
+  mintedAt: ISODate | string; // lots.minted_at (timestamptz)
+}
+
+/** A directed edge in the genealogy DAG — mass on EVERY edge (D6). `kind` mirrors
+ *  the lot_edges check constraint (split|merge|blend|process). */
+export interface LotEdge {
+  parentCode: string; // lot_edges.parent_code
+  childCode: string; // lot_edges.child_code
+  kind: "split" | "merge" | "blend" | "process";
+  kg: number; // lot_edges.kg — mass routed across this edge (> 0)
+}
+
+/** A genealogy subgraph — the {nodes, edges} a lineage view returns. */
+export interface LotGenealogy {
+  nodes: LotNode[];
+  edges: LotEdge[];
+}
