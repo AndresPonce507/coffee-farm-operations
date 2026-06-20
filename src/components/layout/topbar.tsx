@@ -1,6 +1,7 @@
 import { Search, Bell, CloudSun } from "lucide-react";
 
 import { getSupabase } from "@/lib/supabase/server";
+import { MobileNav } from "./mobile-nav";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
 /**
@@ -16,6 +17,8 @@ export async function Topbar() {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-white/50 bg-white/55 px-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.7)] backdrop-blur-xl backdrop-saturate-150 md:px-8">
+      <MobileNav />
+
       <div className="relative hidden max-w-sm flex-1 items-center md:flex">
         <Search className="pointer-events-none absolute left-3 h-4 w-4 text-muted-fg" />
         <input
