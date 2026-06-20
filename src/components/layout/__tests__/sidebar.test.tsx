@@ -23,4 +23,11 @@ describe("Sidebar", () => {
     const inactive = screen.getByRole("link", { name: /Harvests/ });
     expect(inactive).not.toHaveAttribute("aria-current");
   });
+
+  it("includes a Map nav link pointing at /map", () => {
+    render(<Sidebar />);
+
+    const mapLink = screen.getByRole("link", { name: /Map/ });
+    expect(mapLink).toHaveAttribute("href", "/map");
+  });
 });

@@ -4,19 +4,19 @@
 
 begin;
 
-truncate table plots, workers, lots, harvests, processing_batches, tasks, activity, weather, daily_cherries, weekly_harvest, variety_shares, season_summary restart identity cascade;
+truncate table plots, workers, lots, harvests, processing_batches, tasks, activity, weather, daily_cherries, weekly_harvest, variety_shares, season_summary, reserve_zones restart identity cascade;
 
-insert into plots (id, ord, name, block, variety, area_ha, altitude_masl, trees, shade_pct, established_year, status, last_inspected, expected_yield_kg, harvested_kg) values
-  ('p-tizingal-alto', 0, 'Tizingal Alto', 'Block A', 'Geisha', 4.2, 1690, 14800, 55, 2014, 'healthy', '2026-06-18', 18600, 12120),
-  ('p-baru-vista', 1, 'Barú Vista', 'Block A', 'Geisha', 3.1, 1640, 10900, 48, 2016, 'watch', '2026-06-17', 13200, 7400),
-  ('p-talamanca', 2, 'Talamanca', 'Block B', 'Caturra', 6.5, 1520, 24500, 40, 2009, 'healthy', '2026-06-19', 31000, 22800),
-  ('p-nueva-suiza', 3, 'Nueva Suiza', 'Block B', 'Catuaí', 5.8, 1480, 21800, 38, 2011, 'healthy', '2026-06-16', 27500, 19300),
-  ('p-paso-ancho', 4, 'Paso Ancho', 'Block C', 'Pacamara', 3.7, 1450, 11200, 44, 2017, 'at-risk', '2026-06-15', 12600, 4100),
-  ('p-bambito', 5, 'Bambito', 'Block C', 'Caturra', 4.9, 1560, 18400, 42, 2012, 'watch', '2026-06-18', 22000, 13900),
-  ('p-las-lagunas', 6, 'Las Lagunas', 'Block D', 'Geisha', 2.6, 1700, 8600, 60, 2018, 'healthy', '2026-06-19', 9800, 6500),
-  ('p-palmira', 7, 'Palmira', 'Block D', 'Typica', 5.2, 1390, 19600, 35, 2008, 'healthy', '2026-06-14', 23400, 17800),
-  ('p-cuesta-piedra', 8, 'Cuesta de Piedra', 'Block E', 'Catuaí', 4.4, 1360, 16500, 33, 2010, 'watch', '2026-06-13', 19800, 11200),
-  ('p-rio-sereno', 9, 'Río Sereno', 'Block E', 'Pacamara', 3.3, 1430, 9900, 46, 2019, 'healthy', '2026-06-17', 11400, 7100);
+insert into plots (id, ord, name, block, variety, area_ha, altitude_masl, trees, shade_pct, established_year, status, last_inspected, expected_yield_kg, harvested_kg, geom, centroid) values
+  ('p-tizingal-alto', 0, 'Tizingal Alto', 'Block A', 'Geisha', 4.2, 1690, 14800, 55, 2014, 'healthy', '2026-06-18', 18600, 12120, '{"type":"Polygon","coordinates":[[[-82.641276,8.776908],[-82.639413,8.776908],[-82.639413,8.778761],[-82.641276,8.778761],[-82.641276,8.776908]]]}'::jsonb, '{"type":"Point","coordinates":[-82.640344,8.777835]}'::jsonb),
+  ('p-baru-vista', 1, 'Barú Vista', 'Block A', 'Geisha', 3.1, 1640, 10900, 48, 2016, 'watch', '2026-06-17', 13200, 7400, '{"type":"Polygon","coordinates":[[[-82.634782,8.777039],[-82.633181,8.777039],[-82.633181,8.778631],[-82.634782,8.778631],[-82.634782,8.777039]]]}'::jsonb, '{"type":"Point","coordinates":[-82.633982,8.777835]}'::jsonb),
+  ('p-talamanca', 2, 'Talamanca', 'Block B', 'Caturra', 6.5, 1520, 24500, 40, 2009, 'healthy', '2026-06-19', 31000, 22800, '{"type":"Polygon","coordinates":[[[-82.628777,8.776682],[-82.62646,8.776682],[-82.62646,8.778988],[-82.628777,8.778988],[-82.628777,8.776682]]]}'::jsonb, '{"type":"Point","coordinates":[-82.627618,8.777835]}'::jsonb),
+  ('p-nueva-suiza', 3, 'Nueva Suiza', 'Block B', 'Catuaí', 5.8, 1480, 21800, 38, 2011, 'healthy', '2026-06-16', 27500, 19300, '{"type":"Polygon","coordinates":[[[-82.62235,8.776746],[-82.620161,8.776746],[-82.620161,8.778924],[-82.62235,8.778924],[-82.62235,8.776746]]]}'::jsonb, '{"type":"Point","coordinates":[-82.621255,8.777835]}'::jsonb),
+  ('p-paso-ancho', 4, 'Paso Ancho', 'Block C', 'Pacamara', 3.7, 1450, 11200, 44, 2017, 'at-risk', '2026-06-15', 12600, 4100, '{"type":"Polygon","coordinates":[[[-82.641218,8.783296],[-82.63947,8.783296],[-82.63947,8.785035],[-82.641218,8.785035],[-82.641218,8.783296]]]}'::jsonb, '{"type":"Point","coordinates":[-82.640344,8.784166]}'::jsonb),
+  ('p-bambito', 5, 'Bambito', 'Block C', 'Caturra', 4.9, 1560, 18400, 42, 2012, 'watch', '2026-06-18', 22000, 13900, '{"type":"Polygon","coordinates":[[[-82.634987,8.783164],[-82.632975,8.783164],[-82.632975,8.785166],[-82.634987,8.785166],[-82.634987,8.783164]]]}'::jsonb, '{"type":"Point","coordinates":[-82.633981,8.784165]}'::jsonb),
+  ('p-las-lagunas', 6, 'Las Lagunas', 'Block D', 'Geisha', 2.6, 1700, 8600, 60, 2018, 'healthy', '2026-06-19', 9800, 6500, '{"type":"Polygon","coordinates":[[[-82.628351,8.783436],[-82.626886,8.783436],[-82.626886,8.784894],[-82.628351,8.784894],[-82.628351,8.783436]]]}'::jsonb, '{"type":"Point","coordinates":[-82.627618,8.784165]}'::jsonb),
+  ('p-palmira', 7, 'Palmira', 'Block D', 'Typica', 5.2, 1390, 19600, 35, 2008, 'healthy', '2026-06-14', 23400, 17800, '{"type":"Polygon","coordinates":[[[-82.622292,8.783134],[-82.620219,8.783134],[-82.620219,8.785196],[-82.622292,8.785196],[-82.622292,8.783134]]]}'::jsonb, '{"type":"Point","coordinates":[-82.621256,8.784165]}'::jsonb),
+  ('p-cuesta-piedra', 8, 'Cuesta de Piedra', 'Block E', 'Catuaí', 4.4, 1360, 16500, 33, 2010, 'watch', '2026-06-13', 19800, 11200, '{"type":"Polygon","coordinates":[[[-82.641297,8.789547],[-82.639391,8.789547],[-82.639391,8.791444],[-82.641297,8.791444],[-82.641297,8.789547]]]}'::jsonb, '{"type":"Point","coordinates":[-82.640344,8.790496]}'::jsonb),
+  ('p-rio-sereno', 9, 'Río Sereno', 'Block E', 'Pacamara', 3.3, 1430, 9900, 46, 2019, 'healthy', '2026-06-17', 11400, 7100, '{"type":"Polygon","coordinates":[[[-82.634807,8.789674],[-82.633156,8.789674],[-82.633156,8.791317],[-82.634807,8.791317],[-82.634807,8.789674]]]}'::jsonb, '{"type":"Point","coordinates":[-82.633982,8.790495]}'::jsonb);
 
 insert into workers (id, name, role, daily_rate_usd, attendance, started_year, phone, today_kg, crew) values
   ('w-01', 'Miguel Janson', 'Supervisor', 42, 'present', 2009, '+507 6500-1209', 0, 'Field Ops'),
@@ -159,5 +159,8 @@ insert into variety_shares (variety, kg) values
 
 insert into season_summary (id, target_kg, harvested_kg, today_kg, ytd_revenue_usd) values
   (1, 190000, 122240, 644, 486500);
+
+insert into reserve_zones (id, name, kind, geom, area_ha, notes) values
+  ('rz-quetzal', 'Quetzal Cloud-Forest Reserve', 'reserve', '{"type":"Polygon","coordinates":[[[-82.682228,8.829605],[-82.669372,8.829605],[-82.669372,8.842395],[-82.682228,8.842395],[-82.682228,8.829605]]]}'::jsonb, 200.9, 'PLACEHOLDER outline pending the real traced reserve boundary (human/family gate).');
 
 commit;

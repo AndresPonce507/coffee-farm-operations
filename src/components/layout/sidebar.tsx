@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Sprout,
+  Map,
   Coffee,
   Users,
   FlaskConical,
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils";
 export const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/plots", label: "Plots", icon: Sprout },
+  { href: "/map", label: "Map", icon: Map },
   { href: "/harvests", label: "Harvests", icon: Coffee },
   { href: "/workers", label: "Workers", icon: Users },
   { href: "/processing", label: "Processing", icon: FlaskConical },
