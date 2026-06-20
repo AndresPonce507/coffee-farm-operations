@@ -1,7 +1,7 @@
 // AD-8 static guard — the grant/RLS invariants EVERY future migration must hold.
 //
-// Background: this app's live posture is "authenticated-only SELECT; anon reads
-// nothing; nobody has table write grants". grant_hygiene locked
+// Background: this app's live posture is "authenticated reads + the single owner
+// writes (full CRUD); anon reads/writes nothing". grant_hygiene locked
 // `alter default privileges` so a NEW table gets NO grant by default — which means
 // a future `create view`/`create table` that forgets its `grant select` will
 // silently return ZERO rows to every caller (the classic "view returns nothing
@@ -55,21 +55,23 @@ describe("AD-8 migration grant/RLS static guard", () => {
     expect(migrations.length).toBeGreaterThanOrEqual(3);
   });
 
-  // (a) No migration may GRANT write privileges to anon or authenticated.
-  describe("(a) no write grants to anon/authenticated", () => {
+  // (a) No migration may GRANT write privileges to anon. The authenticated owner
+  //     MAY hold write grants — the app is read-write (full CRUD for the owner);
+  //     anon must never be able to write.
+  describe("(a) no write grants to anon", () => {
     for (const m of migrations) {
-      it(`${m.name} grants no insert/update/delete to anon/authenticated`, () => {
+      it(`${m.name} grants no insert/update/delete to anon`, () => {
         // Find `grant ... to <roles>;` statements (NOT `grant ... to ... via
         // default privileges`, and NOT `revoke`). Match the verb list before TO.
         const grantStmts = m.sql.match(/(?<![a-z])grant\s+[^;]*?\sto\s+[^;]*;/g) ?? [];
         for (const stmt of grantStmts) {
           // The privilege list is between `grant` and `on`/`to`.
           const privPart = stmt.slice(0, stmt.indexOf(" on ") >= 0 ? stmt.indexOf(" on ") : stmt.indexOf(" to "));
-          const targetsAnonOrAuth = /\bto\b[^;]*\b(anon|authenticated)\b/.test(stmt);
+          const targetsAnon = /\bto\b[^;]*\banon\b/.test(stmt);
           const grantsWrite = /\b(insert|update|delete)\b/.test(privPart) || /\ball privileges\b/.test(privPart);
           expect(
-            targetsAnonOrAuth && grantsWrite,
-            `WRITE grant to anon/authenticated found:\n  ${stmt.trim()}`,
+            targetsAnon && grantsWrite,
+            `WRITE grant to anon found:\n  ${stmt.trim()}`,
           ).toBe(false);
         }
       });

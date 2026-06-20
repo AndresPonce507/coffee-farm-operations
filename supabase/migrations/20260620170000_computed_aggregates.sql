@@ -70,9 +70,12 @@ create view season_summary_view with (security_invoker = on) as
             where date = (select max(date) from harvests))::numeric as today_kg
   from season_summary s;
 
-grant select on
-  plots_view, workers_view, variety_shares_view,
-  daily_cherries_view, weekly_harvest_view, season_summary_view
-  to anon, authenticated;
+-- One grant per view (explicit, and matches the AD-8 grant guard's per-object scan).
+grant select on plots_view          to anon, authenticated;
+grant select on workers_view        to anon, authenticated;
+grant select on variety_shares_view to anon, authenticated;
+grant select on daily_cherries_view to anon, authenticated;
+grant select on weekly_harvest_view to anon, authenticated;
+grant select on season_summary_view to anon, authenticated;
 
 commit;
