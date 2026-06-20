@@ -6,8 +6,9 @@
 --       never actually let anon read anything — it is purely misleading. The
 --       authenticated owner keeps its SELECT (the app reads as authenticated).
 --   (2) Fills CHECK-coverage holes write_foundation + plot_geometry left open:
---       season_summary magnitudes, the plot-geometry columns (forward guards —
---       all currently NULL), plots.harvested_kg and workers.today_kg.
+--       the season inputs (now constrained on farm_season_config in 20260621101000,
+--       since S4 renamed season_summary aside), the plot-geometry columns (forward
+--       guards — all currently NULL), plots.harvested_kg and workers.today_kg.
 --
 -- Non-destructive: every current row already satisfies every constraint (audited
 -- against live data before authoring — season figures positive, harvested_kg ≥ 0,
@@ -27,12 +28,11 @@ revoke all on
   harvests_view, tasks_view
   from anon;
 
--- (2) season_summary: every figure is a non-negative magnitude.
-alter table season_summary
-  add constraint season_target_nonneg    check (target_kg       >= 0),
-  add constraint season_harvested_nonneg check (harvested_kg    >= 0),
-  add constraint season_today_nonneg     check (today_kg        >= 0),
-  add constraint season_revenue_nonneg   check (ytd_revenue_usd >= 0);
+-- (2) season inputs: the non-negative guards live in 20260621101000 (on
+--     farm_season_config) — S4 (20260621093000) renamed season_summary aside, so
+--     constraining it here would fail on replay. harvested_kg/today_kg are no longer
+--     stored (the view derives them from harvests, where cherries_kg > 0 already
+--     guarantees non-negativity), so they need no constraint.
 
 -- plots: the derived harvest tally is non-negative; the geometry columns
 -- (currently all NULL) must be physically sane — these guard future
