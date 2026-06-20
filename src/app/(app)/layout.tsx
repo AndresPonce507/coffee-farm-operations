@@ -2,6 +2,10 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { LivingBackground } from "@/components/layout/living-background";
 
+// Sections read live from Supabase at request time. Dynamic rendering keeps the
+// build DB-free and always serves fresh farm data. (Swap to `revalidate` for ISR.)
+export const dynamic = "force-dynamic";
+
 export default function AppLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {

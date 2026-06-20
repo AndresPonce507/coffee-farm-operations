@@ -4,7 +4,7 @@ import type {
   TaskCategory,
   TaskStatus,
 } from "@/lib/types";
-import { tasks } from "@/lib/data/tasks";
+import { getTasks } from "@/lib/db/tasks";
 import {
   Card,
   CardContent,
@@ -73,7 +73,9 @@ function isOverdue(task: FarmTask): boolean {
  * Server component (no hooks/handlers): renders every task with its category,
  * plot, assignee, due date, priority and status as on-brand badges.
  */
-export function TaskTable() {
+export async function TaskTable() {
+  const tasks = await getTasks();
+
   return (
     <Card className="animate-rise overflow-hidden">
       <CardHeader>

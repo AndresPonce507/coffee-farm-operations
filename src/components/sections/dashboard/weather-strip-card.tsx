@@ -1,7 +1,7 @@
 import { Cloud, CloudFog, CloudRain, Droplet, Sun } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { weather } from "@/lib/data/weather";
+import { getWeather } from "@/lib/db/weather";
 import type { WeatherDay } from "@/lib/types";
 
 /**
@@ -38,7 +38,9 @@ const CONDITION_LABEL: Record<WeatherIcon, string> = {
   fog: "Fog",
 };
 
-export function WeatherStripCard() {
+export async function WeatherStripCard() {
+  const weather = await getWeather();
+
   return (
     <Card className="animate-rise overflow-hidden">
       <CardHeader>

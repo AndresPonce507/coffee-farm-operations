@@ -1,4 +1,4 @@
-import { batches } from "@/lib/data/processing";
+import { getBatches } from "@/lib/db/processing";
 import { Badge } from "@/components/ui/badge";
 import type { BadgeTone } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -128,15 +128,23 @@ const SHOW_MOISTURE: Record<BatchStage, boolean> = {
  * The single lot furthest along the pipeline — the hero of the board. It earns the
  * one specular sheen sweep in this file (the lot closest to export-ready green).
  */
-const HERO_BATCH_ID = batches.reduce<ProcessingBatch | null>(
-  (lead, b) => (lead === null || b.progressPct > lead.progressPct ? b : lead),
-  null,
-)?.id;
+function heroBatchId(batches: ProcessingBatch[]): string | undefined {
+  return batches.reduce<ProcessingBatch | null>(
+    (lead, b) => (lead === null || b.progressPct > lead.progressPct ? b : lead),
+    null,
+  )?.id;
+}
 
-function BatchTile({ batch }: { batch: ProcessingBatch }) {
+function BatchTile({
+  batch,
+  heroId,
+}: {
+  batch: ProcessingBatch;
+  heroId: string | undefined;
+}) {
   const accent = STAGE_ACCENT[batch.stage];
   const showMoisture = SHOW_MOISTURE[batch.stage];
-  const isHero = batch.id === HERO_BATCH_ID;
+  const isHero = batch.id === heroId;
 
   return (
     <article
@@ -193,7 +201,15 @@ function BatchTile({ batch }: { batch: ProcessingBatch }) {
   );
 }
 
-function StageColumn({ stage }: { stage: BatchStage }) {
+function StageColumn({
+  stage,
+  batches,
+  heroId,
+}: {
+  stage: BatchStage;
+  batches: ProcessingBatch[];
+  heroId: string | undefined;
+}) {
   const accent = STAGE_ACCENT[stage];
   const items = batches.filter((b) => b.stage === stage);
 
@@ -226,7 +242,7 @@ function StageColumn({ stage }: { stage: BatchStage }) {
 
       <div className="cv-auto flex flex-col gap-2.5">
         {items.length > 0 ? (
-          items.map((b) => <BatchTile key={b.id} batch={b} />)
+          items.map((b) => <BatchTile key={b.id} batch={b} heroId={heroId} />)
         ) : (
           <p className="rounded-xl border border-dashed border-white/60 bg-white/40 px-3 py-6 text-center text-xs text-muted-fg">
             No lots in this stage
@@ -237,7 +253,10 @@ function StageColumn({ stage }: { stage: BatchStage }) {
   );
 }
 
-export function StagePipeline() {
+export async function StagePipeline() {
+  const batches = await getBatches();
+  const heroId = heroBatchId(batches);
+
   return (
     <div className="animate-rise">
       <div className="mb-4 flex items-baseline justify-between gap-3">
@@ -257,7 +276,12 @@ export function StagePipeline() {
       <div className="-mx-1 overflow-x-auto px-1 pb-2">
         <div className="stagger perf-contain flex min-w-max gap-3">
           {STAGE_ORDER.map((stage) => (
-            <StageColumn key={stage} stage={stage} />
+            <StageColumn
+              key={stage}
+              stage={stage}
+              batches={batches}
+              heroId={heroId}
+            />
           ))}
         </div>
       </div>

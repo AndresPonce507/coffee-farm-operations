@@ -1,7 +1,7 @@
 import { Coffee, FlaskConical, ListChecks, Users, Truck } from "lucide-react";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { activity } from "@/lib/data/activity";
+import { getActivity } from "@/lib/db/activity";
 import type { ActivityItem } from "@/lib/types";
 import { relativeDay } from "@/lib/utils";
 
@@ -33,7 +33,9 @@ const KIND_CHIP: Record<ActivityKind, string> = {
  * ActivityFeedCard — the dashboard's "what just happened" stream.
  * A vertical, divider-separated timeline of the most recent farm events.
  */
-export function ActivityFeedCard() {
+export async function ActivityFeedCard() {
+  const activity = await getActivity();
+
   return (
     <Card className="animate-rise">
       <CardHeader>

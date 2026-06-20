@@ -9,14 +9,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { workers, CREWS } from "@/lib/data/workers";
+import { getWorkers } from "@/lib/db/workers";
+import { CREWS } from "@/lib/data/workers";
 
 /**
  * CrewBoard — at-a-glance roster of every field crew with today's presence.
  * Static, server-rendered: one sub-panel per crew, an overlapping avatar wrap,
  * and a present/total readout so the farm office can see who's on the ground.
  */
-export function CrewBoard() {
+export async function CrewBoard() {
+  const workers = await getWorkers();
+
   const crews = CREWS.map((crew) => {
     const members = workers.filter((w) => w.crew === crew);
     const present = members.filter((w) => w.attendance === "present").length;

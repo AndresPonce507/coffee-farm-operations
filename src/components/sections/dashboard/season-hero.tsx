@@ -2,7 +2,7 @@ import { Coffee, Sprout, Wallet } from "lucide-react";
 
 import { StatRing } from "@/components/charts/stat-ring";
 import { BRAND } from "@/lib/brand";
-import { SEASON } from "@/lib/data/trends";
+import { getSeason } from "@/lib/db/trends";
 import { kg, num, usd } from "@/lib/utils";
 
 /** A single light stat shown inline on the forest band. */
@@ -45,7 +45,9 @@ function HeroStat({
  * story, and surfaces today's cherry intake alongside a ring tracking progress
  * toward the full-season goal. Pure presentation; safe as a server component.
  */
-export function SeasonHero() {
+export async function SeasonHero() {
+  const SEASON = await getSeason();
+
   const seasonPct = (SEASON.harvestedKg / SEASON.targetKg) * 100;
   const remainingKg = Math.max(0, SEASON.targetKg - SEASON.harvestedKg);
 

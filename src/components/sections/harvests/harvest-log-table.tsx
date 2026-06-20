@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/data-table";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
-import { harvests } from "@/lib/data/harvests";
+import { getHarvests } from "@/lib/db/harvests";
 import { kg, num, longDate, shortDate } from "@/lib/utils";
 
 /** How many of the most-recent picking records to surface in the log. */
@@ -25,7 +25,8 @@ function ripenessTone(pct: number): BadgeTone {
  * harvest records sorted by date descending, each row carrying its lot code,
  * source plot, picker, weight, ripeness quality, and average Brix.
  */
-export function HarvestLogTable() {
+export async function HarvestLogTable() {
+  const harvests = await getHarvests();
   const rows = [...harvests]
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, ROW_LIMIT);

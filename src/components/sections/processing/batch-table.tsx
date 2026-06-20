@@ -1,5 +1,5 @@
 import type { BatchStage } from "@/lib/types";
-import { batches } from "@/lib/data/processing";
+import { getBatches } from "@/lib/db/processing";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import {
@@ -51,7 +51,9 @@ const STAGE_LABEL: Record<BatchStage, string> = {
   green: "Green",
 };
 
-export function BatchTable() {
+export async function BatchTable() {
+  const batches = await getBatches();
+
   return (
     <Card className="animate-rise overflow-hidden">
       <CardHeader>

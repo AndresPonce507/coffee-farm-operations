@@ -3,7 +3,7 @@ import { Scissors, Sprout, Bug, Wind, Trees, Droplets, Mountain } from "lucide-r
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import type { BadgeTone } from "@/components/ui/badge";
-import { tasks } from "@/lib/data/tasks";
+import { getTasks } from "@/lib/db/tasks";
 import type { FarmTask, Priority, TaskCategory, TaskStatus } from "@/lib/types";
 import { cn, relativeDay } from "@/lib/utils";
 
@@ -99,7 +99,9 @@ function TaskTile({ task }: { task: FarmTask }) {
 }
 
 /* ---- Kanban board: the centerpiece of the tasks page ---- */
-export function TaskBoard() {
+export async function TaskBoard() {
+  const tasks = await getTasks();
+
   return (
     <section className="animate-rise cv-auto" aria-label="Task board by status">
       <div className="perf-contain grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">

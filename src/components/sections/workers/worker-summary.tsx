@@ -2,7 +2,7 @@ import { Users, UserCheck, DollarSign, Layers } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Tile } from "@/components/ui/tile";
-import { workers } from "@/lib/data/workers";
+import { getWorkers } from "@/lib/db/workers";
 import { num, usd } from "@/lib/utils";
 
 /**
@@ -10,7 +10,9 @@ import { num, usd } from "@/lib/utils";
  * Server component: derives headcount, today's attendance, payroll, and crew
  * count directly from the canonical workers list. No hooks or handlers.
  */
-export function WorkerSummary() {
+export async function WorkerSummary() {
+  const workers = await getWorkers();
+
   const present = workers.filter((w) => w.attendance === "present");
 
   const headcount = workers.length;

@@ -1,0 +1,204 @@
+/**
+ * Generates supabase/seed.sql from the canonical in-repo mock data
+ * (src/lib/data/*) so the seed can NEVER drift from the source of truth.
+ *
+ *   npx tsx scripts/gen-seed.ts   (or: npm run db:gen-seed)
+ *
+ * Re-runnable: the emitted SQL truncates every table before re-inserting, so it
+ * can reseed a live database as well as bootstrap a fresh one.
+ */
+import { writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { plots, LOT_CODES } from "@/lib/data/plots";
+import { workers } from "@/lib/data/workers";
+import { harvests } from "@/lib/data/harvests";
+import { batches } from "@/lib/data/processing";
+import { tasks } from "@/lib/data/tasks";
+import { activity } from "@/lib/data/activity";
+import {
+  dailyCherries,
+  weeklyHarvest,
+  varietyShares,
+  SEASON,
+} from "@/lib/data/trends";
+import { weather } from "@/lib/data/weather";
+
+const here = dirname(fileURLToPath(import.meta.url));
+const OUT = resolve(here, "../supabase/seed.sql");
+
+// harvests/tasks carry worker NAMES; the DB stores worker ids.
+const workerIdByName = new Map(workers.map((w) => [w.name, w.id]));
+const idForWorker = (name: string): string => {
+  const id = workerIdByName.get(name);
+  if (!id) throw new Error(`gen-seed: no worker id for "${name}"`);
+  return id;
+};
+
+type Val = string | number | boolean | null;
+const lit = (v: Val): string => {
+  if (v === null) return "null";
+  if (typeof v === "number") return String(v);
+  if (typeof v === "boolean") return v ? "true" : "false";
+  return `'${v.replace(/'/g, "''")}'`;
+};
+
+/** Build a multi-row INSERT for one table. */
+const insert = (
+  table: string,
+  cols: string[],
+  rows: Val[][],
+): string => {
+  const colList = cols.join(", ");
+  const values = rows
+    .map((r) => `  (${r.map(lit).join(", ")})`)
+    .join(",\n");
+  return `insert into ${table} (${colList}) values\n${values};\n`;
+};
+
+const blocks: string[] = [];
+
+blocks.push(
+  insert(
+    "plots",
+    [
+      "id", "ord", "name", "block", "variety", "area_ha", "altitude_masl", "trees",
+      "shade_pct", "established_year", "status", "last_inspected",
+      "expected_yield_kg", "harvested_kg",
+    ],
+    plots.map((p, i) => [
+      p.id, i, p.name, p.block, p.variety, p.areaHa, p.altitudeMasl, p.trees,
+      p.shadePct, p.establishedYear, p.status, p.lastInspected,
+      p.expectedYieldKg, p.harvestedKg,
+    ]),
+  ),
+);
+
+blocks.push(
+  insert(
+    "workers",
+    [
+      "id", "name", "role", "daily_rate_usd", "attendance", "started_year",
+      "phone", "today_kg", "crew",
+    ],
+    workers.map((w) => [
+      w.id, w.name, w.role, w.dailyRateUsd, w.attendance, w.startedYear,
+      w.phone, w.todayKg, w.crew,
+    ]),
+  ),
+);
+
+blocks.push(
+  insert("lots", ["code"], LOT_CODES.map((code) => [code])),
+);
+
+blocks.push(
+  insert(
+    "harvests",
+    [
+      "id", "date", "plot_id", "worker_id", "cherries_kg", "ripeness_pct",
+      "brix_avg", "lot_code",
+    ],
+    harvests.map((h) => [
+      h.id, h.date, h.plotId, idForWorker(h.picker), h.cherriesKg,
+      h.ripenessPct, h.brixAvg, h.lotCode,
+    ]),
+  ),
+);
+
+blocks.push(
+  insert(
+    "processing_batches",
+    [
+      "id", "lot_code", "variety", "method", "stage", "started_date",
+      "cherries_kg", "current_kg", "moisture_pct", "patio", "progress_pct",
+    ],
+    batches.map((b) => [
+      b.id, b.lotCode, b.variety, b.method, b.stage, b.startedDate,
+      b.cherriesKg, b.currentKg, b.moisturePct, b.patio, b.progressPct,
+    ]),
+  ),
+);
+
+blocks.push(
+  insert(
+    "tasks",
+    ["id", "title", "category", "plot_id", "worker_id", "due", "status", "priority"],
+    tasks.map((t) => [
+      t.id, t.title, t.category, t.plotId, idForWorker(t.assignee), t.due,
+      t.status, t.priority,
+    ]),
+  ),
+);
+
+blocks.push(
+  insert(
+    "activity",
+    ["id", "at", "kind", "text"],
+    activity.map((a) => [a.id, a.at, a.kind, a.text]),
+  ),
+);
+
+blocks.push(
+  insert(
+    "weather",
+    ["sort_order", "day", "hi", "lo", "rain_pct", "icon"],
+    weather.map((w, i) => [i, w.day, w.hi, w.lo, w.rainPct, w.icon]),
+  ),
+);
+
+blocks.push(
+  insert(
+    "daily_cherries",
+    ["sort_order", "label", "value"],
+    dailyCherries.map((d, i) => [i, d.label, d.value]),
+  ),
+);
+
+blocks.push(
+  insert(
+    "weekly_harvest",
+    ["sort_order", "label", "value"],
+    weeklyHarvest.map((d, i) => [i, d.label, d.value]),
+  ),
+);
+
+blocks.push(
+  insert(
+    "variety_shares",
+    ["variety", "kg"],
+    varietyShares.map((v) => [v.variety, v.kg]),
+  ),
+);
+
+blocks.push(
+  insert(
+    "season_summary",
+    ["id", "target_kg", "harvested_kg", "today_kg", "ytd_revenue_usd"],
+    [[1, SEASON.targetKg, SEASON.harvestedKg, SEASON.todayKg, SEASON.ytdRevenueUsd]],
+  ),
+);
+
+const TABLES = [
+  "plots", "workers", "lots", "harvests", "processing_batches", "tasks",
+  "activity", "weather", "daily_cherries", "weekly_harvest", "variety_shares",
+  "season_summary",
+];
+
+const header = `-- GENERATED by scripts/gen-seed.ts from src/lib/data/* — do not edit by hand.
+-- Re-run: npm run db:gen-seed
+-- Faithful snapshot of the in-repo mock data (today = 2026-06-20).
+
+begin;
+
+truncate table ${TABLES.join(", ")} restart identity cascade;
+
+`;
+
+writeFileSync(OUT, header + blocks.join("\n") + "\ncommit;\n", "utf8");
+console.log(
+  `seed.sql written: ${plots.length} plots, ${workers.length} workers, ` +
+    `${LOT_CODES.length} lots, ${harvests.length} harvests, ${batches.length} batches, ` +
+    `${tasks.length} tasks, ${activity.length} activity, ${weather.length} weather rows.`,
+);

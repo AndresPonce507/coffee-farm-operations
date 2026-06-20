@@ -1,9 +1,9 @@
 import { Coffee, Users, FlaskConical, Target } from "lucide-react";
 
 import { StatCard } from "@/components/ui/stat-card";
-import { workers } from "@/lib/data/workers";
-import { batches } from "@/lib/data/processing";
-import { dailyCherries, SEASON } from "@/lib/data/trends";
+import { getWorkers } from "@/lib/db/workers";
+import { getBatches } from "@/lib/db/processing";
+import { getDailyCherries, getSeason } from "@/lib/db/trends";
 import { kg, num, pct } from "@/lib/utils";
 
 /**
@@ -11,7 +11,12 @@ import { kg, num, pct } from "@/lib/utils";
  * dashboard. Pure server component: every figure is derived from the canonical
  * mock data at module scope, so it renders identically on server and client.
  */
-export function KpiRow() {
+export async function KpiRow() {
+  const workers = await getWorkers();
+  const batches = await getBatches();
+  const dailyCherries = await getDailyCherries();
+  const SEASON = await getSeason();
+
   // 1) Today's cherries — last 7 days of daily intake drive the sparkline,
   //    and the start→end change drives the delta chip.
   const last7 = dailyCherries.slice(-7);

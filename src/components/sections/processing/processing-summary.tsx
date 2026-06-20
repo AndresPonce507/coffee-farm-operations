@@ -2,7 +2,7 @@ import { FlaskConical, Sun, Droplets, PackageCheck } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Tile } from "@/components/ui/tile";
-import { batches } from "@/lib/data/processing";
+import { getBatches } from "@/lib/db/processing";
 import { kg, num, pct } from "@/lib/utils";
 
 /**
@@ -10,7 +10,9 @@ import { kg, num, pct } from "@/lib/utils";
  * drying → green pipeline. Derived live from `batches` so it always reflects
  * whatever is currently moving through the mill.
  */
-export function ProcessingSummary() {
+export async function ProcessingSummary() {
+  const batches = await getBatches();
+
   const dryingBatches = batches.filter((b) => b.stage === "drying");
 
   // Active = anything still in the pipeline (not yet finished as green coffee).

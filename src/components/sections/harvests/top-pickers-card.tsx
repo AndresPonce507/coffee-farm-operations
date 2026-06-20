@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import { ProgressBar } from "@/components/ui/progress-bar";
-import { pickers } from "@/lib/data/workers";
+import { getPickers } from "@/lib/db/workers";
 import { kg } from "@/lib/utils";
 
 /**
@@ -9,7 +9,8 @@ import { kg } from "@/lib/utils";
  * Server component (no hooks/handlers). Active pickers sorted desc and capped at six;
  * pickers with nothing today (absent / rest-day) are listed faded beneath.
  */
-export function TopPickersCard() {
+export async function TopPickersCard() {
+  const pickers = await getPickers();
   const active = pickers
     .filter((p) => p.todayKg > 0)
     .sort((a, b) => b.todayKg - a.todayKg)

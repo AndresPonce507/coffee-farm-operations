@@ -2,27 +2,29 @@ import { ListChecks, Loader, TriangleAlert, Flag } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Tile } from "@/components/ui/tile";
-import { tasks } from "@/lib/data/tasks";
+import { getTasks } from "@/lib/db/tasks";
 import { num } from "@/lib/utils";
 
 /** "Today" for the mock data — tasks due before this are overdue. */
 const TODAY = "2026-06-20";
-
-const openCount = tasks.filter((t) => t.status === "todo").length;
-const inProgressCount = tasks.filter((t) => t.status === "in-progress").length;
-const overdueCount = tasks.filter(
-  (t) => t.due < TODAY && t.status !== "done"
-).length;
-const highPriorityCount = tasks.filter(
-  (t) => t.priority === "high" && t.status !== "done"
-).length;
 
 /**
  * TaskSummary — at-a-glance counts for the agronomy task board.
  * A divided grid of borderless Tiles inside a single Card surface.
  * Server component (pure render over static mock data).
  */
-export function TaskSummary() {
+export async function TaskSummary() {
+  const tasks = await getTasks();
+
+  const openCount = tasks.filter((t) => t.status === "todo").length;
+  const inProgressCount = tasks.filter((t) => t.status === "in-progress").length;
+  const overdueCount = tasks.filter(
+    (t) => t.due < TODAY && t.status !== "done"
+  ).length;
+  const highPriorityCount = tasks.filter(
+    (t) => t.priority === "high" && t.status !== "done"
+  ).length;
+
   return (
     <Card className="animate-rise overflow-hidden glass-hover glass-sheen">
       <div className="stagger perf-contain grid grid-cols-1 divide-y divide-white/60 sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4">

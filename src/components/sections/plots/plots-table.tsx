@@ -1,5 +1,5 @@
 import type { CoffeeVariety, Plot, PlotStatus } from "@/lib/types";
-import { plots } from "@/lib/data/plots";
+import { getPlots } from "@/lib/db/plots";
 import {
   Card,
   CardContent,
@@ -49,7 +49,8 @@ function harvestedShare(plot: Plot): number {
  * PlotsTable — full detail table of every growing lot on the farm.
  * Server component (static display, no hooks/handlers).
  */
-export function PlotsTable() {
+export async function PlotsTable() {
+  const plots = await getPlots();
   return (
     <Card className="animate-rise cv-auto overflow-hidden">
       <CardHeader>

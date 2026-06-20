@@ -5,7 +5,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Donut } from "@/components/charts/donut";
-import { workers } from "@/lib/data/workers";
+import { getWorkers } from "@/lib/db/workers";
 import { PALETTE } from "@/lib/brand";
 import type { AttendanceStatus } from "@/lib/types";
 
@@ -30,7 +30,9 @@ const SLICES: readonly AttendanceSlice[] = [
   { status: "absent", label: "Absent", color: PALETTE.cherry },
 ] as const;
 
-export function AttendanceCard() {
+export async function AttendanceCard() {
+  const workers = await getWorkers();
+
   // Tally each attendance status across the full workforce.
   const counts: Record<AttendanceStatus, number> = {
     present: 0,

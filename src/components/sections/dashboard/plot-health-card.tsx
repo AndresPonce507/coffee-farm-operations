@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
-import { plots } from "@/lib/data/plots";
+import { getPlots } from "@/lib/db/plots";
 import type { Plot, PlotStatus } from "@/lib/types";
 import { pct, kg } from "@/lib/utils";
 
@@ -74,7 +74,9 @@ function PlotHealthRow({ plot }: { plot: Plot }) {
  * PlotHealthCard — dashboard at-a-glance of growing lots, problems first.
  * Lists ~6 plots with status badge and a harvested/expected progress bar.
  */
-export function PlotHealthCard() {
+export async function PlotHealthCard() {
+  const plots = await getPlots();
+
   const ranked = [...plots]
     .sort((a, b) => {
       const byStatus = STATUS_ORDER[a.status] - STATUS_ORDER[b.status];

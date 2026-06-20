@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Donut, type DonutDatum } from "@/components/charts/donut";
 import { CHART_COLORS } from "@/lib/brand";
-import { varietyShares } from "@/lib/data/trends";
+import { getVarietyShares } from "@/lib/db/trends";
 import { kg, num } from "@/lib/utils";
 
 /**
@@ -19,7 +19,9 @@ function shortKg(value: number): string {
   return num(value);
 }
 
-export function VarietyMixCard() {
+export async function VarietyMixCard() {
+  const varietyShares = await getVarietyShares();
+
   const totalKg = varietyShares.reduce((sum, v) => sum + v.kg, 0);
 
   // Assign a brand chart color per variety by index, wrapping if the data ever

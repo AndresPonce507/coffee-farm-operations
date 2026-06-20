@@ -1,6 +1,6 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { batches } from "@/lib/data/processing";
+import { getBatches } from "@/lib/db/processing";
 import { kg } from "@/lib/utils";
 import type { BatchStage } from "@/lib/types";
 import {
@@ -39,7 +39,9 @@ const STAGE_RANK: Record<BatchStage, number> = {
  * ProcessingPipelineCard — wet-mill → drying → green stepper for the dashboard.
  * Server component (pure render over mock data; no hooks or handlers).
  */
-export function ProcessingPipelineCard() {
+export async function ProcessingPipelineCard() {
+  const batches = await getBatches();
+
   // Aggregate batch count + total weight at each stage.
   const byStage = STAGES.map((stage) => {
     const inStage = batches.filter((b) => b.stage === stage.key);

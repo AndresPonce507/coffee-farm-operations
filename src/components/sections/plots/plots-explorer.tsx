@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { MapPin, Sprout } from "lucide-react";
 
-import { plots } from "@/lib/data/plots";
 import type { CoffeeVariety, Plot, PlotStatus } from "@/lib/types";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,7 +41,7 @@ function harvestPct(plot: Plot): number {
 }
 
 /** Unique varieties, preserving the order they appear in the data. */
-function uniqueVarieties(): CoffeeVariety[] {
+function uniqueVarieties(plots: Plot[]): CoffeeVariety[] {
   const seen = new Set<CoffeeVariety>();
   const out: CoffeeVariety[] = [];
   for (const plot of plots) {
@@ -201,11 +200,11 @@ function PlotRow({ plot }: PlotRowProps) {
 
 /* ----------------------------- Main ----------------------------- */
 
-export function PlotsExplorer() {
+export function PlotsExplorer({ plots }: { plots: Plot[] }) {
   const [activeVariety, setActiveVariety] = useState<VarietyFilter>("All");
   const [view, setView] = useState<ViewMode>("grid");
 
-  const varieties = uniqueVarieties();
+  const varieties = uniqueVarieties(plots);
   const filtered =
     activeVariety === "All"
       ? plots

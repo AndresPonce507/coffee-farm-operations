@@ -2,12 +2,14 @@ import { PageHeader } from "@/components/ui/page-header";
 import { PlotsSummary } from "@/components/sections/plots/plots-summary";
 import { PlotsExplorer } from "@/components/sections/plots/plots-explorer";
 import { PlotsTable } from "@/components/sections/plots/plots-table";
+import { getPlots } from "@/lib/db/plots";
 
 /**
  * /plots — overview of every growing lot across Janson's farms in Volcán.
  * Server component: PlotsExplorer is the only client (interactive) section.
  */
-export default function PlotsPage() {
+export default async function PlotsPage() {
+  const plots = await getPlots();
   return (
     <div className="space-y-6">
       <PageHeader
@@ -15,7 +17,7 @@ export default function PlotsPage() {
         subtitle="Growing lots across Janson’s farms in Volcán, Chiriquí"
       />
       <PlotsSummary />
-      <PlotsExplorer />
+      <PlotsExplorer plots={plots} />
       <PlotsTable />
     </div>
   );

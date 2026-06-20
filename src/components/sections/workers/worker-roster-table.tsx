@@ -2,7 +2,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/data-table";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
-import { workers } from "@/lib/data/workers";
+import { getWorkers } from "@/lib/db/workers";
 import { usd } from "@/lib/utils";
 import type { AttendanceStatus } from "@/lib/types";
 
@@ -23,7 +23,9 @@ const ATTENDANCE_LABEL: Record<AttendanceStatus, string> = {
  * WorkerRosterTable — full labor roster for Janson Coffee.
  * Server component: static display only, no hooks or handlers.
  */
-export function WorkerRosterTable() {
+export async function WorkerRosterTable() {
+  const workers = await getWorkers();
+
   return (
     <Card className="animate-rise overflow-hidden">
       <CardHeader>

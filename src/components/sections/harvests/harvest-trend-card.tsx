@@ -1,6 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { BarMini } from "@/components/charts/bar-mini";
-import { harvests } from "@/lib/data/harvests";
+import { getHarvests } from "@/lib/db/harvests";
 import { kg, shortDate } from "@/lib/utils";
 
 /** Coffee brown — signature brand color for the harvest bars. */
@@ -22,7 +22,7 @@ interface DailyTotal {
  * Aggregate harvest records into per-day cherry totals, keep the most recent
  * {@link DAYS} days, and return them in chronological (oldest → newest) order.
  */
-function dailyTotals(): DailyTotal[] {
+function dailyTotals(harvests: { date: string; cherriesKg: number }[]): DailyTotal[] {
   const byDate = new Map<string, number>();
   for (const h of harvests) {
     byDate.set(h.date, (byDate.get(h.date) ?? 0) + h.cherriesKg);
@@ -38,8 +38,9 @@ function dailyTotals(): DailyTotal[] {
  * "Daily harvest (kg)" — a compact bar chart of cherries picked per day across
  * the last eight harvest days, with the farm's best day called out in the header.
  */
-export function HarvestTrendCard() {
-  const days = dailyTotals();
+export async function HarvestTrendCard() {
+  const harvests = await getHarvests();
+  const days = dailyTotals(harvests);
   const best = days.reduce<DailyTotal | null>(
     (top, d) => (top === null || d.value > top.value ? d : top),
     null

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendLine } from "@/components/charts/trend-line";
-import { dailyCherries } from "@/lib/data/trends";
+import { getDailyCherries } from "@/lib/db/trends";
 import { num } from "@/lib/utils";
 
 /** Forest-500 — the signature line color for daily cherry intake. */
@@ -13,7 +13,9 @@ const LINE_COLOR = "#1A6B4D";
  *
  * Server component: pure presentation, no hooks or handlers.
  */
-export function YieldTrendCard() {
+export async function YieldTrendCard() {
+  const dailyCherries = await getDailyCherries();
+
   const days = dailyCherries.length;
   const totalKg = dailyCherries.reduce((sum, point) => sum + point.value, 0);
   const avgPerDay = days > 0 ? Math.round(totalKg / days) : 0;

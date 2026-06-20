@@ -2,14 +2,15 @@ import { Mountain, Sprout, TreePine, TriangleAlert } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Tile } from "@/components/ui/tile";
-import { plots } from "@/lib/data/plots";
+import { getPlots } from "@/lib/db/plots";
 import { num } from "@/lib/utils";
 
 /**
  * PlotsSummary — a single divided strip of headline metrics computed from the
  * farm's growing lots. Borderless Tiles sit inside one Card grid.
  */
-export function PlotsSummary() {
+export async function PlotsSummary() {
+  const plots = await getPlots();
   const totalAreaHa = plots.reduce((sum, plot) => sum + plot.areaHa, 0);
   const totalTrees = plots.reduce((sum, plot) => sum + plot.trees, 0);
   const avgAltitude =

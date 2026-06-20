@@ -2,7 +2,7 @@ import { Coffee, Sprout, Droplets, FlaskConical } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { Tile } from "@/components/ui/tile";
-import { harvests } from "@/lib/data/harvests";
+import { getHarvests } from "@/lib/db/harvests";
 import { kg, num, pct } from "@/lib/utils";
 
 const TODAY = "2026-06-20";
@@ -35,7 +35,8 @@ function avg(
  * ripeness and average sugar (Brix). Pure server component; all figures are
  * computed deterministically from the {@link harvests} anchor.
  */
-export function HarvestSummary() {
+export async function HarvestSummary() {
+  const harvests = await getHarvests();
   const todayRecords = harvests.filter((h) => h.date === TODAY);
   const weekRecords = harvests.filter((h) => LAST_7_DAYS.has(h.date));
 
