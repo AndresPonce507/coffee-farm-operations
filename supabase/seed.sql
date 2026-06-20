@@ -4,7 +4,17 @@
 
 begin;
 
-truncate table plots, workers, lots, harvests, processing_batches, tasks, activity, weather, daily_cherries, weekly_harvest, variety_shares, season_summary, reserve_zones restart identity cascade;
+-- S3: `activity` is now a security_invoker VIEW over the append-only lot_event
+-- ledger (not a table), so it is no longer truncatable/insertable directly. The
+-- ledger is immutable (no DELETE), so the activity feed is re-seeded idempotently
+-- via the _seed_activity_event() command RPC below (keyed per row → re-running this
+-- seed file is a no-op for already-recorded events).
+-- S4: daily_cherries / weekly_harvest / variety_shares / season_summary are no longer
+-- tables — they were renamed aside to *_deprecated and the dashboard now reads
+-- security_invoker VIEWS that COMPUTE these aggregates from `harvests`. So they're
+-- dropped from this truncate + no longer seeded (seeding them would be dead data the
+-- views ignore). The season HEADLINE inputs live in `farm_season_config` (seeded below).
+truncate table plots, workers, lots, harvests, processing_batches, tasks, weather, reserve_zones restart identity cascade;
 
 insert into plots (id, ord, name, block, variety, area_ha, altitude_masl, trees, shade_pct, established_year, status, last_inspected, expected_yield_kg, harvested_kg, geom, centroid) values
   ('p-tizingal-alto', 0, 'Tizingal Alto', 'Block A', 'Geisha', 4.2, 1690, 14800, 55, 2014, 'healthy', '2026-06-18', 18600, 12120, '{"type":"Polygon","coordinates":[[[-82.641276,8.776908],[-82.639413,8.776908],[-82.639413,8.778761],[-82.641276,8.778761],[-82.641276,8.776908]]]}'::jsonb, '{"type":"Point","coordinates":[-82.640344,8.777835]}'::jsonb),
@@ -106,16 +116,18 @@ insert into tasks (id, title, category, plot_id, worker_id, due, status, priorit
   ('t-13', 'Hang broca alcohol-and-water traps farm-wide', 'Pest Control', null, 'w-02', '2026-06-29', 'todo', 'high'),
   ('t-14', 'Clear and grade the Block C access road', 'Weeding', 'p-paso-ancho', 'w-12', '2026-06-30', 'todo', 'low');
 
-insert into activity (id, at, kind, text) values
-  ('act-01', '2026-06-20', 'harvest', 'Talamanca delivered 84 kg cherries — Rosa Quintero, lot JC-552'),
-  ('act-02', '2026-06-20', 'harvest', 'Barú Vista delivered 64 kg cherries — Tomás Atencio, lot JC-541'),
-  ('act-03', '2026-06-20', 'labor', 'Crew Norte clocked in — 644 kg picked across 8 lots today'),
-  ('act-04', '2026-06-20', 'processing', 'Lot JC-602 Geisha started anaerobic ferment — Néstor Gómez (Patio 1)'),
-  ('act-05', '2026-06-20', 'task', 'Shade pruning started on Talamanca — Miguel Janson thinning guabo canopy'),
-  ('act-06', '2026-06-19', 'processing', 'Lot JC-552 Geisha moved to drying (Bed 7) — moisture at 13.5%'),
-  ('act-07', '2026-06-19', 'shipment', 'Green export lot JC-541 staged for shipment — Raúl Santamaría loading'),
-  ('act-08', '2026-06-19', 'harvest', 'Las Lagunas delivered 68 kg cherries — Iris Castillo, lot JC-602'),
-  ('act-09', '2026-06-19', 'task', 'Broca (berry borer) scouting underway on Paso Ancho — Janette Janson');
+-- Activity feed → lot_event projection (the `activity` view reads these back as the
+-- frozen (id, at, kind, text) shape, newest-first). Recorded via the idempotent
+-- _seed_activity_event RPC so the immutable ledger is never written twice.
+select _seed_activity_event('act-01', '2026-06-20', 'harvest',    'Talamanca delivered 84 kg cherries — Rosa Quintero, lot JC-552');
+select _seed_activity_event('act-02', '2026-06-20', 'harvest',    'Barú Vista delivered 64 kg cherries — Tomás Atencio, lot JC-541');
+select _seed_activity_event('act-03', '2026-06-20', 'labor',      'Crew Norte clocked in — 644 kg picked across 8 lots today');
+select _seed_activity_event('act-04', '2026-06-20', 'processing', 'Lot JC-602 Geisha started anaerobic ferment — Néstor Gómez (Patio 1)');
+select _seed_activity_event('act-05', '2026-06-20', 'task',       'Shade pruning started on Talamanca — Miguel Janson thinning guabo canopy');
+select _seed_activity_event('act-06', '2026-06-19', 'processing', 'Lot JC-552 Geisha moved to drying (Bed 7) — moisture at 13.5%');
+select _seed_activity_event('act-07', '2026-06-19', 'shipment',   'Green export lot JC-541 staged for shipment — Raúl Santamaría loading');
+select _seed_activity_event('act-08', '2026-06-19', 'harvest',    'Las Lagunas delivered 68 kg cherries — Iris Castillo, lot JC-602');
+select _seed_activity_event('act-09', '2026-06-19', 'task',       'Broca (berry borer) scouting underway on Paso Ancho — Janette Janson');
 
 insert into weather (sort_order, day, hi, lo, rain_pct, icon) values
   (0, 'Today', 22, 14, 65, 'rain'),
@@ -124,43 +136,40 @@ insert into weather (sort_order, day, hi, lo, rain_pct, icon) values
   (3, 'Mon', 21, 13, 80, 'rain'),
   (4, 'Tue', 20, 12, 55, 'fog');
 
-insert into daily_cherries (sort_order, label, value) values
-  (0, 'Jun 7', 382),
-  (1, 'Jun 8', 414),
-  (2, 'Jun 9', 401),
-  (3, 'Jun 10', 448),
-  (4, 'Jun 11', 472),
-  (5, 'Jun 12', 459),
-  (6, 'Jun 13', 503),
-  (7, 'Jun 14', 538),
-  (8, 'Jun 15', 521),
-  (9, 'Jun 16', 564),
-  (10, 'Jun 17', 597),
-  (11, 'Jun 18', 631),
-  (12, 'Jun 19', 688),
-  (13, 'Jun 20', 644);
-
-insert into weekly_harvest (sort_order, label, value) values
-  (0, 'Wk 1', 2040),
-  (1, 'Wk 2', 3180),
-  (2, 'Wk 3', 4260),
-  (3, 'Wk 4', 5120),
-  (4, 'Wk 5', 6340),
-  (5, 'Wk 6', 7480),
-  (6, 'Wk 7', 8620),
-  (7, 'Wk 8', 9480);
-
-insert into variety_shares (variety, kg) values
-  ('Caturra', 36700),
-  ('Catuaí', 30540),
-  ('Geisha', 26000),
-  ('Typica', 17800),
-  ('Pacamara', 11200);
-
-insert into season_summary (id, target_kg, harvested_kg, today_kg, ytd_revenue_usd) values
-  (1, 190000, 122240, 644, 486500);
+-- S4: daily_cherries / weekly_harvest / variety_shares are now computed VIEWS over
+-- `harvests` (not seeded tables). The season HEADLINE keeps only its genuine INPUTS —
+-- the target goal + modeled YTD revenue — in farm_season_config; harvested_kg/today_kg
+-- are summed by season_summary_view from harvests. (harvested_kg=122240, today_kg=644 in
+-- the old hand-authored row were derived figures, now computed live, so they're dropped.)
+insert into farm_season_config (id, target_kg, ytd_revenue_usd) values
+  (1, 190000, 486500)
+  on conflict (id) do update
+    set target_kg = excluded.target_kg, ytd_revenue_usd = excluded.ytd_revenue_usd;
 
 insert into reserve_zones (id, name, kind, geom, area_ha, notes) values
   ('rz-quetzal', 'Quetzal Cloud-Forest Reserve', 'reserve', '{"type":"Polygon","coordinates":[[[-82.682228,8.829605],[-82.669372,8.829605],[-82.669372,8.842395],[-82.682228,8.842395],[-82.682228,8.829605]]]}'::jsonb, 200.9, 'PLACEHOLDER outline pending the real traced reserve boundary (human/family gate).');
+
+-- ── S5: GreenLot inventory + ATP seed (the first money-shaped slice) ──────────
+-- A milled SOURCE node with declared mass, then a green lot materialized FROM it
+-- via the only writer (materialize_green_lot — links a conserved 'process' edge),
+-- with a reservation + a shipment seeded so /inventory shows a live ATP meter
+-- (committed vs available). The source/green codes use the JC-NNN format
+-- (lots_code_format CHECK is digits-only). materialize_green_lot is idempotent on
+-- the green code, so re-seeding never double-routes mass.
+insert into lots (code, stage, variety, origin_kg, current_kg, is_single_origin, minted_at) values
+  ('JC-700', 'milled', 'Geisha',   620, 620, true, '2026-06-15T08:00:00Z'),
+  ('JC-710', 'milled', 'Caturra',  900, 900, true, '2026-06-16T08:00:00Z')
+  on conflict (code) do nothing;
+
+select materialize_green_lot('JC-700', 'JC-701', 600, 89.5, 'Volcán Warehouse · Bin A3', '2026-06-18T10:00:00Z');
+select materialize_green_lot('JC-710', 'JC-711', 880, 86.0, 'Volcán Warehouse · Bin B1', '2026-06-19T10:00:00Z');
+
+-- Claims against the green lots (append-only). JC-701: 600 kg green, 250 committed
+-- (150 reserved + 100 shipped) → ATP 350. JC-711: 880 kg green, 300 reserved → ATP 580.
+insert into lot_reservations (green_lot_code, buyer, kg) values
+  ('JC-701', 'Onyx Coffee Lab',        150),
+  ('JC-711', 'Sey Coffee (Brooklyn)',  300);
+insert into lot_shipments (green_lot_code, destination, kg) values
+  ('JC-701', 'Port of Balboa → Oakland', 100);
 
 commit;

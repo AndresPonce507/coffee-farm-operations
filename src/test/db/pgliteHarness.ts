@@ -23,6 +23,12 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
+// S3: the event-spine migration needs pgcrypto (`digest()` for the hash chain) and
+// pg_trgm (lot-code search). PGlite ships these as opt-in WASM contrib modules that
+// must be loaded into the constructor AND `create extension`-ed in SQL — loading here
+// is what makes the real S3 migration replayable in-process (AD-9).
+import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
+import { pg_trgm } from "@electric-sql/pglite/contrib/pg_trgm";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // src/test/db -> repo root
@@ -56,7 +62,10 @@ export interface Harness {
  *                   the security delta, not a hardcoded result.
  */
 export async function freshDb(opts: { only?: string[] } = {}): Promise<Harness> {
-  const db = new PGlite();
+  // Load the contrib extensions S3 depends on. The migration still `create
+  // extension`s them in SQL (matching prod); loading them here only makes the WASM
+  // symbols resolvable so that `create extension` succeeds in PGlite.
+  const db = new PGlite({ extensions: { pgcrypto, pg_trgm } });
 
   // AD-9: the migrations GRANT/REVOKE against these roles, so they must pre-exist.
   // `nologin` mirrors Supabase (these are REST-API roles, not login roles).

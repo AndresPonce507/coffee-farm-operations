@@ -6,6 +6,19 @@ import { cn } from "@/lib/utils";
 type Accent = "forest" | "honey" | "cherry" | "coffee" | "sky";
 type DeltaDir = "up" | "down" | "flat";
 
+/** Honest provenance for a derived figure (AD-4): real row count + recency. */
+export interface StatProvenance {
+  /** How many source rows the figure was derived from. */
+  derivedFromCount: number;
+  /**
+   * A real recency stamp rendered verbatim after the count — the most-recent
+   * source-row date (e.g. "2026-06-20"), NOT a synthetic clock time. Rendered
+   * as-is, so it must already read honestly (a date is a date). Empty string
+   * omits the stamp (e.g. no source rows yet).
+   */
+  asOf: string;
+}
+
 export interface StatCardProps {
   label: string;
   value: string;
@@ -14,6 +27,19 @@ export interface StatCardProps {
   hint?: string;
   accent?: Accent;
   spark?: number[];
+  /**
+   * Honest provenance (AD-4). When set, the card renders an always-visible
+   * "derived from N harvests · <asOf date>" line — never hover-only (the
+   * farm-office iPad has no hover). Omit for figures that aren't derived from rows.
+   */
+  provenance?: StatProvenance;
+  /**
+   * Mark a figure as modeled/estimated (e.g. YTD revenue not yet sourced from
+   * real sales). Modeled figures render with lighter ink and an explicit
+   * "est." prefix IN the readout itself (AD-4). Measured figures (default)
+   * render at full visual weight.
+   */
+  modeled?: boolean;
 }
 
 /** Icon-chip background + text color, by accent. Full literal classes (no interpolation). */
@@ -56,6 +82,8 @@ export function StatCard({
   hint,
   accent = "forest",
   spark,
+  provenance,
+  modeled = false,
 }: StatCardProps) {
   const deltaMeta = delta ? DELTA_META[delta.dir] : null;
 
@@ -78,7 +106,22 @@ export function StatCard({
         ) : null}
       </div>
 
-      <div className="mt-3 font-display text-3xl font-bold text-ink">
+      {/*
+        Measured (default): full-weight ink. Modeled: lighter ink + an explicit
+        "est." prefix IN the readout (AD-4) — the estimate is legible without
+        hover (the farm iPad has none).
+      */}
+      <div
+        className={cn(
+          "mt-3 font-display text-3xl font-bold",
+          modeled ? "text-muted-fg" : "text-ink"
+        )}
+      >
+        {modeled ? (
+          <span className="mr-1 text-base font-semibold lowercase tracking-tight text-muted-fg">
+            est.
+          </span>
+        ) : null}
         {value}
       </div>
 
@@ -99,7 +142,30 @@ export function StatCard({
       {spark && spark.length > 1 ? (
         <Sparkline values={spark} className={cn("mt-3", SPARK_COLOR[accent])} />
       ) : null}
+
+      {provenance ? <ProvenanceLine {...provenance} /> : null}
     </Card>
+  );
+}
+
+/**
+ * Honest-provenance readout (AD-4): "derived from N harvests · <asOf date>".
+ * Always visible (never hover-only) on an opaque inner chip so the muted text
+ * keeps AA contrast over the glass surface.
+ */
+function ProvenanceLine({ derivedFromCount, asOf }: StatProvenance) {
+  const harvests = derivedFromCount === 1 ? "harvest" : "harvests";
+  return (
+    <p className="mt-3 inline-flex max-w-full items-center gap-1.5 rounded-lg bg-paper/80 px-2 py-1 text-[0.6875rem] font-medium leading-none text-muted-fg ring-1 ring-black/5">
+      <span
+        aria-hidden="true"
+        className={cn("h-1.5 w-1.5 shrink-0 rounded-full", "bg-forest-500")}
+      />
+      <span className="truncate">
+        derived from {derivedFromCount.toLocaleString()} {harvests}
+        {asOf ? <> · {asOf}</> : null}
+      </span>
+    </p>
   );
 }
 

@@ -82,3 +82,36 @@ export const getSeason = cache(async (): Promise<Season> => {
   if (error) throw new Error(`getSeason: ${error.message}`);
   return mapSeason(data as SeasonRow);
 });
+
+/* ---------------- Honest provenance (AD-4) ---------------- */
+/**
+ * Provenance for the season headline figures: how many harvest rows the metrics
+ * were derived from, and the most-recent harvest date the views see.
+ *
+ * AD-4 requires a REAL row count + a REAL recency timestamp ("derived from N
+ * harvests · HH:MM"), or the affordance is worse than nothing. Both come
+ * straight from the `harvests` base table — the same rows the `*_view`
+ * aggregates compute over — so the readout cannot drift from the figures.
+ *
+ * `asOf` is the max harvest date (empty string when no harvests exist yet).
+ */
+export interface SeasonProvenance {
+  derivedFromCount: number;
+  asOf: string;
+}
+
+export const getSeasonProvenance = cache(
+  async (): Promise<SeasonProvenance> => {
+    const { data, error, count } = await (await getSupabase())
+      .from("harvests")
+      .select("date", { count: "exact" })
+      .order("date", { ascending: false })
+      .limit(1);
+    if (error) throw new Error(`getSeasonProvenance: ${error.message}`);
+    const rows = (data ?? []) as Array<{ date: string }>;
+    return {
+      derivedFromCount: count ?? 0,
+      asOf: rows[0]?.date ?? "",
+    };
+  },
+);

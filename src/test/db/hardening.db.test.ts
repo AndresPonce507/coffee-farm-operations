@@ -9,9 +9,9 @@
 //       assert all eight here so the whole revoke is locked. authenticated KEEPS
 //       its SELECT on every view (the app reads as authenticated).
 //   (2) CHECK-coverage holes write_foundation + plot_geometry never filled:
-//       season_summary magnitudes, the plot-geometry columns (slope/aspect/
-//       elevation ordering — currently all NULL, so these are forward guards),
-//       plots.harvested_kg and workers.today_kg.
+//       the season inputs (on farm_season_config via 20260621101000), the
+//       plot-geometry columns (slope/aspect/elevation ordering — currently all
+//       NULL, so these are forward guards), plots.harvested_kg and workers.today_kg.
 //
 // Replays the REAL migrations in PGlite (no DB round-trip), so the invariants are
 // proven against the exact SQL that ships.
@@ -67,22 +67,25 @@ describe("DB hardening — CHECK coverage holes filled", () => {
     await h.close();
   });
 
-  it("rejects a negative season_summary magnitude", async () => {
+  // Season inputs now live in farm_season_config (S4 renamed season_summary aside);
+  // the non-negative guards moved there in 20260621101000. The migration seeds the
+  // id=1 singleton, so we probe the constraints by UPDATE-ing it.
+  it("rejects a negative farm_season_config target", async () => {
     await expect(
-      h.query(
-        `insert into season_summary (id, target_kg, harvested_kg, today_kg, ytd_revenue_usd)
-         values (1, -1, 0, 0, 0)`,
-      ),
+      h.query(`update farm_season_config set target_kg = -1 where id = 1`),
     ).rejects.toThrow(/check|nonneg/i);
   });
 
-  it("accepts a valid season_summary row (constraints aren't over-tight)", async () => {
-    // Independent of the reject test above: clear the id=1 singleton first so this
-    // assertion can never be masked by leftover state.
-    await h.query(`delete from season_summary`);
+  it("rejects a negative farm_season_config revenue", async () => {
+    await expect(
+      h.query(`update farm_season_config set ytd_revenue_usd = -1 where id = 1`),
+    ).rejects.toThrow(/check|nonneg/i);
+  });
+
+  it("accepts a valid farm_season_config update (constraints aren't over-tight)", async () => {
     const rows = await h.query(
-      `insert into season_summary (id, target_kg, harvested_kg, today_kg, ytd_revenue_usd)
-       values (1, 190000, 2484, 644, 486500) returning id`,
+      `update farm_season_config set target_kg = 200000, ytd_revenue_usd = 500000
+       where id = 1 returning id`,
     );
     expect(rows).toHaveLength(1);
   });
