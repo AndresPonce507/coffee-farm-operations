@@ -2,9 +2,10 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 // Topbar is now an async Server Component that reads the session + renders the
-// client SignOutButton (which uses next/navigation). Mock both.
+// client SignOutButton + MobileNav (both use next/navigation). Mock both.
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/plots",
 }));
 vi.mock("@/lib/supabase/server", () => ({
   getSupabase: vi.fn(async () => ({
