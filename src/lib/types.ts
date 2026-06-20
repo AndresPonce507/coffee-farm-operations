@@ -137,3 +137,128 @@ export interface WeatherDay {
   rainPct: number;
   icon: "sun" | "cloud" | "rain" | "fog";
 }
+
+/* ====================================================================== */
+/* S3 — Event spine (ADR-001 event-log-as-SSOT, ADR-002 command RPCs,     */
+/* ADR-003 derived views). camelCase domain mirror of the migration       */
+/* 20260621092000_event_log_units_lot_graph.sql.                          */
+/* ====================================================================== */
+
+/* ---------------- Units (UCUM-lite; what convert_qty operates over) ---------------- */
+/** A row of the `units` table — declares a unit's dimension and factor to its base unit. */
+export type UnitDimension =
+  | "mass"
+  | "volume"
+  | "area"
+  | "temperature"
+  | "ratio"
+  | "dimensionless";
+
+export interface Unit {
+  code: string; // UCUM code: 'kg','g','[brix]','%','m2','ha','Cel','L','count'
+  dimension: UnitDimension;
+  toBase: number; // multiply a value in `code` by this to get the dimension's base unit
+  display: string; // human label, e.g. "°C", "°Bx"
+}
+
+/* ---------------- Lot event (append-only, hash-chained ledger) ---------------- */
+/** One row of the `lot_event` ledger (ADR-001). `payload` is the event's JSONB body.
+ *  `chainVerified` is a projection-side annotation (from verify_chain), not a stored column. */
+export interface LotEvent {
+  id: ID; // event_uid (uuid)
+  streamKey: string; // stream_key — one stream per lot (or 'activity')
+  kind: string; // event kind, e.g. 'cherry_intake', 'stage_advance'
+  occurredAt: ISODate | string; // occurred_at — field wall-clock (timestamptz)
+  recordedAt: ISODate | string; // recorded_at — server accept clock (timestamptz)
+  deviceId: string; // device_id
+  deviceSeq: number; // device_seq — monotonic per device (D4 replay safety)
+  payload: Record<string, unknown>; // JSONB event body
+  chainVerified?: boolean; // derived: verify_chain(stream) result, when computed
+}
+
+/* ---------------- Lot graph (genealogy DAG over promoted `lots`) ---------------- */
+/** A node in the lot genealogy — the graph-node columns added to `lots` in S3. */
+export interface LotNode {
+  code: string; // lots.code — JC-NNN traceability code
+  stage: BatchStage | string; // lots.stage
+  variety: CoffeeVariety; // lots.variety
+  originKg: number; // lots.origin_kg — mass at mint
+  currentKg: number; // lots.current_kg — mass at current stage
+  isSingleOrigin: boolean; // lots.is_single_origin
+  mintedAt: ISODate | string; // lots.minted_at (timestamptz)
+}
+
+/** A directed edge in the genealogy DAG — mass on EVERY edge (D6). `kind` mirrors
+ *  the lot_edges check constraint (split|merge|blend|process). */
+export interface LotEdge {
+  parentCode: string; // lot_edges.parent_code
+  childCode: string; // lot_edges.child_code
+  kind: "split" | "merge" | "blend" | "process";
+  kg: number; // lot_edges.kg — mass routed across this edge (> 0)
+}
+
+/** A genealogy subgraph — the {nodes, edges} a lineage view returns. */
+export interface LotGenealogy {
+  nodes: LotNode[];
+  edges: LotEdge[];
+}
+
+/* ====================================================================== */
+/* S5 — GreenLot inventory + ATP (the first money-shaped slice). camelCase  */
+/* domain mirror of migration 20260621093500_green_inventory.sql:          */
+/* the `green_lots` detail row, the append-only claim rows                  */
+/* (`lot_reservations`/`lot_shipments`), and the DERIVED `green_lots_atp`    */
+/* available-to-promise view (atp = current_kg − Σreserved − Σshipped).     */
+/* ====================================================================== */
+
+/** The four SCA grade bands the `green_lots.sca_grade` generated column emits
+ *  (D-INV-3) — derived from the cupping score, never disagreeing with it. */
+export type ScaGrade =
+  | "Presidential"
+  | "Specialty"
+  | "Premium"
+  | "Below Specialty";
+
+/** A GreenLot detail row — the green-specific columns keyed by the lot node code.
+ *  The same `lots` node at stage='green' carries the graph identity (LotNode); this
+ *  is the grade-input + location detail. `scaGrade` is the GENERATED band (D-INV-3),
+ *  never stored independently of the cupping score it bands. */
+export interface GreenLot {
+  lotCode: string; // green_lots.lot_code — the PK the EUDR slice (S8) references un-FK'd
+  cuppingScore: number; // green_lots.cupping_score — the measured grade input (0–100)
+  scaGrade: ScaGrade | string; // green_lots.sca_grade — GENERATED band from cuppingScore
+  location: string; // green_lots.location — warehouse / storage location
+  gradedAt: ISODate | string; // green_lots.graded_at (timestamptz)
+}
+
+/** An append-only reservation claim against a green lot's ATP (`lot_reservations`).
+ *  Reservations are never updated/deleted by clients — they accrete; ATP is derived. */
+export interface Reservation {
+  id: number; // lot_reservations.id (identity)
+  greenLotCode: string; // lot_reservations.green_lot_code → green_lots.lot_code
+  buyer: string; // lot_reservations.buyer
+  kg: number; // lot_reservations.kg — committed mass (> 0)
+  createdAt: ISODate | string; // lot_reservations.created_at (timestamptz, server-stamped)
+}
+
+/** An append-only shipment claim against a green lot's ATP (`lot_shipments`). */
+export interface Shipment {
+  id: number; // lot_shipments.id (identity)
+  greenLotCode: string; // lot_shipments.green_lot_code → green_lots.lot_code
+  destination: string; // lot_shipments.destination
+  kg: number; // lot_shipments.kg — committed mass (> 0)
+  createdAt: ISODate | string; // lot_shipments.created_at (timestamptz, server-stamped)
+}
+
+/** A row of the DERIVED `green_lots_atp` view — available-to-promise per green lot.
+ *  `atp = currentKg − reservedKg − shippedKg` is computed in the view (never a
+ *  stored counter), so it can never disagree with the claim rows it sums. */
+export interface GreenLotAtp {
+  greenLotCode: string; // green_lots_atp.green_lot_code
+  scaGrade: ScaGrade | string; // green_lots_atp.sca_grade
+  location: string; // green_lots_atp.location
+  currentKg: number; // green_lots_atp.current_kg — the green node's sellable mass
+  reservedKg: number; // green_lots_atp.reserved_kg — Σ reservations
+  shippedKg: number; // green_lots_atp.shipped_kg — Σ shipments
+  atp: number; // green_lots_atp.atp — currentKg − reservedKg − shippedKg
+}

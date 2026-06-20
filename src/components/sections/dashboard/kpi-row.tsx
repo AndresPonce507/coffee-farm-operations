@@ -3,7 +3,7 @@ import { Coffee, Users, FlaskConical, Target } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { getWorkers } from "@/lib/db/workers";
 import { getBatches } from "@/lib/db/processing";
-import { getDailyCherries, getSeason } from "@/lib/db/trends";
+import { getDailyCherries, getSeason, getSeasonProvenance } from "@/lib/db/trends";
 import { kg, num, pct } from "@/lib/utils";
 
 /**
@@ -12,11 +12,12 @@ import { kg, num, pct } from "@/lib/utils";
  * mock data at module scope, so it renders identically on server and client.
  */
 export async function KpiRow() {
-  const [workers, batches, dailyCherries, SEASON] = await Promise.all([
+  const [workers, batches, dailyCherries, SEASON, provenance] = await Promise.all([
     getWorkers(),
     getBatches(),
     getDailyCherries(),
     getSeason(),
+    getSeasonProvenance(),
   ]);
 
   // 1) Today's cherries — last 7 days of daily intake drive the sparkline,
@@ -77,6 +78,10 @@ export async function KpiRow() {
         icon={Target}
         accent="cherry"
         hint={`${pct(seasonPct)} of target`}
+        // AD-4: this harvest figure is DERIVED by summing the logged harvests, so
+        // it carries an honest, always-visible "derived from N harvests · <date>"
+        // readout — a real row count + the most-recent harvest date (not a chip).
+        provenance={provenance}
       />
     </section>
   );
