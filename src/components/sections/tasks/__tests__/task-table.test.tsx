@@ -36,11 +36,21 @@ vi.mock("@/lib/db/tasks", () => ({
   getTasks: vi.fn(async (): Promise<FarmTask[]> => TASKS),
 }));
 
+// TaskRowActions imports the Server Actions; stub them so the table renders
+// without pulling in next/cache or the Supabase client.
+vi.mock("@/lib/actions/tasks", () => ({
+  createTask: vi.fn(),
+  updateTask: vi.fn(),
+  deleteTask: vi.fn(),
+  setTaskStatus: vi.fn(),
+  IDLE: { status: "idle" },
+}));
+
 import { TaskTable } from "@/components/sections/tasks/task-table";
 
 describe("TaskTable (smoke)", () => {
   it("renders the table header and a row per task without throwing", async () => {
-    const ui = await TaskTable();
+    const ui = await TaskTable({ plots: [], workers: [] });
     render(ui);
 
     // Card title + the count-driven description (4 tasks in fixtures).

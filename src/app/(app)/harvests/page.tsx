@@ -1,25 +1,36 @@
 import { PageHeader } from "@/components/ui/page-header";
+import { getPlots } from "@/lib/db/plots";
+import { getPickers } from "@/lib/db/workers";
+import { getLots } from "@/lib/db/lots";
 import { HarvestSummary } from "@/components/sections/harvests/harvest-summary";
 import { HarvestTrendCard } from "@/components/sections/harvests/harvest-trend-card";
 import { TopPickersCard } from "@/components/sections/harvests/top-pickers-card";
 import { HarvestLogTable } from "@/components/sections/harvests/harvest-log-table";
+import { AddHarvestButton } from "@/components/sections/harvests/harvest-actions";
 
 /**
  * /harvests — the daily picking ledger for the farm.
  *
- * Pure server component: composes the harvest sections (KPI summary, daily
- * trend, picker leaderboard, and the traceability log) into the shared app
- * shell provided by (app)/layout.tsx. All figures are derived deterministically
- * from the mock harvest anchor inside each section, so the page itself holds no
- * state and takes no props.
+ * Server component: fetches the plot, picker, and lot-code lists once (for the
+ * create/edit forms) and composes the header (with the live "Log harvest"
+ * action), the KPI summary, daily trend, picker leaderboard, and the editable
+ * traceability log.
  */
-export default function HarvestsPage() {
+export default async function HarvestsPage() {
+  const [plots, pickers, lots] = await Promise.all([
+    getPlots(),
+    getPickers(),
+    getLots(),
+  ]);
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Harvests"
         subtitle="Daily cherry intake and picker performance"
-      />
+      >
+        <AddHarvestButton plots={plots} pickers={pickers} lots={lots} />
+      </PageHeader>
 
       <HarvestSummary />
 
@@ -30,7 +41,7 @@ export default function HarvestsPage() {
         <TopPickersCard />
       </div>
 
-      <HarvestLogTable />
+      <HarvestLogTable plots={plots} pickers={pickers} lots={lots} />
     </div>
   );
 }

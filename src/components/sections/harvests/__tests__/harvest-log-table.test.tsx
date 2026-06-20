@@ -21,11 +21,20 @@ vi.mock("@/lib/db/harvests", () => ({
   ),
 }));
 
+// HarvestRowActions imports the Server Actions; stub them so the table renders
+// without pulling in next/cache or the Supabase client.
+vi.mock("@/lib/actions/harvests", () => ({
+  createHarvest: vi.fn(),
+  updateHarvest: vi.fn(),
+  deleteHarvest: vi.fn(),
+  IDLE: { status: "idle" },
+}));
+
 import { HarvestLogTable } from "@/components/sections/harvests/harvest-log-table";
 
 describe("HarvestLogTable (smoke)", () => {
   it("renders the traceability ledger from the data layer without throwing", async () => {
-    const ui = await HarvestLogTable();
+    const ui = await HarvestLogTable({ plots: [], pickers: [], lots: [] });
     render(ui);
 
     expect(screen.getByText("Harvest log")).toBeInTheDocument();

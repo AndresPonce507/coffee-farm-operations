@@ -5,6 +5,7 @@ import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { getWorkers } from "@/lib/db/workers";
 import { usd } from "@/lib/utils";
 import type { AttendanceStatus } from "@/lib/types";
+import { WorkerRowActions } from "./worker-actions";
 
 /** Attendance status → badge tone + human label (static maps; no class interpolation). */
 const ATTENDANCE_TONE: Record<AttendanceStatus, BadgeTone> = {
@@ -47,7 +48,8 @@ export async function WorkerRosterTable() {
               <TH className="text-right">Since</TH>
               <TH className="text-right">Day rate</TH>
               <TH className="text-right">Today</TH>
-              <TH className="pr-5 text-right">Attendance</TH>
+              <TH className="text-right">Attendance</TH>
+              <TH className="pr-5 text-right">Actions</TH>
             </TR>
           </THead>
           <TBody>
@@ -76,10 +78,13 @@ export async function WorkerRosterTable() {
                     </span>
                   )}
                 </TD>
-                <TD className="pr-5 text-right">
+                <TD className="text-right">
                   <Badge tone={ATTENDANCE_TONE[worker.attendance]} dot>
                     {ATTENDANCE_LABEL[worker.attendance]}
                   </Badge>
+                </TD>
+                <TD className="pr-5 text-right">
+                  <WorkerRowActions worker={worker} />
                 </TD>
               </TR>
             ))}

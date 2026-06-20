@@ -23,6 +23,15 @@ vi.mock("@/lib/db/plots", () => ({
   ),
 }));
 
+// PlotRowActions imports the Server Actions; stub them so the table renders
+// without pulling in next/cache or the Supabase client.
+vi.mock("@/lib/actions/plots", () => ({
+  createPlot: vi.fn(),
+  updatePlot: vi.fn(),
+  deletePlot: vi.fn(),
+  IDLE: { status: "idle" },
+}));
+
 import { PlotsTable } from "@/components/sections/plots/plots-table";
 
 describe("PlotsTable (smoke)", () => {

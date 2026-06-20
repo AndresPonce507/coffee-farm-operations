@@ -1,10 +1,13 @@
 import type {
   FarmTask,
+  Plot,
   Priority,
   TaskCategory,
   TaskStatus,
+  Worker,
 } from "@/lib/types";
 import { getTasks } from "@/lib/db/tasks";
+import { TaskRowActions } from "./task-actions";
 import {
   Card,
   CardContent,
@@ -73,7 +76,13 @@ function isOverdue(task: FarmTask): boolean {
  * Server component (no hooks/handlers): renders every task with its category,
  * plot, assignee, due date, priority and status as on-brand badges.
  */
-export async function TaskTable() {
+export async function TaskTable({
+  plots,
+  workers,
+}: {
+  plots: Plot[];
+  workers: Worker[];
+}) {
   const tasks = await getTasks();
 
   return (
@@ -98,6 +107,7 @@ export async function TaskTable() {
               <TH>Due</TH>
               <TH>Priority</TH>
               <TH>Status</TH>
+              <TH className="text-right">Actions</TH>
             </TR>
           </THead>
           <TBody>
@@ -157,6 +167,10 @@ export async function TaskTable() {
                     <Badge tone={STATUS_TONE[task.status]} dot>
                       {STATUS_LABEL[task.status]}
                     </Badge>
+                  </TD>
+
+                  <TD className="text-right">
+                    <TaskRowActions task={task} plots={plots} workers={workers} />
                   </TD>
                 </TR>
               );

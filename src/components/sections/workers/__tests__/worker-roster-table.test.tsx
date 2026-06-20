@@ -28,6 +28,15 @@ vi.mock("@/lib/db/workers", () => ({
   ),
 }));
 
+// WorkerRowActions imports the Server Actions; stub them so the table renders
+// without pulling in next/cache or the Supabase client.
+vi.mock("@/lib/actions/workers", () => ({
+  createWorker: vi.fn(),
+  updateWorker: vi.fn(),
+  deleteWorker: vi.fn(),
+  IDLE: { status: "idle" },
+}));
+
 import { WorkerRosterTable } from "@/components/sections/workers/worker-roster-table";
 
 describe("WorkerRosterTable (smoke)", () => {

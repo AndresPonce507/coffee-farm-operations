@@ -31,7 +31,7 @@ export function mapWorker(r: WorkerRow): Worker {
 
 export const getWorkers = cache(async (): Promise<Worker[]> => {
   const { data, error } = await (await getSupabase())
-    .from("workers")
+    .from("workers_view")
     .select("*")
     .order("id");
   if (error) throw new Error(`getWorkers: ${error.message}`);
@@ -41,7 +41,7 @@ export const getWorkers = cache(async (): Promise<Worker[]> => {
 /** Pickers only — mirrors the `pickers` export from the mock data. */
 export const getPickers = cache(async (): Promise<Worker[]> => {
   const { data, error } = await (await getSupabase())
-    .from("workers")
+    .from("workers_view")
     .select("*")
     .eq("role", "Picker")
     .order("id");

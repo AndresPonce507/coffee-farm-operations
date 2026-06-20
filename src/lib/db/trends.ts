@@ -15,18 +15,18 @@ export function mapTrend(r: TrendRow): TrendPoint {
 
 export const getDailyCherries = cache(async (): Promise<TrendPoint[]> => {
   const { data, error } = await (await getSupabase())
-    .from("daily_cherries")
+    .from("daily_cherries_view")
     .select("*")
-    .order("sort_order");
+    .order("on_date");
   if (error) throw new Error(`getDailyCherries: ${error.message}`);
   return (data as TrendRow[]).map(mapTrend);
 });
 
 export const getWeeklyHarvest = cache(async (): Promise<TrendPoint[]> => {
   const { data, error } = await (await getSupabase())
-    .from("weekly_harvest")
+    .from("weekly_harvest_view")
     .select("*")
-    .order("sort_order");
+    .order("week_start");
   if (error) throw new Error(`getWeeklyHarvest: ${error.message}`);
   return (data as TrendRow[]).map(mapTrend);
 });
@@ -42,7 +42,7 @@ export function mapVarietyShare(r: VarietyShareRow): VarietyShare {
 
 export const getVarietyShares = cache(async (): Promise<VarietyShare[]> => {
   const { data, error } = await (await getSupabase())
-    .from("variety_shares")
+    .from("variety_shares_view")
     .select("*")
     .order("kg", { ascending: false });
   if (error) throw new Error(`getVarietyShares: ${error.message}`);
@@ -75,7 +75,7 @@ export function mapSeason(r: SeasonRow): Season {
 
 export const getSeason = cache(async (): Promise<Season> => {
   const { data, error } = await (await getSupabase())
-    .from("season_summary")
+    .from("season_summary_view")
     .select("*")
     .eq("id", 1)
     .single();

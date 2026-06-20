@@ -1,5 +1,6 @@
 import type { BatchStage } from "@/lib/types";
 import { getBatches } from "@/lib/db/processing";
+import { BatchRowActions } from "./batch-actions";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import {
@@ -51,7 +52,7 @@ const STAGE_LABEL: Record<BatchStage, string> = {
   green: "Green",
 };
 
-export async function BatchTable() {
+export async function BatchTable({ lots }: { lots: string[] }) {
   const batches = await getBatches();
 
   return (
@@ -80,6 +81,7 @@ export async function BatchTable() {
               <TH className="text-right">Current</TH>
               <TH className="text-right">Moisture</TH>
               <TH className="min-w-[10rem]">Progress</TH>
+              <TH className="text-right">Actions</TH>
             </TR>
           </THead>
 
@@ -135,6 +137,10 @@ export async function BatchTable() {
                       {pct(batch.progressPct)}
                     </span>
                   </div>
+                </TD>
+
+                <TD className="text-right">
+                  <BatchRowActions batch={batch} lots={lots} />
                 </TD>
               </TR>
             ))}
