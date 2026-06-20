@@ -41,7 +41,7 @@ export function mapPlot(r: PlotRow): Plot {
 }
 
 export const getPlots = cache(async (): Promise<Plot[]> => {
-  const { data, error } = await getSupabase()
+  const { data, error } = await (await getSupabase())
     .from("plots")
     .select("*")
     .order("ord");
@@ -51,7 +51,7 @@ export const getPlots = cache(async (): Promise<Plot[]> => {
 
 export const getPlotById = cache(
   async (id: string): Promise<Plot | undefined> => {
-    const { data, error } = await getSupabase()
+    const { data, error } = await (await getSupabase())
       .from("plots")
       .select("*")
       .eq("id", id)

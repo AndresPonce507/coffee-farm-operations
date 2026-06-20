@@ -32,7 +32,7 @@ export function mapTask(r: TaskRow): FarmTask {
 
 export const getTasks = cache(async (): Promise<FarmTask[]> => {
   // Overdue-first then by due date — matches the curated source order.
-  const { data, error } = await getSupabase()
+  const { data, error } = await (await getSupabase())
     .from("tasks_view")
     .select("*")
     .order("due")

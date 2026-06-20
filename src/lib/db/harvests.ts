@@ -31,7 +31,7 @@ export function mapHarvest(r: HarvestRow): Harvest {
 }
 
 export const getHarvests = cache(async (): Promise<Harvest[]> => {
-  const { data, error } = await getSupabase()
+  const { data, error } = await (await getSupabase())
     .from("harvests_view")
     .select("*")
     .order("date", { ascending: false })

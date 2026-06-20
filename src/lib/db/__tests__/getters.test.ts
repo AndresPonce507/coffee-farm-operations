@@ -54,7 +54,10 @@ vi.mock("@/lib/supabase/server", () => ({
 
 /** Point the mocked client at a builder resolving to these rows / error. */
 function stubQuery<T>(data: T, error: { message: string } | null = null) {
-  getSupabaseMock.mockReturnValue(makeBuilder({ data, error }));
+  const builder = makeBuilder({ data, error });
+  // getSupabase() is async and resolves to a (non-thenable) client whose
+  // .from() returns the chainable, thenable query-builder.
+  getSupabaseMock.mockReturnValue({ from: () => builder });
 }
 
 beforeEach(() => {

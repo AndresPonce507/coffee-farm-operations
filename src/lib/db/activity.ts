@@ -15,7 +15,7 @@ export function mapActivity(r: ActivityRow): ActivityItem {
 }
 
 export const getActivity = cache(async (): Promise<ActivityItem[]> => {
-  const { data, error } = await getSupabase()
+  const { data, error } = await (await getSupabase())
     .from("activity")
     .select("*")
     .order("at", { ascending: false })

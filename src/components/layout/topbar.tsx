@@ -1,12 +1,19 @@
 import { Search, Bell, CloudSun } from "lucide-react";
-import { initials } from "@/lib/utils";
+
+import { getSupabase } from "@/lib/supabase/server";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 
 /**
- * Slim top bar: contextual search, season chip, weather glance, notifications, user.
- * Server component — purely presentational.
+ * Slim top bar: contextual search, season chip, weather glance, notifications,
+ * the signed-in owner, and sign-out. Async Server Component — reads the session.
  */
-export function Topbar() {
-  const user = "Miguel Janson";
+export async function Topbar() {
+  const {
+    data: { user },
+  } = await (await getSupabase()).auth.getUser();
+  const email = user?.email ?? "";
+  const avatar = (email[0] ?? "?").toUpperCase();
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-white/50 bg-white/55 px-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.7)] backdrop-blur-xl backdrop-saturate-150 md:px-8">
       <div className="relative hidden max-w-sm flex-1 items-center md:flex">
@@ -39,13 +46,17 @@ export function Topbar() {
 
         <div className="flex items-center gap-2.5 rounded-xl border border-line bg-card py-1 pl-1 pr-3">
           <div className="grid h-7 w-7 place-items-center rounded-lg bg-forest text-[11px] font-semibold text-paper">
-            {initials(user)}
+            {avatar}
           </div>
           <div className="hidden leading-tight sm:block">
-            <div className="text-xs font-semibold text-ink">{user}</div>
-            <div className="text-[10px] text-muted-fg">Farm Manager</div>
+            <div className="max-w-[160px] truncate text-xs font-semibold text-ink">
+              {email}
+            </div>
+            <div className="text-[10px] text-muted-fg">Owner</div>
           </div>
         </div>
+
+        <SignOutButton />
       </div>
     </header>
   );

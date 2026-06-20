@@ -40,7 +40,7 @@ export function mapBatch(r: BatchRow): ProcessingBatch {
 
 export const getBatches = cache(async (): Promise<ProcessingBatch[]> => {
   // Pipeline order: earliest stage first, newest within a stage — matches the source.
-  const { data, error } = await getSupabase()
+  const { data, error } = await (await getSupabase())
     .from("processing_batches")
     .select("*")
     .order("progress_pct", { ascending: true })

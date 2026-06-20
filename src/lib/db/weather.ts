@@ -23,7 +23,7 @@ export function mapWeather(r: WeatherRow): WeatherDay {
 }
 
 export const getWeather = cache(async (): Promise<WeatherDay[]> => {
-  const { data, error } = await getSupabase()
+  const { data, error } = await (await getSupabase())
     .from("weather")
     .select("*")
     .order("sort_order");
