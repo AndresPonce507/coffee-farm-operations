@@ -3,7 +3,7 @@ import { Coffee, Sprout, Wallet } from "lucide-react";
 import { StatRing } from "@/components/charts/stat-ring";
 import { BRAND } from "@/lib/brand";
 import { getSeason } from "@/lib/db/trends";
-import { kg, num, usd } from "@/lib/utils";
+import { cn, kg, num, usd } from "@/lib/utils";
 
 /** A single light stat shown inline on the forest band. */
 function HeroStat({
@@ -11,11 +11,19 @@ function HeroStat({
   value,
   sub,
   icon: Icon,
+  modeled = false,
 }: {
   label: string;
   value: string;
   sub: string;
   icon: React.ComponentType<{ className?: string }>;
+  /**
+   * AD-4: a modeled/estimated figure (e.g. revenue not yet sourced from real
+   * sales) renders with lighter ink + an explicit "est." prefix IN the readout
+   * itself — never relying on the label alone, never hover-only. Measured
+   * figures (default) render at full paper-white weight.
+   */
+  modeled?: boolean;
 }) {
   return (
     <div className="flex items-start gap-3">
@@ -29,7 +37,20 @@ function HeroStat({
         <p className="text-[11px] font-medium uppercase tracking-wide text-paper/60">
           {label}
         </p>
-        <p className="font-display text-xl font-bold leading-tight text-paper">
+        <p
+          data-modeled={modeled ? "true" : undefined}
+          className={cn(
+            "font-display text-xl font-bold leading-tight",
+            // Modeled figures sit at lighter ink so they read as estimates next
+            // to the full-weight measured tiles (AD-4).
+            modeled ? "text-paper/60" : "text-paper"
+          )}
+        >
+          {modeled ? (
+            <span className="mr-1 text-sm font-semibold lowercase tracking-tight text-paper/55">
+              est.
+            </span>
+          ) : null}
           {value}
         </p>
         <p className="truncate text-xs text-paper/55">{sub}</p>
@@ -119,10 +140,11 @@ export async function SeasonHero() {
               icon={Sprout}
             />
             <HeroStat
-              label="Est. revenue"
+              label="Revenue"
               value={usd(SEASON.ytdRevenueUsd)}
               sub="Season to date"
               icon={Wallet}
+              modeled
             />
             <HeroStat
               label="Season target"

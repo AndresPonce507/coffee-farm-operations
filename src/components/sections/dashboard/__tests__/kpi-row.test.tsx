@@ -58,6 +58,10 @@ vi.mock("@/lib/db/trends", () => ({
     todayKg: 1240,
     ytdRevenueUsd: 185000,
   })),
+  getSeasonProvenance: vi.fn(async () => ({
+    derivedFromCount: 47,
+    asOf: "2026-06-20",
+  })),
 }));
 
 import { KpiRow } from "@/components/sections/dashboard/kpi-row";
@@ -88,6 +92,18 @@ describe("KpiRow (smoke)", () => {
     expect(screen.getByText("of 2 pickers")).toBeInTheDocument();
     // Season to date = harvestedKg = 60,000 kg.
     expect(screen.getByText("60,000 kg")).toBeInTheDocument();
+  });
+
+  it("renders the AD-4 honest-provenance readout on the derived season figure", async () => {
+    const ui = await KpiRow();
+    render(ui);
+
+    // AD-4: the derived harvest figure carries a REAL row count + recency stamp
+    // ("derived from N harvests · <asOf>"), always visible (no hover). The text
+    // is split across nodes, so match the count fragment and the stamp.
+    expect(screen.getByText(/derived from/i)).toBeInTheDocument();
+    expect(screen.getByText(/47 harvests/)).toBeInTheDocument();
+    expect(screen.getByText(/2026-06-20/)).toBeInTheDocument();
   });
 
   it("shows a DOWN delta when the 7-day cherry trend is falling", async () => {
