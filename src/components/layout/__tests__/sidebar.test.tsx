@@ -54,4 +54,12 @@ describe("Sidebar", () => {
       "/crew",
     );
   });
+
+  it("surfaces the P2-S3 Ferment route in the nav", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /Ferment/ })).toHaveAttribute(
+      "href",
+      "/ferment",
+    );
+  });
 });
