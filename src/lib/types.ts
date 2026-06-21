@@ -566,3 +566,47 @@ export interface PasadaPlan {
   reason: string | null; // why this (re)plan exists, e.g. 'rain front'
   firedTaskId: string | null; // the tasks-board row this plan fired
 }
+
+/* ====================================================================== */
+/* P2-S5 — Morning crew dispatch (ripeness-aware bilingual shareable card)  */
+/* ====================================================================== */
+
+/** The outbound lifecycle of a dispatch run. 'superseded' rows are history. */
+export type DispatchStatus = "draft" | "sent" | "acknowledged" | "superseded";
+
+/** The delivery channel a dispatch card was shared through. The default $0 path is
+ *  'web-share' (the device's native share sheet into WhatsApp, manually);
+ *  'whatsapp-cloud' is a DORMANT, flagged paid drop-in. */
+export type DispatchChannel = "web-share" | "copy-link" | "whatsapp-cloud" | "sms";
+
+/** One plot line of a dispatch card — a `v_dispatch_card_plots` row mapped. The
+ *  ripeness/readiness are SNAPSHOTTED at plan time (the card is reproducible). */
+export interface DispatchPlot {
+  id: number; // dispatch_assignment.id
+  dispatchRunId: number; // dispatch_run.id
+  plotId: string; // plots.id
+  plotName: string; // plots.name
+  variety: CoffeeVariety; // plots.variety
+  altitudeMasl: number; // staggers the card down the gradient
+  taskKind: string; // e.g. 'picking'
+  targetKg: number | null; // optional per-plot target, null when none set
+  ripenessTarget: RipenessTarget; // the ripeness band this plot targets
+  readiness: number; // DERIVED readiness in [0,1] at plan time
+  ord: number; // pasada/readiness display order
+}
+
+/** A renderable morning dispatch card — a `v_dispatch_card` row mapped, plus its
+ *  plot lines. "Crew Norte → plots X, Y ripe today" — owner-initiated outbound. */
+export interface DispatchCard {
+  id: number; // dispatch_run.id
+  crewId: string; // crews.id
+  crewName: string; // crews.name
+  dispatchDate: string; // the morning this dispatch is for
+  season: string; // e.g. '2026'
+  status: DispatchStatus; // draft | sent | acknowledged
+  sentChannel: DispatchChannel | null; // the channel it was shared through, if sent
+  readinessThreshold: number; // the readiness cut-off the plots were chosen by
+  idempotencyKey: string | null; // the exactly-once anchor
+  plotCount: number; // how many plots the card lists
+  plots: DispatchPlot[]; // the per-plot lines, in pasada/readiness order
+}
