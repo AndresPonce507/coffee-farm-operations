@@ -20,6 +20,8 @@ import {
   Award,
   CalendarRange,
   Send,
+  Satellite,
+  Bug,
 } from "lucide-react";
 import { JansonLogo } from "./logo";
 import { BRAND } from "@/lib/brand";
@@ -38,6 +40,8 @@ export const NAV = [
   { href: "/drying", label: "Drying", icon: Wind },
   { href: "/inventory", label: "Inventory", icon: Boxes },
   { href: "/qc", label: "QC", icon: Award },
+  { href: "/satellite", label: "Satellite", icon: Satellite },
+  { href: "/scouting", label: "Scouting", icon: Bug },
   { href: "/costing", label: "Costing", icon: Coins },
   { href: "/eudr", label: "EUDR", icon: ShieldCheck },
   { href: "/workers", label: "Workers", icon: Users },

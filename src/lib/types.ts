@@ -610,3 +610,69 @@ export interface DispatchCard {
   plotCount: number; // how many plots the card lists
   plots: DispatchPlot[]; // the per-plot lines, in pasada/readiness order
 }
+
+/* ====================================================================== */
+/* ── P2-S12 — Satellite NDVI/SAR fusion + IPM scouting + spray log ──────────── */
+/* ====================================================================== */
+
+/** Honest fused-vegetation confidence — surfaced, NEVER hidden (the differentiator).
+ *  'high'   : a recent, low-cloud optical (Sentinel-2) read.
+ *  'medium' : optical cloudy/stale, carried by cloud-penetrating SAR (Sentinel-1).
+ *  'low'    : no trustworthy signal — an honest "we can't see clearly right now". */
+export type VegetationConfidence = "high" | "medium" | "low";
+
+/** A plot's fused vegetation read — a v_plot_vegetation row. Optical NDVI/NDRE fused
+ *  with SAR backscatter; the `confidence` + `basis` make the cloud honest. */
+export interface PlotVegetation {
+  plotId: string; // plots.id
+  plotName: string; // plots.name
+  variety: CoffeeVariety; // plots.variety
+  altitudeMasl: number; // plots.altitude_masl
+  value: number | null; // the fused index value, null when no trustworthy signal
+  indexKind: string | null; // 'ndvi' | 'ndre' | 'sar-backscatter' that carried it
+  confidence: VegetationConfidence; // ALWAYS surfaced
+  basis: "optical" | "sar"; // which signal carried the read (badge copy)
+  cloudPct: number | null; // scene cloud cover at capture (null for SAR/none)
+  observedAt: string | null; // when the chosen scene was observed
+}
+
+/** A scouting observation's threshold status — a v_ipm_threshold row. The economic
+ *  -threshold engine's recommend/hold call bound to the plot + pest. */
+export interface IpmThresholdStatus {
+  plotId: string; // plots.id
+  plotName: string; // plots.name
+  pestKind: string; // 'broca' | 'roya' | …
+  incidencePct: number; // the latest observed incidence
+  threshold: number | null; // the published action threshold, null if unknown pest
+  recommend: boolean; // at-or-above threshold → recommend control
+  observedAt: string; // when the scouting read was taken
+  firedTaskId: string | null; // the control task this crossing fired, if any
+}
+
+/** A spray application's PHI/REI status — a v_plot_phi_status row. Drives the
+ *  pre-harvest-interval / re-entry-interval countdown chips and the harvest block. */
+export interface PlotPhiStatus {
+  plotId: string; // plots.id
+  plotName: string; // plots.name
+  product: string; // the applied product
+  activeIngredient: string | null;
+  appliedAt: string; // when it was applied
+  phiClearsOn: string; // pre-harvest interval clears (no pick before this)
+  reiClearsAt: string; // re-entry interval clears (no entry before this)
+  phiActive: boolean; // is a pre-harvest interval still blocking a pick?
+  reiActive: boolean; // is a re-entry interval still blocking entry?
+}
+
+/** One spray-log entry as the history view returns it — a v_spray_history row. */
+export interface SprayLogEntry {
+  id: number; // spray_application.id
+  plotId: string; // plots.id
+  plotName: string; // plots.name
+  product: string;
+  activeIngredient: string | null;
+  phiDays: number; // pre-harvest interval in days
+  reiHours: number; // re-entry interval in hours
+  appliedAt: string;
+  workerId: string; // the (certified) applicator
+  workerName: string;
+}
