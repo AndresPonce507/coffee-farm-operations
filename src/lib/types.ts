@@ -365,3 +365,52 @@ export interface LotEudrDossier {
   status: EudrStatus; // the authoritative eudr_lot_status() verdict
   originPlots: EudrOriginPlot[]; // the plots that fed this lot, each with its EUDR facts
 }
+
+/* ── P2-S8 — Ripeness-aware harvest planning & pasada scheduler ─────────────── */
+
+/** Honest confidence for a readiness prediction — surfaced, never hidden.
+ *  'high'   : a logged bloom date AND a corroborating signal (NDVI / recent ripeness).
+ *  'medium' : a bloom date but no corroborating signal.
+ *  'low'    : GDD-only, no bloom anchor — an honest "we're estimating". */
+export type ReadinessConfidence = "high" | "medium" | "low";
+
+/** The ripeness/yield band a pasada targets (drives the fired task's priority). */
+export type RipenessTarget = "low" | "medium" | "high";
+
+/** The lifecycle of a pasada (harvest-pass) plan. 'superseded' rows are history. */
+export type PasadaStatus = "planned" | "dispatched" | "picked" | "superseded";
+
+/** A plot's DERIVED harvest-readiness — a v_harvest_readiness row. Readiness is
+ *  computed from GDD progress toward the bloom→cherry requirement (nudged by NDVI
+ *  when present) and staggered by altitude; it is NEVER a hand-set flag. */
+export interface PlotReadiness {
+  plotId: string; // plots.id
+  plotName: string; // plots.name
+  variety: CoffeeVariety; // plots.variety
+  altitudeMasl: number; // drives the stagger (lower ripens first)
+  bloomDate: string | null; // logged bloom, null until recorded (an honest unknown)
+  gddAccumulated: number; // GDD since bloom (from the weather feed)
+  gddToCherry: number; // GDD required bloom→cherry (variety requirement)
+  ndviLatest: number | null; // latest NDVI [0,1], null when no satellite signal
+  recentRipenessPct: number | null; // corroborating observed ripeness, null when none
+  readiness: number; // DERIVED readiness in [0,1]
+  confidence: ReadinessConfidence; // how much to trust the prediction
+  staggerDays: number; // extra ripening days from altitude
+  predictedReadyDate: string | null; // projected pick date, null without a bloom anchor
+}
+
+/** A scheduled pasada (harvest pass) — a v_pasada_calendar row (active plans only). */
+export interface PasadaPlan {
+  id: number; // pasada_schedule.id
+  plotId: string; // plots.id
+  plotName: string; // plots.name
+  variety: CoffeeVariety; // plots.variety
+  altitudeMasl: number; // staggers the timeline down the gradient
+  season: string; // e.g. '2026'
+  pasadaNumber: number; // 1st pass, 2nd pass, …
+  predictedReadyDate: string; // the planned pick date
+  ripenessTarget: RipenessTarget; // the ripeness band this pass targets
+  status: PasadaStatus; // 'planned' | 'dispatched' | 'picked'
+  reason: string | null; // why this (re)plan exists, e.g. 'rain front'
+  firedTaskId: string | null; // the tasks-board row this plan fired
+}
