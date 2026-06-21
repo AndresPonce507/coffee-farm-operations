@@ -32,6 +32,17 @@ function refresh() {
   revalidatePath("/");
 }
 
+// Strictly-increasing `device_seq` source for the single online `device_id`
+// ("server"). Seeded from epoch-ms so it stays monotonic across restarts, and a
+// per-process counter guarantees uniqueness even for two submits inside the same
+// millisecond (REVIEW FINDING #10 / ROOT C — a fixed seq collides on the second
+// intake). The DB CHECK is the real guard; this keeps it from ever tripping.
+let seqCursor = Date.now();
+function nextDeviceSeq(): number {
+  seqCursor = Math.max(seqCursor + 1, Date.now());
+  return seqCursor;
+}
+
 /** Map the command's friendly/labelled result onto the form's action state. */
 function toState(result: CherryIntakeResult): IntakeActionState {
   if (result.ok) {
@@ -63,12 +74,23 @@ export async function recordCherryIntakeAction(
       ? raw.idempotencyKey.trim()
       : crypto.randomUUID();
 
+  // REVIEW FINDING #10 (ROOT C): a hardcoded `device_seq = 0` collides on the
+  // single online `device_id="server"` stream the moment a SECOND intake is
+  // recorded — the event spine keys events on (device_id, device_seq). Mint a
+  // unique, strictly-increasing counter per submit (`nextDeviceSeq`). A
+  // retry-safe form may pass an explicit `deviceSeq` (paired with its
+  // `idempotencyKey`) — that wins so a replay re-uses the same sequence.
+  const deviceSeq =
+    typeof raw.deviceSeq === "string" && raw.deviceSeq.trim()
+      ? Number(raw.deviceSeq.trim())
+      : nextDeviceSeq();
+
   const sb = await getSupabase();
   const result = await recordCherryIntake(sb as unknown as CherryIntakeStore, {
     ...raw,
     occurredAt,
     deviceId: "server",
-    deviceSeq: 0,
+    deviceSeq,
     idempotencyKey,
   });
 

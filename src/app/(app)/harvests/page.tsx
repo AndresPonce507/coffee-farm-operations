@@ -7,6 +7,7 @@ import { HarvestTrendCard } from "@/components/sections/harvests/harvest-trend-c
 import { TopPickersCard } from "@/components/sections/harvests/top-pickers-card";
 import { HarvestLogTable } from "@/components/sections/harvests/harvest-log-table";
 import { AddHarvestButton } from "@/components/sections/harvests/harvest-actions";
+import { RecordIntakeButton } from "@/components/sections/harvests/record-intake-button";
 
 /**
  * /harvests — the daily picking ledger for the farm.
@@ -32,6 +33,10 @@ export default async function HarvestsPage() {
         title="Harvests"
         subtitle="Daily cherry intake and picker performance"
       >
+        {/* The genesis WRITE — mints a traceable JC-NNN lot the whole spine
+            reads (COGS / EUDR / inventory) — sits as the primary action,
+            alongside the simple `harvests`-row "Log harvest" path. */}
+        <RecordIntakeButton plots={plots} pickers={pickers} />
         <AddHarvestButton plots={plots} pickers={pickers} lots={lots} />
       </PageHeader>
 

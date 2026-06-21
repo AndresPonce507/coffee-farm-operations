@@ -165,7 +165,7 @@ describe("createPlot", () => {
 
     // exactly one insert, with the snake_case mapping, ord 5, and a string id
     expect(m.insert).toHaveBeenCalledTimes(1);
-    const row = m.insert.mock.calls[0][0] as Record<string, unknown>;
+    const row = (m.insert.mock.calls as unknown[][])[0][0] as Record<string, unknown>;
     expect(row).toEqual(expect.objectContaining({ ...SNAKE_ROW, ord: 5 }));
     expect(typeof row.id).toBe("string");
     expect((row.id as string).length).toBeGreaterThan(0);
@@ -242,7 +242,7 @@ describe("updatePlot", () => {
     expect(result).toEqual({ status: "success", message: "Plot updated." });
 
     expect(m.update).toHaveBeenCalledTimes(1);
-    const row = m.update.mock.calls[0][0] as Record<string, unknown>;
+    const row = (m.update.mock.calls as unknown[][])[0][0] as Record<string, unknown>;
     expect(row).toEqual(SNAKE_ROW);
     // the update is scoped to the id (and never sends ord/id in the payload)
     expect(m.updateEq).toHaveBeenCalledWith("id", "plot-1");

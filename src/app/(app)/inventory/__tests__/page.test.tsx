@@ -21,9 +21,15 @@ vi.mock("@/lib/db/greenlots", () => ({
   getGreenLotAtp: vi.fn(async (): Promise<GreenLotAtp[]> => atp),
 }));
 
-// The reserve client island imports the Server Action; stub it.
+// The header carries the GRADE affordance, fed by the gradable-source read port.
+vi.mock("@/lib/db/gradable-lots", () => ({
+  getGradableLots: vi.fn(async (): Promise<string[]> => ["JC-564", "JC-565"]),
+}));
+
+// The reserve + grade client islands import the Server Actions; stub them.
 vi.mock("@/app/(app)/inventory/actions", () => ({
   reserveGreenLotAction: vi.fn(),
+  gradeGreenLotAction: vi.fn(),
   INVENTORY_IDLE: { status: "idle" },
 }));
 
@@ -41,5 +47,15 @@ describe("/inventory page (smoke)", () => {
     expect(screen.getAllByText("JC-552-G").length).toBeGreaterThan(0);
     // The derived ATP figure flows through to a meter readout.
     expect(screen.getAllByRole("meter").length).toBeGreaterThan(0);
+  });
+
+  it("renders the primary GRADE affordance (the wired-up green-lot writer)", async () => {
+    const ui = await InventoryPage();
+    render(ui);
+
+    // The grade front door is present and enabled (there are gradable sources).
+    const grade = screen.getByRole("button", { name: /grade green lot/i });
+    expect(grade).toBeInTheDocument();
+    expect(grade).toBeEnabled();
   });
 });

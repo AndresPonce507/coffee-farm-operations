@@ -1,6 +1,7 @@
 import type { BatchStage } from "@/lib/types";
 import { getBatches } from "@/lib/db/processing";
 import { BatchRowActions } from "./batch-actions";
+import { AdvanceStageControl } from "./advance-stage-control";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import {
@@ -140,7 +141,10 @@ export async function BatchTable({ lots }: { lots: string[] }) {
                 </TD>
 
                 <TD className="text-right">
-                  <BatchRowActions batch={batch} lots={lots} />
+                  <div className="flex items-center justify-end gap-1">
+                    <AdvanceStageControl batch={batch} />
+                    <BatchRowActions batch={batch} lots={lots} />
+                  </div>
                 </TD>
               </TR>
             ))}

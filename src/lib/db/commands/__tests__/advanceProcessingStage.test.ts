@@ -1,0 +1,221 @@
+import { describe, expect, it, vi } from "vitest";
+
+import {
+  advanceProcessingStage,
+  validateAdvanceProcessingStage,
+  type AdvanceProcessingStageStore,
+} from "@/lib/db/commands/advanceProcessingStage";
+
+/**
+ * Pure-domain command test for the PROCESS-ADVANCE write (the pipeline slice,
+ * ADR-002 — every write flows through a SECURITY DEFINER command RPC). This file
+ * does NOT touch a database: it drives the command against a *fake store* (a
+ * hand-rolled stub of the one method the command calls,
+ * `.rpc('advance_processing_stage', …)`), so it proves the friendly-validation
+ * seam and the exact snake_case argument envelope the
+ * `advance_processing_stage` RPC receives in the fast jsdom loop.
+ *
+ * The hardened RPC (migration 20260621110000) is the *real* enforcement: it
+ * validates the target is a real `batch_stage`, forbids a backward move, and
+ * forbids a mass GAIN. This test pins the friendly errors the family sees before
+ * the round-trip and that the command surfaces a CLEAN error when the RPC raises
+ * one of those CHECK violations (never a raw Postgres exception).
+ *
+ * Mirrors the established command-test idiom in gradeGreenLot.test.ts.
+ */
+
+/** Build a fake AdvanceProcessingStageStore whose `.rpc()` resolves to a fixed result. */
+function fakeStore(result: {
+  data: string | null;
+  error: { message: string; code?: string } | null;
+}): { store: AdvanceProcessingStageStore; rpc: ReturnType<typeof vi.fn> } {
+  const rpc = vi.fn(() => Promise.resolve(result));
+  return { store: { rpc } as unknown as AdvanceProcessingStageStore, rpc };
+}
+
+/** A complete, valid raw advance — the happy-path baseline each case tweaks. */
+const validRaw = (): Record<string, unknown> => ({
+  lotCode: "JC-561",
+  toStage: "drying",
+  currentKg: "420",
+  occurredAt: "2026-06-20T14:03:00.000Z",
+  deviceId: "server",
+  deviceSeq: 0,
+  idempotencyKey: "fixed-key-1",
+});
+
+// ─────────────────────────── validation seam ───────────────────────────────
+
+describe("validateAdvanceProcessingStage", () => {
+  it("accepts a complete, well-formed advance", () => {
+    const r = validateAdvanceProcessingStage(validRaw());
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.lotCode).toBe("JC-561");
+      expect(r.data.toStage).toBe("drying");
+      expect(r.data.currentKg).toBe(420);
+    }
+  });
+
+  it("rejects a missing lot code with a friendly error", () => {
+    const r = validateAdvanceProcessingStage({ ...validRaw(), lotCode: "" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.lotCode).toMatch(/lot/i);
+  });
+
+  it("rejects a target stage that is not a real batch_stage", () => {
+    const r = validateAdvanceProcessingStage({ ...validRaw(), toStage: "roasted" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.toStage).toMatch(/stage/i);
+  });
+
+  it("rejects a missing target stage", () => {
+    const r = validateAdvanceProcessingStage({ ...validRaw(), toStage: "" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.toStage).toBeDefined();
+  });
+
+  it("rejects a non-positive current weight", () => {
+    const zero = validateAdvanceProcessingStage({ ...validRaw(), currentKg: "0" });
+    expect(zero.ok).toBe(false);
+    if (!zero.ok) expect(zero.errors.currentKg).toMatch(/greater than 0/i);
+
+    const neg = validateAdvanceProcessingStage({ ...validRaw(), currentKg: "-5" });
+    expect(neg.ok).toBe(false);
+    if (!neg.ok) expect(neg.errors.currentKg).toBeDefined();
+  });
+
+  it("rejects a non-numeric current weight", () => {
+    const r = validateAdvanceProcessingStage({ ...validRaw(), currentKg: "heavy" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.currentKg).toBeDefined();
+  });
+
+  it("rejects a non-ISO occurredAt timestamp", () => {
+    const r = validateAdvanceProcessingStage({ ...validRaw(), occurredAt: "soon" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.occurredAt).toBeDefined();
+  });
+
+  it("collects multiple field errors at once", () => {
+    const r = validateAdvanceProcessingStage({
+      ...validRaw(),
+      lotCode: "",
+      currentKg: "-3",
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(Object.keys(r.errors).sort()).toEqual(["currentKg", "lotCode"]);
+    }
+  });
+});
+
+// ─────────────────────────── command behaviour ─────────────────────────────
+
+describe("advanceProcessingStage", () => {
+  it("returns a validation failure WITHOUT calling the RPC on bad input", async () => {
+    const { store, rpc } = fakeStore({ data: null, error: null });
+
+    const result = await advanceProcessingStage(store, {
+      ...validRaw(),
+      lotCode: "",
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errors?.lotCode).toBeDefined();
+    // The SQL is the real guard, but bad input must never reach it.
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("calls advance_processing_stage EXACTLY ONCE with the snake_case arg envelope", async () => {
+    const { store, rpc } = fakeStore({ data: "JC-561", error: null });
+
+    const result = await advanceProcessingStage(store, validRaw());
+
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(rpc).toHaveBeenCalledWith("advance_processing_stage", {
+      p_lot_code: "JC-561",
+      p_to_stage: "drying",
+      p_current_kg: 420,
+      p_occurred_at: "2026-06-20T14:03:00.000Z",
+      p_device_id: "server",
+      p_device_seq: 0,
+      p_idempotency_key: "fixed-key-1",
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.lotCode).toBe("JC-561");
+  });
+
+  it("surfaces a labelled error when the RPC rejects a BACKWARD move", async () => {
+    const { store } = fakeStore({
+      data: null,
+      error: {
+        message: "lot JC-561 cannot move backward (drying -> fermentation)",
+        code: "23514",
+      },
+    });
+
+    const result = await advanceProcessingStage(store, {
+      ...validRaw(),
+      toStage: "fermentation",
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toMatch(/backward/i);
+    }
+  });
+
+  it("surfaces a labelled error when the RPC rejects a mass GAIN", async () => {
+    const { store } = fakeStore({
+      data: null,
+      error: {
+        message: "lot JC-561 current_kg cannot increase (420 -> 9999)",
+        code: "23514",
+      },
+    });
+
+    const result = await advanceProcessingStage(store, {
+      ...validRaw(),
+      currentKg: "9999",
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toMatch(/increase|gain|cannot/i);
+    }
+  });
+
+  it("surfaces a labelled error for any other RPC failure", async () => {
+    const { store } = fakeStore({
+      data: null,
+      error: { message: "unknown lot JC-999", code: "23503" },
+    });
+
+    const result = await advanceProcessingStage(store, {
+      ...validRaw(),
+      lotCode: "JC-999",
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toContain("advance_processing_stage");
+    }
+  });
+
+  it("is idempotent on the idempotency key: a replay forwards the SAME key", async () => {
+    // The SQL RPC dedupes on idempotency_key (a no-op replay returns the lot
+    // code). The command's contract is to forward the same key + envelope on a
+    // retry so the DB can dedupe — we prove the envelope is identical.
+    const { store, rpc } = fakeStore({ data: "JC-561", error: null });
+    const raw = validRaw();
+
+    const first = await advanceProcessingStage(store, raw);
+    const second = await advanceProcessingStage(store, raw);
+
+    expect(first.ok && second.ok).toBe(true);
+    const firstArgs = rpc.mock.calls[0][1] as Record<string, unknown>;
+    const secondArgs = rpc.mock.calls[1][1] as Record<string, unknown>;
+    expect(firstArgs.p_idempotency_key).toBe(secondArgs.p_idempotency_key);
+  });
+});
