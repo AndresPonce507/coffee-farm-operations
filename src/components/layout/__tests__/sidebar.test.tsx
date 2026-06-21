@@ -94,4 +94,12 @@ describe("Sidebar", () => {
       "/weigh",
     );
   });
+
+  it("surfaces the P2-S5 morning dispatch route in the nav (Dispatch → /dispatch)", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /Dispatch/ })).toHaveAttribute(
+      "href",
+      "/dispatch",
+    );
+  });
 });
