@@ -10,6 +10,9 @@ import {
   Users,
   FlaskConical,
   ListChecks,
+  Boxes,
+  Coins,
+  ShieldCheck,
 } from "lucide-react";
 import { JansonLogo } from "./logo";
 import { BRAND } from "@/lib/brand";
@@ -20,8 +23,11 @@ export const NAV = [
   { href: "/plots", label: "Plots", icon: Sprout },
   { href: "/map", label: "Map", icon: Map },
   { href: "/harvests", label: "Harvests", icon: Coffee },
-  { href: "/workers", label: "Workers", icon: Users },
   { href: "/processing", label: "Processing", icon: FlaskConical },
+  { href: "/inventory", label: "Inventory", icon: Boxes },
+  { href: "/costing", label: "Costing", icon: Coins },
+  { href: "/eudr", label: "EUDR", icon: ShieldCheck },
+  { href: "/workers", label: "Workers", icon: Users },
   { href: "/tasks", label: "Tasks", icon: ListChecks },
 ] as const;
 

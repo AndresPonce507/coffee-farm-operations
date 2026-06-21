@@ -30,4 +30,20 @@ describe("Sidebar", () => {
     const mapLink = screen.getByRole("link", { name: /Map/ });
     expect(mapLink).toHaveAttribute("href", "/map");
   });
+
+  it("surfaces the S5/S7/S8 routes in the nav (Inventory, Costing, EUDR)", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /Inventory/ })).toHaveAttribute(
+      "href",
+      "/inventory",
+    );
+    expect(screen.getByRole("link", { name: /Costing/ })).toHaveAttribute(
+      "href",
+      "/costing",
+    );
+    expect(screen.getByRole("link", { name: /EUDR/ })).toHaveAttribute(
+      "href",
+      "/eudr",
+    );
+  });
 });

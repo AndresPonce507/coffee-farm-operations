@@ -1,12 +1,14 @@
-import { Search, Bell, CloudSun } from "lucide-react";
+import { Bell, CloudSun } from "lucide-react";
 
 import { getSupabase } from "@/lib/supabase/server";
 import { MobileNav } from "./mobile-nav";
+import { CommandPalette } from "./command-palette";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
 /**
- * Slim top bar: contextual search, season chip, weather glance, notifications,
- * the signed-in owner, and sign-out. Async Server Component — reads the session.
+ * Slim top bar: the ⌘K command palette, season chip, weather glance,
+ * notifications, the signed-in owner, and sign-out. Async Server Component —
+ * reads the session.
  */
 export async function Topbar() {
   const {
@@ -19,15 +21,8 @@ export async function Topbar() {
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-white/50 bg-white/55 px-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.7)] backdrop-blur-xl backdrop-saturate-150 md:px-8">
       <MobileNav />
 
-      <div className="relative hidden max-w-sm flex-1 items-center md:flex">
-        <Search className="pointer-events-none absolute left-3 h-4 w-4 text-muted-fg" />
-        <input
-          type="search"
-          aria-label="Search plots, lots, and workers"
-          placeholder="Search plots, lots, workers…"
-          className="h-9 w-full rounded-xl border border-line bg-card pl-9 pr-3 text-sm text-ink placeholder:text-muted-fg/70 outline-none transition focus:border-forest-300 focus:ring-2 focus:ring-forest-100"
-        />
-      </div>
+      {/* The ⌘K launcher — quick-nav to any route + jump to a lot by code (S9). */}
+      <CommandPalette />
 
       <div className="ml-auto flex items-center gap-2 md:gap-3">
         <span className="hidden items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1.5 text-xs font-medium text-coffee sm:inline-flex">

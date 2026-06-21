@@ -20,11 +20,11 @@ vi.mock("@/lib/supabase/server", () => ({
 import { Topbar } from "@/components/layout/topbar";
 
 describe("Topbar", () => {
-  it("gives the search input an accessible name", async () => {
+  it("mounts the ⌘K command-palette launcher", async () => {
     render(await Topbar());
-    const search = screen.getByRole("searchbox", { name: /search/i });
-    expect(search).toBeInTheDocument();
-    expect(screen.getByLabelText(/search/i)).toBe(search);
+    const launcher = screen.getByTestId("command-palette-trigger");
+    expect(launcher).toBeInTheDocument();
+    expect(launcher).toHaveAccessibleName(/command palette/i);
   });
 
   it("shows the signed-in email and a sign-out control", async () => {
