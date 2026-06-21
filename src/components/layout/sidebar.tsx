@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   HeartHandshake,
   Award,
+  CalendarRange,
 } from "lucide-react";
 import { JansonLogo } from "./logo";
 import { BRAND } from "@/lib/brand";
@@ -27,6 +28,7 @@ export const NAV = [
   { href: "/plots", label: "Plots", icon: Sprout },
   { href: "/map", label: "Map", icon: Map },
   { href: "/harvests", label: "Harvests", icon: Coffee },
+  { href: "/plan", label: "Plan", icon: CalendarRange },
   { href: "/processing", label: "Processing", icon: FlaskConical },
   { href: "/ferment", label: "Ferment", icon: Beaker },
   { href: "/drying", label: "Drying", icon: Wind },

@@ -78,4 +78,12 @@ describe("Sidebar", () => {
       "/qc",
     );
   });
+
+  it("surfaces the P2-S8 harvest planner route in the nav (Plan → /plan)", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /Plan/ })).toHaveAttribute(
+      "href",
+      "/plan",
+    );
+  });
 });
