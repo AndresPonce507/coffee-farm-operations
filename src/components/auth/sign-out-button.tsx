@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
+import { purgeOfflineCaches } from "@/lib/offline/purge";
 
 export function SignOutButton() {
   const router = useRouter();
@@ -13,6 +14,9 @@ export function SignOutButton() {
   async function signOut() {
     setPending(true);
     await createClient().auth.signOut();
+    // Clear any Service Worker-cached authenticated pages (payroll/PII/EUDR) so
+    // they can't be served to the next person on a shared field device.
+    await purgeOfflineCaches();
     router.replace("/login");
     router.refresh();
   }
