@@ -17,7 +17,7 @@ begin;
 -- cost_entry is added explicitly: it has NO FK to lots (target_code is un-FK'd by
 -- design), so a `truncate lots cascade` does NOT reach it — without this, re-running
 -- the seed re-inserts every cost and DOUBLES COGS (phase-1 review HIGH).
-truncate table plots, workers, lots, harvests, processing_batches, tasks, weather, reserve_zones, cost_entry restart identity cascade;
+truncate table plots, workers, lots, harvests, processing_batches, tasks, weather, reserve_zones, cost_entry, crews, crew_memberships, worker_identity, worker_stream_event, attendance_event, por_obra_contracts, worker_certifications restart identity cascade;
 
 insert into plots (id, ord, name, block, variety, area_ha, altitude_masl, trees, shade_pct, established_year, status, last_inspected, expected_yield_kg, harvested_kg, geom, centroid) values
   ('p-tizingal-alto', 0, 'Tizingal Alto', 'Block A', 'Geisha', 4.2, 1690, 14800, 55, 2014, 'healthy', '2026-06-18', 18600, 12120, '{"type":"Polygon","coordinates":[[[-82.641276,8.776908],[-82.639413,8.776908],[-82.639413,8.778761],[-82.641276,8.778761],[-82.641276,8.776908]]]}'::jsonb, '{"type":"Point","coordinates":[-82.640344,8.777835]}'::jsonb),
@@ -46,6 +46,23 @@ insert into workers (id, name, role, daily_rate_usd, attendance, started_year, p
   ('w-12', 'Raúl Santamaría', 'Driver', 28, 'present', 2012, '+507 6723-8890', 0, 'Field Ops'),
   ('w-13', 'Iris Castillo', 'Picker', 22, 'present', 2021, '+507 6734-1145', 71, 'Crew Tizingal'),
   ('w-14', 'Félix Rodríguez', 'Picker', 22, 'present', 2016, '+507 6745-6622', 79, 'Crew Norte');
+
+-- ── P2-S1: promote-in-place people system ────────────────────────────────────
+-- seed.sql runs AFTER all migrations, so the people-system backfill (crews +
+-- crew_memberships + worker_identity, derived from the workers just inserted) is
+-- driven HERE via the idempotent _backfill_people() helper the S1 migration defines
+-- (the S5 precedent: the seed calls the writer, never raw-inserts derived rows). Then
+-- a few real dignity-data flourishes for the /crew dogfood moment — the Ngäbe-Buglé
+-- crew's languages/comarca, a still-valid pesticide cert, and a signed por-obra
+-- piece-rate — written through the command RPCs so they exercise the live write door.
+select _backfill_people();
+update worker_identity set comarca_origin = 'Ngäbe-Buglé', preferred_name = 'Lucía',
+       languages = array['es','ngäbere'], id_doc_kind = 'cedula', rehire_eligible = true
+ where worker_id = 'w-06';
+update worker_identity set comarca_origin = 'Ngäbe-Buglé', languages = array['es','ngäbere'], rehire_eligible = true
+ where worker_id in ('w-08','w-13');
+select record_certification('w-06', 'pesticide-handling', '2026-01-15', '2027-01-15', 'MIDA Panamá', 'cert-doc-w06', 'seed-cert-w06');
+select sign_por_obra_contract('w-06', 'picking', 'per-lata', 3.50, '2026-06-01', null, 'seed-sig-w06', 'seed-por-w06');
 
 insert into lots (code) values
   ('JC-541'),
