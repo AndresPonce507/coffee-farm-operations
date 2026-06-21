@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 /** Elements that can hold keyboard focus inside the modal, in DOM order. */
@@ -26,6 +27,10 @@ export function Dialog({
   const panelRef = useRef<HTMLDivElement>(null);
   // The element focused right before the modal opened, restored on close.
   const restoreRef = useRef<HTMLElement | null>(null);
+  // Portal target only exists on the client. Gate the portal on mount so SSR
+  // renders nothing (the modal is always opened by a client interaction anyway).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!open) return;
@@ -62,9 +67,11 @@ export function Dialog({
     return () => {
       restoreRef.current?.focus?.();
     };
-  }, [open]);
+    // `mounted` is a dep: the panel only exists after the portal mounts, so the
+    // focus-into-dialog must (re-)run once mounting makes panelRef.current real.
+  }, [open, mounted]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   // Keep Tab/Shift+Tab inside the modal by wrapping at the edges.
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -94,7 +101,12 @@ export function Dialog({
     }
   };
 
-  return (
+  // Portal to <body> so the modal escapes every page stacking context. The page
+  // shell + cards carry lingering `transform`s (from `animate-rise`, whose end
+  // state is translateY(0) — still a transform, so still a stacking context),
+  // which would otherwise trap this z-50 layer *below* sibling cards and let page
+  // content render through the modal. (Fixes the "form renders behind the page" bug.)
+  return createPortal(
     <div
       className="fixed inset-0 z-50 grid place-items-center p-4"
       role="dialog"
@@ -127,6 +139,7 @@ export function Dialog({
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

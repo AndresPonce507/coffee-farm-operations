@@ -116,6 +116,24 @@ describe("Dialog", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  // Regression: the modal must PORTAL to <body> so it escapes page stacking
+  // contexts. Rendered inline, a transformed ancestor (the app shell / cards carry
+  // a lingering `animate-rise` transform) traps the z-50 layer below sibling cards
+  // and page content renders THROUGH the modal. Fails on the pre-portal code.
+  it("portals to document.body, escaping a transformed ancestor's stacking context", () => {
+    render(
+      <div data-testid="page-shell" style={{ transform: "translateY(0)" }}>
+        <DialogWithBody open onClose={() => {}} />
+      </div>,
+    );
+    const shell = screen.getByTestId("page-shell");
+    // The dialog is NOT nested inside the (stacking-context-creating) shell …
+    expect(shell.querySelector('[role="dialog"]')).toBeNull();
+    // … it is portaled out onto <body>.
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.parentElement).toBe(document.body);
+  });
+
   it("falls back to focusing the dialog container when it has no focusable children", () => {
     render(
       <Dialog open onClose={() => {}} title="Empty">
