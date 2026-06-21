@@ -81,6 +81,8 @@ A **LivingBackground** (`components/layout/living-background.tsx`) drifts three 
 **Done**
 - ✅ Full structural app — 6 routes, 25 sections, mock-data layer, all charts (built by a 55-agent fan-out; build green, brand + a11y reviewed)
 - ✅ System-level **liquid-glass foundation** — glass utilities, living background, glass sidebar/topbar/cards, motion tokens, honey-contrast fix
+- ✅ **Supabase backend (Phase 1)** — event-log traceability spine (lots/lot_edges/hash-chained lot_event), activity-based COGS, EUDR dossiers, green inventory + ATP, and the full operable pipeline (cherry intake → process → grade green) with world-class write UIs; AD-8 grants, RLS, test-first (816 tests)
+- ✅ **Live on prod** — [janson-coffee.vercel.app](https://janson-coffee.vercel.app); **auto-deploys from `main`** via the Vercel↔GitHub integration
 
 **Next (planned 51-agent polish pass — not yet run)**
 1. **Per-section glass + motion polish** (25 sections + primitives + charts): apply `glass-hover`/`glass-sheen`, `stagger` grids, convert inner tiles/kanban cards to glass, add `cv-auto`/`perf-contain` to tables & boards.
