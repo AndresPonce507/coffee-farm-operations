@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { Wind } from "lucide-react";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { getLots } from "@/lib/db/lots";
 import { ProcessingSummary } from "@/components/sections/processing/processing-summary";
@@ -28,6 +31,13 @@ export default async function ProcessingPage() {
         title="Processing"
         subtitle="Wet mill, drying beds and green coffee"
       >
+        <Link
+          href="/drying"
+          className="inline-flex items-center gap-1.5 rounded-full border border-white/60 bg-white/55 px-3.5 py-2 text-sm font-medium text-forest-600 transition-colors hover:border-white/80 hover:bg-white/75 hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-300"
+        >
+          <Wind aria-hidden className="h-4 w-4" />
+          Drying &amp; reposo
+        </Link>
         <AddBatchButton lots={lots} />
       </PageHeader>
 
