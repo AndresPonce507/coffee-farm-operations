@@ -86,4 +86,12 @@ describe("Sidebar", () => {
       "/plan",
     );
   });
+
+  it("surfaces the P2-S2 weigh-capture route in the nav (Weigh → /weigh)", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /Weigh/ })).toHaveAttribute(
+      "href",
+      "/weigh",
+    );
+  });
 });
