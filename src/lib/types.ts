@@ -442,3 +442,77 @@ export interface DryingWeatherRisk {
   icon: WeatherDay["icon"]; // v_drying_weather_risk.icon
   coverRisk: boolean; // rain_pct ≥ 60 AND icon = 'rain' on an open-air station
 }
+
+/* ====================================================================== */
+/* P2-S6 — QC & cupping: SCA CVA (2023) + legacy 100-pt sessions, an        */
+/* append-only cup-score ledger, a green-defect ledger, cupper-drift        */
+/* calibration, and the QC-HOLD quarantine that BLOCKS a held green lot      */
+/* from being reserved/shipped. camelCase domain mirror of migration        */
+/* 20260622096000_qc_cupping.sql. Every score binds back through            */
+/* greenLotCode → green_lots → the lot graph (cup-to-cause).                 */
+/* ====================================================================== */
+
+/** The two scoring protocols a cupping session can run — mirrors the
+ *  `cupping_sessions.protocol` CHECK. `sca-cva` is the 2023 SCA Cupping
+ *  Form / affective scale; `legacy-100` is the classic 100-point scoresheet. */
+export type CuppingProtocol = "sca-cva" | "legacy-100";
+
+/** A green-defect band — mirrors the `green_defects.category` CHECK. Primary
+ *  defects (full black, sour, fungus) are disqualifying; secondary are quality. */
+export type DefectCategory = "primary" | "secondary";
+
+/** A cupping session — one cupping of a green lot under a protocol by a cupper.
+ *  `isCalibration` flags a SHARED calibration sample the drift view measures bias
+ *  against. Binds back to `greenLotCode` for the cup-to-cause loop. */
+export interface CuppingSession {
+  id: number; // cupping_sessions.id (identity)
+  greenLotCode: string; // cupping_sessions.green_lot_code → green_lots.lot_code
+  cupperId: string; // cupping_sessions.cupper_id → workers.id
+  protocol: CuppingProtocol | string; // cupping_sessions.protocol
+  isCalibration: boolean; // cupping_sessions.is_calibration
+  occurredAt: ISODate | string; // cupping_sessions.occurred_at (field wall-clock)
+}
+
+/** One row of the DERIVED `v_cup_final_score` view — the protocol-correct total
+ *  for a session, computed (never stored) so it can't disagree with its scores. */
+export interface CupFinalScore {
+  sessionId: number; // v_cup_final_score.session_id
+  greenLotCode: string; // v_cup_final_score.green_lot_code
+  cupperId: string; // v_cup_final_score.cupper_id
+  protocol: CuppingProtocol | string; // v_cup_final_score.protocol
+  isCalibration: boolean; // v_cup_final_score.is_calibration
+  finalScore: number; // v_cup_final_score.final_score — Σ attribute scores
+  attributeCount: number; // v_cup_final_score.attribute_count
+}
+
+/** One row of the DERIVED `v_cupper_drift` view — a cupper's systematic bias on
+ *  a shared calibration attribute (their mean − the panel mean). Surfaced as
+ *  EVIDENCE, never a hard block (you correct for known drift, you don't reject). */
+export interface CupperDrift {
+  cupperId: string; // v_cupper_drift.cupper_id
+  attribute: string; // v_cupper_drift.attribute
+  cupperMean: number; // v_cupper_drift.cupper_mean
+  panelMean: number; // v_cupper_drift.panel_mean
+  drift: number; // v_cupper_drift.drift — cupperMean − panelMean (signed)
+  sampleN: number; // v_cupper_drift.sample_n
+}
+
+/** One row of the DERIVED `v_qc_status` view — the per-lot QC roll-up the banner
+ *  and table read: held state + open-hold reason, latest cup final, defect tallies. */
+export interface QcStatus {
+  greenLotCode: string; // v_qc_status.green_lot_code
+  held: boolean; // v_qc_status.held — an open qc_hold exists → un-sellable
+  holdReason: string | null; // v_qc_status.hold_reason — the open hold's reason
+  latestCupScore: number | null; // v_qc_status.latest_cup_score — most recent session final
+  primaryDefects: number; // v_qc_status.primary_defects — Σ primary defect counts
+  secondaryDefects: number; // v_qc_status.secondary_defects — Σ secondary defect counts
+}
+
+/** An append-only green-defect ledger row (`green_defects`). */
+export interface GreenDefect {
+  id: number; // green_defects.id (identity)
+  greenLotCode: string; // green_defects.green_lot_code → green_lots.lot_code
+  defectKind: string; // green_defects.defect_kind
+  count: number; // green_defects.count
+  category: DefectCategory | string; // green_defects.category
+}
