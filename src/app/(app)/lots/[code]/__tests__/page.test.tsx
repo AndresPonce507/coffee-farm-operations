@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import type { LotGenealogy } from "@/lib/types";
+import type { LotEudrDossier, LotGenealogy } from "@/lib/types";
 
 // The page is an async Server Component that awaits getLotGenealogy(code).
 // Mock the read port so the page composes against a seeded lineage with no Supabase.
@@ -35,6 +35,27 @@ vi.mock("@/lib/db/lots", () => ({
   getLotGenealogy: vi.fn(async (): Promise<LotGenealogy> => genealogy),
 }));
 
+// The page also awaits the S8 EUDR dossier; mock that port too (no Supabase).
+vi.mock("@/lib/db/eudr", () => ({
+  getLotEudrDossier: vi.fn(
+    async (code: string): Promise<LotEudrDossier> => ({
+      code,
+      status: "compliant",
+      originPlots: [
+        {
+          plotId: "p-baru-vista",
+          plotName: "Barú Vista",
+          establishedYear: 2015,
+          centroid: [-82.63, 8.77],
+          geolocated: true,
+          deforestationFree: true,
+          declBasis: "established-pre-cutoff",
+        },
+      ],
+    }),
+  ),
+}));
+
 import LotGenealogyPage from "@/app/(app)/lots/[code]/page";
 import { getLotGenealogy } from "@/lib/db/lots";
 
@@ -55,5 +76,25 @@ describe("/lots/[code] page (smoke)", () => {
     expect(screen.getByRole("img", { name: /genealogy/i })).toBeInTheDocument();
     // The lineage's root intake is visible in the rendered graph.
     expect(screen.getAllByText("JC-100").length).toBeGreaterThan(0);
+
+    // S8: the EUDR due-diligence dossier renders below the lineage (green lot).
+    expect(screen.getByTestId("eudr-badge-compliant")).toBeInTheDocument();
+    expect(screen.getByText("Barú Vista")).toBeInTheDocument();
+  });
+
+  it("does NOT render the EUDR dossier for a non-green lot (it's not yet an export lot)", async () => {
+    const { getLotEudrDossier } = await import("@/lib/db/eudr");
+    vi.mocked(getLotEudrDossier).mockClear();
+
+    // JC-100 is a cherry-stage node in the mocked lineage → no dossier section.
+    const ui = await LotGenealogyPage({
+      params: Promise.resolve({ code: "JC-100" }),
+    });
+    render(ui);
+
+    expect(screen.queryByTestId("eudr-badge-compliant")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("eudr-no-origin")).not.toBeInTheDocument();
+    // the dossier port is never even called for a non-green lot (no wasted fetch).
+    expect(getLotEudrDossier).not.toHaveBeenCalled();
   });
 });

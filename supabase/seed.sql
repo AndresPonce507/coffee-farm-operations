@@ -192,4 +192,26 @@ insert into cost_entry (driver, allocation_rule, target_kind, target_code, amoun
 -- Refresh the one earned materialized view so seeded COGS is immediately readable.
 select refresh_lot_cost();
 
+-- ── S8: EUDR traceability seed (plots of origin + deforestation-free claims) ──
+-- The seeded green lots descend from milled sources JC-700/JC-710 that carried no
+-- harvests, so they had no traceable origin. Tie real plots to those sources via
+-- harvests (independent records — no conservation trigger): the green lot up-walk
+-- then reaches them. JC-701 ← JC-700 ← {p-baru-vista, p-talamanca};
+-- JC-711 ← JC-710 ← {p-nueva-suiza, p-palmira}. (Harvest weights are illustrative;
+-- only the plot↔lot linkage matters to the dossier.)
+insert into harvests (id, date, plot_id, worker_id, cherries_kg, ripeness_pct, brix_avg, lot_code) values
+  ('h-eudr-700a', '2026-06-14', 'p-baru-vista',  'w-05', 320, 92, 22.4, 'JC-700'),
+  ('h-eudr-700b', '2026-06-14', 'p-talamanca',   'w-03', 300, 90, 19.8, 'JC-700'),
+  ('h-eudr-710a', '2026-06-15', 'p-nueva-suiza', 'w-14', 460, 89, 20.4, 'JC-710'),
+  ('h-eudr-710b', '2026-06-15', 'p-palmira',     'w-13', 440, 87, 20.0, 'JC-710');
+
+-- Declare the deforestation-free status. JC-701's plots are fully declared
+-- (basis: established before the 2020-12-31 cutoff, so no new clearing) → the lot
+-- reads COMPLIANT. One of JC-711's plots (p-palmira) is left UNDECLARED so that
+-- lot reads INCOMPLETE — the honest "cannot fully substantiate yet" demo state.
+select eudr_declare_plot('p-baru-vista',  true, 'established-pre-cutoff');
+select eudr_declare_plot('p-talamanca',   true, 'established-pre-cutoff');
+select eudr_declare_plot('p-nueva-suiza', true, 'satellite-monitoring');
+-- p-palmira intentionally left undeclared (demonstrates the INCOMPLETE verdict).
+
 commit;

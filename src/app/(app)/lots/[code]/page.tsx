@@ -1,15 +1,19 @@
 import { PageHeader } from "@/components/ui/page-header";
 import { GenealogyGraph } from "@/components/sections/lots/genealogy-graph";
+import { EudrDossier } from "@/components/sections/eudr/eudr-dossier";
 import { getLotGenealogy } from "@/lib/db/lots";
+import { getLotEudrDossier } from "@/lib/db/eudr";
 
 /**
- * /lots/[code] — the S6 dogfood: open a lot, SEE its farm-to-bag lineage.
+ * /lots/[code] — open a lot, SEE its farm-to-bag lineage (S6) AND its EUDR
+ * due-diligence dossier (S8).
  *
  * Server Component. It awaits the S3 derived-read port `getLotGenealogy(code)`
  * (scoped to the lot's lineage) and renders the <GenealogyGraph> — the cherry
  * intake split into Washed/Natural, processed with visible yield-loss, blended
- * into the green bag being sold. "Provenance IS the product", made visible: the
- * buyer/auditor artifact.
+ * into the green bag being sold — then the <EudrDossier> (the lot's plots of
+ * origin + their geolocation/deforestation-free status). "Provenance IS the
+ * product", made visible AND auditable: the buyer/auditor artifact.
  *
  * The terminal node (this `code`) gets the one glass-sheen. The graph prints as
  * SVG with zero client JS required; a thin island layers pan/zoom on top, and a
@@ -17,7 +21,7 @@ import { getLotGenealogy } from "@/lib/db/lots";
  * reduced-motion).
  *
  * NOTE (S9): nav/command-palette wiring TO this URL is a later slice — this page
- * only renders the lineage; it does not touch the shell nav.
+ * only renders; it does not touch the shell nav.
  */
 export default async function LotGenealogyPage({
   params,
@@ -27,6 +31,15 @@ export default async function LotGenealogyPage({
   const { code } = await params;
   const graph = await getLotGenealogy(code);
 
+  // The EUDR dossier is defined over GREEN export lots only — a non-green lot is
+  // not yet under due diligence, and showing its dossier would mislabel a lot
+  // with real direct harvests as "origin unverified" (review finding). Gate the
+  // section on this lot actually being green; only then fetch the dossier.
+  const isGreen = graph.nodes.some(
+    (n) => n.code === code && n.stage === "green",
+  );
+  const dossier = isGreen ? await getLotEudrDossier(code) : null;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -35,6 +48,12 @@ export default async function LotGenealogyPage({
       />
 
       <GenealogyGraph graph={graph} terminalCode={code} />
+
+      {dossier && (
+        <section id="eudr" className="scroll-mt-24">
+          <EudrDossier dossier={dossier} />
+        </section>
+      )}
     </div>
   );
 }

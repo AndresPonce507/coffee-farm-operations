@@ -327,3 +327,41 @@ export interface LotRuleCost {
   rule: AllocationRule | string; // cost_entry.allocation_rule — one of the 4 rules
   allocatedUsd: number; // this rule's apportioned USD on the lot (signed; reversals netted in-DB)
 }
+
+/* ====================================================================== */
+/* S8 — EUDR due-diligence traceability: prove each green lot's plots of    */
+/* origin are geolocated + declared deforestation-free since the 2020-12-31 */
+/* cutoff. camelCase domain mirror of migration 20260621102000.            */
+/* ====================================================================== */
+
+/** The EU Deforestation Regulation cutoff date — land deforested AFTER this is
+ *  non-compliant. A documented constant (shown as the dossier's reference date). */
+export const EUDR_CUTOFF = "2020-12-31";
+
+/** A green lot's EUDR verdict — mirrors the eudr_lot_status() RPC.
+ *  'compliant'  : ≥1 origin plot AND every one geolocated + declared free.
+ *  'incomplete' : has origin plots, but one is missing geolocation or declaration.
+ *  'no-origin'  : the lineage reaches no harvested plot — origin can't be
+ *                 substantiated (an honest auditor red flag, never a false pass). */
+export type EudrStatus = "compliant" | "incomplete" | "no-origin";
+
+/** One plot of origin behind a green lot, with the two EUDR facts — a
+ *  lot_origin_plots row. `centroid` is the plot's [lng, lat] geolocation point
+ *  (null when the plot isn't geolocated). */
+export interface EudrOriginPlot {
+  plotId: string; // plots.id
+  plotName: string; // plots.name
+  establishedYear: number; // plots.established_year (evidence the land pre-dates the cutoff)
+  centroid: [number, number] | null; // [lng, lat] from the GeoJSON Point, null if ungeolocated
+  geolocated: boolean; // a GeoJSON polygon AND centroid are present (EUDR geolocation)
+  deforestationFree: boolean; // the owner's affirmative declaration
+  declBasis: string | null; // how the claim is substantiated (null when undeclared)
+}
+
+/** A green lot's EUDR due-diligence dossier — the verdict + its plots of origin
+ *  (the buyer/auditor artifact the whole slice exists to produce). */
+export interface LotEudrDossier {
+  code: string; // the green lot's JC-NNN code
+  status: EudrStatus; // the authoritative eudr_lot_status() verdict
+  originPlots: EudrOriginPlot[]; // the plots that fed this lot, each with its EUDR facts
+}
