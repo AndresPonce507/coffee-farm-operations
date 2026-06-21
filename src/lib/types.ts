@@ -262,3 +262,68 @@ export interface GreenLotAtp {
   shippedKg: number; // green_lots_atp.shipped_kg — Σ shipments
   atp: number; // green_lots_atp.atp — currentKg − reservedKg − shippedKg
 }
+
+/* ====================================================================== */
+/* S7 — Activity-based COGS: true cost-per-kg-green, the number the         */
+/* business turns on. camelCase domain mirror of migration                 */
+/* 20260621094000_costing.sql: the append-only `cost_entry` provenance      */
+/* ledger and the cost-per-kg-green RESULT the cogs_per_lot()/cogs_per_plot()*/
+/* .rpc() functions return (numeric, NULL on zero green-kg — never a        */
+/* divide-by-zero). The matview `mv_lot_cost` does the recursive walk; the  */
+/* port only reads the scalar verdict + the ledger rows behind it.          */
+/* ====================================================================== */
+
+/** What generated a cost — mirrors the `cost_entry.driver` check constraint. */
+export type CostDriver = "worker-day" | "task" | "processing-batch";
+
+/** How a cost is apportioned — mirrors the `cost_entry.allocation_rule` check.
+ *  1. direct-labor → lot, 2. processing → lot (whole amount lands on the lot);
+ *  3. agronomy → plot (split by harvested cherries-kg share); 4. overhead → farm
+ *  (split across ALL green lots pro-rata by green-kg). */
+export type AllocationRule =
+  | "direct-labor"
+  | "processing"
+  | "agronomy"
+  | "overhead";
+
+/** The allocation TARGET kind — mirrors the `cost_entry.target_kind` check.
+ *  A 'farm' row carries no target code (overhead); 'plot'/'lot' always name one. */
+export type CostTargetKind = "plot" | "lot" | "farm";
+
+/** One row of the append-only `cost_entry` provenance ledger (D-COST-1).
+ *  Corrections are REVERSING ENTRIES — a negative-amount row pointing at the
+ *  original via `reversesId`, never an UPDATE/DELETE. The ledger doubles as the
+ *  future QBO/Xero journal source AND the audit trail behind every COGS figure. */
+export interface CostEntry {
+  id: number; // cost_entry.id (identity)
+  driver: CostDriver | string; // cost_entry.driver — what generated the cost
+  allocationRule: AllocationRule | string; // cost_entry.allocation_rule — one of the 4 rules
+  targetKind: CostTargetKind | string; // cost_entry.target_kind — plot | lot | farm
+  targetCode: string | null; // cost_entry.target_code — plots.id / lots.code; null for farm overhead
+  amountUsd: number; // cost_entry.amount_usd — signed (a reversal is negative)
+  reversesId: number | null; // cost_entry.reverses_id — self-FK to the row this corrects (null for an original)
+  memo: string | null; // cost_entry.memo — free-text note
+  occurredAt: ISODate | string; // cost_entry.occurred_at (timestamptz)
+  createdAt: ISODate | string; // cost_entry.created_at (timestamptz, server-stamped)
+}
+
+/** The cost-per-kg-green verdict for one lot or plot — the scalar the
+ *  cogs_per_lot()/cogs_per_plot() RPCs return. `costPerKgGreen` is NULL when the
+ *  green-kg denominator is 0/undeclared (the RPC returns NULL, never a
+ *  divide-by-zero raise) — the UI shows "—" rather than a fabricated 0. */
+export interface LotCost {
+  code: string; // the green lot's JC-NNN code, or a plot id
+  costPerKgGreen: number | null; // cost-per-kg-green; null on zero/undeclared green-kg
+}
+
+/** One allocation rule's share of a green lot's FULLY-allocated cost — a row of
+ *  the cogs_breakdown_per_lot() RPC (mirrors mv_lot_cost_by_rule). This is the
+ *  SAME allocation the cogs_per_lot() headline divides (overhead pro-rata +
+ *  agronomy plot-split + walked source costs all included), so Σ allocatedUsd /
+ *  greenKg === the headline. The per-category card build-up reads THIS, never the
+ *  lot-literal cost_entry ledger (which omitted those three and contradicted the
+ *  total). */
+export interface LotRuleCost {
+  rule: AllocationRule | string; // cost_entry.allocation_rule — one of the 4 rules
+  allocatedUsd: number; // this rule's apportioned USD on the lot (signed; reversals netted in-DB)
+}

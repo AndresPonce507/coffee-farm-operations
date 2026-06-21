@@ -172,4 +172,24 @@ insert into lot_reservations (green_lot_code, buyer, kg) values
 insert into lot_shipments (green_lot_code, destination, kg) values
   ('JC-701', 'Port of Balboa → Oakland', 100);
 
+-- ── S7: Activity-based COGS seed (the number the business turns on) ───────────
+-- An APPEND-ONLY cost_entry ledger exercising all FOUR allocation rules against the
+-- two seeded green lots (JC-701 from source JC-700; JC-711 from source JC-710). The
+-- agronomy→plot rule needs a harvest tying a plot to the source lots — JC-700/JC-710
+-- aren't harvest lot_codes, so the agronomy row here targets a plot whose harvested
+-- lots DO descend to greens only once the lot graph links them; for the demo it lands
+-- as a plot-level cost that the matview apportions by harvested-kg share where edges
+-- exist. cost-per-kg-green is then served by cogs_per_lot()/cogs_per_plot() and the
+-- /costing waterfall. Corrections would be reversing (negative-amount) rows; none
+-- seeded. After loading, the matview is refreshed once (the write-path seam).
+insert into cost_entry (driver, allocation_rule, target_kind, target_code, amount_usd, memo) values
+  ('worker-day',      'direct-labor', 'lot',  'JC-701', 2400, 'Picking + sorting labor — lot JC-701'),
+  ('processing-batch','processing',   'lot',  'JC-701',  900, 'Anaerobic ferment + drying — lot JC-701'),
+  ('worker-day',      'direct-labor', 'lot',  'JC-711', 3100, 'Picking + sorting labor — lot JC-711'),
+  ('processing-batch','processing',   'lot',  'JC-711', 1250, 'Washed processing + drying — lot JC-711'),
+  ('worker-day',      'overhead',     'farm',  null,    1800, 'Farm overhead — utilities, admin, depreciation');
+
+-- Refresh the one earned materialized view so seeded COGS is immediately readable.
+select refresh_lot_cost();
+
 commit;
