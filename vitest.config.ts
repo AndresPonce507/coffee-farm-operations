@@ -31,6 +31,14 @@ export default defineConfig({
           name: "db",
           environment: "node",
           include: ["src/**/*.db.test.ts"],
+          // Each db file's beforeAll spins a fresh in-process PGlite and replays
+          // EVERY migration (WASM Postgres — CPU-heavy). As the migration lane and
+          // the db-test set grow, that cold replay can exceed the default 10s hook
+          // timeout when many files run concurrently (pure CPU contention, not a
+          // logic failure — the same files pass comfortably run alone or serially).
+          // Give the PGlite cold-start headroom so the suite stays green as it grows.
+          hookTimeout: 60000,
+          testTimeout: 30000,
         },
       },
     ],

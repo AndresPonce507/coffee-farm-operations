@@ -365,3 +365,80 @@ export interface LotEudrDossier {
   status: EudrStatus; // the authoritative eudr_lot_status() verdict
   originPlots: EudrOriginPlot[]; // the plots that fed this lot, each with its EUDR facts
 }
+
+/* ====================================================================== */
+/* P2-S4 — Drying management + THE REPOSO GATE + capacity-tracked stations.  */
+/* camelCase domain mirror of migration 20260622094000_drying_reposo.sql.   */
+/* The reposo gate is a DATA-LAYER invariant (a precondition inside          */
+/* advance_processing_stage + a BEFORE-UPDATE trigger backstop on lots): a   */
+/* lot cannot advance drying→milled until moisture is stable in-band AND the */
+/* minimum rest-days are met. These types are read-only projections of the   */
+/* derived views; the only writers are the SECURITY DEFINER command RPCs.    */
+/* ====================================================================== */
+
+/** A drying station's kind — mirrors the `drying_stations.kind` check. */
+export type DryingStationKind = "patio" | "raised-bed" | "guardiola" | "parabolic";
+
+/** One drying station with its live committed-vs-capacity occupancy — a row of
+ *  the DERIVED `station_occupancy` view (committed is Σ open assignments, never a
+ *  stored counter, so it can never disagree with the assignment rows it sums). */
+export interface StationOccupancy {
+  stationId: string; // station_occupancy.station_id
+  name: string; // station_occupancy.name
+  kind: DryingStationKind | string; // station_occupancy.kind
+  capacityKg: number; // station_occupancy.capacity_kg
+  committedKg: number; // station_occupancy.committed_kg — Σ open assignments
+  availableKg: number; // station_occupancy.available_kg — capacity − committed
+}
+
+/** A lot's REPOSO-GATE status — a row of the DERIVED `v_reposo_status` view (the
+ *  reposo_status() function). `ready` is the gate's single source of truth: true
+ *  only when moisture is stable in-band AND the rest-days threshold is met. The
+ *  advance-to-mill button is disabled (with `reason`) until `ready` flips true —
+ *  but the real enforcement is in the database, not this projection. */
+export interface ReposoStatus {
+  lotCode: string; // v_reposo_status.lot_code
+  latestMoisture: number | null; // v_reposo_status.latest_moisture — null with no readings
+  readingCount: number; // v_reposo_status.reading_count
+  moistureStable: boolean; // v_reposo_status.moisture_stable — last N readings in-band, flat
+  dryingStartedAt: string | null; // v_reposo_status.drying_started_at (timestamptz)
+  restDaysElapsed: number | null; // v_reposo_status.rest_days_elapsed — null before drying
+  restMet: boolean; // v_reposo_status.rest_met — rest_days ≥ min_reposo_days
+  ready: boolean; // v_reposo_status.ready — the gate verdict (moistureStable AND restMet)
+  reason: string; // v_reposo_status.reason — human-readable "why" (blocked or clear)
+}
+
+/** One moisture reading on a lot's drying curve — a row of the append-only
+ *  `moisture_readings` ledger (immutable; a correction is a NEW reading, never an
+ *  UPDATE). The curve is EVIDENCE the reposo gate and the cup-to-cause loop read. */
+export interface MoistureReading {
+  lotCode: string; // moisture_readings.lot_code
+  moisturePct: number; // moisture_readings.moisture_pct
+  occurredAt: string; // moisture_readings.occurred_at — field wall-clock
+}
+
+/** A drying lot's full drying-management view — its station, its reposo status,
+ *  and its moisture curve — the shape the /process/[lot]/drying surface renders. */
+export interface DryingLot {
+  lotCode: string; // lots.code
+  variety: CoffeeVariety | string | null; // lots.variety
+  currentKg: number | null; // lots.current_kg — the resting mass
+  stationId: string | null; // the open drying_assignments.station_id (null if unassigned)
+  stationName: string | null; // the station's display name
+  reposo: ReposoStatus; // the gate status for this lot
+  curve: MoistureReading[]; // the lot's moisture readings, oldest → newest
+}
+
+/** A drying-station weather-cover risk row — a row of `v_drying_weather_risk`
+ *  (the Phase-1 `weather` forecast feed × open-air stations). `coverRisk` flags an
+ *  upcoming high-rain day for an open-air bed so the UI can fire a "cover" alert. */
+export interface DryingWeatherRisk {
+  stationId: string; // v_drying_weather_risk.station_id
+  name: string; // v_drying_weather_risk.name
+  kind: DryingStationKind | string; // v_drying_weather_risk.kind
+  forecastOrder: number; // v_drying_weather_risk.forecast_order
+  day: string; // v_drying_weather_risk.day
+  rainPct: number; // v_drying_weather_risk.rain_pct
+  icon: WeatherDay["icon"]; // v_drying_weather_risk.icon
+  coverRisk: boolean; // rain_pct ≥ 60 AND icon = 'rain' on an open-air station
+}

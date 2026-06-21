@@ -31,6 +31,14 @@ describe("Sidebar", () => {
     expect(mapLink).toHaveAttribute("href", "/map");
   });
 
+  it("surfaces the P2-S4 Drying route in the nav (the reposo-gate surface)", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /Drying/ })).toHaveAttribute(
+      "href",
+      "/drying",
+    );
+  });
+
   it("surfaces the S5/S7/S8 routes in the nav (Inventory, Costing, EUDR)", () => {
     render(<Sidebar />);
     expect(screen.getByRole("link", { name: /Inventory/ })).toHaveAttribute(
