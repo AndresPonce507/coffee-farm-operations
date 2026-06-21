@@ -48,7 +48,11 @@ export function StatRing({
   track = "#E7DED0",
   className,
 }: StatRingProps) {
-  const clamped = Math.min(100, Math.max(0, value));
+  // Coerce a non-finite input (NaN/±Infinity) to 0 BEFORE clamping: Math.min/
+  // Math.max pass NaN straight through (→ "NaN%") and let Infinity read as a
+  // false 100%. This guard means no caller can ever paint a non-finite ring.
+  const safeValue = Number.isFinite(value) ? value : 0;
+  const clamped = Math.min(100, Math.max(0, safeValue));
   const center = size / 2;
   const radius = (size - 14) / 2;
   const circumference = 2 * Math.PI * radius;

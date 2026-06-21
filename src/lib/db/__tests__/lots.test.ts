@@ -171,10 +171,16 @@ describe("getLotGenealogy", () => {
       kind: "split",
       kg: "5",
     };
+    const unrelatedNodeA: LotNodeRow = { ...nodeRow, code: "JC-900" };
+    const unrelatedNodeB: LotNodeRow = { ...nodeRow, code: "JC-901" };
     stubTables({
-      lots: { data: [nodeRow, otherNode], error: null },
-      // edge query is pre-filtered by the getter; return only the matching edge.
-      lot_edges: { data: [edgeRow], error: null },
+      // the getter fetches ALL edges and ALL nodes, then walks the connected
+      // component in JS (no raw `code` interpolated into a PostgREST filter).
+      lots: {
+        data: [nodeRow, otherNode, unrelatedNodeA, unrelatedNodeB],
+        error: null,
+      },
+      lot_edges: { data: [edgeRow, unrelatedEdge], error: null },
     });
 
     const { getLotGenealogy } = await import("@/lib/db/lots");
@@ -191,10 +197,141 @@ describe("getLotGenealogy", () => {
         kg: 14.2,
       },
     ]);
-    // sanity: the unrelated edge fixture is never surfaced.
+    // sanity: the unrelated edge/nodes fixture is never surfaced.
     expect(graph.edges).not.toContainEqual(
       expect.objectContaining({ parentCode: unrelatedEdge.parent_code }),
     );
+    expect(graph.nodes).not.toContainEqual(
+      expect.objectContaining({ code: "JC-900" }),
+    );
+  });
+
+  it("returns the FULL multi-hop lineage transitively (cherry→…→green), not just the code's immediate neighbours", async () => {
+    // A 3-hop chain: JC-100 (cherry) → JC-150 (parchment) → JC-180 (milled) →
+    // JC-200 (green). Asking for the GREEN terminal must walk ANCESTORS all the
+    // way back to the cherry intake — a 1-hop slice would drop JC-100/JC-150.
+    const mk = (code: string, stage: string): LotNodeRow => ({
+      ...nodeRow,
+      code,
+      stage: stage as LotNodeRow["stage"],
+    });
+    const e = (parent: string, child: string): LotEdgeRow => ({
+      parent_code: parent,
+      child_code: child,
+      kind: "process",
+      kg: "50",
+    });
+    // A separate, disconnected lineage that must NOT bleed in.
+    const farNode = mk("JC-900", "green");
+
+    stubTables({
+      lots: {
+        data: [
+          mk("JC-100", "cherry"),
+          mk("JC-150", "parchment"),
+          mk("JC-180", "milled"),
+          mk("JC-200", "green"),
+          farNode,
+        ],
+        error: null,
+      },
+      lot_edges: {
+        data: [
+          e("JC-100", "JC-150"),
+          e("JC-150", "JC-180"),
+          e("JC-180", "JC-200"),
+          e("JC-800", "JC-900"), // disconnected edge
+        ],
+        error: null,
+      },
+    });
+
+    const { getLotGenealogy } = await import("@/lib/db/lots");
+    const graph = await getLotGenealogy("JC-200");
+
+    // The full ancestor chain back to cherry is present (multi-hop, not 1-hop).
+    expect(graph.nodes.map((n) => n.code).sort()).toEqual([
+      "JC-100",
+      "JC-150",
+      "JC-180",
+      "JC-200",
+    ]);
+    // All three connecting edges are returned…
+    expect(graph.edges).toHaveLength(3);
+    // …and the disconnected far lineage never leaks in.
+    expect(graph.nodes.map((n) => n.code)).not.toContain("JC-900");
+    expect(
+      graph.edges.some((edge) => edge.childCode === "JC-900"),
+    ).toBe(false);
+  });
+
+  it("walks DESCENDANTS as well as ancestors (asking for a mid/upstream code returns the whole connected component)", async () => {
+    const mk = (code: string, stage: string): LotNodeRow => ({
+      ...nodeRow,
+      code,
+      stage: stage as LotNodeRow["stage"],
+    });
+    const e = (parent: string, child: string): LotEdgeRow => ({
+      parent_code: parent,
+      child_code: child,
+      kind: "process",
+      kg: "50",
+    });
+    stubTables({
+      lots: {
+        data: [
+          mk("JC-100", "cherry"),
+          mk("JC-150", "parchment"),
+          mk("JC-200", "green"),
+        ],
+        error: null,
+      },
+      lot_edges: {
+        data: [e("JC-100", "JC-150"), e("JC-150", "JC-200")],
+        error: null,
+      },
+    });
+
+    const { getLotGenealogy } = await import("@/lib/db/lots");
+    // Ask for the UPSTREAM cherry code — descendants must be walked forward.
+    const graph = await getLotGenealogy("JC-100");
+    expect(graph.nodes.map((n) => n.code).sort()).toEqual([
+      "JC-100",
+      "JC-150",
+      "JC-200",
+    ]);
+    expect(graph.edges).toHaveLength(2);
+  });
+
+  it("rejects a malformed code (read-filter injection payload) without it reaching the query — returns an empty graph", async () => {
+    const orSpy = vi.fn();
+    // A client whose `.or()` is spied so we can prove it is NEVER called with
+    // attacker text. The getter must validate `code` against ^JC-\d{3,}$ first.
+    getSupabaseMock.mockReturnValue({
+      from: () => {
+        const builder: Record<string, unknown> = {
+          select: vi.fn(() => builder),
+          order: vi.fn(() => builder),
+          eq: vi.fn(() => builder),
+          or: vi.fn((arg: unknown) => {
+            orSpy(arg);
+            return builder;
+          }),
+          in: vi.fn(() => builder),
+          then: (onFulfilled: (v: QueryResult<unknown>) => unknown) =>
+            Promise.resolve({ data: [], error: null }).then(onFulfilled),
+        };
+        return builder;
+      },
+    });
+
+    const { getLotGenealogy } = await import("@/lib/db/lots");
+    const graph = await getLotGenealogy("JC-1,kind.eq.split");
+
+    // A non-conforming code yields an empty graph (so the page can notFound())…
+    expect(graph).toEqual({ nodes: [], edges: [] });
+    // …and the attacker payload NEVER reaches an `.or()` filter string.
+    expect(orSpy).not.toHaveBeenCalled();
   });
 
   it("throws a labelled error when the nodes query fails", async () => {

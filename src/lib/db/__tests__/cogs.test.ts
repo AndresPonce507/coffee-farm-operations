@@ -321,6 +321,97 @@ describe("getCostBreakdown", () => {
   });
 });
 
+// ----- getter: getGreenReachableLots (the COGS-safe lot targets) ------------
+
+describe("getGreenReachableLots", () => {
+  it("reads the green_reachable_lots view and returns just the codes", async () => {
+    const { client, calls } = makeClient<Array<{ code: string }>>({
+      data: [{ code: "JC-701" }, { code: "JC-710" }],
+      error: null,
+    });
+    getSupabaseMock.mockReturnValue(client);
+
+    const { getGreenReachableLots } = await import("@/lib/db/cogs");
+    const codes = await getGreenReachableLots();
+
+    expect(calls.from).toBe("green_reachable_lots");
+    expect(codes).toEqual(["JC-701", "JC-710"]);
+  });
+
+  it("returns [] when no lot reaches a green terminal yet", async () => {
+    const { client } = makeClient<Array<{ code: string }>>({
+      data: [],
+      error: null,
+    });
+    getSupabaseMock.mockReturnValue(client);
+
+    const { getGreenReachableLots } = await import("@/lib/db/cogs");
+    expect(await getGreenReachableLots()).toEqual([]);
+  });
+
+  it("throws a labelled error when the query fails", async () => {
+    const { client } = makeClient<null>({
+      data: null,
+      error: { message: "lots view boom" },
+    });
+    getSupabaseMock.mockReturnValue(client);
+
+    const { getGreenReachableLots } = await import("@/lib/db/cogs");
+    await expect(getGreenReachableLots()).rejects.toThrow(
+      "getGreenReachableLots: lots view boom",
+    );
+  });
+});
+
+// ----- getter: getGreenReachablePlots (the COGS-safe plot targets) ----------
+
+describe("getGreenReachablePlots", () => {
+  it("joins green_reachable_plots → plots and returns {id,name} for the label", async () => {
+    const { client, calls } = makeClient<
+      Array<{ id: string; plots: { name: string } | null }>
+    >({
+      data: [
+        { id: "plot-A", plots: { name: "Tizingal Alto" } },
+        { id: "plot-B", plots: { name: "Tizingal Bajo" } },
+      ],
+      error: null,
+    });
+    getSupabaseMock.mockReturnValue(client);
+
+    const { getGreenReachablePlots } = await import("@/lib/db/cogs");
+    const plots = await getGreenReachablePlots();
+
+    expect(calls.from).toBe("green_reachable_plots");
+    expect(plots).toEqual([
+      { id: "plot-A", name: "Tizingal Alto" },
+      { id: "plot-B", name: "Tizingal Bajo" },
+    ]);
+  });
+
+  it("returns [] when no plot reaches a green terminal yet", async () => {
+    const { client } = makeClient<
+      Array<{ id: string; plots: { name: string } | null }>
+    >({ data: [], error: null });
+    getSupabaseMock.mockReturnValue(client);
+
+    const { getGreenReachablePlots } = await import("@/lib/db/cogs");
+    expect(await getGreenReachablePlots()).toEqual([]);
+  });
+
+  it("throws a labelled error when the query fails", async () => {
+    const { client } = makeClient<null>({
+      data: null,
+      error: { message: "plots view boom" },
+    });
+    getSupabaseMock.mockReturnValue(client);
+
+    const { getGreenReachablePlots } = await import("@/lib/db/cogs");
+    await expect(getGreenReachablePlots()).rejects.toThrow(
+      "getGreenReachablePlots: plots view boom",
+    );
+  });
+});
+
 // ----- getter: getCostBreakdownByRule (the fully-allocated build-up) ---------
 
 describe("getCostBreakdownByRule", () => {

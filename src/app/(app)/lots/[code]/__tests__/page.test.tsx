@@ -35,6 +35,15 @@ vi.mock("@/lib/db/lots", () => ({
   getLotGenealogy: vi.fn(async (): Promise<LotGenealogy> => genealogy),
 }));
 
+// next/navigation's notFound() throws a sentinel that the router catches to
+// render the 404 page. Mock it so the test can assert the page short-circuits.
+const NOT_FOUND = new Error("NEXT_NOT_FOUND");
+vi.mock("next/navigation", () => ({
+  notFound: vi.fn(() => {
+    throw NOT_FOUND;
+  }),
+}));
+
 // The page also awaits the S8 EUDR dossier; mock that port too (no Supabase).
 vi.mock("@/lib/db/eudr", () => ({
   getLotEudrDossier: vi.fn(
@@ -58,6 +67,7 @@ vi.mock("@/lib/db/eudr", () => ({
 
 import LotGenealogyPage from "@/app/(app)/lots/[code]/page";
 import { getLotGenealogy } from "@/lib/db/lots";
+import { notFound } from "next/navigation";
 
 describe("/lots/[code] page (smoke)", () => {
   it("awaits the seeded lot code and renders the farm-to-bag lineage graph", async () => {
@@ -96,5 +106,18 @@ describe("/lots/[code] page (smoke)", () => {
     expect(screen.queryByTestId("eudr-no-origin")).not.toBeInTheDocument();
     // the dossier port is never even called for a non-green lot (no wasted fetch).
     expect(getLotEudrDossier).not.toHaveBeenCalled();
+  });
+
+  it("calls notFound() for a nonexistent lot (empty graph) instead of fabricating a page", async () => {
+    vi.mocked(notFound).mockClear();
+    // A code with no nodes: the ⌘K palette can route to /lots/JC-999 even when
+    // no such lot exists — that must 404, not render an empty traceability page.
+    vi.mocked(getLotGenealogy).mockResolvedValueOnce({ nodes: [], edges: [] });
+
+    await expect(
+      LotGenealogyPage({ params: Promise.resolve({ code: "JC-999" }) }),
+    ).rejects.toThrow("NEXT_NOT_FOUND");
+
+    expect(notFound).toHaveBeenCalledTimes(1);
   });
 });

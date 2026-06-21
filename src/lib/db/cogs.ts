@@ -95,6 +95,49 @@ export const getPlotCost = cache(async (id: string): Promise<LotCost> => {
   return { code: id, costPerKgGreen: toCostPerKg(data) };
 });
 
+/**
+ * The lot codes whose cost actually REACHES a green terminal — the only lots a
+ * booked cost can land on without silently vanishing from cost-per-kg-green (the
+ * `cost_alloc` walk keeps green terminals only). Reads the `green_reachable_lots`
+ * view (security_invoker — under the caller's RLS); the costing write form offers
+ * ONLY these as lot targets so money can never be booked onto a COGS-orphan lot.
+ */
+export const getGreenReachableLots = cache(async (): Promise<string[]> => {
+  const { data, error } = await (await getSupabase())
+    .from("green_reachable_lots")
+    .select("code");
+  if (error) throw new Error(`getGreenReachableLots: ${error.message}`);
+  return (data as { code: string }[]).map((r) => r.code);
+});
+
+/** A `green_reachable_plots` row joined to `plots` for the picker label.
+ *  PostgREST embeds the joined resource as an ARRAY when it can't prove a to-one
+ *  relationship (green_reachable_plots is a view), so accept either shape. */
+interface GreenReachablePlotRow {
+  id: string;
+  plots: { name: string } | { name: string }[] | null;
+}
+
+/**
+ * The plots whose cost actually REACHES a green terminal, as `{id,name}` for the
+ * write form's picker. Reads the `green_reachable_plots` view joined to `plots`
+ * for the human label (the view itself is id-only). Same COGS-orphan guard as
+ * `getGreenReachableLots`: the form offers ONLY these as plot targets, so a cost
+ * can never be booked onto a plot that reaches no green inventory.
+ */
+export const getGreenReachablePlots = cache(
+  async (): Promise<{ id: string; name: string }[]> => {
+    const { data, error } = await (await getSupabase())
+      .from("green_reachable_plots")
+      .select("id, plots(name)");
+    if (error) throw new Error(`getGreenReachablePlots: ${error.message}`);
+    return (data as GreenReachablePlotRow[]).map((r) => {
+      const joined = Array.isArray(r.plots) ? r.plots[0] : r.plots;
+      return { id: r.id, name: joined?.name ?? r.id };
+    });
+  },
+);
+
 /** A `cogs_breakdown_per_lot` RPC row (snake_case): one allocation rule's share
  *  of a green lot's fully-allocated cost. `allocated_cost` is a numeric PostgREST
  *  may serialize as a string. */

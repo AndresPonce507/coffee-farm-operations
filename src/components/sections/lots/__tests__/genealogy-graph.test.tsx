@@ -196,6 +196,39 @@ describe("<GenealogyGraph> (server SVG)", () => {
       render(<GenealogyGraph graph={{ nodes: [], edges: [] }} />),
     ).not.toThrow();
   });
+
+  it("renders a graceful fallback (never the literal 'null') for a bare seed lot with null stage/variety/kg", () => {
+    // Bare seed lots (JC-541..JC-611) were inserted with only `code` — null
+    // stage/variety/mass. The graph must show a graceful fallback, never paint
+    // the literal string "null" into the SVG or the tree.
+    const bare: LotGenealogy = {
+      nodes: [
+        {
+          code: "JC-541",
+          // null fields a bare seed carries (cast through unknown — the seed
+          // row is genuinely null even though the domain type narrows them).
+          stage: null as unknown as string,
+          variety: null as unknown as LotGenealogy["nodes"][number]["variety"],
+          originKg: null as unknown as number,
+          currentKg: null as unknown as number,
+          isSingleOrigin: false,
+          mintedAt: "2026-05-01",
+        },
+      ],
+      edges: [],
+    };
+
+    const { container } = render(
+      <GenealogyGraph graph={bare} terminalCode="JC-541" />,
+    );
+
+    // The node code still renders…
+    expect(screen.getAllByText("JC-541").length).toBeGreaterThan(0);
+    // …but NOWHERE in the rendered output is the literal string "null".
+    expect(container.textContent ?? "").not.toContain("null");
+    // A graceful placeholder is present instead (em-dash or "Unknown").
+    expect(container.textContent ?? "").toMatch(/—|Unknown/);
+  });
 });
 
 describe("role=tree no-JS fallback", () => {

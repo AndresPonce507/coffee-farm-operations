@@ -119,6 +119,29 @@ function validate(
   };
 }
 
+/**
+ * Map a Postgres insert error to a CLEAN, family-readable message — never leak
+ * the raw exception string (column names, SQLSTATE, "violates … constraint")
+ * into the UI (#29). A CHECK violation (23514) carries an author-written,
+ * already-friendly message (e.g. the immutability/shape guards), so it passes
+ * through; the structural codes get canned guidance. Mirrors the friendly
+ * surfacing the inventory commands (reserveGreenLot) already do.
+ */
+function friendlyInsertError(error: { message: string; code?: string }): string {
+  switch (error.code) {
+    case "23514": // check_violation — author-written, safe to surface
+      return error.message;
+    case "23502": // not_null_violation
+      return "That cost is missing a required field — please fill every field and try again.";
+    case "23503": // foreign_key_violation
+      return "That target no longer exists — pick a current lot or plot and try again.";
+    case "23505": // unique_violation
+      return "That cost looks like a duplicate — it may already be booked.";
+    default:
+      return "Could not book that cost. Please check the entry and try again.";
+  }
+}
+
 export async function bookCostEntry(
   input: BookCostEntryInput,
 ): Promise<BookCostEntryResult> {
@@ -127,8 +150,29 @@ export async function bookCostEntry(
 
   const sb = await getSupabase();
 
+  // COGS-orphan guard (the CRIT): a cost booked onto a lot/plot/farm target
+  // whose money never reaches a green terminal is silently dropped from
+  // cost-per-kg-green (the cost_alloc walk keeps green terminals only). Fail
+  // CLOSED before the append: ask the DB whether this target reaches green. A
+  // farm target passes a NULL code (farm reaches green iff any green lot exists).
+  const isFarm = parsed.row.target_kind === "farm";
+  const { data: reaches, error: reachesError } = await sb.rpc("reaches_green", {
+    p_target_kind: parsed.row.target_kind,
+    p_target_code: isFarm ? null : parsed.row.target_code,
+  });
+  if (reachesError) {
+    return { ok: false, error: friendlyInsertError(reachesError) };
+  }
+  if (reaches !== true) {
+    return {
+      ok: false,
+      error:
+        "This lot/plot has no green inventory yet — the cost would not reach cost-per-kg-green.",
+    };
+  }
+
   const { error } = await sb.from("cost_entry").insert(parsed.row);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: friendlyInsertError(error) };
 
   // Bust the matview cache so the new cost is reflected immediately (D5 — the
   // write-path refresh seam). Best-effort: the append is the source of truth, so

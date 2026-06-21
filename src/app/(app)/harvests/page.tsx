@@ -1,7 +1,7 @@
 import { PageHeader } from "@/components/ui/page-header";
 import { getPlots } from "@/lib/db/plots";
 import { getPickers } from "@/lib/db/workers";
-import { getLots } from "@/lib/db/lots";
+import { getHarvestableLots } from "@/lib/db/harvestable-lots";
 import { HarvestSummary } from "@/components/sections/harvests/harvest-summary";
 import { HarvestTrendCard } from "@/components/sections/harvests/harvest-trend-card";
 import { TopPickersCard } from "@/components/sections/harvests/top-pickers-card";
@@ -17,10 +17,13 @@ import { AddHarvestButton } from "@/components/sections/harvests/harvest-actions
  * traceability log.
  */
 export default async function HarvestsPage() {
+  // Only lots that can take fresh cherry intake (cherry-stage / unstaged) — never
+  // green export or milled source lots (FINDING #35). Feeds both the "Log harvest"
+  // form and the per-row edit form so neither can target a green/milled lot.
   const [plots, pickers, lots] = await Promise.all([
     getPlots(),
     getPickers(),
-    getLots(),
+    getHarvestableLots(),
   ]);
 
   return (

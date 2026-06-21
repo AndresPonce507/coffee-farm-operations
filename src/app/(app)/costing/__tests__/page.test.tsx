@@ -17,11 +17,11 @@ vi.mock("@/components/sections/costing/cost-lot-list", () => ({
 vi.mock("@/components/sections/costing/cost-entry-form", () => ({
   BookCostButton: () => <div data-testid="book-cost-button-stub" />,
 }));
-vi.mock("@/lib/db/lots", () => ({
-  getLots: () => Promise.resolve(["JC-701", "JC-702"]),
-}));
-vi.mock("@/lib/db/plots", () => ({
-  getPlots: () =>
+// The page feeds the form the GREEN-REACHABLE target lists (not the raw
+// lots/plots), so a cost can never be booked onto a COGS-orphan target.
+vi.mock("@/lib/db/cogs", () => ({
+  getGreenReachableLots: () => Promise.resolve(["JC-701", "JC-702"]),
+  getGreenReachablePlots: () =>
     Promise.resolve([{ id: "plot-A", name: "Tizingal Alto" }]),
 }));
 

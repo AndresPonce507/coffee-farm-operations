@@ -69,7 +69,10 @@ function HeroStat({
 export async function SeasonHero() {
   const SEASON = await getSeason();
 
-  const seasonPct = (SEASON.harvestedKg / SEASON.targetKg) * 100;
+  // Guard the divide (mirrors kpi-row): a zero/missing target must read as 0%,
+  // never 0/0 = NaN flowing into the progress ring.
+  const seasonPct =
+    SEASON.targetKg > 0 ? (SEASON.harvestedKg / SEASON.targetKg) * 100 : 0;
   const remainingKg = Math.max(0, SEASON.targetKg - SEASON.harvestedKg);
 
   return (

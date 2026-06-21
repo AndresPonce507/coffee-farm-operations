@@ -35,9 +35,19 @@ vi.mock("next/cache", () => ({
 
 import { bookCostEntry } from "@/app/(app)/costing/actions";
 
-/** A Supabase-client stand-in: `.from().insert()` for the append, `.rpc()` for refresh. */
+/**
+ * A Supabase-client stand-in: `.from().insert()` for the append, `.rpc()` for the
+ * `reaches_green` reachability gate AND the `refresh_lot_cost` refresh. The two
+ * RPCs are dispatched by name so a test can fail the gate (reaches=false) while
+ * leaving the refresh stub default. `reaches` defaults to `true` (the target
+ * reaches COGS) so the happy-path tests don't have to opt in.
+ */
 function makeClient(opts?: {
   insert?: { data: unknown; error: { message: string; code?: string } | null };
+  reaches?: {
+    data: unknown;
+    error: { message: string; code?: string } | null;
+  };
   rpc?: { data: unknown; error: { message: string } | null };
 }): {
   client: unknown;
@@ -47,9 +57,12 @@ function makeClient(opts?: {
   const insert = vi.fn(() =>
     Promise.resolve(opts?.insert ?? { data: null, error: null }),
   );
-  const rpc = vi.fn(() =>
-    Promise.resolve(opts?.rpc ?? { data: null, error: null }),
-  );
+  const rpc = vi.fn((name: string) => {
+    if (name === "reaches_green") {
+      return Promise.resolve(opts?.reaches ?? { data: true, error: null });
+    }
+    return Promise.resolve(opts?.rpc ?? { data: null, error: null });
+  });
   const from = vi.fn(() => ({ insert }));
   return { client: { from, rpc }, insert, rpc };
 }
@@ -86,6 +99,11 @@ describe("bookCostEntry", () => {
       amount_usd: 42.5,
       memo: "Crew Norte picking day",
     });
+    // the reachability gate fires FIRST with the lot's target, BEFORE the append
+    expect(rpc).toHaveBeenCalledWith("reaches_green", {
+      p_target_kind: "lot",
+      p_target_code: "JC-701",
+    });
     // the refresh seam fires so the new cost is reflected immediately
     expect(rpc).toHaveBeenCalledWith("refresh_lot_cost");
     expect(revalidatePathMock).toHaveBeenCalledWith("/costing");
@@ -111,6 +129,12 @@ describe("bookCostEntry", () => {
       target_code: null,
       amount_usd: 200,
       memo: null,
+    });
+    // a farm target passes a NULL code to the reachability gate (farm reaches
+    // green iff any green lot exists — not a per-code lookup).
+    expect(rpc).toHaveBeenCalledWith("reaches_green", {
+      p_target_kind: "farm",
+      p_target_code: null,
     });
     expect(rpc).toHaveBeenCalledWith("refresh_lot_cost");
   });
@@ -265,10 +289,109 @@ describe("bookCostEntry", () => {
     });
 
     expect(result.ok).toBe(false);
+    // a CHECK violation (23514) carries an author-written, already-friendly
+    // message (the shape/immutability guards) so it surfaces verbatim.
     if (!result.ok) expect(result.error).toContain("ledger boom");
-    // a failed insert does NOT refresh the matview or revalidate
-    expect(rpc).not.toHaveBeenCalled();
+    // a failed insert does NOT refresh the matview or revalidate (the
+    // reachability gate may have run, but the refresh seam never does).
+    expect(rpc).not.toHaveBeenCalledWith("refresh_lot_cost");
     expect(revalidatePathMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a lot whose cost would NOT reach a green terminal — no insert, no refresh (the COGS-orphan guard)", async () => {
+    const { client, insert, rpc } = makeClient({
+      reaches: { data: false, error: null }, // this lot reaches no green lot
+    });
+    getSupabaseMock.mockReturnValue(client);
+
+    const result = await bookCostEntry({
+      driver: "worker-day",
+      allocationRule: "direct-labor",
+      targetKind: "lot",
+      targetCode: "JC-541", // an everyday harvest lot, stage NULL, no edges
+      amountUsd: 42.5,
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toMatch(/green|reach|cost-per-kg-green/i);
+      // the friendly message names the failure mode, not a raw SQL string
+      expect(result.error).not.toMatch(/SQLSTATE|23514|null value|violates/i);
+    }
+    // the gate fired with this lot, and the append/refresh did NOT
+    expect(rpc).toHaveBeenCalledWith("reaches_green", {
+      p_target_kind: "lot",
+      p_target_code: "JC-541",
+    });
+    expect(insert).not.toHaveBeenCalled();
+    expect(rpc).not.toHaveBeenCalledWith("refresh_lot_cost");
+    expect(revalidatePathMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a nonexistent target_code (the reachability gate returns false) — no insert", async () => {
+    const { client, insert } = makeClient({
+      reaches: { data: false, error: null }, // no such lot → reaches no green
+    });
+    getSupabaseMock.mockReturnValue(client);
+
+    const result = await bookCostEntry({
+      driver: "worker-day",
+      allocationRule: "direct-labor",
+      targetKind: "lot",
+      targetCode: "JC-ZZZ", // a target that does not exist (#26)
+      amountUsd: 10,
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toMatch(/green|reach/i);
+    expect(insert).not.toHaveBeenCalled();
+  });
+
+  it("surfaces a FRIENDLY error (never the raw Postgres string) on an insert failure", async () => {
+    const { client } = makeClient({
+      insert: {
+        data: null,
+        error: {
+          message:
+            'null value in column "amount_usd" violates not-null constraint',
+          code: "23502",
+        },
+      },
+    });
+    getSupabaseMock.mockReturnValue(client);
+
+    const result = await bookCostEntry({
+      driver: "worker-day",
+      allocationRule: "direct-labor",
+      targetKind: "lot",
+      targetCode: "JC-701",
+      amountUsd: 10,
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      // the raw Postgres internals must NOT leak to the family-facing UI
+      expect(result.error).not.toMatch(
+        /violates|not-null constraint|column "amount_usd"|23502/i,
+      );
+      expect(result.error.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("does NOT call the reachability gate before the shape validation rejects (no wasted round-trip)", async () => {
+    const { client, rpc } = makeClient();
+    getSupabaseMock.mockReturnValue(client);
+
+    const result = await bookCostEntry({
+      driver: "worker-day",
+      allocationRule: "direct-labor",
+      targetKind: "lot",
+      targetCode: "", // illegal shape — caught before any RPC
+      amountUsd: 10,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(rpc).not.toHaveBeenCalled();
   });
 
   it("still succeeds (best-effort) when the refresh RPC errors — the append committed", async () => {

@@ -58,6 +58,52 @@ describe("validateHarvest", () => {
     expect(validateHarvest({ ...valid, brixAvg: "0" }).ok).toBe(true);
   });
 
+  // FINDING #25 — a blank/whitespace required numeric must ERROR, never silently
+  // coerce to 0 (Number("") === 0). A blank ripeness/brix/cherries is missing data,
+  // not "0% ripe" / "0 Brix" / "0 kg".
+  it("rejects a blank or whitespace-only ripeness instead of recording 0", () => {
+    const blank = validateHarvest({ ...valid, ripenessPct: "" });
+    expect(blank.ok).toBe(false);
+    expect(blank.ok === false && blank.errors.ripenessPct).toBeTruthy();
+
+    const ws = validateHarvest({ ...valid, ripenessPct: "   " });
+    expect(ws.ok).toBe(false);
+    expect(ws.ok === false && ws.errors.ripenessPct).toBeTruthy();
+
+    // a non-numeric is rejected too, never coerced.
+    expect(validateHarvest({ ...valid, ripenessPct: "abc" }).ok).toBe(false);
+  });
+
+  it("rejects a blank or whitespace-only brix instead of recording 0", () => {
+    const blank = validateHarvest({ ...valid, brixAvg: "" });
+    expect(blank.ok).toBe(false);
+    expect(blank.ok === false && blank.errors.brixAvg).toBeTruthy();
+
+    const ws = validateHarvest({ ...valid, brixAvg: "  " });
+    expect(ws.ok).toBe(false);
+    expect(ws.ok === false && ws.errors.brixAvg).toBeTruthy();
+
+    expect(validateHarvest({ ...valid, brixAvg: "abc" }).ok).toBe(false);
+  });
+
+  it("rejects a blank or whitespace-only cherries weight instead of recording 0", () => {
+    const blank = validateHarvest({ ...valid, cherriesKg: "" });
+    expect(blank.ok).toBe(false);
+    expect(blank.ok === false && blank.errors.cherriesKg).toBeTruthy();
+
+    const ws = validateHarvest({ ...valid, cherriesKg: "   " });
+    expect(ws.ok).toBe(false);
+    expect(ws.ok === false && ws.errors.cherriesKg).toBeTruthy();
+  });
+
+  it("still accepts a missing (undefined) optional-less field only when supplied; required numerics with no value error", () => {
+    // omitting the key entirely (undefined) is treated as missing, not 0.
+    const noRipeness = validateHarvest({ ...valid, ripenessPct: undefined });
+    expect(noRipeness.ok).toBe(false);
+    const noBrix = validateHarvest({ ...valid, brixAvg: undefined });
+    expect(noBrix.ok).toBe(false);
+  });
+
   it("requires a lot code matching ^JC-[0-9]{3,}$", () => {
     expect(validateHarvest({ ...valid, lotCode: "" }).ok).toBe(false);
     expect(validateHarvest({ ...valid, lotCode: "JC-12" }).ok).toBe(false);

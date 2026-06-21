@@ -41,8 +41,22 @@ const STAGE_FILL: Record<string, string> = {
   green: "#1a6b4d",
 };
 
-function stageFill(stage: string): string {
-  return STAGE_FILL[stage] ?? "#6c6155";
+function stageFill(stage: string | null | undefined): string {
+  return (stage && STAGE_FILL[stage]) ?? "#6c6155";
+}
+
+/**
+ * Graceful fallbacks for bare seed lots (JC-541..JC-611) inserted with only a
+ * `code` (null stage/variety/mass). Never paint the literal string "null" into
+ * the graph — show an em-dash / "Unknown" instead (review finding #22).
+ */
+function stageLabel(stage: unknown): string {
+  return stage == null || stage === "" ? "Unknown" : String(stage);
+}
+
+/** Mass readout that degrades a null/undefined/NaN kg to an em-dash, never "null". */
+function kgLabel(value: unknown): string {
+  return typeof value === "number" && Number.isFinite(value) ? kg(value) : "—";
 }
 
 /** Content-hashed UID so multiple graphs on one page never share <defs> ids. */
@@ -260,7 +274,7 @@ export function GenealogyGraph({
                     fontSize={11}
                     fill="#6c6155"
                   >
-                    {String(n.stage)} · {kg(n.currentKg)}
+                    {stageLabel(n.stage)} · {kgLabel(n.currentKg)}
                   </text>
                   {/* AD-3: the redundant collision-avoided label-band <text> was
                       removed — the code is already on the opaque white node card
@@ -484,7 +498,7 @@ function TreeNode({
       <span className="text-ink inline-flex flex-wrap items-baseline gap-2 py-1">
         <span className="font-medium">{node.code}</span>
         <span className="text-muted-fg text-xs">
-          {String(node.stage)} · {kg(node.currentKg)}
+          {stageLabel(node.stage)} · {kgLabel(node.currentKg)}
         </span>
         {edgeKg && (
           <span className="text-muted-fg text-xs">

@@ -13,6 +13,7 @@ vi.mock("@/lib/db/trends", () => ({
 }));
 
 import { SeasonHero } from "@/components/sections/dashboard/season-hero";
+import { getSeason } from "@/lib/db/trends";
 
 // vitest config has no globals, so RTL's auto afterEach(cleanup) isn't registered;
 // register it explicitly so each test renders into a fresh document body.
@@ -68,5 +69,30 @@ describe("SeasonHero (smoke)", () => {
     // Measured harvest tile is NOT marked modeled (full visual weight).
     const measured = container.querySelectorAll('[data-modeled="true"]');
     expect(measured.length).toBe(1);
+  });
+
+  // FINDING #39 — seasonPct = harvestedKg / targetKg was computed with no
+  // zero-guard, so a season with targetKg=0 produced 0/0 = NaN flowing into the
+  // ring. Guarding the divide (mirroring kpi-row) makes a zero target read as a
+  // clean 0%, never "NaN%".
+  it("renders a clean 0% (not NaN%) when the season target is zero", async () => {
+    vi.mocked(getSeason).mockResolvedValueOnce({
+      targetKg: 0,
+      harvestedKg: 0,
+      todayKg: 0,
+      ytdRevenueUsd: 0,
+    });
+
+    const ui = await SeasonHero();
+    const { container } = render(ui);
+
+    // The progress ring is the only role="img" in the hero; its aria-label
+    // carries the percent. With a zero target it must read 0 percent, no NaN.
+    const ring = screen.getByRole("img");
+    expect(ring.getAttribute("aria-label")).toContain("0 percent");
+    expect(ring.getAttribute("aria-label")).not.toContain("NaN");
+
+    // No "NaN" text leaks anywhere in the rendered hero.
+    expect(container.textContent).not.toContain("NaN");
   });
 });

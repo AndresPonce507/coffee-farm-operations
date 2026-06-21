@@ -2,8 +2,10 @@ import { PageHeader } from "@/components/ui/page-header";
 import { CostingSummary } from "@/components/sections/costing/costing-summary";
 import { CostLotList } from "@/components/sections/costing/cost-lot-list";
 import { BookCostButton } from "@/components/sections/costing/cost-entry-form";
-import { getLots } from "@/lib/db/lots";
-import { getPlots } from "@/lib/db/plots";
+import {
+  getGreenReachableLots,
+  getGreenReachablePlots,
+} from "@/lib/db/cogs";
 
 /**
  * Costing — the "/costing" route for Coffee Farm Operations (S7).
@@ -19,9 +21,11 @@ import { getPlots } from "@/lib/db/plots";
  * The header now carries the WRITE affordance — `BookCostButton` opens a form
  * that appends a NEW cost to the `cost_entry` ledger (the only legal write is an
  * append; the action refreshes the matview so the new cost shows immediately).
- * It is fed the lot-code + plot lists so a plot/lot-targeted cost names a real
- * target; a farm-wide overhead carries none. Corrections (reversing entries)
- * remain a follow-up.
+ * It is fed the GREEN-REACHABLE lot-code + plot lists — only targets whose money
+ * actually reaches a green terminal (and thus cost-per-kg-green); a cost booked
+ * onto a lot/plot that reaches no green inventory would silently vanish from
+ * COGS, so the picker never offers one. A farm-wide overhead carries no target.
+ * Corrections (reversing entries) remain a follow-up.
  *
  * Server Component (no client JS in the read sections): all data flows from the
  * cogs + greenlots read ports; the matview-backed `cogs_per_lot` RPC is the SSOT
@@ -29,7 +33,10 @@ import { getPlots } from "@/lib/db/plots";
  * re-implements the COGS sum.
  */
 export default async function CostingPage() {
-  const [lots, plots] = await Promise.all([getLots(), getPlots()]);
+  const [lots, plots] = await Promise.all([
+    getGreenReachableLots(),
+    getGreenReachablePlots(),
+  ]);
 
   return (
     <div className="space-y-6">

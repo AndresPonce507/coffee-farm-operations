@@ -77,4 +77,74 @@ describe("CommandPalette (S9)", () => {
     expect(screen.queryByTestId("command-palette")).not.toBeInTheDocument();
     expect(push).not.toHaveBeenCalled();
   });
+
+  // FINDING #31 — ARIA combobox pattern. The input must be wired to its
+  // listbox so a screen reader announces the result list, its expanded state,
+  // and which option is currently active as the user arrows through.
+  describe("ARIA combobox wiring (FINDING #31)", () => {
+    it("marks the input as a combobox controlling the listbox", () => {
+      open();
+      const input = screen.getByLabelText("Search routes and lots");
+      expect(input).toHaveAttribute("role", "combobox");
+
+      const listbox = screen.getByRole("listbox");
+      expect(listbox).toHaveAttribute("id");
+      // aria-controls points at the listbox by id.
+      expect(input).toHaveAttribute("aria-controls", listbox.getAttribute("id")!);
+    });
+
+    it("reports the expanded state (open with results) via aria-expanded", () => {
+      open();
+      const input = screen.getByLabelText("Search routes and lots");
+      expect(input).toHaveAttribute("aria-expanded", "true");
+    });
+
+    it("gives every option a stable id and points aria-activedescendant at the active one", () => {
+      open();
+      const input = screen.getByLabelText("Search routes and lots");
+
+      const options = screen.getAllByRole("option");
+      // Each option carries a non-empty id.
+      for (const opt of options) {
+        expect(opt.getAttribute("id")).toBeTruthy();
+      }
+
+      // The first row is active on open; aria-activedescendant references its id.
+      const activeId = input.getAttribute("aria-activedescendant");
+      expect(activeId).toBeTruthy();
+      const activeOption = options.find(
+        (o) => o.getAttribute("aria-selected") === "true",
+      );
+      expect(activeOption).toBeDefined();
+      expect(activeId).toBe(activeOption!.getAttribute("id"));
+    });
+
+    it("moves aria-activedescendant to the next option on ArrowDown", () => {
+      const dialog = open();
+      const input = screen.getByLabelText("Search routes and lots");
+      const firstActive = input.getAttribute("aria-activedescendant");
+
+      fireEvent.keyDown(dialog, { key: "ArrowDown" });
+
+      const nextActive = input.getAttribute("aria-activedescendant");
+      expect(nextActive).toBeTruthy();
+      expect(nextActive).not.toBe(firstActive);
+      // The referenced option is the one now marked selected.
+      const selected = screen
+        .getAllByRole("option")
+        .find((o) => o.getAttribute("aria-selected") === "true");
+      expect(selected!.getAttribute("id")).toBe(nextActive);
+    });
+
+    it("drops aria-activedescendant when there are no matching options", () => {
+      open();
+      const input = screen.getByLabelText("Search routes and lots");
+      // A query that matches no nav route and yields no lot code (no 3+ digits).
+      fireEvent.change(input, { target: { value: "zzqqxx" } });
+
+      expect(screen.getByTestId("command-palette-empty")).toBeInTheDocument();
+      // Nothing is active, so the input must not dangle a stale reference.
+      expect(input.getAttribute("aria-activedescendant")).toBeFalsy();
+    });
+  });
 });

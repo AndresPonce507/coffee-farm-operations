@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { GenealogyGraph } from "@/components/sections/lots/genealogy-graph";
 import { EudrDossier } from "@/components/sections/eudr/eudr-dossier";
@@ -30,6 +32,14 @@ export default async function LotGenealogyPage({
 }) {
   const { code } = await params;
   const graph = await getLotGenealogy(code);
+
+  // The ⌘K palette (and any hand-typed URL) can route to /lots/JC-999 even when
+  // no such lot exists; an invalid/injection code resolves to an empty graph too
+  // (getLotGenealogy rejects it). Either way there's no lineage to show — 404
+  // rather than render a fabricated/empty traceability page (review finding #18).
+  if (graph.nodes.length === 0) {
+    notFound();
+  }
 
   // The EUDR dossier is defined over GREEN export lots only — a non-green lot is
   // not yet under due diligence, and showing its dossier would mislabel a lot

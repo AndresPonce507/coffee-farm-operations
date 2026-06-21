@@ -63,6 +63,14 @@ export function CommandPalette() {
     return [...lotHit, ...navHits];
   }, [query]);
 
+  // Stable per-row ids so the input's aria-activedescendant can point at the
+  // highlighted option (ARIA combobox pattern). Keyed by kind+href like the
+  // <li> keys, so the id of a given result is stable across renders.
+  const LISTBOX_ID = "command-palette-listbox";
+  const optionId = (r: Result) => `command-option-${r.kind}-${r.href}`;
+  const activeId =
+    results.length > 0 && results[active] ? optionId(results[active]) : undefined;
+
   // Clamp the active row whenever the result set shrinks.
   useEffect(() => {
     setActive((a) => Math.min(a, Math.max(results.length - 1, 0)));
@@ -157,13 +165,26 @@ export function CommandPalette() {
                   setQuery(e.target.value);
                   setActive(0);
                 }}
+                // ARIA combobox pattern: the input owns the listbox below, and
+                // announces its expanded state + the currently-highlighted
+                // option so screen readers track arrow navigation.
+                role="combobox"
                 aria-label="Search routes and lots"
+                aria-controls={LISTBOX_ID}
+                aria-expanded={results.length > 0}
+                aria-autocomplete="list"
+                aria-activedescendant={activeId}
                 placeholder="Jump to a page, or type a lot number…"
                 className="h-12 w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted-fg/70"
               />
             </div>
 
-            <ul role="listbox" aria-label="Results" className="max-h-80 overflow-y-auto p-2">
+            <ul
+              id={LISTBOX_ID}
+              role="listbox"
+              aria-label="Results"
+              className="max-h-80 overflow-y-auto p-2"
+            >
               {results.length === 0 ? (
                 <li
                   data-testid="command-palette-empty"
@@ -173,7 +194,12 @@ export function CommandPalette() {
                 </li>
               ) : (
                 results.map((r, i) => (
-                  <li key={`${r.kind}-${r.href}`} role="option" aria-selected={i === active}>
+                  <li
+                    key={`${r.kind}-${r.href}`}
+                    id={optionId(r)}
+                    role="option"
+                    aria-selected={i === active}
+                  >
                     <button
                       type="button"
                       data-testid={`command-result-${r.href}`}
