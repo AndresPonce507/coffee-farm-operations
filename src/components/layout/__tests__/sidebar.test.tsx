@@ -46,4 +46,12 @@ describe("Sidebar", () => {
       "/eudr",
     );
   });
+
+  it("surfaces the P2-S6 QC route in the nav", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /QC/ })).toHaveAttribute(
+      "href",
+      "/qc",
+    );
+  });
 });
