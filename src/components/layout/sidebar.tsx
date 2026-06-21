@@ -7,6 +7,7 @@ import {
   Sprout,
   Map,
   Coffee,
+  Scale,
   Users,
   FlaskConical,
   Beaker,
@@ -18,6 +19,10 @@ import {
   HeartHandshake,
   Award,
   CalendarRange,
+  Send,
+  Satellite,
+  Bug,
+  Banknote,
 } from "lucide-react";
 import { JansonLogo } from "./logo";
 import { BRAND } from "@/lib/brand";
@@ -27,17 +32,22 @@ export const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/plots", label: "Plots", icon: Sprout },
   { href: "/map", label: "Map", icon: Map },
+  { href: "/weigh", label: "Weigh", icon: Scale },
   { href: "/harvests", label: "Harvests", icon: Coffee },
   { href: "/plan", label: "Plan", icon: CalendarRange },
+  { href: "/dispatch", label: "Dispatch", icon: Send },
   { href: "/processing", label: "Processing", icon: FlaskConical },
   { href: "/ferment", label: "Ferment", icon: Beaker },
   { href: "/drying", label: "Drying", icon: Wind },
   { href: "/inventory", label: "Inventory", icon: Boxes },
   { href: "/qc", label: "QC", icon: Award },
+  { href: "/satellite", label: "Satellite", icon: Satellite },
+  { href: "/scouting", label: "Scouting", icon: Bug },
   { href: "/costing", label: "Costing", icon: Coins },
   { href: "/eudr", label: "EUDR", icon: ShieldCheck },
   { href: "/workers", label: "Workers", icon: Users },
   { href: "/crew", label: "Crew", icon: HeartHandshake },
+  { href: "/payroll", label: "Payroll", icon: Banknote },
   { href: "/tasks", label: "Tasks", icon: ListChecks },
 ] as const;
 

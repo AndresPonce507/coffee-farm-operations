@@ -86,4 +86,28 @@ describe("Sidebar", () => {
       "/plan",
     );
   });
+
+  it("surfaces the P2-S7 payroll route in the nav (Payroll → /payroll)", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /Payroll/ })).toHaveAttribute(
+      "href",
+      "/payroll",
+    );
+  });
+
+  it("surfaces the P2-S2 weigh-capture route in the nav (Weigh → /weigh)", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /Weigh/ })).toHaveAttribute(
+      "href",
+      "/weigh",
+    );
+  });
+
+  it("surfaces the P2-S5 morning dispatch route in the nav (Dispatch → /dispatch)", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /Dispatch/ })).toHaveAttribute(
+      "href",
+      "/dispatch",
+    );
+  });
 });
