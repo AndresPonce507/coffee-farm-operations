@@ -46,4 +46,12 @@ describe("Sidebar", () => {
       "/eudr",
     );
   });
+
+  it("surfaces the P2-S1 people route in the nav (Crew → /crew)", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /Crew/ })).toHaveAttribute(
+      "href",
+      "/crew",
+    );
+  });
 });
