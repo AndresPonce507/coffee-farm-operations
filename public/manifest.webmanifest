@@ -1,0 +1,23 @@
+{
+  "name": "Janson Coffee — Farm Operations",
+  "short_name": "Janson Coffee",
+  "description": "Field-trustworthy operations for Janson Coffee, Volcán, Chiriquí — works offline at 1,700 masl.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#faf7f1",
+  "theme_color": "#00291d",
+  "lang": "es",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "agriculture"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

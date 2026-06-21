@@ -3,6 +3,7 @@ import { Bell, CloudSun } from "lucide-react";
 import { getSupabase } from "@/lib/supabase/server";
 import { MobileNav } from "./mobile-nav";
 import { CommandPalette } from "./command-palette";
+import { SyncStatus } from "./sync-status-island";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
 /**
@@ -25,6 +26,10 @@ export async function Topbar() {
       <CommandPalette />
 
       <div className="ml-auto flex items-center gap-2 md:gap-3">
+        {/* Offline sync status — the always-visible chrome that tells a picker
+            in a dead zone their capture is safe (P2-S0). Client island. */}
+        <SyncStatus />
+
         <span className="hidden items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1.5 text-xs font-medium text-coffee sm:inline-flex">
           Harvest season · 2026
         </span>

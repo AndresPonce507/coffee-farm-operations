@@ -188,6 +188,11 @@
      ============================================================ */
   .animate-rise { animation: rise 0.5s var(--ease-glass) both; }
 
+  /* Offline sync drawer (P2-S0): a right-edge slide-over + its backdrop fade.
+     Transform/opacity only (GPU), neutralized by the reduced-motion rule below. */
+  .animate-slide-in-right { animation: slide-in-right 0.28s var(--ease-glass) both; }
+  .animate-fade-in { animation: fade-in 0.2s ease both; }
+
   /* Staggered entrance for grids/lists — children rise in sequence. */
   .stagger > * { animation: rise 0.55s var(--ease-glass) both; }
   .stagger > *:nth-child(1) { animation-delay: 0.03s; }
@@ -252,6 +257,14 @@
 @keyframes rise {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 @keyframes drift-1 {
   from { transform: translate3d(0, 0, 0) scale(1); }
