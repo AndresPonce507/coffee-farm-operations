@@ -14,7 +14,10 @@ begin;
 -- security_invoker VIEWS that COMPUTE these aggregates from `harvests`. So they're
 -- dropped from this truncate + no longer seeded (seeding them would be dead data the
 -- views ignore). The season HEADLINE inputs live in `farm_season_config` (seeded below).
-truncate table plots, workers, lots, harvests, processing_batches, tasks, weather, reserve_zones restart identity cascade;
+-- cost_entry is added explicitly: it has NO FK to lots (target_code is un-FK'd by
+-- design), so a `truncate lots cascade` does NOT reach it — without this, re-running
+-- the seed re-inserts every cost and DOUBLES COGS (phase-1 review HIGH).
+truncate table plots, workers, lots, harvests, processing_batches, tasks, weather, reserve_zones, cost_entry restart identity cascade;
 
 insert into plots (id, ord, name, block, variety, area_ha, altitude_masl, trees, shade_pct, established_year, status, last_inspected, expected_yield_kg, harvested_kg, geom, centroid) values
   ('p-tizingal-alto', 0, 'Tizingal Alto', 'Block A', 'Geisha', 4.2, 1690, 14800, 55, 2014, 'healthy', '2026-06-18', 18600, 12120, '{"type":"Polygon","coordinates":[[[-82.641276,8.776908],[-82.639413,8.776908],[-82.639413,8.778761],[-82.641276,8.778761],[-82.641276,8.776908]]]}'::jsonb, '{"type":"Point","coordinates":[-82.640344,8.777835]}'::jsonb),
@@ -213,5 +216,14 @@ select eudr_declare_plot('p-baru-vista',  true, 'established-pre-cutoff');
 select eudr_declare_plot('p-talamanca',   true, 'established-pre-cutoff');
 select eudr_declare_plot('p-nueva-suiza', true, 'satellite-monitoring');
 -- p-palmira intentionally left undeclared (demonstrates the INCOMPLETE verdict).
+
+-- ── Advance the lot-code minter past every seeded code ───────────────────────
+-- lot_code_seq starts at 700 but the seed hard-inserts JC-700/701/710/711 WITHOUT
+-- advancing it, so the first real record_cherry_intake would mint 'JC-700' and
+-- collide on lots_pkey (phase-1 review HIGH). Sync the sequence to the max seeded
+-- JC number so the next mint is strictly greater. (The minter is also collision-
+-- proof now — mig 20260621110000 — so this is belt-and-braces.)
+select setval('lot_code_seq', (select max((split_part(code, '-', 2))::bigint)
+                                 from lots where code ~ '^JC-[0-9]+$'));
 
 commit;

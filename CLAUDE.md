@@ -5,6 +5,18 @@ the global `~/.claude/CLAUDE.md` (Andres's portable workflow, which applies to e
 automatically). Where they conflict, **this file wins** — it adapts the standard workflow
 for a **$0, no-CI practice project**.
 
+## 🚨 RULE #1 — ALWAYS MAXIMIZE PARALLELISM (Andres's number-one rule for this repo)
+
+**Literally always use the maximum number of agents in parallel that is safe to do so. Never
+forget this.** Every substantive task — investigation, design, build, review, fixing a batch of
+findings — fans out across as many concurrent agents / a Workflow as the work safely allows,
+never sequentially. "As is safe" = the standing safety rails still hold: writing agents are
+strictly file-disjoint or worktree-isolated, one author for migrations/seed (the schema lane),
+a reviewer pass closes every authoring fan-out, and a phased gate runs before anything lands.
+Within those rails, **default to the most parallelism possible, always.** A sequential pass on
+work that could have fanned out is a mistake in this repo. (Reinforces the global "always 20+
+agents" law — here it is Rule #1.)
+
 ## What this is
 A practice/portfolio app for **Janson Coffee** (real family farm, Volcán, Chiriquí, Panamá).
 Next.js 15 App Router + React 19 + TypeScript + Tailwind v4. In-repo **mock data** (`src/lib/data/*`),
