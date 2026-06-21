@@ -1,4 +1,10 @@
-# HANDOFF — Janson Coffee farm-ops, Phase 2 (2026-06-21 ~10:40)
+# HANDOFF — Janson Coffee farm-ops, Phase 2 (2026-06-21 ~11:00)
+
+## ⚡ LATEST: ALL OF PHASE 2 IS ON `main` (`d20e033`)
+All 10 slices (foundation S0/S1/S3/S4/S6/S8 + dependent S2/S5/S12/S7) merged to `main` + pushed (auto-deploying). 9 phase-2 migrations, 10 routes (/crew /weigh /ferment /drying /qc /plan /dispatch /satellite /scouting /payroll), 1880 tests. Design docs + handoff vaulted in `docs/design/` + `docs/handoff/`. **So the "build + integrate" parts of the queue below are DONE — pick up at: (A) finish the mega-review (verify the 203 findings → fix), (B) push phase-2 schema to prod + smoke test, (C) multi-tenant P4-S0, (D) phase 3.** `unset SUPABASE_ACCESS_TOKEN` before supabase CLI; prod `db push` needs Andres's approval.
+
+---
+
 
 Continue **exactly** here. This repo is Andres's $0/no-CI practice+portfolio app for his family's
 real coffee farm (Janson Coffee, Volcán, Chiriquí, Panamá). Quality bar: world-class liquid-glass UI,
@@ -49,7 +55,7 @@ Migrations `20260622090000`(S1 crew) `092000`(S3 ferment) `094000`(S4 drying+rep
 | S5 morning dispatch | branch **`claude/p2-s5-crew-dispatch`** (`96b24a4`) [worktree `.claude/worktrees/agent-ab3e86a91c9d7dc08`] | ✅ **committed** (mig `104000`) |
 | S7 payroll + min-wage guard | `claude/p2-s7-payroll` | ✅ **committed** (mig `108000`; un-bypassable make-whole guard — generated cols + BEFORE-INSERT trigger overwrites floor + CHECK; 1634 tests) |
 
-**ALL 4 DEPENDENT SLICES COMMITTED.** A **dependent-wave integration agent** (`a71edadfe1b17951e`) is merging them onto branch `claude/phase2-dependent-integration` (off `main` `77ca8a7`): merges S2/S5/S12/S7, additive-union of shared `sidebar.tsx`/`types.ts`/`seed.sql`, gates the combined 9-migration replay. **When it reports GREEN → `git checkout main && git merge --ff-only claude/phase2-dependent-integration && git push origin main`** (auto-deploys). If the agent died mid-run, check the branch; if not green, re-run the merge (same 4 branches, additive-union conflicts).
+**ALL 4 DEPENDENT SLICES COMMITTED.** A **dependent-wave integration agent** (`a71edadfe1b17951e`) is merging them onto branch `claude/phase2-dependent-integration` (off `main` `77ca8a7`): merges S2/S5/S12/S7, additive-union of shared `sidebar.tsx`/`types.ts`/`seed.sql`, gates the combined 9-migration replay. **When it reports GREEN → `git checkout main && git merge claude/phase2-dependent-integration && git push origin main`** (auto-deploys). NOTE: `main` advanced to `4d8e7d4` (a docs-only commit vaulting the design docs into `docs/design` + `docs/handoff`), so use a plain `git merge` (NOT `--ff-only`) — docs vs the integration's src/supabase files are disjoint → clean merge commit. If the agent died mid-run, check the branch; if not green, re-run the merge (same 4 branches, additive-union conflicts).
 
 **🔄 Mega-review (100+ agents)** — Workflow `wbv4vm8w9`, run `wf_a1017aa5-fcb`. 42 finders (6 slices × 7 dims: security · invariant-bypass · migration · rpc · ui · feature-gap · test) + adversarial verify (2 skeptics CRIT/HIGH, refute-by-default) → synthesize confirmed by severity.
 
