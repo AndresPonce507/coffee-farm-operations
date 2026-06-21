@@ -1,6 +1,9 @@
 import { PageHeader } from "@/components/ui/page-header";
 import { CostingSummary } from "@/components/sections/costing/costing-summary";
 import { CostLotList } from "@/components/sections/costing/cost-lot-list";
+import { BookCostButton } from "@/components/sections/costing/cost-entry-form";
+import { getLots } from "@/lib/db/lots";
+import { getPlots } from "@/lib/db/plots";
 
 /**
  * Costing — the "/costing" route for Coffee Farm Operations (S7).
@@ -13,19 +16,29 @@ import { CostLotList } from "@/components/sections/costing/cost-lot-list";
  * allocation rules (labor | processing | agronomy | overhead), with every
  * figure resolvable to its append-only `cost_entry` provenance.
  *
- * Server Component (no client JS): all data flows from the cogs + greenlots read
- * ports; the matview-backed `cogs_per_lot` RPC is the SSOT for each verdict, the
- * ledger is the audit trail behind it — nothing here re-implements the COGS sum.
- * The app shell (sidebar, topbar, padded main) is provided by (app)/layout.tsx;
- * this page renders only its inner content.
+ * The header now carries the WRITE affordance — `BookCostButton` opens a form
+ * that appends a NEW cost to the `cost_entry` ledger (the only legal write is an
+ * append; the action refreshes the matview so the new cost shows immediately).
+ * It is fed the lot-code + plot lists so a plot/lot-targeted cost names a real
+ * target; a farm-wide overhead carries none. Corrections (reversing entries)
+ * remain a follow-up.
+ *
+ * Server Component (no client JS in the read sections): all data flows from the
+ * cogs + greenlots read ports; the matview-backed `cogs_per_lot` RPC is the SSOT
+ * for each verdict, the ledger is the audit trail behind it — nothing here
+ * re-implements the COGS sum.
  */
-export default function CostingPage() {
+export default async function CostingPage() {
+  const [lots, plots] = await Promise.all([getLots(), getPlots()]);
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Costing"
         subtitle="True cost-per-kg-green — the number the farm turns on"
-      />
+      >
+        <BookCostButton lots={lots} plots={plots} />
+      </PageHeader>
 
       <CostingSummary />
 

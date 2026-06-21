@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EUDR_CUTOFF, type LotEudrDossier } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
+import { DeclarePlotForm } from "./declare-plot-form";
 import { EudrStatusBadge } from "./eudr-status-badge";
 
 /** A compliance fact chip — a green check or a red cross, label, never color
@@ -54,7 +55,7 @@ export function EudrDossier({
   dossier: LotEudrDossier;
   className?: string;
 }) {
-  const { status, originPlots } = dossier;
+  const { code, status, originPlots } = dossier;
 
   return (
     <Card className={cn("animate-rise", className)}>
@@ -107,6 +108,16 @@ export function EudrDossier({
                       : "Undeclared"}
                   </FactChip>
                 </div>
+                {/* The owner's WRITE seam: declare an UNdeclared plot
+                    deforestation-free (the verdict re-renders from the SSOT).
+                    A declared plot shows no button — withdraw is out of scope. */}
+                {!p.deforestationFree && (
+                  <DeclarePlotForm
+                    plotId={p.plotId}
+                    establishedYear={p.establishedYear}
+                    lotCode={code}
+                  />
+                )}
               </li>
             ))}
           </ul>
