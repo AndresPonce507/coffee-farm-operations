@@ -262,4 +262,42 @@ select eudr_declare_plot('p-nueva-suiza', true, 'satellite-monitoring');
 select setval('lot_code_seq', (select max((split_part(code, '-', 2))::bigint)
                                  from lots where code ~ '^JC-[0-9]+$'));
 
+-- ── P2-S7: payroll dogfood — a calculated pay period for the people-trunk capstone ──
+-- The /payroll cockpit needs a real, frozen period to read. The make-whole guard,
+-- statutory withholding, and the append-only ledgers all live in the migration; here
+-- we seed the INPUTS (attendance hours + a tuned min wage) and run the live
+-- compute_pay_period RPC so the dogfood shows a genuine snapshot — including ONE
+-- worker the legal-minimum guard visibly lifts.
+--
+-- ⚠️ The min wage + statutory rates below are PLACEHOLDER demo values (DESIGN §4.1
+-- Apply-OK gate). They make the make-whole + withholding render today; they are NOT
+-- the confirmed Panama figures and must be set by the family/an accountant before a
+-- real run. min_wage_hourly is tuned to 3.00/hr so a short-clocked picker falls under
+-- the floor and the make-whole fires (with the 0.80 default, every full day clears it).
+update farm_season_config
+   set min_wage_hourly_usd = 3.00, standard_workday_hours = 8
+ where id = 1;
+
+-- A week of attendance for the picking crew (clock-in 13:00Z → clock-out 21:00Z = 8h),
+-- written through the live record_attendance RPC so the hour-pairing the payroll view
+-- relies on is exercised. w-06 (Lucía) gets a SHORT day (1h) so her blended pay falls
+-- below the floor and the system tops her up — the dignity moment, made literal.
+select record_attendance('w-03','clock-in',  null, '2026-06-16T13:00:00Z'::timestamptz, 'server', next_server_seq(), 'seed-att-w03-in');
+select record_attendance('w-03','clock-out', null, '2026-06-16T21:00:00Z'::timestamptz, 'server', next_server_seq(), 'seed-att-w03-out');
+select record_attendance('w-04','clock-in',  null, '2026-06-16T13:00:00Z'::timestamptz, 'server', next_server_seq(), 'seed-att-w04-in');
+select record_attendance('w-04','clock-out', null, '2026-06-16T21:00:00Z'::timestamptz, 'server', next_server_seq(), 'seed-att-w04-out');
+select record_attendance('w-08','clock-in',  null, '2026-06-17T13:00:00Z'::timestamptz, 'server', next_server_seq(), 'seed-att-w08-in');
+select record_attendance('w-08','clock-out', null, '2026-06-17T21:00:00Z'::timestamptz, 'server', next_server_seq(), 'seed-att-w08-out');
+-- Lucía: a short 1-hour clocked day → blended pay below the 3.00/hr floor → made whole.
+select record_attendance('w-06','clock-in',  null, '2026-06-16T13:00:00Z'::timestamptz, 'server', next_server_seq(), 'seed-att-w06-in');
+select record_attendance('w-06','clock-out', null, '2026-06-16T14:00:00Z'::timestamptz, 'server', next_server_seq(), 'seed-att-w06-out');
+
+-- statutory rate row for the period (placeholder; supersedes the 2026-01-01 baseline).
+insert into statutory_rates (effective_from, css_employee_pct, seguro_educativo_pct, decimo_accrual_pct, note)
+values ('2026-06-01', 9.75, 1.25, 8.33, 'PLACEHOLDER demo rates — confirm with family/accountant before a real run.')
+  on conflict (effective_from) do nothing;
+
+-- Calculate (freeze the snapshot for) the demo week via the live command RPC.
+select compute_pay_period('pp-2026-06-w3', '2026-06-15', '2026-06-21', '2026-2027', 'daily');
+
 commit;
