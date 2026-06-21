@@ -58,4 +58,25 @@ describe("ReservationDrawer (the one client island)", () => {
     const toast = await screen.findByTestId("reservation-toast-region");
     expect(toast).toBeInTheDocument();
   });
+
+  // Regression: the drawer must PORTAL to <body> so it escapes page stacking
+  // contexts. Rendered inline, a transformed ancestor (the page shell / cards
+  // carry a lingering `animate-rise` translateY(0) transform) traps the z-50
+  // layer below sibling cards and page content renders THROUGH the drawer.
+  // Mirrors the dialog.tsx portal regression. Fails on the pre-portal code.
+  it("portals to document.body, escaping a transformed ancestor's stacking context", () => {
+    render(
+      <div data-testid="page-shell" style={{ transform: "translateY(0)" }}>
+        <ReservationDrawer lot={LOT} />
+      </div>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /reserve/i }));
+
+    const shell = screen.getByTestId("page-shell");
+    // The open drawer is NOT nested inside the (stacking-context-creating) shell …
+    expect(shell.querySelector('[role="dialog"]')).toBeNull();
+    // … it is portaled out onto <body>.
+    const drawer = screen.getByRole("dialog");
+    expect(drawer.parentElement).toBe(document.body);
+  });
 });

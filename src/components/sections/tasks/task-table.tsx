@@ -111,6 +111,15 @@ export async function TaskTable({
             </TR>
           </THead>
           <TBody>
+            {tasks.length === 0 && (
+              <TR className="hover:bg-transparent">
+                <TD colSpan={8} className="px-4 py-10 text-center">
+                  <span className="inline-block rounded-xl border border-dashed border-line bg-white/40 px-4 py-3 text-sm text-muted-fg">
+                    No tasks.
+                  </span>
+                </TD>
+              </TR>
+            )}
             {tasks.map((task) => {
               const overdue = isOverdue(task);
               return (

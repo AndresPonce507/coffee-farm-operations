@@ -40,6 +40,26 @@ export function BarMini({
       ? `Bar chart of ${data.length} values, from ${data[0].label} (${data[0].value}) to ${data[lastIndex].label} (${data[lastIndex].value}).`
       : "Bar chart with no data.";
 
+  // Explicit empty state — a labelled, accessible placeholder rather than a
+  // silently-empty plot, so a card with no harvest reads as "nothing yet" and
+  // not as a broken chart.
+  if (data.length === 0) {
+    return (
+      <div
+        className={cn("flex flex-col", className)}
+        role="img"
+        aria-label={ariaLabel}
+      >
+        <div
+          className="flex items-center justify-center rounded-lg text-sm text-muted-fg"
+          style={{ height: `${height}px` }}
+        >
+          No harvest data yet.
+        </div>
+      </div>
+    );
+  }
+
   // Vertical gradient: a lighter tint of the bar color up top, deepening to
   // the base color at the foot. color-mix keeps this correct for any hex the
   // caller passes (forest, coffee, honey…) without hardcoding a second color.
@@ -54,11 +74,24 @@ export function BarMini({
         aria-label={ariaLabel}
       >
         {data.map((d, i) => {
-          const heightPct = max > 0 ? (d.value / max) * 100 : 0;
+          // Guard the scale: a non-positive max (empty/all-zero/non-finite set)
+          // collapses every bar to a clean 0% — never NaN/Infinity from a
+          // divide-by-zero. `Number.isFinite` also tolerates a stray NaN datum.
+          const heightPct =
+            max > 0 && Number.isFinite(d.value)
+              ? Math.max(0, (d.value / max) * 100)
+              : 0;
           const isLast = i === lastIndex;
           return (
-            <div key={`${d.label}-${i}`} className="flex flex-1 items-end">
+            // `h-full` makes this flex item stretch to the plot's definite
+            // pixel height. Without it, `align-items:flex-end` leaves the item
+            // content-sized (indefinite), so the bar's percentage height below
+            // resolves to `auto` → 0 and every bar renders invisible — the
+            // /harvests "blank chart" regression.
+            <div key={`${d.label}-${i}`} className="flex h-full flex-1 items-end">
               <div
+                data-bar
+                data-testid="bar-mini-bar"
                 title={`${d.label}: ${d.value}`}
                 className={cn(
                   "group/bar relative w-full origin-bottom rounded-t-lg",

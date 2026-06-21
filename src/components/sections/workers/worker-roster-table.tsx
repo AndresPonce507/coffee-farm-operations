@@ -53,6 +53,15 @@ export async function WorkerRosterTable() {
             </TR>
           </THead>
           <TBody>
+            {workers.length === 0 && (
+              <TR className="hover:bg-transparent">
+                <TD colSpan={8} className="px-5 py-10 text-center">
+                  <span className="inline-block rounded-xl border border-dashed border-line bg-white/40 px-4 py-3 text-sm text-muted-fg">
+                    No workers yet.
+                  </span>
+                </TD>
+              </TR>
+            )}
             {workers.map((worker) => (
               <TR key={worker.id}>
                 <TD className="pl-5">

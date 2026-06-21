@@ -54,6 +54,25 @@ export function Donut({
 
   const total = data.reduce((sum, d) => sum + (d.value > 0 ? d.value : 0), 0);
 
+  // Explicit empty state — when there's nothing to plot (no slices, or every
+  // slice is zero) show a labelled placeholder instead of a bare track ring
+  // that reads as a chart which silently failed to render.
+  if (data.length === 0 || total <= 0) {
+    return (
+      <div
+        className={cn(
+          "relative inline-flex items-center justify-center rounded-full text-center text-xs text-muted-fg",
+          className,
+        )}
+        style={{ width: size, height: size }}
+        role="img"
+        aria-label="Donut chart with no data."
+      >
+        No data yet.
+      </div>
+    );
+  }
+
   // Per-instance suffix keyed on the actual content, so two charts never reuse
   // the same gradient/filter ids.
   const uid = donutUid(

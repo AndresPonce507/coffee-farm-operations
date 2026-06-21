@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { ShieldCheck, ShieldAlert, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +61,11 @@ export function AuditDrawer({
   events,
   chainVerified,
 }: AuditDrawerProps) {
+  // Portal target only exists on the client. Gate the portal on mount so SSR
+  // renders nothing (the drawer is always opened by a client interaction anyway).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -73,11 +79,16 @@ export function AuditDrawer({
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   const VerifyIcon = chainVerified ? ShieldCheck : ShieldAlert;
 
-  return (
+  // Portal to <body> so the slide-over escapes every page stacking context. The
+  // page shell + cards carry lingering `transform`s (from `animate-rise`, whose
+  // end state is translateY(0) — still a transform, so still a stacking context),
+  // which would otherwise trap this z-50 layer *below* sibling cards and let page
+  // content render through the drawer. (Fixes the "drawer renders behind the page" bug.)
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex justify-end"
       role="dialog"
@@ -173,6 +184,7 @@ export function AuditDrawer({
           )}
         </div>
       </aside>
-    </div>
+    </div>,
+    document.body,
   );
 }

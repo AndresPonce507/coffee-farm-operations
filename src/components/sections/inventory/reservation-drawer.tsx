@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { CheckCircle2, Lock, X } from "lucide-react";
 
 import type { GreenLotAtp } from "@/lib/types";
@@ -63,9 +64,7 @@ export function ReservationDrawer({ lot }: { lot: GreenLotAtp }) {
         )}
       </Button>
 
-      {open && (
-        <ReservationPanel lot={lot} onClose={() => setOpen(false)} />
-      )}
+      {open && <ReservationPanel lot={lot} onClose={() => setOpen(false)} />}
     </>
   );
 }
@@ -81,6 +80,11 @@ function ReservationPanel({
     InventoryActionState,
     FormData
   >(reserveGreenLotAction, INVENTORY_IDLE);
+
+  // Portal target only exists on the client. Gate the portal on mount so SSR
+  // renders nothing (this drawer is only ever opened by a client interaction).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // Escape-to-close + scroll lock while the drawer is mounted.
   useEffect(() => {
@@ -110,7 +114,14 @@ function ReservationPanel({
   const toastMessage =
     state.status === "error" && state.message ? state.message : null;
 
-  return (
+  if (!mounted) return null;
+
+  // Portal to <body> so the drawer escapes every page stacking context. The page
+  // shell + cards carry lingering `transform`s (from `animate-rise`, whose end
+  // state translateY(0) is still a transform → still a stacking context), which
+  // would otherwise trap this z-50 layer *below* sibling cards and let page
+  // content render through the drawer. (Fixes the "renders behind the page" bug.)
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex justify-end"
       role="dialog"
@@ -243,6 +254,7 @@ function ReservationPanel({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

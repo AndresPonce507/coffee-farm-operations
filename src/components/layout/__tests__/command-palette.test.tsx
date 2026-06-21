@@ -40,7 +40,9 @@ describe("CommandPalette (S9)", () => {
       target: { value: "cost" },
     });
     expect(screen.getByTestId("command-result-/costing")).toBeInTheDocument();
-    expect(screen.queryByTestId("command-result-/plots")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("command-result-/plots"),
+    ).not.toBeInTheDocument();
   });
 
   it("offers a jump-to-lot action for a typed lot number and navigates to /lots/JC-NNN", () => {
@@ -59,7 +61,9 @@ describe("CommandPalette (S9)", () => {
     fireEvent.change(screen.getByLabelText("Search routes and lots"), {
       target: { value: "jc-711" },
     });
-    expect(screen.getByTestId("command-result-/lots/JC-711")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("command-result-/lots/JC-711"),
+    ).toBeInTheDocument();
   });
 
   it("navigates with the keyboard (ArrowDown + Enter) and closes after", () => {
@@ -78,6 +82,29 @@ describe("CommandPalette (S9)", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
+  // Regression: the palette overlay must PORTAL to <body> so it escapes page
+  // stacking contexts. Rendered inline, a transformed ancestor (the app shell /
+  // cards carry a lingering `animate-rise` translateY(0) transform) traps the
+  // z-50 layer below sibling cards and page content renders THROUGH the palette.
+  // Mirrors the dialog.tsx portal regression. Fails on the pre-portal code.
+  it("portals to document.body, escaping a transformed ancestor's stacking context", () => {
+    render(
+      <div data-testid="page-shell" style={{ transform: "translateY(0)" }}>
+        <CommandPalette />
+      </div>,
+    );
+    fireEvent.click(screen.getByTestId("command-palette-trigger"));
+
+    const shell = screen.getByTestId("page-shell");
+    // The open palette is NOT nested inside the (stacking-context-creating) shell …
+    expect(shell.querySelector('[role="dialog"]')).toBeNull();
+    // … it is portaled out onto <body> (the scrim wrapper sits on body).
+    const palette = screen.getByTestId("command-palette");
+    const scrim = screen.getByTestId("command-palette-scrim");
+    expect(scrim.parentElement).toBe(document.body);
+    expect(scrim.contains(palette)).toBe(true);
+  });
+
   // FINDING #31 — ARIA combobox pattern. The input must be wired to its
   // listbox so a screen reader announces the result list, its expanded state,
   // and which option is currently active as the user arrows through.
@@ -90,7 +117,10 @@ describe("CommandPalette (S9)", () => {
       const listbox = screen.getByRole("listbox");
       expect(listbox).toHaveAttribute("id");
       // aria-controls points at the listbox by id.
-      expect(input).toHaveAttribute("aria-controls", listbox.getAttribute("id")!);
+      expect(input).toHaveAttribute(
+        "aria-controls",
+        listbox.getAttribute("id")!,
+      );
     });
 
     it("reports the expanded state (open with results) via aria-expanded", () => {

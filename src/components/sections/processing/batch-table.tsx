@@ -102,6 +102,15 @@ export async function BatchTable({ lots }: { lots: string[] }) {
           </THead>
 
           <TBody>
+            {batches.length === 0 && (
+              <TR className="hover:bg-transparent">
+                <TD colSpan={11} className="px-4 py-10 text-center">
+                  <span className="inline-block rounded-xl border border-dashed border-line bg-white/40 px-4 py-3 text-sm text-muted-fg">
+                    No batches in process.
+                  </span>
+                </TD>
+              </TR>
+            )}
             {batches.map((batch) => {
               // The LOT's authoritative stage (lots.stage); fall back to the
               // batch's own stage only if the lot isn't in the map (defensive).

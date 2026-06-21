@@ -32,6 +32,24 @@ export function TrendLine({
 }: TrendLineProps) {
   const points = data.length;
 
+  // Explicit empty state — a labelled placeholder instead of a chart frame with
+  // only gridlines, so an empty series reads as "no data yet", not as a chart
+  // that silently failed to draw its line.
+  if (points === 0) {
+    return (
+      <div className={cn("w-full", className)}>
+        <div
+          className="flex items-center justify-center text-sm text-muted-fg"
+          style={{ height }}
+          role="img"
+          aria-label="Trend line chart with no data."
+        >
+          No trend data yet.
+        </div>
+      </div>
+    );
+  }
+
   // Unique ids avoid collisions when several charts share one page.
   const safeColor = color.replace(/[^a-zA-Z0-9]/g, "");
   const gradientId = `trendline-gradient-${safeColor}`;

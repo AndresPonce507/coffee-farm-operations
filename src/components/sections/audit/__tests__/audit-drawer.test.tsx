@@ -115,4 +115,28 @@ describe("AuditDrawer (smoke)", () => {
 
     expect(screen.getByText(/no events/i)).toBeInTheDocument();
   });
+
+  // Regression: the slide-over must PORTAL to <body> so it escapes page stacking
+  // contexts. Rendered inline, a transformed ancestor (the app shell / cards carry
+  // a lingering `animate-rise` transform) traps the z-50 layer below sibling cards
+  // and page content renders THROUGH the drawer. Fails on the pre-portal code.
+  it("portals to document.body, escaping a transformed ancestor's stacking context", () => {
+    render(
+      <div data-testid="page-shell" style={{ transform: "translateY(0)" }}>
+        <AuditDrawer
+          open
+          onClose={vi.fn()}
+          streamKey="JC-564"
+          events={FIXTURE}
+          chainVerified
+        />
+      </div>,
+    );
+    const shell = screen.getByTestId("page-shell");
+    // The drawer is NOT nested inside the (stacking-context-creating) shell …
+    expect(shell.querySelector('[role="dialog"]')).toBeNull();
+    // … it is portaled out onto <body>.
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.parentElement).toBe(document.body);
+  });
 });

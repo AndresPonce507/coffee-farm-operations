@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Search, CornerDownLeft, Hash } from "lucide-react";
 
@@ -42,6 +43,10 @@ export function CommandPalette() {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Portal target only exists on the client. Gate the overlay portal on mount so
+  // SSR renders nothing for it (the launcher is only ever opened client-side).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const results = useMemo<Result[]>(() => {
     const q = query.trim().toLowerCase();
@@ -69,7 +74,9 @@ export function CommandPalette() {
   const LISTBOX_ID = "command-palette-listbox";
   const optionId = (r: Result) => `command-option-${r.kind}-${r.href}`;
   const activeId =
-    results.length > 0 && results[active] ? optionId(results[active]) : undefined;
+    results.length > 0 && results[active]
+      ? optionId(results[active])
+      : undefined;
 
   // Clamp the active row whenever the result set shrinks.
   useEffect(() => {
@@ -126,111 +133,126 @@ export function CommandPalette() {
         </kbd>
       </button>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-start justify-center bg-ink/30 p-4 pt-[12vh]"
-          onClick={close}
-          data-testid="command-palette-scrim"
-        >
+      {open &&
+        mounted &&
+        // Portal the overlay to <body> so it escapes every page stacking context.
+        // The page shell + cards carry lingering `transform`s (from `animate-rise`,
+        // whose end state translateY(0) is still a transform → still a stacking
+        // context), which would otherwise trap this z-50 layer *below* sibling
+        // cards and let page content render through the palette. (Fixes the
+        // "renders behind the page" bug.)
+        createPortal(
           <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="Command palette"
-            data-testid="command-palette"
-            onClick={(e) => e.stopPropagation()}
-            className="animate-rise w-full max-w-lg overflow-hidden rounded-2xl border border-white/60 bg-white/90 shadow-2xl backdrop-blur-xl"
-            onKeyDown={(e) => {
-              if (e.key === "Escape") {
-                e.preventDefault();
-                close();
-              } else if (e.key === "ArrowDown") {
-                e.preventDefault();
-                setActive((a) => Math.min(a + 1, results.length - 1));
-              } else if (e.key === "ArrowUp") {
-                e.preventDefault();
-                setActive((a) => Math.max(a - 1, 0));
-              } else if (e.key === "Enter") {
-                e.preventDefault();
-                go(results[active]);
-              }
-            }}
+            className="fixed inset-0 z-50 flex items-start justify-center bg-ink/30 p-4 pt-[12vh]"
+            onClick={close}
+            data-testid="command-palette-scrim"
           >
-            <div className="flex items-center gap-2 border-b border-line px-4">
-              <Search className="h-4 w-4 shrink-0 text-muted-fg" aria-hidden />
-              <input
-                ref={inputRef}
-                type="text"
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  setActive(0);
-                }}
-                // ARIA combobox pattern: the input owns the listbox below, and
-                // announces its expanded state + the currently-highlighted
-                // option so screen readers track arrow navigation.
-                role="combobox"
-                aria-label="Search routes and lots"
-                aria-controls={LISTBOX_ID}
-                aria-expanded={results.length > 0}
-                aria-autocomplete="list"
-                aria-activedescendant={activeId}
-                placeholder="Jump to a page, or type a lot number…"
-                className="h-12 w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted-fg/70"
-              />
-            </div>
-
-            <ul
-              id={LISTBOX_ID}
-              role="listbox"
-              aria-label="Results"
-              className="max-h-80 overflow-y-auto p-2"
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Command palette"
+              data-testid="command-palette"
+              onClick={(e) => e.stopPropagation()}
+              className="animate-rise w-full max-w-lg overflow-hidden rounded-2xl border border-white/60 bg-white/90 shadow-2xl backdrop-blur-xl"
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  close();
+                } else if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  setActive((a) => Math.min(a + 1, results.length - 1));
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setActive((a) => Math.max(a - 1, 0));
+                } else if (e.key === "Enter") {
+                  e.preventDefault();
+                  go(results[active]);
+                }
+              }}
             >
-              {results.length === 0 ? (
-                <li
-                  data-testid="command-palette-empty"
-                  className="px-3 py-6 text-center text-sm text-muted-fg"
-                >
-                  No matches — type a lot number like 701 to open its dossier.
-                </li>
-              ) : (
-                results.map((r, i) => (
+              <div className="flex items-center gap-2 border-b border-line px-4">
+                <Search
+                  className="h-4 w-4 shrink-0 text-muted-fg"
+                  aria-hidden
+                />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setActive(0);
+                  }}
+                  // ARIA combobox pattern: the input owns the listbox below, and
+                  // announces its expanded state + the currently-highlighted
+                  // option so screen readers track arrow navigation.
+                  role="combobox"
+                  aria-label="Search routes and lots"
+                  aria-controls={LISTBOX_ID}
+                  aria-expanded={results.length > 0}
+                  aria-autocomplete="list"
+                  aria-activedescendant={activeId}
+                  placeholder="Jump to a page, or type a lot number…"
+                  className="h-12 w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted-fg/70"
+                />
+              </div>
+
+              <ul
+                id={LISTBOX_ID}
+                role="listbox"
+                aria-label="Results"
+                className="max-h-80 overflow-y-auto p-2"
+              >
+                {results.length === 0 ? (
                   <li
-                    key={`${r.kind}-${r.href}`}
-                    id={optionId(r)}
-                    role="option"
-                    aria-selected={i === active}
+                    data-testid="command-palette-empty"
+                    className="px-3 py-6 text-center text-sm text-muted-fg"
                   >
-                    <button
-                      type="button"
-                      data-testid={`command-result-${r.href}`}
-                      onMouseEnter={() => setActive(i)}
-                      onClick={() => go(r)}
-                      className={cn(
-                        "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors",
-                        i === active
-                          ? "bg-forest-100 text-forest"
-                          : "text-ink hover:bg-muted",
-                      )}
-                    >
-                      <r.Icon
-                        className={cn(
-                          "h-[18px] w-[18px] shrink-0",
-                          i === active ? "text-forest" : "text-muted-fg",
-                        )}
-                        aria-hidden
-                      />
-                      <span className="truncate">{r.label}</span>
-                      {i === active && (
-                        <CornerDownLeft className="ml-auto h-3.5 w-3.5 text-forest/70" aria-hidden />
-                      )}
-                    </button>
+                    No matches — type a lot number like 701 to open its dossier.
                   </li>
-                ))
-              )}
-            </ul>
-          </div>
-        </div>
-      )}
+                ) : (
+                  results.map((r, i) => (
+                    <li
+                      key={`${r.kind}-${r.href}`}
+                      id={optionId(r)}
+                      role="option"
+                      aria-selected={i === active}
+                    >
+                      <button
+                        type="button"
+                        data-testid={`command-result-${r.href}`}
+                        onMouseEnter={() => setActive(i)}
+                        onClick={() => go(r)}
+                        className={cn(
+                          "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors",
+                          i === active
+                            ? "bg-forest-100 text-forest"
+                            : "text-ink hover:bg-muted",
+                        )}
+                      >
+                        <r.Icon
+                          className={cn(
+                            "h-[18px] w-[18px] shrink-0",
+                            i === active ? "text-forest" : "text-muted-fg",
+                          )}
+                          aria-hidden
+                        />
+                        <span className="truncate">{r.label}</span>
+                        {i === active && (
+                          <CornerDownLeft
+                            className="ml-auto h-3.5 w-3.5 text-forest/70"
+                            aria-hidden
+                          />
+                        )}
+                      </button>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

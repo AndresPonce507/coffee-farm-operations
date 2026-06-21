@@ -81,6 +81,21 @@ describe("BatchTable (smoke)", () => {
     expect(advanceButtons).toHaveLength(1);
   });
 
+  it("renders a single empty-state row when there are no batches", async () => {
+    getBatchesMock.mockResolvedValue([]);
+    getLotStagesMock.mockResolvedValue(stageMap({}));
+
+    const ui = await BatchTable({ lots: [] });
+    render(ui);
+
+    // A tasteful empty-state message stands in for the missing rows …
+    expect(screen.getByText(/no batches in process/i)).toBeInTheDocument();
+    // … and not a single batch row is rendered.
+    expect(
+      screen.queryByRole("button", { name: /advance .* to the next stage/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it("keys the advance control off the LOT's stage (lots.stage), not the stale batch.stage", async () => {
     // The batch row claims 'fermentation' but the LOT has already advanced to
     // 'drying'. The advance affordance must derive its forward set from the LOT's
