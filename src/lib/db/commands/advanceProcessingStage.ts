@@ -145,16 +145,35 @@ export type AdvanceProcessingStageResult =
   | { ok: false; errors?: Record<string, string>; message?: string };
 
 /**
- * Does this RPC error look like one of the hardened CHECK violations? The
- * backward-move and mass-gain guards raise with errcode `check_violation`
- * (SQLSTATE 23514); the bad-stage guard raises an invalid-enum error. We match
- * the message so the family sees a clean, human-readable reason rather than the
- * raw exception text.
+ * Does this RPC error look like one of the hardened CHECK violations or a known
+ * integrity failure? We translate each into a clean, human-readable reason so the
+ * family never sees raw Postgres exception text:
+ *   - backward-move / mass-gain guards raise `check_violation` (SQLSTATE 23514),
+ *     matched by message;
+ *   - the bad-stage guard raises an invalid-enum error;
+ *   - an UNKNOWN lot raises a foreign_key_violation (SQLSTATE 23503) — the
+ *     lot_code has no row to advance;
+ *   - a replayed/duplicated event collides on the lot_event
+ *     `(device_id, device_seq)` unique key (SQLSTATE 23505) — a retry artefact.
+ * SQLSTATE codes are matched first (most robust), with a message fallback for the
+ * CHECK-violation variants whose code overlaps.
  */
 function friendlyRpcError(
   error: { message: string; code?: string },
   toStage: string,
+  lotCode: string,
 ): string | null {
+  // An unknown lot — the FK from the event/update has no lots row to point at.
+  if (error.code === "23503" || /foreign key constraint/i.test(error.message)) {
+    return `Lot ${lotCode} doesn't exist — choose a lot that's already in the mill.`;
+  }
+  // A duplicate event (device_id, device_seq) — a replay/double-submit artefact.
+  if (
+    error.code === "23505" ||
+    /duplicate key value|unique constraint/i.test(error.message)
+  ) {
+    return "That advance was already recorded — please refresh and try again if the stage didn't move.";
+  }
   if (/backward/i.test(error.message)) {
     return `That moves the lot backward through the pipeline — a lot can only advance forward. (${error.message})`;
   }
@@ -193,7 +212,11 @@ export async function advanceProcessingStage(
   });
 
   if (error) {
-    const friendly = friendlyRpcError(error, parsed.data.toStage);
+    const friendly = friendlyRpcError(
+      error,
+      parsed.data.toStage,
+      parsed.data.lotCode,
+    );
     if (friendly) return { ok: false, message: friendly };
     return { ok: false, message: `advance_processing_stage: ${error.message}` };
   }

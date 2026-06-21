@@ -82,7 +82,20 @@ export async function gradeGreenLotAction(
     occurredAt,
   });
 
-  if (result.ok) refresh();
+  if (result.ok) {
+    // Cost the freshly-minted green lot immediately — otherwise it sits uncosted
+    // on the table until an unrelated refresh fires. Best-effort (D5 write-path
+    // refresh seam): the materialize is the source of truth, so a refresh hiccup
+    // must never fail the grade — the next refresh/read recovers.
+    try {
+      await (sb as unknown as { rpc: (fn: string) => Promise<unknown> }).rpc(
+        "refresh_lot_cost",
+      );
+    } catch {
+      // swallow — the grade succeeded; costing self-heals on the next refresh.
+    }
+    refresh();
+  }
   return gradeToState(result);
 }
 

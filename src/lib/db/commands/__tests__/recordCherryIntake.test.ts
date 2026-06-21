@@ -136,10 +136,10 @@ describe("recordCherryIntake", () => {
     if (result.ok) expect(result.lotCode).toBe("JC-565");
   });
 
-  it("surfaces a labelled error when the RPC fails", async () => {
+  it("surfaces a labelled error when the RPC fails with an unrecognised message", async () => {
     const { store } = fakeStore({
       data: null,
-      error: { message: "duplicate key value violates unique constraint" },
+      error: { message: "connection terminated unexpectedly" },
     });
 
     const result = await recordCherryIntake(store, validRaw());
@@ -147,7 +147,31 @@ describe("recordCherryIntake", () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.message).toContain("record_cherry_intake");
-      expect(result.message).toContain("duplicate key");
+      expect(result.message).toContain("connection terminated");
+    }
+  });
+
+  // MED — a raw (device_id, device_seq) unique violation must NOT leak the raw
+  // Postgres constraint text to the family. It maps to a friendly, retry-safe
+  // message and drops the raw "duplicate key … violates unique constraint …
+  // lot_event_device_id_device_seq_key" string. FAILS pre-fix (raw text leaks).
+  it("maps a (device_id, device_seq) unique violation to a friendly message (no raw constraint text)", async () => {
+    const { store } = fakeStore({
+      data: null,
+      error: {
+        message:
+          'duplicate key value violates unique constraint "lot_event_device_id_device_seq_key"',
+      },
+    });
+
+    const result = await recordCherryIntake(store, validRaw());
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      // friendly, family-readable — mentions a retry/already-recorded notion
+      expect(result.message).toMatch(/again|already|retr/i);
+      // and the raw Postgres internals never reach the user
+      expect(result.message).not.toMatch(/duplicate key|violates|unique constraint|lot_event_device_id/i);
     }
   });
 

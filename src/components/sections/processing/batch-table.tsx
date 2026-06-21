@@ -1,5 +1,6 @@
 import type { BatchStage } from "@/lib/types";
 import { getBatches } from "@/lib/db/processing";
+import { getLotStages } from "@/lib/db/processing-lots";
 import { BatchRowActions } from "./batch-actions";
 import { AdvanceStageControl } from "./advance-stage-control";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
@@ -22,6 +23,15 @@ import { kg, pct, longDate } from "@/lib/utils";
  * reads at a glance: cherry/fermentation (early, wet) → drying → parchment →
  * milled → green (finished). Tone/fill maps are explicit literal records —
  * Tailwind never sees an interpolated class name.
+ *
+ * COHERENCE (pipeline-UI review fix): the advance write moves `lots.stage`, NOT
+ * `processing_batches.stage`. So the Advance affordance is keyed off the LOT, not
+ * the batch row — exactly ONE per `lot_code`, with its "from" stage read from
+ * `getLotStages` (`lots.stage`). This kills the old defect where a lot_code with
+ * several batch rows rendered several Advance buttons all mutating one shared
+ * lot, and where the displayed stage drifted from what the advance actually
+ * moves. After a successful advance, `revalidatePath('/processing')` re-reads
+ * `getLotStages`, so the board reflects the new LOT stage on the next paint.
  */
 
 const STAGE_TONE: Record<BatchStage, BadgeTone> = {
@@ -54,7 +64,12 @@ const STAGE_LABEL: Record<BatchStage, string> = {
 };
 
 export async function BatchTable({ lots }: { lots: string[] }) {
-  const batches = await getBatches();
+  const [batches, lotStages] = await Promise.all([getBatches(), getLotStages()]);
+
+  // The advance affordance is one-per-lot, keyed off the LOT's stage. Track which
+  // lot_codes have already shown their control so a lot with several batch rows
+  // surfaces exactly one Advance button (on its first row), mutating one lot.
+  const lotControlShown = new Set<string>();
 
   return (
     <Card className="animate-rise overflow-hidden">
@@ -87,7 +102,15 @@ export async function BatchTable({ lots }: { lots: string[] }) {
           </THead>
 
           <TBody>
-            {batches.map((batch) => (
+            {batches.map((batch) => {
+              // The LOT's authoritative stage (lots.stage); fall back to the
+              // batch's own stage only if the lot isn't in the map (defensive).
+              const lotStage = lotStages.get(batch.lotCode) ?? batch.stage;
+              // Show the advance control once per lot_code — on its first row.
+              const showAdvance = !lotControlShown.has(batch.lotCode);
+              if (showAdvance) lotControlShown.add(batch.lotCode);
+
+              return (
               <TR key={batch.id} className="group">
                 <TD>
                   <span className="font-mono text-sm font-medium text-ink transition-colors group-hover:text-forest-700">
@@ -142,12 +165,19 @@ export async function BatchTable({ lots }: { lots: string[] }) {
 
                 <TD className="text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <AdvanceStageControl batch={batch} />
+                    {showAdvance && (
+                      <AdvanceStageControl
+                        lotCode={batch.lotCode}
+                        currentStage={lotStage}
+                        currentKg={batch.currentKg}
+                      />
+                    )}
                     <BatchRowActions batch={batch} lots={lots} />
                   </div>
                 </TD>
               </TR>
-            ))}
+              );
+            })}
           </TBody>
         </Table>
       </CardContent>

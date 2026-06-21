@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useId, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Coffee, Sparkles, X } from "lucide-react";
+import { ArrowRight, CheckCircle2, Coffee, Sparkles } from "lucide-react";
 
 import type { ScaGrade } from "@/lib/types";
 import {
@@ -12,6 +12,7 @@ import {
 } from "@/app/(app)/inventory/actions";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 /**
@@ -21,15 +22,22 @@ import { cn } from "@/lib/utils";
  * `gradeGreenLotAction` → `materialize_green_lot` RPC had no front door, so green
  * sellable inventory could only appear via seed. Here the family GRADES a finished
  * MILLED lot into a located, available-to-promise GREEN lot: pick a source, enter
- * green-kg + cupping score + warehouse location, submit → a new GREEN node
- * (`JC-NNN-G`) exists with its derived SCA grade and a live ATP on the table.
+ * green-kg + cupping score + warehouse location, submit → a new GREEN node exists
+ * with its derived SCA grade and a live ATP on the table.
  *
- * Glass styling matches atp-table / reservation-drawer / the ui primitives — a
- * right-anchored glass drawer (GPU transform/opacity only). The oversell /
- * conservation guards live in the database (the S3 conservation trigger + the
- * `green_lots` CHECKs are fail-closed); this island surfaces a rejection as a
- * clean on-brand alert, never a raw Postgres exception. Inline validation mirrors
- * the command's friendly-error seam so most mistakes never reach the round-trip.
+ * The green code is SYSTEM IDENTITY, minted server-side by `materialize_green_lot`
+ * (migration 20260621120000) — there is NO user-facing green-code field. The old
+ * `<source>-G` suggestion violated `lots_code_format` (`^JC-[0-9]{3,}$`) and broke
+ * every grade; now the form passes none and the SUCCESS state shows the RETURNED
+ * minted JC-NNN with its /lots/[code] trace link.
+ *
+ * The drawer is the shared <Dialog> primitive (focus-trap / initial-focus /
+ * restore + Escape + scroll-lock, all tested) — not a rolled-own modal. The
+ * oversell / conservation guards live in the database (the S3 conservation trigger
+ * + the `green_lots` CHECKs are fail-closed); this island surfaces a rejection as
+ * a clean on-brand alert in normal flow, never a raw Postgres exception. Inline
+ * validation mirrors the command's friendly-error seam so most mistakes never
+ * reach the round-trip.
  *
  * The SCA grade preview is derived client-side from the cupping score, matching
  * the DB's GENERATED `sca_grade` band exactly (D-INV-3) so the family sees the
@@ -37,7 +45,7 @@ import { cn } from "@/lib/utils";
  */
 
 const FIELD =
-  "h-10 w-full rounded-xl border border-line bg-white/70 px-3 text-sm text-ink outline-none transition focus:border-forest-300 focus:ring-2 focus:ring-forest-100 disabled:opacity-50";
+  "h-10 w-full rounded-xl border border-line bg-white/70 px-3 text-sm text-ink outline-none transition focus:border-forest-300 focus:ring-2 focus:ring-forest-100 disabled:opacity-50 aria-[invalid=true]:border-cherry aria-[invalid=true]:ring-cherry-100";
 const LABEL = "text-xs font-medium text-muted-fg";
 
 const GRADE_TONE: Record<ScaGrade, BadgeTone> = {
@@ -82,14 +90,17 @@ export function GradeGreenForm({ sources }: { sources: string[] }) {
         Grade green lot
       </Button>
 
-      {open && (
-        <GradePanel sources={sources} onClose={() => setOpen(false)} />
-      )}
+      {/* Dialog renders its children only while open and unmounts them on close,
+          so GradeBody (and its stable idempotency token + cupping-preview state)
+          is fresh each time the drawer is opened. */}
+      <Dialog open={open} onClose={() => setOpen(false)} title="Grade green lot">
+        <GradeBody sources={sources} onClose={() => setOpen(false)} />
+      </Dialog>
     </>
   );
 }
 
-function GradePanel({
+function GradeBody({
   sources,
   onClose,
 }: {
@@ -110,21 +121,16 @@ function GradePanel({
     [score],
   );
 
-  // Escape-to-close + scroll lock while the drawer is mounted.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [onClose]);
+  // A STABLE idempotency token for the life of this dialog-open. Because the green
+  // code is now server-minted, a re-submit mints a NEW code (materialize is
+  // exactly-once only on a SUPPLIED code); this stable token + the
+  // disabled-during-pending guard below mitigate a double mint from a fast
+  // double-click. `useId` is stable across re-renders, so typing never churns it.
+  const idempotencyKey = useId();
 
   const fieldError = (key: string) =>
     state.status === "error" ? state.errors?.[key] : undefined;
+  const invalid = (key: string) => (fieldError(key) ? true : undefined);
 
   const errorMessage =
     state.status === "error" && state.message ? state.message : null;
@@ -132,243 +138,158 @@ function GradePanel({
   const succeeded = state.status === "success";
   const greenCode = succeeded ? state.greenLotCode : undefined;
 
-  return (
-    <div
-      className="fixed inset-0 z-50 flex justify-end"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Grade and materialize a green lot"
-    >
-      {/* Click-away scrim. */}
-      <button
-        type="button"
-        aria-label="Close"
-        tabIndex={-1}
-        onClick={onClose}
-        className="absolute inset-0 cursor-default bg-forest/40 backdrop-blur-sm"
-      />
+  if (succeeded && greenCode) {
+    return (
+      <GradeSuccess greenCode={greenCode} grade={previewGrade} onClose={onClose} />
+    );
+  }
 
-      {/* The drawer panel — slides in from the right (GPU transform). */}
-      <div className="animate-rise relative z-10 flex h-full w-full max-w-md flex-col border-l border-white/60 bg-white/85 p-6 shadow-[0_24px_64px_-20px_rgba(0,41,29,0.45)] backdrop-blur-xl">
-        <div className="mb-1 flex items-start justify-between">
-          <div>
-            <h2 className="font-display text-lg font-semibold text-ink">
-              Grade green lot
-            </h2>
-            <p className="mt-0.5 text-sm text-muted-fg">
-              Promote a milled lot into located, sellable green coffee
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close drawer"
-            className="grid h-8 w-8 place-items-center rounded-lg text-muted-fg transition hover:bg-white/60 hover:text-ink"
+  return (
+    <div className="flex flex-col">
+      <p className="-mt-2 mb-3 text-sm text-muted-fg">
+        Promote a milled lot into located, sellable green coffee
+      </p>
+
+      <form action={formAction} className="flex flex-col gap-3">
+        {/* The green code is system identity — minted server-side and shown back
+            on success. The form carries a STABLE idempotency token so a fast
+            double-submit reuses the same key. */}
+        <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
+
+        {/* ── Source (milled) lot ── */}
+        <div className="space-y-1">
+          <label className={LABEL} htmlFor="grade-source">
+            Source lot
+          </label>
+          <select
+            id="grade-source"
+            name="sourceCode"
+            defaultValue=""
+            className={FIELD}
+            aria-invalid={invalid("sourceCode")}
           >
-            <X className="h-4 w-4" />
-          </button>
+            <option value="" disabled>
+              Choose a milled lot…
+            </option>
+            {sources.map((code) => (
+              <option key={code} value={code}>
+                {code}
+              </option>
+            ))}
+          </select>
+          {fieldError("sourceCode") && (
+            <p className="text-xs text-cherry">{fieldError("sourceCode")}</p>
+          )}
         </div>
 
-        {succeeded && greenCode ? (
-          <GradeSuccess
-            greenCode={greenCode}
-            grade={previewGrade}
-            onClose={onClose}
+        {/* ── Green kilograms ── */}
+        <div className="space-y-1">
+          <label className={LABEL} htmlFor="grade-kg">
+            Green kilograms
+          </label>
+          <input
+            id="grade-kg"
+            name="kg"
+            type="number"
+            min="0"
+            step="any"
+            inputMode="decimal"
+            placeholder="e.g. 240"
+            className={FIELD}
+            aria-invalid={invalid("kg")}
           />
-        ) : (
-          <form
-            action={formAction}
-            className="mt-5 flex flex-1 flex-col gap-3 overflow-y-auto"
+          {fieldError("kg") && (
+            <p className="text-xs text-cherry">{fieldError("kg")}</p>
+          )}
+        </div>
+
+        {/* ── Cupping score + live SCA grade preview ── */}
+        <div className="space-y-1">
+          <label className={LABEL} htmlFor="grade-cupping">
+            Cupping score
+          </label>
+          <input
+            id="grade-cupping"
+            name="cuppingScore"
+            type="number"
+            min="0"
+            max="100"
+            step="0.25"
+            placeholder="0–100"
+            value={score}
+            onChange={(e) => setScore(e.target.value)}
+            className={FIELD}
+            aria-invalid={invalid("cuppingScore")}
+          />
+          {fieldError("cuppingScore") && (
+            <p className="text-xs text-cherry">{fieldError("cuppingScore")}</p>
+          )}
+          {/* Live grade preview — the band the DB will GENERATE from the score,
+              shown before the family commits. */}
+          <div
+            data-testid="grade-preview"
+            aria-live="polite"
+            className="flex items-center gap-2 pt-1 text-xs text-muted-fg"
           >
-            {/* ── Source (milled) lot ── */}
-            <div className="space-y-1">
-              <label className={LABEL} htmlFor="grade-source">
-                Source lot
-              </label>
-              <select
-                id="grade-source"
-                name="sourceCode"
-                defaultValue=""
-                className={FIELD}
-              >
-                <option value="" disabled>
-                  Choose a milled lot…
-                </option>
-                {sources.map((code) => (
-                  <option key={code} value={code}>
-                    {code}
-                  </option>
-                ))}
-              </select>
-              {fieldError("sourceCode") && (
-                <p className="text-xs text-cherry">
-                  {fieldError("sourceCode")}
-                </p>
-              )}
-            </div>
+            {previewGrade ? (
+              <>
+                <span>Grades as</span>
+                <Badge tone={GRADE_TONE[previewGrade]} dot>
+                  {previewGrade}
+                </Badge>
+              </>
+            ) : (
+              <span className="text-muted-fg/70">
+                Enter a score to preview the SCA grade
+              </span>
+            )}
+          </div>
+        </div>
 
-            {/* The green code is derived server-side semantics but the family
-                still names it — defaulting to the conventional <source>-G trace
-                code keeps the genealogy readable. Mirrored from the picked source
-                with a small helper so it stays in sync but remains overridable. */}
-            <GreenCodeField error={fieldError("greenCode")} />
+        {/* ── Warehouse location ── */}
+        <div className="space-y-1">
+          <label className={LABEL} htmlFor="grade-location">
+            Warehouse location
+          </label>
+          <input
+            id="grade-location"
+            name="location"
+            placeholder="e.g. Warehouse A · Bay 3"
+            className={FIELD}
+            aria-invalid={invalid("location")}
+          />
+          {fieldError("location") && (
+            <p className="text-xs text-cherry">{fieldError("location")}</p>
+          )}
+        </div>
 
-            {/* ── Green kilograms ── */}
-            <div className="space-y-1">
-              <label className={LABEL} htmlFor="grade-kg">
-                Green kilograms
-              </label>
-              <input
-                id="grade-kg"
-                name="kg"
-                type="number"
-                min="0"
-                step="any"
-                placeholder="e.g. 240"
-                className={FIELD}
-              />
-              {fieldError("kg") && (
-                <p className="text-xs text-cherry">{fieldError("kg")}</p>
-              )}
-            </div>
-
-            {/* ── Cupping score + live SCA grade preview ── */}
-            <div className="space-y-1">
-              <label className={LABEL} htmlFor="grade-cupping">
-                Cupping score
-              </label>
-              <input
-                id="grade-cupping"
-                name="cuppingScore"
-                type="number"
-                min="0"
-                max="100"
-                step="0.25"
-                placeholder="0–100"
-                value={score}
-                onChange={(e) => setScore(e.target.value)}
-                className={FIELD}
-              />
-              {fieldError("cuppingScore") && (
-                <p className="text-xs text-cherry">
-                  {fieldError("cuppingScore")}
-                </p>
-              )}
-              {/* Live grade preview — the band the DB will GENERATE from the
-                  score, shown before the family commits. */}
-              <div
-                data-testid="grade-preview"
-                aria-live="polite"
-                className="flex items-center gap-2 pt-1 text-xs text-muted-fg"
-              >
-                {previewGrade ? (
-                  <>
-                    <span>Grades as</span>
-                    <Badge tone={GRADE_TONE[previewGrade]} dot>
-                      {previewGrade}
-                    </Badge>
-                  </>
-                ) : (
-                  <span className="text-muted-fg/70">
-                    Enter a score to preview the SCA grade
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* ── Warehouse location ── */}
-            <div className="space-y-1">
-              <label className={LABEL} htmlFor="grade-location">
-                Warehouse location
-              </label>
-              <input
-                id="grade-location"
-                name="location"
-                placeholder="e.g. Warehouse A · Bay 3"
-                className={FIELD}
-              />
-              {fieldError("location") && (
-                <p className="text-xs text-cherry">
-                  {fieldError("location")}
-                </p>
-              )}
-            </div>
-
-            <div className="mt-auto flex justify-end gap-2 pt-3">
-              <Button type="button" variant="ghost" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={pending}>
-                {pending ? "Grading…" : "Grade & materialize"}
-              </Button>
-            </div>
-          </form>
-        )}
-
-        {/* Friendly error region — a clean on-brand alert for a CHECK / conservation
-            rejection, never a raw Postgres exception. aria-live announces it. */}
+        {/* Friendly error — a clean on-brand alert for a CHECK / conservation
+            rejection, in NORMAL FLOW above the buttons (never absolutely
+            positioned over them). A SINGLE live region (role=alert is implicitly
+            assertive) — no double announce. */}
         {errorMessage && (
           <div
             data-testid="grade-error-region"
-            aria-live="assertive"
-            className="pointer-events-none absolute inset-x-6 bottom-6"
+            role="alert"
+            className={cn(
+              "flex items-start gap-2 rounded-xl border border-cherry-100 bg-cherry-100/95 px-4 py-3",
+              "text-sm font-medium text-cherry shadow-[0_12px_32px_-12px_rgba(122,18,30,0.4)]",
+            )}
           >
-            <div
-              role="alert"
-              className={cn(
-                "flex items-start gap-2 rounded-xl border border-cherry-100 bg-cherry-100/95 px-4 py-3",
-                "text-sm font-medium text-cherry shadow-[0_12px_32px_-12px_rgba(122,18,30,0.4)] backdrop-blur-md",
-              )}
-            >
-              <Coffee className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{friendlyError(errorMessage)}</span>
-            </div>
+            <Coffee className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <span>{errorMessage}</span>
           </div>
         )}
-      </div>
-    </div>
-  );
-}
 
-/**
- * The green traceability code, defaulting to the conventional `<source>-G` form
- * as the family picks a source — kept overridable so an unusual code is still
- * possible. A tiny client field reading the sibling source <select>.
- */
-function GreenCodeField({ error }: { error?: string }) {
-  const [code, setCode] = useState("");
-  const [touched, setTouched] = useState(false);
-
-  // Mirror the source select into a suggested green code until the family edits.
-  useEffect(() => {
-    const select = document.getElementById(
-      "grade-source",
-    ) as HTMLSelectElement | null;
-    if (!select) return;
-    const onChange = () => {
-      if (!touched && select.value) setCode(`${select.value}-G`);
-    };
-    select.addEventListener("change", onChange);
-    return () => select.removeEventListener("change", onChange);
-  }, [touched]);
-
-  return (
-    <div className="space-y-1">
-      <label className={LABEL} htmlFor="grade-green-code">
-        Green lot code
-      </label>
-      <input
-        id="grade-green-code"
-        name="greenCode"
-        value={code}
-        onChange={(e) => {
-          setTouched(true);
-          setCode(e.target.value);
-        }}
-        placeholder="e.g. JC-564-G"
-        className={cn(FIELD, "font-mono")}
-      />
-      {error && <p className="text-xs text-cherry">{error}</p>}
+        <div className="mt-2 flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={pending}>
+            {pending ? "Grading…" : "Grade & materialize"}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }
@@ -384,10 +305,10 @@ function GradeSuccess({
   onClose: () => void;
 }) {
   return (
-    <div className="mt-6 flex flex-1 flex-col">
+    <div role="status" className="flex flex-col">
       <div className="rounded-2xl border border-forest-300 bg-forest-100/70 p-5 text-center shadow-[0_12px_32px_-16px_rgba(0,41,29,0.4)]">
         <div className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-forest-100 text-forest">
-          <CheckCircle2 className="h-6 w-6" />
+          <CheckCircle2 className="h-6 w-6" aria-hidden />
         </div>
         <p className="mt-3 text-xs font-medium uppercase tracking-wide text-forest-600">
           Green lot materialized
@@ -413,7 +334,7 @@ function GradeSuccess({
           className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-forest px-4 text-sm font-medium text-paper shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18),0_1px_2px_0_rgba(0,41,29,0.25)] transition-all duration-200 ease-out hover:bg-forest-700 hover:-translate-y-px"
         >
           View lot traceability
-          <ArrowRight className="h-4 w-4" />
+          <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
         <Button type="button" variant="ghost" onClick={onClose}>
           Done
@@ -421,12 +342,4 @@ function GradeSuccess({
       </div>
     </div>
   );
-}
-
-/**
- * Strip the command's `materialize_green_lot: ` prefix (and a doubled SQL prefix)
- * so the family reads the constraint reason, not the function name.
- */
-function friendlyError(message: string): string {
-  return message.replace(/^materialize_green_lot:\s*/i, "").trim() || message;
 }

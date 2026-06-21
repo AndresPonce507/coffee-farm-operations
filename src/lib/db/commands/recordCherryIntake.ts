@@ -116,7 +116,7 @@ export function validateCherryIntake(
 /** The PostgREST shape the command returns from `.rpc()`. */
 interface RpcResult {
   data: string | null;
-  error: { message: string } | null;
+  error: { message: string; code?: string } | null;
 }
 
 /**
@@ -134,10 +134,38 @@ export type CherryIntakeResult =
   | { ok: false; errors?: Record<string, string>; message?: string };
 
 /**
+ * Map a raw Postgres/PostgREST error onto a clean, family-readable message so
+ * the raw constraint text never leaks to the farm (the friendly-error seam,
+ * mirroring `friendlyRpcError` in advanceProcessingStage.ts).
+ *
+ * The event spine keys every event on the `(device_id, device_seq)` UNIQUE
+ * pair; if two writes ever land the same pair (e.g. a retry that re-uses a
+ * sequence, or a clock/cursor collision across serverless instances) Postgres
+ * raises a 23505 unique_violation naming `lot_event_device_id_device_seq_key`.
+ * That is a replay/retry situation from the family's point of view, not a thing
+ * to read raw SQL about — so we surface a reassuring, retry-safe message and
+ * drop the constraint internals.
+ */
+function friendlyRpcError(error: {
+  message: string;
+  code?: string;
+}): string | null {
+  const isUniqueViolation =
+    error.code === "23505" ||
+    /duplicate key value|violates unique constraint/i.test(error.message);
+  if (isUniqueViolation) {
+    return "This intake looks like it was already recorded — please refresh the harvests list before trying again.";
+  }
+  return null;
+}
+
+/**
  * Validate then mint: calls `record_cherry_intake` exactly once with the
  * snake_case argument envelope the SECURITY DEFINER RPC expects. Bad input
- * never reaches the RPC (friendly errors); RPC failures surface labelled. The
- * RPC is exactly-once on `idempotencyKey` — a replay returns the originally
+ * never reaches the RPC (friendly errors); a `(device_id, device_seq)` unique
+ * violation (or any other PG error) is mapped through `friendlyRpcError` so no
+ * raw constraint text reaches the family, any other failure surfaces labelled.
+ * The RPC is exactly-once on `idempotencyKey` — a replay returns the originally
  * minted code, no second lot, no second event.
  */
 export async function recordCherryIntake(
@@ -159,6 +187,8 @@ export async function recordCherryIntake(
   });
 
   if (error) {
+    const friendly = friendlyRpcError(error);
+    if (friendly) return { ok: false, message: friendly };
     return { ok: false, message: `record_cherry_intake: ${error.message}` };
   }
   if (!data) {

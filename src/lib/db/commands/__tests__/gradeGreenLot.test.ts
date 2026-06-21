@@ -18,6 +18,12 @@ import {
  * surfaces a clean error when the RPC raises (e.g. routing more mass than the
  * source holds).
  *
+ * The green code is SYSTEM IDENTITY, minted server-side by `materialize_green_lot`
+ * (migration 20260621120000) — the form passes NO green code, so the command
+ * forwards `p_green_code` as null and shows the RETURNED minted code. Defense in
+ * depth: if a green code IS ever supplied it must match the `lots_code_format`
+ * CHECK (`^JC-[0-9]{3,}$`) or the command rejects it before the round-trip.
+ *
  * Mirrors the established command-test idiom in recordCherryIntake.test.ts.
  */
 
@@ -29,10 +35,12 @@ function fakeStore(
   return { store: { rpc } as unknown as GradeGreenLotStore, rpc };
 }
 
-/** A complete, valid raw grade — the happy-path baseline each case tweaks. */
+/**
+ * A complete, valid raw grade — the happy-path baseline each case tweaks. NO
+ * green code is supplied (the common path): the RPC mints the JC-NNN identity.
+ */
 const validRaw = (): Record<string, unknown> => ({
   sourceCode: "JC-564",
-  greenCode: "JC-564-G",
   kg: "240",
   cuppingScore: "88.5",
   location: "Warehouse A · Rack 3",
@@ -42,27 +50,34 @@ const validRaw = (): Record<string, unknown> => ({
 // ─────────────────────────── validation seam ───────────────────────────────
 
 describe("validateGradeGreenLot", () => {
-  it("accepts a complete, well-formed grade", () => {
+  it("accepts a complete, well-formed grade with NO green code (server-minted)", () => {
     const r = validateGradeGreenLot(validRaw());
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.data.sourceCode).toBe("JC-564");
-      expect(r.data.greenCode).toBe("JC-564-G");
+      expect(r.data.greenCode).toBe("");
       expect(r.data.kg).toBe(240);
       expect(r.data.cuppingScore).toBe(88.5);
     }
+  });
+
+  it("accepts a SUPPLIED green code that matches the lots_code_format CHECK", () => {
+    const r = validateGradeGreenLot({ ...validRaw(), greenCode: "JC-564" });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.data.greenCode).toBe("JC-564");
+  });
+
+  it("rejects a SUPPLIED green code that violates the lots_code_format CHECK", () => {
+    // The old '<source>-G' form is exactly what broke every grade — defense in depth.
+    const r = validateGradeGreenLot({ ...validRaw(), greenCode: "JC-564-G" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.greenCode).toMatch(/JC|format|code/i);
   });
 
   it("rejects a missing source lot with a friendly error", () => {
     const r = validateGradeGreenLot({ ...validRaw(), sourceCode: "" });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.errors.sourceCode).toMatch(/source/i);
-  });
-
-  it("rejects a missing green code with a friendly error", () => {
-    const r = validateGradeGreenLot({ ...validRaw(), greenCode: "" });
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.errors.greenCode).toMatch(/code/i);
   });
 
   it("rejects non-positive mass to route", () => {
@@ -126,25 +141,47 @@ describe("gradeGreenLot", () => {
     expect(rpc).not.toHaveBeenCalled();
   });
 
-  it("calls materialize_green_lot EXACTLY ONCE with the snake_case arg envelope", async () => {
-    const { store, rpc } = fakeStore({ data: "JC-564-G", error: null });
+  it("passes p_green_code as null so the RPC mints the identity, and returns the MINTED code", async () => {
+    // The DB mints a digit-only JC-NNN and returns it; the command surfaces it.
+    const { store, rpc } = fakeStore({ data: "JC-572", error: null });
 
     const result = await gradeGreenLot(store, validRaw());
 
     expect(rpc).toHaveBeenCalledTimes(1);
     expect(rpc).toHaveBeenCalledWith("materialize_green_lot", {
       p_source_code: "JC-564",
-      p_green_code: "JC-564-G",
+      p_green_code: null,
       p_kg: 240,
       p_cupping_score: 88.5,
       p_location: "Warehouse A · Rack 3",
       p_occurred_at: "2026-06-20T14:03:00.000Z",
     });
     expect(result.ok).toBe(true);
-    if (result.ok) expect(result.greenLotCode).toBe("JC-564-G");
+    if (result.ok) expect(result.greenLotCode).toBe("JC-572");
   });
 
-  it("surfaces a labelled error when the conservation trigger rejects over-routing", async () => {
+  it("forwards a SUPPLIED, well-formed green code to the RPC unchanged", async () => {
+    const { store, rpc } = fakeStore({ data: "JC-564", error: null });
+
+    const result = await gradeGreenLot(store, { ...validRaw(), greenCode: "JC-564" });
+
+    expect(rpc).toHaveBeenCalledTimes(1);
+    const args = rpc.mock.calls[0][1] as Record<string, unknown>;
+    expect(args.p_green_code).toBe("JC-564");
+    expect(result.ok).toBe(true);
+  });
+
+  it("rejects a malformed SUPPLIED green code WITHOUT a round-trip (defense in depth)", async () => {
+    const { store, rpc } = fakeStore({ data: null, error: null });
+
+    const result = await gradeGreenLot(store, { ...validRaw(), greenCode: "JC-564-G" });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errors?.greenCode).toBeDefined();
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("surfaces a FRIENDLY message (never raw PG) when the conservation trigger rejects over-routing", async () => {
     const { store } = fakeStore({
       data: null,
       error: {
@@ -157,27 +194,54 @@ describe("gradeGreenLot", () => {
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.message).toContain("materialize_green_lot");
-      expect(result.message).toContain("mass conservation");
+      expect(result.message).toMatch(/available|exceed|enough|mass/i);
+      // The raw function-name prefix must not leak to the family.
+      expect(result.message).not.toMatch(/materialize_green_lot/);
     }
   });
 
-  it("is idempotent on the green code: a replay returns the SAME code without a second mutation arg change", async () => {
-    // The SQL RPC is a no-op for an existing green code (returns the code). The
-    // command's contract is to forward the same code on a retry so the DB can
-    // dedupe — we prove the envelope is identical across calls.
-    const { store, rpc } = fakeStore({ data: "JC-564-G", error: null });
-    const raw = validRaw();
+  it("maps an unknown-source foreign-key rejection to a friendly message", async () => {
+    const { store } = fakeStore({
+      data: null,
+      error: { message: 'unknown source lot "JC-999"' },
+    });
 
-    const first = await gradeGreenLot(store, raw);
-    const second = await gradeGreenLot(store, raw);
+    const result = await gradeGreenLot(store, validRaw());
 
-    expect(first.ok && second.ok).toBe(true);
-    if (first.ok && second.ok) {
-      expect(first.greenLotCode).toBe(second.greenLotCode);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toMatch(/source|lot|exist/i);
+      expect(result.message).not.toMatch(/materialize_green_lot/);
     }
-    const firstArgs = rpc.mock.calls[0][1] as Record<string, unknown>;
-    const secondArgs = rpc.mock.calls[1][1] as Record<string, unknown>;
-    expect(firstArgs.p_green_code).toBe(secondArgs.p_green_code);
+  });
+
+  it("maps a code-format CHECK rejection to a friendly message (never raw PG)", async () => {
+    const { store } = fakeStore({
+      data: null,
+      error: {
+        message:
+          'new row for relation "lots" violates check constraint "lots_code_format"',
+      },
+    });
+
+    const result = await gradeGreenLot(store, validRaw());
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).not.toMatch(/lots_code_format|check constraint/);
+      expect(result.message?.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("returns a clean message when the RPC yields no code", async () => {
+    const { store } = fakeStore({ data: null, error: null });
+
+    const result = await gradeGreenLot(store, validRaw());
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toBeTruthy();
+      expect(result.message).not.toMatch(/materialize_green_lot/);
+    }
   });
 });

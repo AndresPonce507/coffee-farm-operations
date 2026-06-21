@@ -186,16 +186,55 @@ describe("advanceProcessingStage", () => {
     }
   });
 
-  it("surfaces a labelled error for any other RPC failure", async () => {
+  it("maps an unknown-lot foreign_key_violation to a FRIENDLY message (never raw PG)", async () => {
     const { store } = fakeStore({
       data: null,
-      error: { message: "unknown lot JC-999", code: "23503" },
+      error: {
+        message:
+          'insert or update on table "lot_event" violates foreign key constraint "lot_event_lot_code_fkey"',
+        code: "23503",
+      },
     });
 
     const result = await advanceProcessingStage(store, {
       ...validRaw(),
       lotCode: "JC-999",
     });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      // Family-readable — mentions the unknown lot, not the raw FK text.
+      expect(result.message).toMatch(/lot|exist|found/i);
+      expect(result.message).not.toMatch(/foreign key constraint/i);
+    }
+  });
+
+  it("maps a (device_id, device_seq) unique_violation to a FRIENDLY retry message", async () => {
+    const { store } = fakeStore({
+      data: null,
+      error: {
+        message:
+          'duplicate key value violates unique constraint "lot_event_device_id_device_seq_key"',
+        code: "23505",
+      },
+    });
+
+    const result = await advanceProcessingStage(store, validRaw());
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toMatch(/again|retry|try/i);
+      expect(result.message).not.toMatch(/duplicate key value/i);
+    }
+  });
+
+  it("surfaces a labelled error for any OTHER (unmapped) RPC failure", async () => {
+    const { store } = fakeStore({
+      data: null,
+      error: { message: "connection reset by peer", code: "08006" },
+    });
+
+    const result = await advanceProcessingStage(store, validRaw());
 
     expect(result.ok).toBe(false);
     if (!result.ok) {

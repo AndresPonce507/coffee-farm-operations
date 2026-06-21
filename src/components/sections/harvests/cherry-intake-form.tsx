@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Sprout } from "lucide-react";
 
@@ -57,6 +57,14 @@ export function CherryIntakeForm({
     FormData
   >(recordCherryIntakeAction, INTAKE_IDLE);
 
+  // STABLE exactly-once anchor minted ONCE per dialog-open (the form unmounts on
+  // close, so a lazy-initialised state value is fresh per open but stable across
+  // every re-render — including an error round-trip). The form carries it as a
+  // hidden field so a double-submit re-uses the SAME key: the
+  // `record_cherry_intake` RPC short-circuits on `idempotency_key` and returns
+  // the originally-minted lot instead of minting a second one.
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
+
   const fieldError = (key: string) =>
     state.status === "error" ? state.errors?.[key] : undefined;
 
@@ -101,6 +109,10 @@ export function CherryIntakeForm({
   // ── Capture: plot · picker · cherries · variety → mint. ──
   return (
     <form action={formAction} className="space-y-4">
+      {/* Stable exactly-once anchor — see `idempotencyKey` above. A double-submit
+          carries the same key, so the RPC dedupes to the originally-minted lot. */}
+      <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
+
       <p className="flex items-start gap-2 rounded-xl bg-forest-50/70 px-3 py-2 text-xs text-forest-700 ring-1 ring-forest-100">
         <Sprout className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
         <span>
@@ -119,6 +131,8 @@ export function CherryIntakeForm({
             id="intake-plotId"
             name="plotId"
             defaultValue=""
+            required
+            disabled={pending}
             className={FIELD}
             aria-invalid={fieldError("plotId") ? true : undefined}
           >
@@ -144,6 +158,8 @@ export function CherryIntakeForm({
             id="intake-workerId"
             name="workerId"
             defaultValue=""
+            required
+            disabled={pending}
             className={FIELD}
             aria-invalid={fieldError("workerId") ? true : undefined}
           >
@@ -175,6 +191,8 @@ export function CherryIntakeForm({
             step="0.1"
             inputMode="decimal"
             placeholder="e.g. 88"
+            required
+            disabled={pending}
             className={FIELD}
             aria-invalid={fieldError("cherriesKg") ? true : undefined}
           />
@@ -191,6 +209,8 @@ export function CherryIntakeForm({
             id="intake-variety"
             name="variety"
             defaultValue=""
+            required
+            disabled={pending}
             className={FIELD}
             aria-invalid={fieldError("variety") ? true : undefined}
           >

@@ -77,6 +77,42 @@ describe("CherryIntakeForm", () => {
     ).toBeInTheDocument();
   });
 
+  // LOW — the mandatory fields are `required` so an empty submit is caught
+  // client-side, not via a wasted round-trip.
+  it("marks the mandatory fields (plot, picker, cherries, variety) as required", () => {
+    const { container } = renderForm();
+
+    expect(container.querySelector('[name="plotId"]')).toHaveAttribute("required");
+    expect(container.querySelector('[name="workerId"]')).toHaveAttribute("required");
+    expect(container.querySelector('[name="cherriesKg"]')).toHaveAttribute("required");
+    expect(container.querySelector('[name="variety"]')).toHaveAttribute("required");
+  });
+
+  // HIGH — the form carries a STABLE idempotency key (hidden field) per
+  // dialog-open, so a double-submit returns the SAME minted lot (the RPC
+  // short-circuits on idempotency_key) instead of minting two lots.
+  it("carries a stable hidden idempotencyKey that does not change across re-renders", () => {
+    const { container, rerender } = renderForm();
+
+    const hidden = container.querySelector(
+      'input[name="idempotencyKey"]',
+    ) as HTMLInputElement | null;
+    expect(hidden).not.toBeNull();
+    expect(hidden?.type).toBe("hidden");
+    const key = hidden?.value;
+    expect(key).toBeTruthy();
+
+    // a re-render (e.g. an error round-trip) must NOT mint a fresh key —
+    // otherwise a retry would mint a second lot.
+    rerender(
+      <CherryIntakeForm plots={plots} pickers={pickers} onDone={() => {}} />,
+    );
+    const after = container.querySelector(
+      'input[name="idempotencyKey"]',
+    ) as HTMLInputElement | null;
+    expect(after?.value).toBe(key);
+  });
+
   it("submitting the form drives the bound Server Action", async () => {
     nextState = { status: "idle" };
     actionSpy.mockClear();

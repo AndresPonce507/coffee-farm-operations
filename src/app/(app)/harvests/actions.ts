@@ -32,15 +32,30 @@ function refresh() {
   revalidatePath("/");
 }
 
-// Strictly-increasing `device_seq` source for the single online `device_id`
-// ("server"). Seeded from epoch-ms so it stays monotonic across restarts, and a
-// per-process counter guarantees uniqueness even for two submits inside the same
-// millisecond (REVIEW FINDING #10 / ROOT C — a fixed seq collides on the second
-// intake). The DB CHECK is the real guard; this keeps it from ever tripping.
-let seqCursor = Date.now();
-function nextDeviceSeq(): number {
-  seqCursor = Math.max(seqCursor + 1, Date.now());
-  return seqCursor;
+// The offline node identity for the cherry-intake surface. Distinct from the
+// PROCESS-ADVANCE surface's `"server"` id (HIGH review finding): both write
+// `lot_event` rows keyed on the `(device_id, device_seq)` UNIQUE pair, so a
+// SHARED device_id would needlessly widen the collision surface between the two
+// surfaces. Each surface carries its own id, so their sequence spaces are
+// independent.
+const INTAKE_DEVICE_ID = "server-intake";
+
+// Globally-unique `device_seq` source. A per-PROCESS monotonic cursor (the old
+// approach) restarts at every serverless cold start — each instance seeds from
+// epoch-ms, so two instances can mint the SAME small sequence and collide on
+// `lot_event`'s `(device_id, device_seq)` UNIQUE key (HIGH review finding). A
+// 48-bit value drawn from `crypto.getRandomValues` is independent across
+// instances and well within both JS safe-integer range (2^48 ≪ 2^53) and
+// Postgres `bigint`, so a cross-instance collision is astronomically unlikely.
+// The real exactly-once anchor is still `idempotency_key`; this just keeps the
+// event-spine key from tripping. A retry-safe form may pass an explicit
+// `deviceSeq` (paired with its `idempotencyKey`) — that wins so a replay
+// re-uses the same sequence.
+function randomDeviceSeq(): number {
+  const buf = new Uint32Array(2);
+  crypto.getRandomValues(buf);
+  // 48 bits: high 16 bits from buf[0], low 32 bits from buf[1].
+  return (buf[0] & 0xffff) * 0x100000000 + buf[1];
 }
 
 /** Map the command's friendly/labelled result onto the form's action state. */
@@ -74,22 +89,22 @@ export async function recordCherryIntakeAction(
       ? raw.idempotencyKey.trim()
       : crypto.randomUUID();
 
-  // REVIEW FINDING #10 (ROOT C): a hardcoded `device_seq = 0` collides on the
-  // single online `device_id="server"` stream the moment a SECOND intake is
-  // recorded — the event spine keys events on (device_id, device_seq). Mint a
-  // unique, strictly-increasing counter per submit (`nextDeviceSeq`). A
-  // retry-safe form may pass an explicit `deviceSeq` (paired with its
-  // `idempotencyKey`) — that wins so a replay re-uses the same sequence.
+  // HIGH review finding: a per-PROCESS monotonic cursor collides across
+  // serverless instances (each cold start restarts it). Mint a globally-unique
+  // sequence per submit (`randomDeviceSeq`) so the event-spine
+  // `(device_id, device_seq)` key never trips. A retry-safe form may pass an
+  // explicit `deviceSeq` (paired with its `idempotencyKey`) — that wins so a
+  // replay re-uses the same sequence.
   const deviceSeq =
     typeof raw.deviceSeq === "string" && raw.deviceSeq.trim()
       ? Number(raw.deviceSeq.trim())
-      : nextDeviceSeq();
+      : randomDeviceSeq();
 
   const sb = await getSupabase();
   const result = await recordCherryIntake(sb as unknown as CherryIntakeStore, {
     ...raw,
     occurredAt,
-    deviceId: "server",
+    deviceId: INTAKE_DEVICE_ID,
     deviceSeq,
     idempotencyKey,
   });

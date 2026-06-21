@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { ArrowRight, CheckCircle2, Lock, MoveRight } from "lucide-react";
 
-import type { BatchStage, ProcessingBatch } from "@/lib/types";
+import type { BatchStage } from "@/lib/types";
 import { BATCH_STAGES } from "@/lib/enums";
 import {
   advanceStageAction,
@@ -19,6 +19,14 @@ import { cn, kg } from "@/lib/utils";
  * pipeline from the Processing surface (the first interactive write on this
  * route; everything else is a Server Component).
  *
+ * COHERENCE (pipeline-UI review fix): the control is keyed off the LOT, not a
+ * batch row. The advance write moves `lots.stage` / `lots.current_kg`, so the
+ * board reads the LOT's stage (`getLotStages`) and renders exactly ONE advance
+ * affordance per `lot_code` with that stage as the "from". This removes the old
+ * defect where a lot_code with several `processing_batches` rows showed several
+ * Advance buttons all mutating one shared lot, and where the displayed "from"
+ * stage came from the stale `processing_batches.stage` column.
+ *
  * It is a thin trigger that opens a glass dialog carrying the advance form,
  * driven by `advanceStageAction` through `useActionState`. The forward-only
  * model is enforced in the database (the hardened `advance_processing_stage`
@@ -30,6 +38,10 @@ import { cn, kg } from "@/lib/utils";
  *   2. If the RPC DOES reject (e.g. a typed-in weight that gained mass), the
  *      action returns a clean, family-readable message which we surface as an
  *      on-brand inline alert — never a raw Postgres exception.
+ *
+ * A STABLE idempotency key is generated per open form instance (a hidden field)
+ * so a double-submit forwards the SAME key — the DB dedupes it to a no-op rather
+ * than appending a duplicate ledger event.
  */
 
 const FIELD =
@@ -51,9 +63,23 @@ function forwardStages(stage: BatchStage): BatchStage[] {
   return BATCH_STAGES.slice(i + 1) as BatchStage[];
 }
 
-export function AdvanceStageControl({ batch }: { batch: ProcessingBatch }) {
+/**
+ * The advance affordance for a single LOT. `currentStage` is the LOT's
+ * authoritative stage (`lots.stage`, surfaced by `getLotStages`) — the "from" —
+ * and `currentKg` its mass at that stage. The board renders exactly one of these
+ * per `lot_code`.
+ */
+export function AdvanceStageControl({
+  lotCode,
+  currentStage,
+  currentKg,
+}: {
+  lotCode: string;
+  currentStage: BatchStage;
+  currentKg: number;
+}) {
   const [open, setOpen] = useState(false);
-  const ahead = forwardStages(batch.stage);
+  const ahead = forwardStages(currentStage);
 
   // A finished (green) lot — or any lot already at the pipeline terminal — has
   // nowhere forward to go, so it shows no trigger at all.
@@ -66,7 +92,7 @@ export function AdvanceStageControl({ batch }: { batch: ProcessingBatch }) {
         variant="outline"
         size="sm"
         onClick={() => setOpen(true)}
-        aria-label={`Advance ${batch.lotCode} to the next stage`}
+        aria-label={`Advance ${lotCode} to the next stage`}
       >
         <MoveRight className="h-3.5 w-3.5" />
         Advance
@@ -75,10 +101,12 @@ export function AdvanceStageControl({ batch }: { batch: ProcessingBatch }) {
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
-        title={`Advance ${batch.lotCode}`}
+        title={`Advance ${lotCode}`}
       >
         <AdvanceForm
-          batch={batch}
+          lotCode={lotCode}
+          currentStage={currentStage}
+          currentKg={currentKg}
           forward={ahead}
           onDone={() => setOpen(false)}
         />
@@ -88,11 +116,15 @@ export function AdvanceStageControl({ batch }: { batch: ProcessingBatch }) {
 }
 
 function AdvanceForm({
-  batch,
+  lotCode,
+  currentStage,
+  currentKg,
   forward,
   onDone,
 }: {
-  batch: ProcessingBatch;
+  lotCode: string;
+  currentStage: BatchStage;
+  currentKg: number;
   forward: BatchStage[];
   onDone: () => void;
 }) {
@@ -100,6 +132,12 @@ function AdvanceForm({
     ProcessingActionState,
     FormData
   >(advanceStageAction, PROCESSING_IDLE);
+
+  // A STABLE idempotency key per open form instance: re-submitting the SAME form
+  // forwards the SAME key, so the DB dedupes a double-submit to a no-op instead
+  // of appending a duplicate ledger event. `useMemo` (empty deps) holds it for
+  // the life of this mounted form — a fresh dialog open mounts a fresh key.
+  const idempotencyKey = useMemo(() => crypto.randomUUID(), []);
 
   // A successful advance closes the dialog shortly after (the page revalidates
   // server-side, so the board reflects the new stage on the next paint).
@@ -122,12 +160,14 @@ function AdvanceForm({
 
   return (
     <form action={formAction} className="space-y-4">
-      <input type="hidden" name="lotCode" value={batch.lotCode} />
+      <input type="hidden" name="lotCode" value={lotCode} />
+      {/* Stable per-form idempotency key — a double-submit is a DB no-op. */}
+      <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
 
       {/* From → To context so the family reads the move at a glance. */}
       <div className="flex items-center justify-center gap-3 rounded-xl border border-white/60 bg-white/55 px-4 py-3">
         <span className="rounded-lg bg-white/70 px-2.5 py-1 text-xs font-medium text-muted-fg">
-          {STAGE_LABEL[batch.stage]}
+          {STAGE_LABEL[currentStage]}
         </span>
         <ArrowRight className="h-4 w-4 shrink-0 text-forest-500" aria-hidden />
         <span className="rounded-lg bg-forest-100 px-2.5 py-1 text-xs font-semibold text-forest-700">
@@ -166,9 +206,10 @@ function AdvanceForm({
             name="currentKg"
             type="number"
             min="0"
-            max={batch.currentKg}
+            max={currentKg}
             step="any"
-            defaultValue={batch.currentKg}
+            required
+            defaultValue={currentKg}
             className={FIELD}
           />
           {fieldError("currentKg") && (
@@ -178,7 +219,7 @@ function AdvanceForm({
       </div>
 
       <p className="text-xs text-muted-fg">
-        Now at {kg(batch.currentKg)}. Processing conserves or loses mass — the new
+        Now at {kg(currentKg)}. Processing conserves or loses mass — the new
         weight should be the same or lower.
       </p>
 

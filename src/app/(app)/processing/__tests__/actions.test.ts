@@ -87,7 +87,7 @@ describe("advanceStageAction", () => {
       p_to_stage: "drying",
       p_current_kg: 420,
       p_occurred_at: "2026-06-20T14:03:00.000Z",
-      p_device_id: "server",
+      p_device_id: "server-processing",
       p_device_seq: expect.any(Number),
       p_idempotency_key: expect.any(String),
     });
@@ -110,7 +110,7 @@ describe("advanceStageAction", () => {
     expect(typeof args.p_occurred_at).toBe("string");
     expect(Number.isFinite(Date.parse(args.p_occurred_at as string))).toBe(true);
     // a synthetic device id + a non-empty idempotency key.
-    expect(args.p_device_id).toBe("server");
+    expect(args.p_device_id).toBe("server-processing");
     expect(typeof args.p_idempotency_key).toBe("string");
     expect((args.p_idempotency_key as string).length).toBeGreaterThan(0);
   });
@@ -127,6 +127,51 @@ describe("advanceStageAction", () => {
     const first = rpc.mock.calls[0][1] as Record<string, unknown>;
     const second = rpc.mock.calls[1][1] as Record<string, unknown>;
     expect(first.p_idempotency_key).not.toBe(second.p_idempotency_key);
+    // device_seq must be genuinely unique per call — Date.now() collides on two
+    // advances within the same millisecond, breaking the lot_event
+    // (device_id, device_seq) unique key.
+    expect(first.p_device_seq).not.toBe(second.p_device_seq);
+    // A valid non-negative integer (the validator's device_seq contract).
+    expect(Number.isInteger(first.p_device_seq)).toBe(true);
+    expect(first.p_device_seq as number).toBeGreaterThanOrEqual(0);
+  });
+
+  it("forwards a STABLE idempotency key from the form (a double-submit dedupes)", async () => {
+    // The control carries a stable hidden idempotencyKey per open form instance.
+    // The action must FORWARD it verbatim (not overwrite it), so a double-submit
+    // of the same form arrives with the same key → the DB dedupes to a no-op.
+    const { client, rpc } = makeClient({ rpc: { data: "JC-561", error: null } });
+    getSupabaseMock.mockReturnValue(client);
+
+    const stable = () =>
+      form({
+        lotCode: "JC-561",
+        toStage: "drying",
+        currentKg: "420",
+        idempotencyKey: "form-instance-key-123",
+      });
+    await advanceStageAction(PROCESSING_IDLE, stable());
+    await advanceStageAction(PROCESSING_IDLE, stable());
+
+    const first = rpc.mock.calls[0][1] as Record<string, unknown>;
+    const second = rpc.mock.calls[1][1] as Record<string, unknown>;
+    expect(first.p_idempotency_key).toBe("form-instance-key-123");
+    expect(second.p_idempotency_key).toBe("form-instance-key-123");
+  });
+
+  it("uses a processing-specific device_id (distinct from intake's 'server')", async () => {
+    const { client, rpc } = makeClient({ rpc: { data: "JC-561", error: null } });
+    getSupabaseMock.mockReturnValue(client);
+
+    await advanceStageAction(
+      PROCESSING_IDLE,
+      form({ lotCode: "JC-561", toStage: "drying", currentKg: "420" }),
+    );
+
+    const args = rpc.mock.calls[0][1] as Record<string, unknown>;
+    // A distinct device namespace so processing advances never collide with
+    // intake writes on the (device_id, device_seq) unique key.
+    expect(args.p_device_id).toBe("server-processing");
   });
 
   it("returns field errors WITHOUT a round-trip on invalid input", async () => {

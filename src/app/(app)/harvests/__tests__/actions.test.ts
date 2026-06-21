@@ -102,6 +102,61 @@ describe("recordCherryIntakeAction", () => {
     expect(first.p_device_seq).not.toBe(second.p_device_seq);
   });
 
+  // HIGH — the per-PROCESS monotonic cursor restarts at cold start (each
+  // serverless instance seeds from epoch-ms), so two instances can mint the
+  // SAME small device_seq. A globally-unique source (random, not a counter)
+  // makes a cross-instance collision astronomically unlikely. We assert the
+  // seq is drawn from a LARGE space — a per-process cursor seeded from Date.now()
+  // would sit near epoch-ms (~1.7e12); a 48-bit random sits anywhere in 0..2^48.
+  // The defining trait we pin: two consecutive seqs are NOT adjacent (a counter
+  // increments by 1; a random source does not). FAILS on the +1 cursor.
+  it("derives device_seq from a wide random space, not a +1 per-process counter", async () => {
+    const { client, rpc } = makeClient({ data: "JC-742", error: null });
+    getSupabaseMock.mockReturnValue(client);
+
+    await recordCherryIntakeAction(INTAKE_IDLE, intakeForm());
+    await recordCherryIntakeAction(INTAKE_IDLE, intakeForm());
+
+    const first = Number(
+      (rpc.mock.calls[0][1] as Record<string, unknown>).p_device_seq,
+    );
+    const second = Number(
+      (rpc.mock.calls[1][1] as Record<string, unknown>).p_device_seq,
+    );
+
+    // A monotonic +1 cursor produces adjacent values; a random source won't.
+    expect(Math.abs(second - first)).toBeGreaterThan(1);
+  });
+
+  // HIGH — the intake surface must NOT share device_id="server" with the
+  // advance surface (which also writes lot_event keyed on device_id,device_seq);
+  // a shared id widens the collision surface. Intake carries its own device_id.
+  it("uses an intake-specific device_id (not the shared 'server' id)", async () => {
+    const { client, rpc } = makeClient({ data: "JC-742", error: null });
+    getSupabaseMock.mockReturnValue(client);
+
+    await recordCherryIntakeAction(INTAKE_IDLE, intakeForm());
+
+    const args = rpc.mock.calls[0][1] as Record<string, unknown>;
+    expect(args.p_device_id).toMatch(/intake/i);
+  });
+
+  // HIGH — a STABLE idempotency key from the form (retry-safe double-submit)
+  // wins over the minted fallback, so the RPC dedupes and returns the SAME lot.
+  it("honours a stable idempotency key from the form so a double-submit dedupes", async () => {
+    const { client, rpc } = makeClient({ data: "JC-742", error: null });
+    getSupabaseMock.mockReturnValue(client);
+
+    const stable = "intake-stable-key-abc";
+    await recordCherryIntakeAction(INTAKE_IDLE, intakeForm({ idempotencyKey: stable }));
+    await recordCherryIntakeAction(INTAKE_IDLE, intakeForm({ idempotencyKey: stable }));
+
+    const first = rpc.mock.calls[0][1] as Record<string, unknown>;
+    const second = rpc.mock.calls[1][1] as Record<string, unknown>;
+    expect(first.p_idempotency_key).toBe(stable);
+    expect(second.p_idempotency_key).toBe(stable);
+  });
+
   it("mints a fresh idempotency key per submit when the form omits one", async () => {
     const { client, rpc } = makeClient({ data: "JC-742", error: null });
     getSupabaseMock.mockReturnValue(client);
@@ -136,7 +191,7 @@ describe("recordCherryIntakeAction", () => {
   it("surfaces a labelled DB error and does NOT revalidate", async () => {
     const { client } = makeClient({
       data: null,
-      error: { message: "duplicate key value violates unique constraint" },
+      error: { message: "connection terminated unexpectedly" },
     });
     getSupabaseMock.mockReturnValue(client);
 
@@ -145,6 +200,28 @@ describe("recordCherryIntakeAction", () => {
     expect(state.status).toBe("error");
     if (state.status === "error") {
       expect(state.message).toContain("record_cherry_intake");
+    }
+    expect(revalidatePathMock).not.toHaveBeenCalled();
+  });
+
+  // MED — a raw (device_id, device_seq) unique violation must surface as a
+  // FRIENDLY message (no raw Postgres constraint text), and still not revalidate.
+  it("maps a (device_id, device_seq) unique violation to a friendly message", async () => {
+    const { client } = makeClient({
+      data: null,
+      error: {
+        message:
+          'duplicate key value violates unique constraint "lot_event_device_id_device_seq_key"',
+      },
+    });
+    getSupabaseMock.mockReturnValue(client);
+
+    const state = await recordCherryIntakeAction(INTAKE_IDLE, intakeForm());
+
+    expect(state.status).toBe("error");
+    if (state.status === "error") {
+      expect(state.message).toMatch(/again|already|retr/i);
+      expect(state.message).not.toMatch(/duplicate key|violates|unique constraint/i);
     }
     expect(revalidatePathMock).not.toHaveBeenCalled();
   });

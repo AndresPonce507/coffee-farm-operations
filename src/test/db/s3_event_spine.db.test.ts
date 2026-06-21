@@ -310,6 +310,20 @@ describe("S3 event spine — record_cherry_intake (gap-free monotonic minter, ex
   let h: Harness;
   beforeAll(async () => {
     h = await freshDb();
+    // record_cherry_intake now writes a harvests row (plot→lot origin link, mig
+    // 20260621120000), so the referenced plot + worker must exist.
+    await h.db.exec(
+      `insert into plots (id, ord, name, block, variety, area_ha, altitude_masl, trees,
+         shade_pct, established_year, status, last_inspected, expected_yield_kg, harvested_kg, geom, centroid)
+       values ('p-test', 90, 'S3 Test Plot', 'Block T', 'Geisha', 1, 1500, 100, 50, 2015, 'healthy',
+         '2026-06-01', 1000, 800,
+         '{"type":"Polygon","coordinates":[[[-82.6,8.7],[-82.5,8.7],[-82.5,8.8],[-82.6,8.8],[-82.6,8.7]]]}'::jsonb,
+         '{"type":"Point","coordinates":[-82.55,8.75]}'::jsonb);`,
+    );
+    await h.db.exec(
+      `insert into workers (id, name, role, daily_rate_usd, attendance, started_year, phone, crew)
+       values ('w-test', 'S3 Tester', 'Picker', 22, 'present', 2015, '+507 0', 'Crew T');`,
+    );
   });
   afterAll(async () => h.close());
 

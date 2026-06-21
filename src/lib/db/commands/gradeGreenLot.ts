@@ -33,7 +33,14 @@ import {
 export interface GradeGreenLotInput {
   /** The source `lots.code` whose mass is routed into the green node. */
   sourceCode: string;
-  /** The new green node's `lots.code` (JC-NNN-G traceability code). */
+  /**
+   * The new green node's `lots.code` — SYSTEM IDENTITY, normally minted by the
+   * RPC. The form passes none, so this is `""` on the common path and the RPC
+   * mints a collision-proof digit-only `JC-NNN`. A non-empty value is only
+   * allowed if it already matches the `lots_code_format` CHECK (`^JC-[0-9]{3,}$`)
+   * — defense in depth so a malformed code never reaches (and is rejected by) the
+   * round-trip the way the old `<source>-G` suggestion did.
+   */
   greenCode: string;
   /** Mass (kg) to route from source → green via the conserved 'process' edge. */
   kg: number;
@@ -44,6 +51,13 @@ export interface GradeGreenLotInput {
   /** Field wall-clock — `occurred_at`, carried onto the node + edge + detail row. */
   occurredAt: string;
 }
+
+/**
+ * The `lots_code_format` CHECK the green node's code must satisfy: a digit-only
+ * `JC-NNN` (3+ digits). Mirrored here so a SUPPLIED code is rejected before the
+ * round-trip — the common path supplies NONE and the RPC mints the identity.
+ */
+const GREEN_CODE_FORMAT = /^JC-[0-9]{3,}$/;
 
 /** Is `v` a recognised, ISO-8601 timestamp (e.g. "2026-06-20T14:03:00.000Z")? */
 function isISOTimestamp(v: string): boolean {
@@ -66,8 +80,14 @@ export function validateGradeGreenLot(
   const sourceCode = trimmed(raw.sourceCode);
   if (!sourceCode) errors.sourceCode = "Choose a source lot.";
 
+  // The green code is system identity, minted server-side — the form supplies
+  // NONE (the empty common path). Only a supplied code is validated, and it must
+  // match the digit-only `lots_code_format` CHECK (defense in depth: the old
+  // `<source>-G` suggestion violated it and broke every grade).
   const greenCode = trimmed(raw.greenCode);
-  if (!greenCode) errors.greenCode = "A green lot code is required.";
+  if (greenCode && !GREEN_CODE_FORMAT.test(greenCode)) {
+    errors.greenCode = "A green lot code must look like JC-564 (digits only).";
+  }
 
   const kg = toNumber(raw.kg);
   if (kg === null || kg <= 0) {
@@ -127,12 +147,52 @@ export type GradeGreenLotResult =
   | { ok: false; errors?: Record<string, string>; message?: string };
 
 /**
+ * Map a raw Postgres error from `materialize_green_lot` onto a family-readable
+ * sentence — the SQL trigger/CHECK is the real guard, but the family must never
+ * see raw PG text (constraint names, the function name, errcodes). Falls back to
+ * a generic "couldn't be graded" line for anything unrecognised, so nothing leaks.
+ */
+export function friendlyGradeError(raw: string): string {
+  const m = raw.toLowerCase();
+
+  // S3 conservation trigger — routing more mass than the source holds.
+  if (m.includes("conservation") || m.includes("exceeds") || m.includes("available mass")) {
+    return "That's more than the source lot has available. Lower the kilograms and try again.";
+  }
+  // Unknown / missing source lot (foreign_key_violation raised by the RPC).
+  if (m.includes("unknown source") || m.includes("foreign key") || m.includes("foreign_key")) {
+    return "That source lot couldn't be found. Pick a milled lot from the list and try again.";
+  }
+  // Code-format / primary-key / unique collisions on the green node.
+  if (
+    m.includes("lots_code_format") ||
+    m.includes("duplicate key") ||
+    m.includes("already exists") ||
+    m.includes("unique constraint") ||
+    m.includes("primary key")
+  ) {
+    return "That green lot code can't be used. Leave the code blank so it's assigned automatically.";
+  }
+  // Any other CHECK / over-route the validator didn't pre-catch.
+  if (m.includes("check constraint") || m.includes("violates")) {
+    return "Those grade details were rejected. Double-check the kilograms, score, and location.";
+  }
+  return "This lot couldn't be graded right now. Please check the details and try again.";
+}
+
+/**
  * Validate then grade: calls `materialize_green_lot` exactly once with the
  * snake_case argument envelope the SECURITY DEFINER RPC expects. Bad input never
  * reaches the RPC (friendly errors); RPC failures (e.g. the conservation trigger
- * rejecting over-routing) surface labelled. The RPC is idempotent on the green
- * code — a replay returns the originally-materialized code with no second edge
- * and no double-routed mass.
+ * rejecting over-routing) surface as family-readable sentences (`friendlyGradeError`)
+ * — raw Postgres text never leaks.
+ *
+ * The green code is SYSTEM IDENTITY: the form supplies none, so this passes
+ * `p_green_code: null` and the RPC mints a collision-proof digit-only `JC-NNN`,
+ * returning it (the command surfaces the minted code). Because the code is
+ * server-minted, a fresh submit mints a NEW code — exactly-once is only on a
+ * SUPPLIED code; the form mitigates double-submit with a stable idempotency token
+ * + the disabled-during-pending guard.
  */
 export async function gradeGreenLot(
   store: GradeGreenLotStore,
@@ -143,7 +203,9 @@ export async function gradeGreenLot(
 
   const { data, error } = await store.rpc("materialize_green_lot", {
     p_source_code: parsed.data.sourceCode,
-    p_green_code: parsed.data.greenCode,
+    // Pass null on the common path so the RPC MINTS a digit-only JC-NNN identity
+    // (a blank/`""` would also coalesce server-side, but null is the clean intent).
+    p_green_code: parsed.data.greenCode || null,
     p_kg: parsed.data.kg,
     p_cupping_score: parsed.data.cuppingScore,
     p_location: parsed.data.location,
@@ -151,12 +213,12 @@ export async function gradeGreenLot(
   });
 
   if (error) {
-    return { ok: false, message: `materialize_green_lot: ${error.message}` };
+    return { ok: false, message: friendlyGradeError(error.message) };
   }
   if (!data) {
     return {
       ok: false,
-      message: "materialize_green_lot: no green lot code returned",
+      message: "This lot couldn't be graded right now. Please try again.",
     };
   }
   return { ok: true, greenLotCode: data };
