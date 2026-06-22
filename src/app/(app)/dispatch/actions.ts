@@ -65,9 +65,53 @@ function idempotencyKeyOrNew(raw: Record<string, unknown>): string {
   return str(raw, "idempotencyKey") ?? crypto.randomUUID();
 }
 
-/** A monotonic-enough per-call seq (ms since epoch); unique per (device, seq). */
-function deviceSeq(): number {
-  return Date.now();
+/**
+ * A UNIQUE monotonic device_seq for the single online dispatch device
+ * (DISPATCH_DEVICE_ID). dispatch_run and dispatch_acknowledgement BOTH carry
+ * `unique (device_id, device_seq)`, and all three actions write under the SAME
+ * device_id, so a bare `Date.now()` collides whenever two crews are dispatched in
+ * the same dawn millisecond — the second INSERT raises duplicate-key (the C1
+ * collision class the crew / harvests / processing slices already fixed).
+ * `next_server_seq()` is the SECURITY DEFINER online draw the S1 migration exposes
+ * (granted to authenticated); it hands out a strictly-increasing seq so
+ * (device_id, seq) is unique forever. (When the S0 offline outbox lands, field
+ * devices mint their own (device_id, device_seq) client-side and pass it on the
+ * form — see `resolveDeviceSeq` — and this server path becomes one more device.)
+ */
+async function nextServerSeq(
+  sb: {
+    rpc(
+      fn: "next_server_seq",
+    ): Promise<{ data: number | string | null; error: { message: string } | null }>;
+  },
+): Promise<number> {
+  const res = await sb.rpc("next_server_seq");
+  const { data, error } = res ?? { data: null, error: null };
+  if (error || data === null || data === undefined) {
+    // Fail safe to a time-derived seq so a draw hiccup never silently reuses a value;
+    // the (device_id, device_seq) unique key still protects correctness and the action
+    // surfaces any real error.
+    return Date.now();
+  }
+  return Number(data);
+}
+
+/**
+ * Resolve the write's device_seq. A genuine offline replay carries its OWN
+ * envelope (a `deviceSeq` paired with its `idempotencyKey`) — reuse it so the
+ * replayed business intent lands under its original sequence rather than minting
+ * a fresh one. Online (no form seq), draw a unique seq from `next_server_seq()`.
+ */
+async function resolveDeviceSeq(
+  raw: Record<string, unknown>,
+  sb: Parameters<typeof nextServerSeq>[0],
+): Promise<number> {
+  const supplied = str(raw, "deviceSeq");
+  if (supplied !== undefined) {
+    const n = Number(supplied);
+    if (Number.isFinite(n)) return n;
+  }
+  return nextServerSeq(sb);
 }
 
 /** Map a raw DB/RPC error string to a friendly, SQL-free sentence. */
@@ -81,6 +125,16 @@ function friendlyError(message: string | undefined): string {
   }
   if (m.includes("append-only") || m.includes("supersede") || m.includes("lifecycle")) {
     return "A dispatch can only be re-planned with a new version — refresh and try again.";
+  }
+  // Completes the error map for the (device_id, device_seq) unique constraint that
+  // dispatch_run / dispatch_acknowledgement carry: if two dispatches ever land in the
+  // same instant, surface a retry (SQL-free), not the generic "couldn't save".
+  if (
+    m.includes("duplicate key") ||
+    m.includes("unique constraint") ||
+    m.includes("already exists")
+  ) {
+    return "Two dispatches arrived at once — try that one again.";
   }
   return "We couldn't save that dispatch. Please try again.";
 }
@@ -110,7 +164,7 @@ export async function generateDispatchAction(
     ...raw,
     occurredAt: occurredAtOrNow(raw),
     deviceId: DISPATCH_DEVICE_ID,
-    deviceSeq: deviceSeq(),
+    deviceSeq: await resolveDeviceSeq(raw, sb as unknown as Parameters<typeof nextServerSeq>[0]),
     idempotencyKey: idempotencyKeyOrNew(raw),
   });
 
@@ -140,7 +194,7 @@ export async function markDispatchSentAction(
     channel,
     occurredAt: occurredAtOrNow(raw),
     deviceId: DISPATCH_DEVICE_ID,
-    deviceSeq: deviceSeq(),
+    deviceSeq: await resolveDeviceSeq(raw, sb as unknown as Parameters<typeof nextServerSeq>[0]),
     idempotencyKey: idempotencyKeyOrNew(raw),
   });
 
@@ -166,7 +220,7 @@ export async function recordDispatchAckAction(
     ...raw,
     occurredAt: occurredAtOrNow(raw),
     deviceId: DISPATCH_DEVICE_ID,
-    deviceSeq: deviceSeq(),
+    deviceSeq: await resolveDeviceSeq(raw, sb as unknown as Parameters<typeof nextServerSeq>[0]),
     idempotencyKey: idempotencyKeyOrNew(raw),
   });
 

@@ -122,6 +122,33 @@ describe("runtime — shipped routerTransport classification (139)", () => {
     const all = await outbox.list();
     expect(all[0].status).toBe("done");
   });
+
+  it("injects the outbox-stamped device_seq/device_id into the action's args (overwriting the client placeholder)", async () => {
+    const seen = vi.fn();
+    const { getRuntime, registerCommand } = await import(
+      "@/lib/offline/runtime"
+    );
+    // A generic command whose queued args carry the client placeholder seq (0).
+    registerCommand("test_rpc", async (env) => {
+      seen(env.args);
+      return { ok: true as const };
+    });
+    const { outbox } = getRuntime();
+
+    await outbox.enqueue({
+      ...baseEntry,
+      rpc: "test_rpc",
+      args: { p_worker_id: "w1", p_device_seq: 0, p_device_id: "stale" },
+    });
+    await outbox.flush();
+
+    const args = seen.mock.calls[0][0] as Record<string, unknown>;
+    // The DURABLE minted seq (>= 1, monotonic per device) reaches args, not the 0.
+    expect(Number(args.p_device_seq)).toBeGreaterThanOrEqual(1);
+    expect(args.p_device_id).toBe(baseEntry.deviceId);
+    // Other args survive untouched.
+    expect(args.p_worker_id).toBe("w1");
+  });
 });
 
 describe("runtime — singleton + store selection", () => {

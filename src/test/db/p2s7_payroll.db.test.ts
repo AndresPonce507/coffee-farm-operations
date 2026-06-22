@@ -908,6 +908,82 @@ describe("P2-S7 ROOT4 — period lifecycle + reversal RPCs", () => {
     expect(Number(cTot.tot)).toBeCloseTo(0, 2);
     await hh.close();
   });
+
+  it("after reversing a disbursement, a CORRECTED payment can be re-recorded (the slot is freed, not a dead end)", async () => {
+    // the one-per-worker disbursement index is keyed on LIVE originals (reversed_at is
+    // null). Before the fix the reversed original still occupied the slot, so "reverse
+    // first to re-pay" raised 'already has a disbursement' forever. Now reverse_disbursement
+    // stamps reversed_at, freeing the slot so the corrected payment lands.
+    const hh = await freshDb();
+    await seedFarm(hh);
+    await hh.query(
+      `select compute_pay_period('pp-repay','${PERIOD_START}','${PERIOD_END}','2026-2027','daily');`,
+    );
+    const orig = (
+      await hh.query<{ id: number; net: string }>(
+        `select id, net_usd as net from pay_line where pay_period_id='pp-repay' and worker_id='w-big' and reverses_id is null;`,
+      )
+    )[0];
+    await hh.query(`select approve_pay_line(${orig.id});`);
+    const net = Number(orig.net);
+    // record the (wrong-but-valid-amount) disbursement, then reverse it.
+    const d1 = (
+      await hh.query<{ id: number }>(
+        `select record_disbursement('pp-repay','w-big', ${net}, 'yappy', 'tx-wrong', null, 'k-wrong') as id;`,
+      )
+    )[0].id;
+    await hh.query(`select reverse_disbursement(${d1}, 'rev-wrong');`);
+    // the original is now stamped reversed_at, so a corrected re-pay (fresh key) is allowed.
+    const d2 = (
+      await hh.query<{ id: number }>(
+        `select record_disbursement('pp-repay','w-big', ${net}, 'yappy', 'tx-right', null, 'k-right') as id;`,
+      )
+    )[0].id;
+    expect(d2).toBeTruthy();
+    // exactly one LIVE (un-reversed) original disbursement remains — the corrected one.
+    const live = (
+      await hh.query<{ n: number }>(
+        `select count(*)::int as n from disbursement
+           where worker_id='w-big' and pay_period_id='pp-repay'
+             and reverses_id is null and reversed_at is null;`,
+      )
+    )[0].n;
+    expect(live).toBe(1);
+    // the net cash to the worker is the single corrected amount (wrong + its reversal net 0).
+    const cash = (
+      await hh.query<{ tot: string }>(
+        `select coalesce(sum(amount_usd),0) as tot from disbursement where worker_id='w-big' and pay_period_id='pp-repay';`,
+      )
+    )[0];
+    expect(Number(cash.tot)).toBeCloseTo(net, 2);
+    await hh.close();
+  });
+
+  it("disbursement reversed_at is the ONLY mutable column — money/identity columns stay frozen", async () => {
+    const hh = await freshDb();
+    await seedFarm(hh);
+    await hh.query(
+      `select compute_pay_period('pp-frozen','${PERIOD_START}','${PERIOD_END}','2026-2027','daily');`,
+    );
+    const orig = (
+      await hh.query<{ id: number; net: string }>(
+        `select id, net_usd as net from pay_line where pay_period_id='pp-frozen' and worker_id='w-big' and reverses_id is null;`,
+      )
+    )[0];
+    await hh.query(`select approve_pay_line(${orig.id});`);
+    await hh.query(
+      `select record_disbursement('pp-frozen','w-big', ${Number(orig.net)}, 'yappy', 'tx-f', null, 'k-f');`,
+    );
+    // a direct money-column UPDATE is still blocked (the relaxed trigger only frees reversed_at).
+    await expect(
+      hh.query(`update disbursement set amount_usd = 0 where worker_id='w-big' and reverses_id is null;`),
+    ).rejects.toThrow(/append-only/);
+    // and DELETE is still blocked.
+    await expect(
+      hh.query(`delete from disbursement where worker_id='w-big';`),
+    ).rejects.toThrow(/append-only/);
+    await hh.close();
+  });
 });
 
 // ════════════════════════════════════════════════════════════════════════════

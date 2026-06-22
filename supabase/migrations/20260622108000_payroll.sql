@@ -384,6 +384,12 @@ create table disbursement (
   signature_ref   text,                             -- for cash-signed: the worker's signature capture
   cost_entry_id   bigint  references cost_entry(id), -- the COGS journal row this wrote
   reverses_id     bigint  references disbursement(id),
+  -- stamped on an ORIGINAL the instant a reversal is appended for it (the one narrow,
+  -- non-money UPDATE the block trigger permits). This is what FREES the worker+period
+  -- slot so a corrected payment can be re-recorded after a reversal — without it, the
+  -- append-only original would occupy the one-per-worker slot forever and "reverse first
+  -- to re-pay" would be a dead end. A live (re-payable) original has reversed_at = null.
+  reversed_at     timestamptz,
   disbursed_at    timestamptz not null default now(),
   created_at      timestamptz not null default now(),
   -- a cash-signed disbursement must carry a signature reference (the unbanked-crew
@@ -400,13 +406,16 @@ create index disbursement_worker_idx on disbursement (worker_id);
 create unique index disbursement_idempotency_idx
   on disbursement (worker_id, pay_period_id, idempotency_key)
   where (reverses_id is null and idempotency_key is not null);
--- ONE non-reversal disbursement per worker per period: a re-record with the SAME key is
--- the idempotent retry (handled above); a DIFFERENT-key second pay is a double-pay and is
--- rejected by this index (reverse first to re-pay). Mirrors the make-whole's data-layer
--- posture — the "paid at most once" promise is enforced, not honor-system.
+-- ONE LIVE non-reversal disbursement per worker per period: a re-record with the SAME key
+-- is the idempotent retry (handled above); a DIFFERENT-key second pay while a live
+-- disbursement still stands is a double-pay and is rejected by this index. Keyed on LIVE
+-- originals (reversed_at is null) — exactly like pay_line_one_original_idx — so once an
+-- original is REVERSED (reversed_at stamped) it no longer occupies the slot and a corrected
+-- payment CAN be re-recorded. Mirrors the make-whole's data-layer posture — the "paid at
+-- most once while live" promise is enforced, not honor-system.
 create unique index disbursement_one_per_worker_period_idx
   on disbursement (worker_id, pay_period_id)
-  where (reverses_id is null);
+  where (reverses_id is null and reversed_at is null);
 -- one reversal per original (a disbursement can be reversed at most once).
 create unique index disbursement_one_reversal_idx
   on disbursement (reverses_id)
@@ -416,8 +425,29 @@ create or replace function disbursement_block_mutation() returns trigger
   language plpgsql
 as $$
 begin
-  raise exception 'disbursement is append-only (% blocked) — money moved is a permanent record; correct with a reversing entry', tg_op
-    using errcode = 'restrict_violation';
+  if tg_op = 'DELETE' then
+    raise exception 'disbursement is append-only (DELETE blocked) — money moved is a permanent record; correct with a reversing entry'
+      using errcode = 'restrict_violation';
+  end if;
+  -- UPDATE: every money/identity column is frozen. The ONE permitted change is stamping
+  -- reversed_at (null → a timestamp) when this original gets a reversal — the same narrow,
+  -- non-money status-style UPDATE pay_line allows. Re-stamping or clearing it is blocked.
+  if old.reversed_at is not null
+     or new.id            is distinct from old.id
+     or new.pay_period_id is distinct from old.pay_period_id
+     or new.worker_id     is distinct from old.worker_id
+     or new.pay_line_id   is distinct from old.pay_line_id
+     or new.amount_usd    is distinct from old.amount_usd
+     or new.method        is distinct from old.method
+     or new.ref           is distinct from old.ref
+     or new.idempotency_key is distinct from old.idempotency_key
+     or new.signature_ref is distinct from old.signature_ref
+     or new.cost_entry_id is distinct from old.cost_entry_id
+     or new.reverses_id   is distinct from old.reverses_id then
+    raise exception 'disbursement is append-only — money moved is a permanent record; correct with a reversing entry'
+      using errcode = 'restrict_violation';
+  end if;
+  return new;
 end $$;
 
 create trigger disbursement_block_mutation
@@ -1008,6 +1038,12 @@ begin
           coalesce(p_idempotency_key, 'reversal:' || p_disbursement_id),
           'reversal:' || p_disbursement_id, v.signature_ref, v_cost, p_disbursement_id)
   returning id into v_new;
+
+  -- FREE the worker+period slot: stamp the original reversed_at (the one narrow non-money
+  -- UPDATE the block trigger permits). This drops the original out of the LIVE one-per-
+  -- worker unique index so a CORRECTED payment can be re-recorded — making "reverse first
+  -- to re-pay" actually reachable rather than a permanent dead end.
+  update disbursement set reversed_at = now() where id = p_disbursement_id;
   return v_new;
 end $$;
 
