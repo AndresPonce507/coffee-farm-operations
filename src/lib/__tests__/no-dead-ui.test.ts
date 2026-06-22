@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
@@ -18,7 +19,10 @@ import { describe, expect, it } from "vitest";
  * count is explicit and a re-introduced dead click is caught.
  */
 
-const SRC = fileURLToPath(new URL("../../", import.meta.url)); // → src/
+// Resolve to `src/` via the file path of THIS test (under jsdom `import.meta.url`
+// is not a file: URL, so `new URL(..)` + fileURLToPath throws — climb from the
+// real on-disk path instead, matching ripple-routes-exist.test.ts).
+const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", ".."); // → src/
 
 /** Count `// DEAD:` markers (the audit's tag for an unresolved dead affordance). */
 function deadMarkerCount(): number {
