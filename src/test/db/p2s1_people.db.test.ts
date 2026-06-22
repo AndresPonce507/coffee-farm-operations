@@ -29,7 +29,12 @@ import { asAnon, asAuthenticated, freshDb, type Harness } from "./pgliteHarness"
 
 const SEED = readFileSync(join(process.cwd(), "supabase/seed.sql"), "utf8");
 
-const DEV = `'2026-06-22T12:00:00Z'`;
+// now()-relative so memberships closed at this occurred_at always satisfy the
+// crew_memberships CHECK (left_at >= joined_at) — the seed backfill opens each
+// worker's first membership at joined_at = now(), so a fixed wall-clock literal
+// went stale once real UTC passed it (it flaked daily after noon). +1h keeps the
+// enroll/rehire occurred_at safely at-or-after the seed's now() at any wall time.
+const DEV = `(now() + interval '1 hour')`;
 
 // The migrations create EMPTY tables; seed.sql (which runs after them in prod) inserts
 // workers and then calls _backfill_people(). The PGlite harness replays migrations
@@ -386,7 +391,7 @@ describe("P2-S1 — verify_chain is attendance/worker-stream aware (the chain-ve
       `select record_attendance('w-06','clock-in',null,${DEV},'dev-A',1,'vc-att-1');`,
     );
     await h.query(
-      `select record_attendance('w-06','clock-out',null,'2026-06-22T18:00:00Z','dev-A',2,'vc-att-2');`,
+      `select record_attendance('w-06','clock-out',null,(now() + interval '6 hours'),'dev-A',2,'vc-att-2');`,
     );
     // a worker-stream event too (enroll appends a WORKER_ENROLLED row).
     await h.query(
@@ -737,7 +742,7 @@ describe("P2-S1 — hash-chain verifies on the worker ledgers", () => {
       `select record_attendance('w-06','clock-in',null,${DEV},'dev-A',1,'att-c1');`,
     );
     await h.query(
-      `select record_attendance('w-06','clock-out',null,'2026-06-22T18:00:00Z','dev-A',2,'att-c2');`,
+      `select record_attendance('w-06','clock-out',null,(now() + interval '6 hours'),'dev-A',2,'att-c2');`,
     );
     // two events on the PII-scoped worker:w-06 stream (a cert then a rehire), so its
     // hash chain has a genuine prev->hash link to verify (idx 154).
