@@ -352,3 +352,116 @@ describe("getDispatchToday — reads the active cards + groups their plot lines"
     expect(eq).toHaveBeenCalledWith("v_dispatch_card", "dispatch_date", expectedToday);
   });
 });
+
+// ── getDispatchRunById: the /dispatch/[id] dossier anchor (Phase 5 L2) ────────
+describe("getDispatchRunById — one run by its numeric id (no date pin)", () => {
+  const cardRow: DispatchCardRow = {
+    id: 3,
+    crew_id: "crew-norte",
+    crew_name: "Crew Norte",
+    dispatch_date: "2026-06-21",
+    season: "2026",
+    status: "draft",
+    sent_channel: null,
+    readiness_threshold: "0.5",
+    idempotency_key: "idem-abc",
+    plot_count: "2",
+  };
+
+  const plotRows: DispatchCardPlotRow[] = [
+    {
+      id: 21,
+      dispatch_run_id: 3,
+      plot_id: "p-norte-alto",
+      plot_name: "Norte Alto",
+      variety: "Geisha",
+      altitude_masl: "1700",
+      task_kind: "picking",
+      target_kg: null,
+      ripeness_target: "medium",
+      readiness: "0.6",
+      ord: "2",
+    },
+    {
+      id: 20,
+      dispatch_run_id: 3,
+      plot_id: "p-norte-bajo",
+      plot_name: "Norte Bajo",
+      variety: "Catuaí",
+      altitude_masl: "1400",
+      task_kind: "picking",
+      target_kg: "120",
+      ripeness_target: "high",
+      readiness: "0.92",
+      ord: "1",
+    },
+    {
+      // a plot line for a DIFFERENT run — must not leak into run 3's card.
+      id: 30,
+      dispatch_run_id: 4,
+      plot_id: "p-sur-bajo",
+      plot_name: "Sur Bajo",
+      variety: "Caturra",
+      altitude_masl: "1300",
+      task_kind: "picking",
+      target_kg: "80",
+      ripeness_target: "high",
+      readiness: "0.88",
+      ord: "1",
+    },
+  ];
+
+  it("reads the run by id (NO date pin) and assembles its card in display order", async () => {
+    const { getDispatchRunById } = await import("@/lib/db/dispatch");
+    const { from, eq } = stubByTable({
+      v_dispatch_card: [cardRow],
+      v_dispatch_card_plots: plotRows,
+    });
+
+    const card = await getDispatchRunById(3);
+
+    expect(from).toHaveBeenCalledWith("v_dispatch_card");
+    expect(from).toHaveBeenCalledWith("v_dispatch_card_plots");
+    // Filters by id, NOT by dispatch_date (a dossier can open any day's run).
+    expect(eq).toHaveBeenCalledWith("v_dispatch_card", "id", 3);
+    const eqCols = eq.mock.calls.map((c) => c[1]);
+    expect(eqCols).not.toContain("dispatch_date");
+
+    expect(card).not.toBeNull();
+    expect(card!.id).toBe(3);
+    expect(card!.crewId).toBe("crew-norte");
+    // only this run's plot lines, in pasada/readiness order.
+    expect(card!.plots.map((p) => p.plotId)).toEqual([
+      "p-norte-bajo",
+      "p-norte-alto",
+    ]);
+  });
+
+  it("coerces a string id to a number before querying (route params are strings)", async () => {
+    const { getDispatchRunById } = await import("@/lib/db/dispatch");
+    const { eq } = stubByTable({
+      v_dispatch_card: [cardRow],
+      v_dispatch_card_plots: plotRows,
+    });
+    await getDispatchRunById("3");
+    expect(eq).toHaveBeenCalledWith("v_dispatch_card", "id", 3);
+  });
+
+  it("returns null for an unknown run id (dossier → notFound)", async () => {
+    const { getDispatchRunById } = await import("@/lib/db/dispatch");
+    stubByTable({ v_dispatch_card: [], v_dispatch_card_plots: [] });
+    expect(await getDispatchRunById(999)).toBeNull();
+  });
+
+  it("returns null for a non-numeric id (no fabricated run)", async () => {
+    const { getDispatchRunById } = await import("@/lib/db/dispatch");
+    stubByTable({ v_dispatch_card: [cardRow], v_dispatch_card_plots: plotRows });
+    expect(await getDispatchRunById("not-a-number")).toBeNull();
+  });
+
+  it("throws a labelled error when the card query errors", async () => {
+    const { getDispatchRunById } = await import("@/lib/db/dispatch");
+    stubByTable({}, { message: "boom" });
+    await expect(getDispatchRunById(3)).rejects.toThrow(/getDispatchRunById/);
+  });
+});

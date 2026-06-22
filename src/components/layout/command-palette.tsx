@@ -3,14 +3,35 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Search, CornerDownLeft, Hash } from "lucide-react";
+import {
+  Search,
+  CornerDownLeft,
+  Hash,
+  Sprout,
+  Users,
+  HeartHandshake,
+  Send,
+  Banknote,
+  Beaker,
+  Award,
+} from "lucide-react";
 
 import { NAV } from "./sidebar";
+import { entityHref } from "@/lib/dossier/entity-href";
 import { cn } from "@/lib/utils";
 
-/** A resolved palette result — a nav destination or a jump-to-lot action. */
+/** A resolved palette result — a nav destination or an entity jump action. */
 interface Result {
-  kind: "nav" | "lot";
+  kind:
+    | "nav"
+    | "lot"
+    | "plot"
+    | "worker"
+    | "crew"
+    | "dispatch"
+    | "pay-period"
+    | "batch"
+    | "cup";
   href: string;
   label: string;
   Icon: typeof Search;
@@ -23,6 +44,120 @@ interface Result {
 function lotCodeFrom(query: string): string | null {
   const digits = query.replace(/\D/g, "");
   return digits.length >= 3 ? `JC-${digits}` : null;
+}
+
+/**
+ * Phase 5 orphan-wire (US-05) — the typed-shape recognizers that turn a raw query
+ * into candidate ENTITY destinations, every URL resolved through the `entityHref`
+ * SSOT (never hand-built here). Each recognizer mirrors the lot-code contract: it
+ * proposes a destination from the input's shape, and the destination route's own
+ * `notFound()` is the authority (a bad id routes, then 404s — the palette only
+ * shows "no matches" when NO recognizer fires). This is what makes the 5 new
+ * dossiers + the 3 existing orphan dossiers reachable from anywhere via ⌘K.
+ *
+ * Recognizers are intentionally prefix/keyword-anchored so a plain number stays a
+ * lot (the dominant use-case) and the other kinds need a light cue:
+ *   - `w-03` / `worker 3`        → /workers/<id>
+ *   - `p-tizingal-alto` / `plot …` → /plots/<id>
+ *   - `crew-norte` / `crew …`    → /crew/<id>
+ *   - `disp 42` / `dispatch 42`  → /dispatch/<id>  (numeric run)
+ *   - `pp 2026-w12` / `pay …`    → /pay-period/<id>
+ *   - `batch fb-118` / `ferment …` → /ferment/<id>
+ *   - a green-lot code (JC-NNN)  → ALSO offers /qc/cup/<code>
+ */
+function entityResultsFrom(raw: string): Result[] {
+  const q = raw.trim();
+  if (q === "") return [];
+  const out: Result[] = [];
+
+  // worker — `w-03`, `w 03`, `worker 3`, `trabajador 3`
+  const worker = q.match(/^(?:w[-\s]?|trabajador\s+|worker\s+)0*([0-9]{1,3})$/i);
+  if (worker) {
+    const id = `w-${worker[1].padStart(2, "0")}`;
+    out.push({
+      kind: "worker",
+      href: entityHref.worker(id),
+      label: `Abrir trabajador ${id}`,
+      Icon: Users,
+    });
+  }
+
+  // crew — `crew-norte`, `crew norte`, `cuadrilla norte`
+  const crew = q.match(/^(?:crew|cuadrilla)[-\s]+([a-z0-9-]+)$/i);
+  if (crew) {
+    const id = `crew-${crew[1].replace(/^crew-/i, "")}`;
+    out.push({
+      kind: "crew",
+      href: entityHref.crew(id),
+      label: `Abrir cuadrilla ${id}`,
+      Icon: HeartHandshake,
+    });
+  }
+
+  // plot — `p-tizingal-alto`, `plot tizingal-alto`, `lote tizingal-alto`
+  const plot = q.match(/^(?:p-|plot\s+|lote\s+|parcela\s+)([a-z][a-z0-9-]+)$/i);
+  if (plot) {
+    const slug = plot[1].toLowerCase();
+    const id = slug.startsWith("p-") ? slug : `p-${slug}`;
+    out.push({
+      kind: "plot",
+      href: entityHref.plot(id),
+      label: `Abrir lote ${id}`,
+      Icon: Sprout,
+    });
+  }
+
+  // dispatch run — `disp 42`, `dispatch 42`, `despacho 42`, `#42`
+  const disp = q.match(/^(?:disp(?:atch)?|despacho|#)\s*([0-9]{1,9})$/i);
+  if (disp) {
+    const id = disp[1];
+    out.push({
+      kind: "dispatch",
+      href: entityHref.dispatch(id),
+      label: `Abrir despacho ${id}`,
+      Icon: Send,
+    });
+  }
+
+  // pay period — `pp 2026-w12`, `pay 2026-w12`, `nomina 2026-w12`
+  const pay = q.match(/^(?:pp|pay|n[oó]mina)[-\s]+([a-z0-9-]+)$/i);
+  if (pay) {
+    const id = pay[1].toLowerCase();
+    out.push({
+      kind: "pay-period",
+      href: entityHref["pay-period"](id),
+      label: `Abrir periodo de pago ${id}`,
+      Icon: Banknote,
+    });
+  }
+
+  // ferment batch — `batch fb-118`, `ferment fb-118`, `lote-ferm fb-118`
+  const batch = q.match(/^(?:batch|ferment|fermento|tanda)[-\s]+([a-z0-9-]+)$/i);
+  if (batch) {
+    const id = batch[1].toLowerCase();
+    out.push({
+      kind: "batch",
+      href: entityHref.batch(id),
+      label: `Abrir tanda ${id}`,
+      Icon: Beaker,
+    });
+  }
+
+  // green-lot CUP score — any lot code ALSO offers its cup scoresheet (a green
+  // lot's QC dossier lives at /qc/cup/<code>). Complements, never replaces, the
+  // lot. Cup is NOT one of the 7 entity dossiers, so it is intentionally absent
+  // from the `entityHref` SSOT; its route is the QC scoresheet path, built here.
+  const code = lotCodeFrom(q);
+  if (code) {
+    out.push({
+      kind: "cup",
+      href: `/qc/cup/${code}`,
+      label: `Ver taza de ${code}`,
+      Icon: Award,
+    });
+  }
+
+  return out;
 }
 
 /**
@@ -65,7 +200,11 @@ export function CommandPalette() {
           },
         ]
       : [];
-    return [...lotHit, ...navHits];
+    // Phase 5 orphan-wire: the lot jump leads, then the other entity-kind jumps
+    // (worker/plot/crew/dispatch/pay-period/batch + the cup-of-this-lot drill),
+    // then the nav routes. Every entity href comes from the entityHref SSOT.
+    const entityHits = entityResultsFrom(query);
+    return [...lotHit, ...entityHits, ...navHits];
   }, [query]);
 
   // Stable per-row ids so the input's aria-activedescendant can point at the
@@ -208,7 +347,8 @@ export function CommandPalette() {
                     data-testid="command-palette-empty"
                     className="px-3 py-6 text-center text-sm text-muted-fg"
                   >
-                    No matches — type a lot number like 701 to open its dossier.
+                    Sin resultados — prueba un lote (701), un trabajador (w-03) o
+                    un lote/parcela (p-tizingal-alto).
                   </li>
                 ) : (
                   results.map((r, i) => (

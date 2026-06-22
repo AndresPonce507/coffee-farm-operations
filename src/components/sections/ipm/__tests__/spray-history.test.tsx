@@ -36,4 +36,16 @@ describe("SprayHistory (render/smoke)", () => {
     render(<SprayHistory rows={[]} />);
     expect(screen.getByTestId("spray-empty")).toBeInTheDocument();
   });
+
+  it("wires the plot name to the plot dossier (was COSMETIC)", () => {
+    render(<SprayHistory rows={[entry]} />);
+    const link = screen.getByRole("link", { name: /Talamanca/i });
+    expect(link).toHaveAttribute("href", "/plots/p-talamanca");
+  });
+
+  it("wires the applicator name to the worker dossier (was COSMETIC)", () => {
+    render(<SprayHistory rows={[entry]} />);
+    const link = screen.getByRole("link", { name: /Lucía Mendez/i });
+    expect(link).toHaveAttribute("href", "/workers/w-agro");
+  });
 });

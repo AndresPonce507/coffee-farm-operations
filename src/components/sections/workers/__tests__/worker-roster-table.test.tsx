@@ -10,6 +10,16 @@ vi.mock("@/lib/db/workers", () => ({
   getWorkers: () => getWorkersMock(),
 }));
 
+// The table now also reads crews LIVE (for the inline edit form's crew picker);
+// mock getCrews so the smoke test renders with no network.
+vi.mock("@/lib/db/people", async (orig) => ({
+  ...(await orig<typeof import("@/lib/db/people")>()),
+  getCrews: vi.fn(async () => [
+    { crewId: "crew-norte", crewName: "Crew Norte", memberCount: 2, presentCount: 2 },
+    { crewId: "field-ops", crewName: "Field Ops", memberCount: 1, presentCount: 1 },
+  ]),
+}));
+
 // Mixed roles / attendance exercise the role column, day-rate formatting, the
 // today-kg "—" fallback for non-pickers, and every attendance badge tone.
 const ROSTER: Worker[] = [
@@ -57,6 +67,23 @@ describe("WorkerRosterTable (smoke)", () => {
     expect(screen.getByText("$22")).toBeInTheDocument();
     // Picker's cherries-today cell.
     expect(screen.getByText("78 kg")).toBeInTheDocument();
+  });
+
+  it("wires each worker name to its /workers/[id] dossier", async () => {
+    getWorkersMock.mockResolvedValue(ROSTER);
+    const ui = await WorkerRosterTable();
+    render(ui);
+
+    const link = screen
+      .getByText("Eduardo Pérez")
+      .closest("a") as HTMLAnchorElement | null;
+    expect(link).not.toBeNull();
+    expect(link).toHaveAttribute("href", "/workers/w1");
+
+    const link2 = screen
+      .getByText("Janette Janson")
+      .closest("a") as HTMLAnchorElement | null;
+    expect(link2).toHaveAttribute("href", "/workers/w2");
   });
 
   it("renders a single empty-state row when the roster is empty", async () => {

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
-import { PageHeader } from "@/components/ui/page-header";
+import { DossierShell } from "@/components/dossier/dossier-shell";
+import { DossierSection } from "@/components/dossier/dossier-section";
 import { GenealogyGraph } from "@/components/sections/lots/genealogy-graph";
 import { EudrDossier } from "@/components/sections/eudr/eudr-dossier";
 import { getLotGenealogy } from "@/lib/db/lots";
@@ -51,19 +52,23 @@ export default async function LotGenealogyPage({
   const dossier = isGreen ? await getLotEudrDossier(code) : null;
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title={`Lot ${code}`}
-        subtitle="Farm-to-bag lineage — mass flow from cherry intake to the sold green lot"
-      />
-
-      <GenealogyGraph graph={graph} terminalCode={code} />
+    <DossierShell
+      kind="lot"
+      title={`Lot ${code}`}
+      eyebrow="Lote"
+      subtitle="Trazabilidad de la finca a la bolsa — flujo de masa desde la cereza hasta el lote verde vendido"
+      backHref="/lots"
+      backLabel="Todos los lotes"
+    >
+      <DossierSection id="lineage" title="Linaje (de la finca a la bolsa)">
+        <GenealogyGraph graph={graph} terminalCode={code} />
+      </DossierSection>
 
       {dossier && (
-        <section id="eudr" className="scroll-mt-24">
+        <DossierSection id="eudr" title="Diligencia debida EUDR">
           <EudrDossier dossier={dossier} />
-        </section>
+        </DossierSection>
       )}
-    </div>
+    </DossierShell>
   );
 }

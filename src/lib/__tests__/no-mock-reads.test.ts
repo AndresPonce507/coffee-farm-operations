@@ -58,9 +58,10 @@ function mockReadFiles(): string[] {
     .filter((f) => !f.includes("/lib/data/"));
 }
 
-// SKIP today (the CREWS MOCK leak + seed-geometry still read @/lib/data). US-02
-// un-skips this in the same PR that swaps the last mock read for a live getter.
-describe.skip("no-mock-reads guard", () => {
+// UN-SKIPPED (Phase 5 L3): the CREWS MOCK leak in sections/workers/{crew-board,
+// worker-form}.tsx now reads crews LIVE via getCrews(). This guard is now the
+// machine enforcement of KPI 2 (0 mock-data reads on production render paths).
+describe("no-mock-reads guard", () => {
   it("has zero @/lib/data reads on production render paths (KPI 2 = 0 mock)", () => {
     expect(mockReadFiles()).toEqual([]);
   });

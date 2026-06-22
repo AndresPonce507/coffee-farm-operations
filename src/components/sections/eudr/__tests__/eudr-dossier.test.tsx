@@ -53,6 +53,39 @@ describe("EudrDossier", () => {
     expect(within(baru).getByText(/established-pre-cutoff/)).toBeInTheDocument();
   });
 
+  it("links each origin-plot name to its /plots/[id] dossier (J4: cosmetic row → dossier link)", () => {
+    render(<EudrDossier dossier={compliant} />);
+
+    const baru = screen.getByText("Barú Vista").closest("a");
+    expect(baru).toHaveAttribute("href", "/plots/p-baru-vista");
+
+    const talamanca = screen.getByText("Talamanca").closest("a");
+    expect(talamanca).toHaveAttribute("href", "/plots/p-talamanca");
+  });
+
+  it("links the plot name even on an undeclared/ungeolocated origin row", () => {
+    const incomplete: LotEudrDossier = {
+      code: "JC-721",
+      status: "incomplete",
+      originPlots: [
+        {
+          plotId: "p-mystery",
+          plotName: "Mystery",
+          establishedYear: 2019,
+          centroid: null,
+          geolocated: false,
+          deforestationFree: false,
+          declBasis: null,
+        },
+      ],
+    };
+    render(<EudrDossier dossier={incomplete} />);
+    expect(screen.getByText("Mystery").closest("a")).toHaveAttribute(
+      "href",
+      "/plots/p-mystery",
+    );
+  });
+
   it("shows the honest 'origin cannot be substantiated' state for a no-origin lot (no fabricated tick)", () => {
     render(<EudrDossier dossier={noOrigin} />);
     expect(screen.getByTestId("eudr-badge-no-origin")).toBeInTheDocument();

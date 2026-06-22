@@ -67,6 +67,22 @@ describe("FermentTracker (smoke)", () => {
     expect(screen.getByText(/Anaerobic/)).toBeInTheDocument();
   });
 
+  it("links the batch's lot code to its lot dossier (cross-entity coherence)", () => {
+    const { container } = render(
+      <FermentTracker
+        batch={batch}
+        curve={curve}
+        cutpoint={cutpoint}
+        water={water}
+      />,
+    );
+    // The batch.lotCode is an <EntityLink> to /lots/<code> — from a ferment
+    // batch you hop straight to the lot it belongs to (design §5 link map).
+    const lotLink = container.querySelector('a[href="/lots/JC-800"]');
+    expect(lotLink).not.toBeNull();
+    expect(lotLink).toHaveTextContent("JC-800");
+  });
+
   it("renders the live curve, the cut-point signal, and the water chip", () => {
     render(
       <FermentTracker

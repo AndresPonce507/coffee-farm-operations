@@ -10,10 +10,19 @@ import { WorkerForm } from "@/components/sections/workers/worker-form";
 
 const noop = async (): Promise<ActionState> => ({ status: "idle" });
 
+// Crew names now arrive as a prop, sourced LIVE from getCrews() by the RSC parent
+// (no more hardcoded CREWS const import inside the form).
+const CREW_NAMES = ["Crew Norte", "Field Ops"];
+
 describe("WorkerForm (smoke)", () => {
   it("renders the worker fields and the submit label", () => {
     render(
-      <WorkerForm action={noop} submitLabel="Add worker" onDone={() => {}} />,
+      <WorkerForm
+        action={noop}
+        submitLabel="Add worker"
+        onDone={() => {}}
+        crews={CREW_NAMES}
+      />,
     );
 
     expect(screen.getByLabelText("Name")).toBeInTheDocument();
@@ -31,9 +40,12 @@ describe("WorkerForm (smoke)", () => {
       screen.getByRole("button", { name: "Add worker" }),
     ).toBeInTheDocument();
 
-    // The crew select is populated from the CREWS const.
+    // The crew select is populated from the live `crews` prop.
     expect(
       screen.getByRole("option", { name: "Crew Norte" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Field Ops" }),
     ).toBeInTheDocument();
     // A role option from WORKER_ROLES renders.
     expect(

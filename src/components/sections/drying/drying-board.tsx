@@ -4,6 +4,7 @@ import { Coffee, MapPin } from "lucide-react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
+import { EntityLink } from "@/components/ui/entity-link";
 import { ReposoGateChip } from "./reposo-gate-chip";
 import { MoistureCurve } from "./moisture-curve";
 import { cn, kg } from "@/lib/utils";
@@ -65,10 +66,14 @@ export function DryingBoard({ lots }: { lots: DryingLot[] }) {
               >
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div>
-                    <p className="flex items-center gap-1.5 font-display text-base font-bold tracking-tight text-ink">
+                    <EntityLink
+                      kind="lot"
+                      id={lot.lotCode}
+                      className="flex items-center gap-1.5 font-display text-base font-bold tracking-tight text-ink rounded-sm outline-none transition-colors hover:text-forest-700 focus-visible:ring-2 focus-visible:ring-forest/40"
+                    >
                       <Coffee aria-hidden className="h-4 w-4 text-honey-700" />
                       {lot.lotCode}
-                    </p>
+                    </EntityLink>
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted-fg">
                       {lot.variety && <span>{lot.variety}</span>}
                       {lot.currentKg != null && (

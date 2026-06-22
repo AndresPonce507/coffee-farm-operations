@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import type { Plot } from "@/lib/types";
 
@@ -38,9 +38,9 @@ describe("PlotsExplorer (smoke)", () => {
     expect(screen.getByRole("button", { name: /Geisha/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Pacamara/ })).toBeInTheDocument();
     // Grid is the default view → each plot card renders its name heading.
-    expect(
-      screen.getByRole("heading", { name: "Tizingal Alto" }),
-    ).toBeInTheDocument();
+    // The name now nests inside an EntityLink (es-PA aria-label), so assert by
+    // visible text rather than the heading's accessible name.
+    expect(screen.getByText("Tizingal Alto")).toBeInTheDocument();
   });
 
   it("shows the result count for the rendered plots", () => {
@@ -52,5 +52,25 @@ describe("PlotsExplorer (smoke)", () => {
       .getAllByText(/Showing/, { selector: "p" })
       .find((el) => el.textContent?.replace(/\s+/g, " ").trim() === "Showing 3 plots.");
     expect(summary).toBeDefined();
+  });
+
+  // Phase 5 D2 — formerly-COSMETIC grid card names now drill into /plots/[id].
+  it("links each grid plot card name to its plot dossier", () => {
+    render(<PlotsExplorer plots={plots} />);
+    // EntityLink carries an es-PA aria-label; the visible plot name nests inside it.
+    const link = screen.getByRole("link", { name: /plot p1/i });
+    expect(link).toHaveAttribute("href", "/plots/p1");
+    expect(link).toHaveTextContent("Tizingal Alto");
+  });
+
+  // Phase 5 D2 — the list view plot rows are dossier links too.
+  it("links each list plot row name to its plot dossier", () => {
+    render(<PlotsExplorer plots={plots} />);
+    // Switch to list view.
+    const listToggle = screen.getByRole("button", { name: /^List$/ });
+    fireEvent.click(listToggle);
+    const link = screen.getByRole("link", { name: /plot p2/i });
+    expect(link).toHaveAttribute("href", "/plots/p2");
+    expect(link).toHaveTextContent("Paso Ancho");
   });
 });

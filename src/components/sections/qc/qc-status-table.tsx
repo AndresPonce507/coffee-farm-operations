@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { THead, TBody, TR, TH, TD } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import { num } from "@/lib/utils";
 import { QcHoldControl } from "./qc-hold-control";
 
@@ -94,9 +95,13 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
                   {rows.map((row) => (
                     <TR key={row.greenLotCode} className="group align-middle">
                       <TD>
-                        <span className="font-mono text-sm font-medium text-ink transition-colors group-hover:text-forest-700">
+                        <EntityLink
+                          kind="lot"
+                          id={row.greenLotCode}
+                          className="font-mono text-sm font-medium text-ink underline-offset-4 transition-colors hover:text-forest-700 hover:underline group-hover:text-forest-700"
+                        >
                           {row.greenLotCode}
-                        </span>
+                        </EntityLink>
                       </TD>
                       <TD>
                         <div className="flex flex-col gap-0.5">
@@ -148,9 +153,13 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
                   className="rounded-2xl border border-white/60 bg-white/55 p-4 shadow-[0_8px_24px_-16px_rgba(0,41,29,0.35)]"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <p className="font-mono text-sm font-medium text-ink">
+                    <EntityLink
+                      kind="lot"
+                      id={row.greenLotCode}
+                      className="font-mono text-sm font-medium text-ink underline-offset-4 hover:text-forest-700 hover:underline"
+                    >
                       {row.greenLotCode}
-                    </p>
+                    </EntityLink>
                     <HeldBadge held={row.held} />
                   </div>
                   {row.held && row.holdReason && (

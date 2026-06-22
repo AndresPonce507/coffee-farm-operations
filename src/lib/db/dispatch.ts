@@ -161,3 +161,43 @@ export const getDispatchToday = cache(
     );
   },
 );
+
+/**
+ * ONE dispatch run by its numeric id — the /dispatch/[id] dossier anchor (Phase 5
+ * L2, facet-02 §5/§11). Unlike getDispatchToday this is NOT date-pinned: a dossier
+ * link may open any morning's run, so the read is keyed purely on the run id. The
+ * route param arrives as a string, so the id is coerced to a number (the public
+ * handle is v_dispatch_card.id, not idempotency_key); a non-numeric id resolves to
+ * null without a query. Returns null when no run matches (the dossier calls
+ * notFound() — no fabricated run). Read-only.
+ */
+export const getDispatchRunById = cache(
+  async (id: string | number): Promise<DispatchCard | null> => {
+    const runId = Number(id);
+    if (!Number.isFinite(runId)) return null;
+
+    const client = await getSupabase();
+
+    const { data: cardData, error: cardError } = await client
+      .from("v_dispatch_card")
+      .select("*")
+      .eq("id", runId);
+    if (cardError) throw new Error(`getDispatchRunById: ${cardError.message}`);
+
+    const cardRow = (cardData as DispatchCardRow[])[0];
+    if (!cardRow) return null;
+
+    const { data: plotData, error: plotError } = await client
+      .from("v_dispatch_card_plots")
+      .select("*")
+      .eq("dispatch_run_id", runId);
+    if (plotError) throw new Error(`getDispatchRunById: ${plotError.message}`);
+
+    // Belt-and-braces: keep only THIS run's plot lines (the query is already
+    // scoped, but mapDispatchCard must never receive another run's plots).
+    const plots = (plotData as DispatchCardPlotRow[]).filter(
+      (p) => Number(p.dispatch_run_id) === runId,
+    );
+    return mapDispatchCard(cardRow, plots);
+  },
+);

@@ -9,7 +9,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { createWorker, deleteWorker, updateWorker } from "@/lib/actions/workers";
 import { WorkerForm } from "./worker-form";
 
-export function AddWorkerButton() {
+export function AddWorkerButton({ crews }: { crews: readonly string[] }) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -22,13 +22,20 @@ export function AddWorkerButton() {
           action={createWorker}
           submitLabel="Add worker"
           onDone={() => setOpen(false)}
+          crews={crews}
         />
       </Dialog>
     </>
   );
 }
 
-export function WorkerRowActions({ worker }: { worker: Worker }) {
+export function WorkerRowActions({
+  worker,
+  crews,
+}: {
+  worker: Worker;
+  crews: readonly string[];
+}) {
   const [editing, setEditing] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -70,6 +77,7 @@ export function WorkerRowActions({ worker }: { worker: Worker }) {
           action={updateWorker}
           submitLabel="Save changes"
           onDone={() => setEditing(false)}
+          crews={crews}
         />
       </Dialog>
     </div>

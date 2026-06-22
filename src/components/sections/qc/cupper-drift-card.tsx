@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import { num } from "@/lib/utils";
 
 /**
@@ -80,15 +81,17 @@ export function CupperDriftCard({
                 className="flex items-center justify-between gap-4 py-2.5"
               >
                 <div className="min-w-0">
-                  <p
+                  <EntityLink
+                    kind="worker"
+                    id={d.cupperId}
                     className={
                       name
-                        ? "truncate text-sm font-medium text-ink"
-                        : "font-mono text-sm font-medium text-ink"
+                        ? "block truncate text-sm font-medium text-ink underline-offset-4 hover:text-forest-700 hover:underline"
+                        : "block font-mono text-sm font-medium text-ink underline-offset-4 hover:text-forest-700 hover:underline"
                     }
                   >
                     {name ?? d.cupperId}
-                  </p>
+                  </EntityLink>
                   <p className="mt-0.5 text-xs capitalize text-muted-fg">
                     {name ? (
                       <span className="font-mono lowercase text-muted-fg/80">

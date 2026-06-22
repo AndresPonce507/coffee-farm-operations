@@ -17,6 +17,24 @@ const genealogy: LotGenealogy = {
       mintedAt: "2026-05-01",
     },
     {
+      code: "JC-100W",
+      stage: "parchment",
+      variety: "Geisha",
+      originKg: 600,
+      currentKg: 450,
+      isSingleOrigin: true,
+      mintedAt: "2026-05-05",
+    },
+    {
+      code: "JC-100N",
+      stage: "drying",
+      variety: "Geisha",
+      originKg: 400,
+      currentKg: 280,
+      isSingleOrigin: true,
+      mintedAt: "2026-05-05",
+    },
+    {
       code: "JC-200",
       stage: "green",
       variety: "Geisha",
@@ -27,7 +45,10 @@ const genealogy: LotGenealogy = {
     },
   ],
   edges: [
-    { parentCode: "JC-100", childCode: "JC-200", kind: "process", kg: 200 },
+    { parentCode: "JC-100", childCode: "JC-100W", kind: "split", kg: 600 },
+    { parentCode: "JC-100", childCode: "JC-100N", kind: "split", kg: 400 },
+    { parentCode: "JC-100W", childCode: "JC-200", kind: "blend", kg: 120 },
+    { parentCode: "JC-100N", childCode: "JC-200", kind: "blend", kg: 80 },
   ],
 };
 
@@ -78,6 +99,15 @@ describe("/lots/[code] page (smoke)", () => {
 
     // The read port was called with the route's lot code.
     expect(getLotGenealogy).toHaveBeenCalledWith("JC-200");
+
+    // Retrofit: the page now wraps its content in the shared <DossierShell>
+    // (data-dossier="lot") with a localized eyebrow + back link, so all 7
+    // dossiers share chrome. The data + sections are unchanged.
+    expect(screen.getByTestId("dossier-lot")).toBeInTheDocument();
+    expect(screen.getByText("Lote")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /todos los lotes/i }),
+    ).toHaveAttribute("href", "/lots");
 
     // The header names the lot, and the genealogy figure renders.
     expect(

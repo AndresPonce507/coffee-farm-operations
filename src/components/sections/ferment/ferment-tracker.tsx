@@ -8,6 +8,7 @@ import type {
   WaterPerKg,
 } from "@/lib/db/ferment";
 import { Badge } from "@/components/ui/badge";
+import { EntityLink } from "@/components/ui/entity-link";
 import {
   Card,
   CardContent,
@@ -100,7 +101,14 @@ export function FermentTracker({
         <CardHeader>
           <div>
             <CardTitle>
-              <span className="font-mono">{batch.lotCode}</span> ferment
+              <EntityLink
+                kind="lot"
+                id={batch.lotCode}
+                className="font-mono underline-offset-4 transition-colors hover:text-forest hover:underline"
+              >
+                {batch.lotCode}
+              </EntityLink>{" "}
+              ferment
             </CardTitle>
             <CardDescription>
               <span className="inline-flex items-center gap-1">

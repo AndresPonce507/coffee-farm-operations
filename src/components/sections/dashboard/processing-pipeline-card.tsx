@@ -1,5 +1,6 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EntityLink } from "@/components/ui/entity-link";
 import { getBatches } from "@/lib/db/processing";
 import { kg } from "@/lib/utils";
 import type { BatchStage } from "@/lib/types";
@@ -183,26 +184,29 @@ export async function ProcessingPipelineCard() {
               Closest to green
             </p>
             <ul className="stagger mt-3 space-y-2">
-              {nearingGreen.map((batch, i) => (
-                <li
-                  key={batch.id}
-                  className="glass-hover flex items-center justify-between gap-3 rounded-xl border border-white/60 bg-white/55 px-3 py-2.5"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-display text-sm font-semibold text-ink">
-                        {batch.lotCode}
+              {nearingGreen.map((batch) => (
+                <li key={batch.id}>
+                  <EntityLink
+                    kind="lot"
+                    id={batch.lotCode}
+                    className="glass-hover flex items-center justify-between gap-3 rounded-xl border border-white/60 bg-white/55 px-3 py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-300"
+                  >
+                    <span className="min-w-0">
+                      <span className="flex items-center gap-2">
+                        <span className="font-display text-sm font-semibold text-ink">
+                          {batch.lotCode}
+                        </span>
+                        <span className="truncate text-xs text-muted-fg">
+                          {batch.variety} · {batch.method}
+                        </span>
                       </span>
-                      <span className="truncate text-xs text-muted-fg">
-                        {batch.variety} · {batch.method}
+                      <span className="mt-0.5 block text-xs text-muted-fg">
+                        {stageLabel(batch.stage)} · {batch.patio} ·{" "}
+                        {kg(batch.currentKg)}
                       </span>
-                    </div>
-                    <p className="mt-0.5 text-xs text-muted-fg">
-                      {stageLabel(batch.stage)} · {batch.patio} ·{" "}
-                      {kg(batch.currentKg)}
-                    </p>
-                  </div>
-                  <Badge tone="honey">{batch.progressPct}%</Badge>
+                    </span>
+                    <Badge tone="honey">{batch.progressPct}%</Badge>
+                  </EntityLink>
                 </li>
               ))}
             </ul>

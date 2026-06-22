@@ -2,7 +2,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/data-table";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { EntityLink } from "@/components/ui/entity-link";
 import { getWorkers } from "@/lib/db/workers";
+import { getCrews } from "@/lib/db/people";
 import { usd } from "@/lib/utils";
 import type { AttendanceStatus } from "@/lib/types";
 import { WorkerRowActions } from "./worker-actions";
@@ -25,7 +27,11 @@ const ATTENDANCE_LABEL: Record<AttendanceStatus, string> = {
  * Server component: static display only, no hooks or handlers.
  */
 export async function WorkerRosterTable() {
-  const workers = await getWorkers();
+  const [workers, crews] = await Promise.all([getWorkers(), getCrews()]);
+  // Crew names for the inline edit form's crew picker (live, mock-free).
+  const crewNames = crews
+    .map((c) => c.crewName)
+    .filter((n): n is string => Boolean(n));
 
   return (
     <Card className="animate-rise overflow-hidden">
@@ -65,10 +71,14 @@ export async function WorkerRosterTable() {
             {workers.map((worker) => (
               <TR key={worker.id}>
                 <TD className="pl-5">
-                  <div className="flex items-center gap-3">
+                  <EntityLink
+                    kind="worker"
+                    id={worker.id}
+                    className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-1 transition hover:bg-white/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
+                  >
                     <Avatar name={worker.name} size="md" />
                     <span className="font-medium text-ink">{worker.name}</span>
-                  </div>
+                  </EntityLink>
                 </TD>
                 <TD className="text-muted-fg">{worker.role}</TD>
                 <TD className="text-muted-fg">{worker.crew}</TD>
@@ -93,7 +103,7 @@ export async function WorkerRosterTable() {
                   </Badge>
                 </TD>
                 <TD className="pr-5 text-right">
-                  <WorkerRowActions worker={worker} />
+                  <WorkerRowActions worker={worker} crews={crewNames} />
                 </TD>
               </TR>
             ))}

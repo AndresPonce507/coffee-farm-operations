@@ -1,7 +1,5 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-
-import { PageHeader } from "@/components/ui/page-header";
+import { DossierShell } from "@/components/dossier/dossier-shell";
+import { DossierSection } from "@/components/dossier/dossier-section";
 import { CuppingScoresheet } from "@/components/sections/qc/cupping-scoresheet";
 import { CupToCausePanel } from "@/components/sections/qc/cup-to-cause-panel";
 import { DefectEntryForm } from "@/components/sections/qc/defect-entry-form";
@@ -44,31 +42,31 @@ export default async function CuppingPage({
   const cuppers = workers.map((w) => ({ id: w.id, name: w.name }));
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Cupping"
-        subtitle="Score the cup — and see exactly what produced it"
-      >
-        <Link
-          href="/qc"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white/60 px-3 py-2 text-sm font-medium text-ink transition hover:border-forest-300 hover:text-forest-700"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          All QC
-        </Link>
-      </PageHeader>
-
+    <DossierShell
+      kind="lot"
+      title={`Catación ${lotCode}`}
+      eyebrow="Catación"
+      subtitle="Califica la taza — y ve exactamente qué la produjo"
+      backHref="/qc"
+      backLabel="Todo el control de calidad"
+    >
       {status?.held && (
         <QcHoldBanner lotCode={lotCode} reason={status.holdReason} />
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <div className="space-y-6">
-          <CuppingScoresheet lotCode={lotCode} cuppers={cuppers} />
-          <DefectEntryForm lotCode={lotCode} defects={defects} />
+      <DossierSection id="cupping" title="Taza y causa">
+        <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+          <div className="space-y-6">
+            <CuppingScoresheet lotCode={lotCode} cuppers={cuppers} />
+            <DefectEntryForm lotCode={lotCode} defects={defects} />
+          </div>
+          <CupToCausePanel
+            lotCode={lotCode}
+            genealogy={genealogy}
+            status={status}
+          />
         </div>
-        <CupToCausePanel lotCode={lotCode} genealogy={genealogy} status={status} />
-      </div>
-    </div>
+      </DossierSection>
+    </DossierShell>
   );
 }

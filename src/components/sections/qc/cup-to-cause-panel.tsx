@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import { FermentCurve } from "@/components/sections/ferment/ferment-curve";
 import { MoistureCurve } from "@/components/sections/drying/moisture-curve";
 import { kg } from "@/lib/utils";
@@ -29,8 +30,12 @@ import { kg } from "@/lib/utils";
  * lineage at all, an honest empty state appears.
  */
 
-/** The minimal plot identity the cup-to-cause loop surfaces: a name + elevation. */
+/** The minimal plot identity the cup-to-cause loop surfaces: a name + elevation.
+ *  `id` (when known) makes the plot a dossier link to `/plots/[id]` — the cup-to-
+ *  cause loop's clickable anchor (Phase-5 L3 wire-up). Optional so a plot resolved
+ *  by name-only still renders honestly (as plain text) rather than a broken link. */
 export interface CupCausePlot {
+  id?: string;
   name: string;
   altitudeMasl: number;
 }
@@ -126,7 +131,17 @@ export function CupToCausePanel({
                 <Mountain className="h-4 w-4 text-forest-600" aria-hidden />
                 <span className="text-sm text-ink">
                   Plot{" "}
-                  <span className="font-medium text-forest-700">{plot.name}</span>
+                  {plot.id ? (
+                    <EntityLink
+                      kind="plot"
+                      id={plot.id}
+                      className="font-medium text-forest-700 underline-offset-4 hover:underline"
+                    >
+                      {plot.name}
+                    </EntityLink>
+                  ) : (
+                    <span className="font-medium text-forest-700">{plot.name}</span>
+                  )}
                   {" — "}
                   <span className="tabular-nums">
                     {plot.altitudeMasl.toLocaleString("en-US")} masl
@@ -147,7 +162,13 @@ export function CupToCausePanel({
                     <span className="text-sm font-medium capitalize text-ink">
                       {s.stage}
                     </span>
-                    <span className="font-mono text-xs text-muted-fg">{s.code}</span>
+                    <EntityLink
+                      kind="lot"
+                      id={s.code}
+                      className="font-mono text-xs text-muted-fg underline-offset-4 transition-colors hover:text-forest-700 hover:underline"
+                    >
+                      {s.code}
+                    </EntityLink>
                   </div>
                   <p className="mt-0.5 text-xs text-muted-fg tabular-nums">
                     {kg(s.currentKg)}

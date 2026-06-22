@@ -1,5 +1,6 @@
 import type { CoffeeVariety, Plot, PlotStatus } from "@/lib/types";
 import { getPlots } from "@/lib/db/plots";
+import { EntityLink } from "@/components/ui/entity-link";
 import { PlotRowActions } from "./plot-actions";
 import {
   Card,
@@ -79,8 +80,16 @@ export async function PlotsTable() {
               return (
                 <TR key={plot.id}>
                   <TD>
-                    <div className="font-medium text-ink">{plot.name}</div>
-                    <div className="text-xs text-muted-fg">{plot.block}</div>
+                    <EntityLink
+                      kind="plot"
+                      id={plot.id}
+                      className="group/plot inline-flex flex-col rounded-md outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
+                    >
+                      <span className="font-medium text-ink transition-colors group-hover/plot:text-forest">
+                        {plot.name}
+                      </span>
+                      <span className="text-xs text-muted-fg">{plot.block}</span>
+                    </EntityLink>
                   </TD>
                   <TD>
                     <Badge tone={VARIETY_TONE[plot.variety]}>

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { THead, TBody, TR, TH, TD } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import { ReservationDrawer } from "./reservation-drawer";
 import { kg } from "@/lib/utils";
 
@@ -91,9 +92,13 @@ export function AtpTable({ rows }: { rows: GreenLotAtp[] }) {
                   {rows.map((row) => (
                     <TR key={row.greenLotCode} className="group align-top">
                       <TD>
-                        <span className="font-mono text-sm font-medium text-ink transition-colors group-hover:text-forest-700">
+                        <EntityLink
+                          kind="lot"
+                          id={row.greenLotCode}
+                          className="font-mono text-sm font-medium text-ink underline-offset-4 transition-colors hover:text-forest-700 hover:underline focus-visible:text-forest-700 focus-visible:underline focus-visible:outline-none group-hover:text-forest-700"
+                        >
                           {row.greenLotCode}
-                        </span>
+                        </EntityLink>
                       </TD>
                       <TD>
                         <Badge tone={gradeTone(row.scaGrade)} dot>
@@ -132,9 +137,13 @@ export function AtpTable({ rows }: { rows: GreenLotAtp[] }) {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-mono text-sm font-medium text-ink">
+                      <EntityLink
+                        kind="lot"
+                        id={row.greenLotCode}
+                        className="font-mono text-sm font-medium text-ink underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none"
+                      >
                         {row.greenLotCode}
-                      </p>
+                      </EntityLink>
                       <p className="mt-0.5 text-xs text-muted-fg">
                         {row.location}
                       </p>

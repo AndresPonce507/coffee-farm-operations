@@ -363,6 +363,23 @@ export interface EudrOriginPlot {
   declBasis: string | null; // how the claim is substantiated (null when undeclared)
 }
 
+/** The plot-centric EUDR origin view (for the /plots/[id] dossier) — one plot's
+ *  own due-diligence facts plus the green lots its cherries feed. Composed from
+ *  the lot_origin_plots rows for the plot (the plot-level facts are identical
+ *  across those rows; `feedsLots` lists the distinct green-lot codes). `null`
+ *  when the plot feeds no green lot — origin that can't be substantiated is
+ *  surfaced honestly, never a fabricated pass. */
+export interface PlotOriginStatus {
+  plotId: string; // plots.id
+  plotName: string; // plots.name
+  establishedYear: number; // plots.established_year
+  centroid: [number, number] | null; // [lng, lat], null if ungeolocated
+  geolocated: boolean; // EUDR geolocation present
+  deforestationFree: boolean; // the owner's affirmative declaration
+  declBasis: string | null; // how the claim is substantiated (null when undeclared)
+  feedsLots: string[]; // distinct green-lot codes this plot's cherries feed
+}
+
 /** A green lot's EUDR due-diligence dossier — the verdict + its plots of origin
  *  (the buyer/auditor artifact the whole slice exists to produce). */
 export interface LotEudrDossier {
