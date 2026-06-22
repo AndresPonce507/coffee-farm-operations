@@ -228,26 +228,20 @@ declare
   v_lot text;
   v_seq bigint;
 begin
-  -- P4-S0: tenant-clamp every ferment_batches / ferment_recipes access (SECURITY DEFINER
-  -- bypasses RLS; ferment_batches.id is a global uuid and ferment_recipes is per-tenant
-  -- proprietary IP — a bare-key read/update could reach another estate's batch/recipe).
-  select lot_code into v_lot from ferment_batches
-   where id = p_batch_id and tenant_id = current_tenant_id();
+  select lot_code into v_lot from ferment_batches where id = p_batch_id;
   if v_lot is null then
     raise exception 'unknown ferment batch %', p_batch_id using errcode = 'foreign_key_violation';
   end if;
-  if not exists (select 1 from ferment_recipes where id = p_recipe_id and tenant_id = current_tenant_id()) then
+  if not exists (select 1 from ferment_recipes where id = p_recipe_id) then
     raise exception 'unknown recipe %', p_recipe_id using errcode = 'foreign_key_violation';
   end if;
 
   -- no-op if already bound to this exact recipe (idempotent rebind: no event)
-  if exists (select 1 from ferment_batches
-              where id = p_batch_id and recipe_id = p_recipe_id and tenant_id = current_tenant_id()) then
+  if exists (select 1 from ferment_batches where id = p_batch_id and recipe_id = p_recipe_id) then
     return p_batch_id;
   end if;
 
-  update ferment_batches set recipe_id = p_recipe_id
-   where id = p_batch_id and tenant_id = current_tenant_id();
+  update ferment_batches set recipe_id = p_recipe_id where id = p_batch_id;
 
   -- Draw device_seq from the shared monotonic server sequence (the SSOT the weigh /
   -- attendance / clock-in paths use) instead of a WHOLE-SECOND epoch. A second-
@@ -291,12 +285,10 @@ as $$
 declare
   new_id uuid;
 begin
-  -- P4-S0: tenant-clamp the lot + recipe existence checks (SECURITY DEFINER bypasses RLS).
-  if not exists (select 1 from lots where code = p_lot_code and tenant_id = current_tenant_id()) then
+  if not exists (select 1 from lots where code = p_lot_code) then
     raise exception 'unknown lot %', p_lot_code using errcode = 'foreign_key_violation';
   end if;
-  if p_recipe_id is not null and not exists (select 1 from ferment_recipes
-                                              where id = p_recipe_id and tenant_id = current_tenant_id()) then
+  if p_recipe_id is not null and not exists (select 1 from ferment_recipes where id = p_recipe_id) then
     raise exception 'unknown recipe %', p_recipe_id using errcode = 'foreign_key_violation';
   end if;
 
@@ -327,8 +319,7 @@ begin
   if new_id is null then
     -- replay: return the already-minted batch, append nothing. The ferment_started
     -- event was already recorded on the original insert.
-    select id into new_id from ferment_batches
-     where idempotency_key = p_idempotency_key and tenant_id = current_tenant_id();
+    select id into new_id from ferment_batches where idempotency_key = p_idempotency_key;
     return new_id;
   end if;
 
@@ -398,9 +389,8 @@ declare
   v_plot      text;
   v_task_id   text;
 begin
-  -- exactly-once replay short-circuit (tenant-clamped: SECURITY DEFINER bypasses RLS)
-  select id into existing from ferment_readings
-   where idempotency_key = p_idempotency_key and tenant_id = current_tenant_id();
+  -- exactly-once replay short-circuit
+  select id into existing from ferment_readings where idempotency_key = p_idempotency_key;
   if existing is not null then
     return existing;
   end if;
@@ -415,8 +405,7 @@ begin
       using errcode = 'unique_violation';
   end if;
 
-  select lot_code into v_lot from ferment_batches
-   where id = p_batch_id and tenant_id = current_tenant_id();
+  select lot_code into v_lot from ferment_batches where id = p_batch_id;
   if v_lot is null then
     raise exception 'unknown ferment batch %', p_batch_id using errcode = 'foreign_key_violation';
   end if;
@@ -429,8 +418,7 @@ begin
 
   if new_id is null then
     -- lost a concurrent race on the same key — return the winner's id
-    select id into new_id from ferment_readings
-     where idempotency_key = p_idempotency_key and tenant_id = current_tenant_id();
+    select id into new_id from ferment_readings where idempotency_key = p_idempotency_key;
     return new_id;
   end if;
 
@@ -451,8 +439,8 @@ begin
     select b.recipe_id, b.fired_cut_task_id, rec.target_ph
       into v_recipe, v_already, v_target_ph
       from ferment_batches b
-      left join ferment_recipes rec on rec.id = b.recipe_id and rec.tenant_id = b.tenant_id
-     where b.id = p_batch_id and b.tenant_id = current_tenant_id();
+      left join ferment_recipes rec on rec.id = b.recipe_id
+     where b.id = p_batch_id;
 
     if v_recipe is not null and v_already is null
        and v_target_ph is not null and p_value <= v_target_ph then
@@ -460,8 +448,7 @@ begin
       -- (tasks.worker_id is NOT NULL — never insert a null assignee).
       v_worker := _resolve_ferment_cut_worker(v_lot);
       if v_worker is not null then
-        select plot_id into v_plot from harvests
-         where lot_code = v_lot and tenant_id = current_tenant_id()
+        select plot_id into v_plot from harvests where lot_code = v_lot
           order by date desc limit 1;
         v_task_id := gen_random_uuid()::text;
         insert into tasks (id, title, category, plot_id, worker_id, due, status, priority)
@@ -475,8 +462,7 @@ begin
           'todo',
           'high'
         );
-        update ferment_batches set fired_cut_task_id = v_task_id
-         where id = p_batch_id and tenant_id = current_tenant_id();
+        update ferment_batches set fired_cut_task_id = v_task_id where id = p_batch_id;
       end if;
     end if;
   end if;
@@ -503,8 +489,7 @@ declare
   existing bigint;
   new_id   bigint;
 begin
-  select id into existing from mill_water_log
-   where idempotency_key = p_idempotency_key and tenant_id = current_tenant_id();
+  select id into existing from mill_water_log where idempotency_key = p_idempotency_key;
   if existing is not null then
     return existing;
   end if;
@@ -518,8 +503,7 @@ begin
       using errcode = 'unique_violation';
   end if;
 
-  select lot_code into v_lot from ferment_batches
-   where id = p_batch_id and tenant_id = current_tenant_id();
+  select lot_code into v_lot from ferment_batches where id = p_batch_id;
   if v_lot is null then
     raise exception 'unknown ferment batch %', p_batch_id using errcode = 'foreign_key_violation';
   end if;
@@ -531,8 +515,7 @@ begin
   returning id into new_id;
 
   if new_id is null then
-    select id into new_id from mill_water_log
-     where idempotency_key = p_idempotency_key and tenant_id = current_tenant_id();
+    select id into new_id from mill_water_log where idempotency_key = p_idempotency_key;
     return new_id;
   end if;
 

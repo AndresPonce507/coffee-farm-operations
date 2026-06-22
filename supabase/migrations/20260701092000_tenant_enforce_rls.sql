@@ -2156,5 +2156,365 @@ end $$;
 revoke execute on function eudr_declare_plot(text, boolean, text) from public;
 grant   execute on function eudr_declare_plot(text, boolean, text) to authenticated;
 
+
+-- ============================================================================
+-- Section M. PROD-FAITHFUL RELOCATION of phase-2 tenant clamps (P4-S0).
+--   These 6 SECURITY DEFINER fns were tenant-clamped in 20260622090000_people_system.sql
+--   and 20260622092000_fermentation.sql, but those migrations already ran on prod, so
+--   their edits would never apply there. Relocated here so the clamps reach prod;
+--   the two phase-2 files are reverted to their original (pre-clamp) bodies.
+-- ============================================================================
+
+-- M.1 people_system internal resync helpers
+create or replace function _resync_worker_crew(p_worker_id text) returns void
+  language plpgsql
+  set search_path = public
+as $$
+declare nm text;
+begin
+  -- P4-S0: clamp to the caller's tenant. This helper is invoked (via perform) from the
+  -- SECURITY DEFINER command RPCs, so it runs RLS-bypassing as the function owner; a bare
+  -- worker_id read/write would touch another estate's same-id worker. The session GUC is
+  -- preserved across the perform, so current_tenant_id() is the caller's.
+  select c.name into nm
+    from crew_memberships m
+    join crews c on c.id = m.crew_id and c.tenant_id = m.tenant_id
+   where m.worker_id = p_worker_id and m.left_at is null
+     and m.tenant_id = current_tenant_id()
+   order by m.joined_at desc
+   limit 1;
+  if nm is not null then
+    update workers set crew = nm where id = p_worker_id and tenant_id = current_tenant_id();
+  end if;
+end $$;
+
+create or replace function _resync_worker_attendance(p_worker_id text) returns void
+  language plpgsql
+  set search_path = public
+as $$
+declare k text; st attendance_status;
+begin
+  -- P4-S0: clamp to the caller's tenant (runs RLS-bypassing under the calling definer RPC).
+  select event_kind into k
+    from attendance_event
+   where worker_id = p_worker_id and tenant_id = current_tenant_id()
+   order by occurred_at desc, recorded_at desc
+   limit 1;
+  st := case k
+          when 'clock-in'  then 'present'::attendance_status
+          when 'clock-out' then 'present'::attendance_status
+          when 'rest-day'  then 'rest-day'::attendance_status
+          when 'absent'    then 'absent'::attendance_status
+          else null
+        end;
+  if st is not null then
+    update workers set attendance = st where id = p_worker_id and tenant_id = current_tenant_id();
+  end if;
+end $$;
+
+revoke execute on function _resync_worker_crew(text)       from public;
+revoke execute on function _resync_worker_attendance(text) from public;
+
+-- M.2 fermentation definer RPCs
+create or replace function apply_ferment_recipe(
+  p_batch_id  uuid,
+  p_recipe_id text
+) returns uuid
+  language plpgsql
+  security definer
+  set search_path = public, extensions
+as $$
+declare
+  v_lot text;
+  v_seq bigint;
+begin
+  -- P4-S0: tenant-clamp every ferment_batches / ferment_recipes access (SECURITY DEFINER
+  -- bypasses RLS; ferment_batches.id is a global uuid and ferment_recipes is per-tenant
+  -- proprietary IP — a bare-key read/update could reach another estate's batch/recipe).
+  select lot_code into v_lot from ferment_batches
+   where id = p_batch_id and tenant_id = current_tenant_id();
+  if v_lot is null then
+    raise exception 'unknown ferment batch %', p_batch_id using errcode = 'foreign_key_violation';
+  end if;
+  if not exists (select 1 from ferment_recipes where id = p_recipe_id and tenant_id = current_tenant_id()) then
+    raise exception 'unknown recipe %', p_recipe_id using errcode = 'foreign_key_violation';
+  end if;
+
+  -- no-op if already bound to this exact recipe (idempotent rebind: no event)
+  if exists (select 1 from ferment_batches
+              where id = p_batch_id and recipe_id = p_recipe_id and tenant_id = current_tenant_id()) then
+    return p_batch_id;
+  end if;
+
+  update ferment_batches set recipe_id = p_recipe_id
+   where id = p_batch_id and tenant_id = current_tenant_id();
+
+  -- Draw device_seq from the shared monotonic server sequence (the SSOT the weigh /
+  -- attendance / clock-in paths use) instead of a WHOLE-SECOND epoch. A second-
+  -- granularity epoch under the constant 'server-ferment' device collides on
+  -- lot_event's UNIQUE(device_id, device_seq) whenever two distinct binds land in the
+  -- same wall-clock second, aborting the bind with a raw 23505. nextval is strictly
+  -- increasing and never repeats, so (device_id, device_seq) is collision-free forever.
+  v_seq := nextval('worker_server_seq');
+
+  -- Fold the seq into the event's idempotency_key so a genuine rebind back to a
+  -- previously-used recipe (A->B->A) always appends a fresh ferment_recipe_applied
+  -- event (the line-above no-op check already makes a true same-recipe re-apply a
+  -- no-op). Without the seq the key 'apply-recipe:batch:A' would be reused on the
+  -- rebind-to-A and ON CONFLICT DO NOTHING would silently drop the event, leaving the
+  -- batch's recipe_id diverged from the ledger's last recipe-applied event.
+  perform record_lot_event(
+    v_lot, 'ferment_recipe_applied',
+    jsonb_build_object('batch_id', p_batch_id, 'recipe_id', p_recipe_id),
+    now(), 'server-ferment', v_seq,
+    'apply-recipe:' || p_batch_id::text || ':' || p_recipe_id || ':' || v_seq::text
+  );
+  return p_batch_id;
+end $$;
+
+create or replace function start_ferment_batch(
+  p_lot_code        text,
+  p_recipe_id       text,
+  p_method          process_method,
+  p_occurred_at     timestamptz,
+  p_device_id       text,
+  p_device_seq      bigint,
+  p_idempotency_key text
+) returns uuid
+  language plpgsql
+  security definer
+  set search_path = public, extensions
+as $$
+declare
+  new_id uuid;
+begin
+  -- P4-S0: tenant-clamp the lot + recipe existence checks (SECURITY DEFINER bypasses RLS).
+  if not exists (select 1 from lots where code = p_lot_code and tenant_id = current_tenant_id()) then
+    raise exception 'unknown lot %', p_lot_code using errcode = 'foreign_key_violation';
+  end if;
+  if p_recipe_id is not null and not exists (select 1 from ferment_recipes
+                                              where id = p_recipe_id and tenant_id = current_tenant_id()) then
+    raise exception 'unknown recipe %', p_recipe_id using errcode = 'foreign_key_violation';
+  end if;
+
+  -- FAIL CLOSED on a CROSS-KIND key collision. lot_event.idempotency_key is GLOBALLY
+  -- unique across ALL kinds. If this key was already burned by a DIFFERENT event kind,
+  -- the batch INSERT below would still succeed (the key is free on ferment_batches),
+  -- but record_lot_event's ON CONFLICT (idempotency_key) DO NOTHING would silently drop
+  -- the ferment_started append — leaving a phantom batch with no ledger backing. Reject
+  -- it instead (23505 maps to the client's "already started" message). A genuine same-
+  -- key replay of THIS start is handled by the domain ON CONFLICT below and never
+  -- reaches here, because its event kind IS 'ferment_started'.
+  if exists (
+    select 1 from lot_event
+     where idempotency_key = p_idempotency_key and kind <> 'ferment_started'
+  ) then
+    raise exception 'idempotency_key % already used by a different event kind', p_idempotency_key
+      using errcode = 'unique_violation';
+  end if;
+
+  -- exactly-once is bound on the DOMAIN row, not a kind-scoped event lookup. Binding the
+  -- key on ferment_batches makes the batch row and its ferment_started event atomically
+  -- consistent: a genuine replay returns the same batch and re-appends nothing.
+  insert into ferment_batches (lot_code, recipe_id, method, started_at, idempotency_key)
+  values (p_lot_code, p_recipe_id, p_method, p_occurred_at, p_idempotency_key)
+  on conflict (idempotency_key) do nothing
+  returning id into new_id;
+
+  if new_id is null then
+    -- replay: return the already-minted batch, append nothing. The ferment_started
+    -- event was already recorded on the original insert.
+    select id into new_id from ferment_batches
+     where idempotency_key = p_idempotency_key and tenant_id = current_tenant_id();
+    return new_id;
+  end if;
+
+  perform record_lot_event(
+    p_lot_code, 'ferment_started',
+    jsonb_build_object('batch_id', new_id, 'lot_code', p_lot_code,
+                       'recipe_id', p_recipe_id, 'method', p_method),
+    p_occurred_at, p_device_id, p_device_seq, p_idempotency_key
+  );
+  return new_id;
+end $$;
+
+create or replace function record_ferment_reading(
+  p_batch_id        uuid,
+  p_kind            text,
+  p_value           numeric,
+  p_occurred_at     timestamptz,
+  p_device_id       text,
+  p_device_seq      bigint,
+  p_idempotency_key text
+) returns bigint
+  language plpgsql
+  security definer
+  set search_path = public, extensions
+as $$
+declare
+  v_lot       text;
+  existing    bigint;
+  new_id      bigint;
+  v_target_ph numeric;
+  v_recipe    text;
+  v_already   text;
+  v_worker    text;
+  v_plot      text;
+  v_task_id   text;
+begin
+  -- exactly-once replay short-circuit (tenant-clamped: SECURITY DEFINER bypasses RLS)
+  select id into existing from ferment_readings
+   where idempotency_key = p_idempotency_key and tenant_id = current_tenant_id();
+  if existing is not null then
+    return existing;
+  end if;
+
+  -- fail closed on a CROSS-KIND key collision: the lot_event append below uses the SAME
+  -- raw idempotency_key (one shared namespace). If that key already anchors a DIFFERENT
+  -- ledger event, record_lot_event's ON CONFLICT DO NOTHING would silently drop the
+  -- ferment_reading append, leaving a reading row in the immutable series with no
+  -- backing provenance event. Reject it so the whole txn aborts (no orphaned reading).
+  if exists (select 1 from lot_event where idempotency_key = p_idempotency_key) then
+    raise exception 'idempotency_key % already anchors a different ledger event', p_idempotency_key
+      using errcode = 'unique_violation';
+  end if;
+
+  select lot_code into v_lot from ferment_batches
+   where id = p_batch_id and tenant_id = current_tenant_id();
+  if v_lot is null then
+    raise exception 'unknown ferment batch %', p_batch_id using errcode = 'foreign_key_violation';
+  end if;
+
+  insert into ferment_readings
+    (batch_id, reading_kind, value, occurred_at, device_id, device_seq, idempotency_key)
+  values (p_batch_id, p_kind, p_value, p_occurred_at, p_device_id, p_device_seq, p_idempotency_key)
+  on conflict (idempotency_key) do nothing
+  returning id into new_id;
+
+  if new_id is null then
+    -- lost a concurrent race on the same key — return the winner's id
+    select id into new_id from ferment_readings
+     where idempotency_key = p_idempotency_key and tenant_id = current_tenant_id();
+    return new_id;
+  end if;
+
+  -- one shared idempotency namespace with the reading (no 'ferment-reading:' prefix): the
+  -- event is anchored to the same key the reading deduped on, so it can never be orphaned.
+  perform record_lot_event(
+    v_lot, 'ferment_reading',
+    jsonb_build_object('batch_id', p_batch_id, 'kind', p_kind, 'value', p_value),
+    p_occurred_at, p_device_id, p_device_seq, p_idempotency_key
+  );
+
+  -- CLOSED-LOOP CUT ALERT: a pH reading at/below the recipe target = the window is
+  -- closing. Fire ONE board task on the FIRST crossing only (single-fire anchor), so a
+  -- replay or a subsequent below-target reading never double-fires. Skip silently if no
+  -- recipe is bound, the reading isn't pH, the value is above target, or the task was
+  -- already fired. (The v_ferment_cutpoint view still surfaces cut_reached regardless.)
+  if p_kind = 'ph' then
+    select b.recipe_id, b.fired_cut_task_id, rec.target_ph
+      into v_recipe, v_already, v_target_ph
+      from ferment_batches b
+      left join ferment_recipes rec on rec.id = b.recipe_id and rec.tenant_id = b.tenant_id
+     where b.id = p_batch_id and b.tenant_id = current_tenant_id();
+
+    if v_recipe is not null and v_already is null
+       and v_target_ph is not null and p_value <= v_target_ph then
+      -- resolve an assignee; skip the task insert only if the farm has NO workers at all
+      -- (tasks.worker_id is NOT NULL — never insert a null assignee).
+      v_worker := _resolve_ferment_cut_worker(v_lot);
+      if v_worker is not null then
+        select plot_id into v_plot from harvests
+         where lot_code = v_lot and tenant_id = current_tenant_id()
+          order by date desc limit 1;
+        v_task_id := gen_random_uuid()::text;
+        insert into tasks (id, title, category, plot_id, worker_id, due, status, priority)
+        values (
+          v_task_id,
+          'Cut ferment — ' || v_lot,
+          'Ferment Cut',
+          v_plot,
+          v_worker,
+          (p_occurred_at at time zone 'UTC')::date,
+          'todo',
+          'high'
+        );
+        update ferment_batches set fired_cut_task_id = v_task_id
+         where id = p_batch_id and tenant_id = current_tenant_id();
+      end if;
+    end if;
+  end if;
+
+  return new_id;
+end $$;
+
+create or replace function log_mill_water(
+  p_batch_id        uuid,
+  p_liters          numeric,
+  p_occurred_at     timestamptz,
+  p_device_id       text,
+  p_device_seq      bigint,
+  p_idempotency_key text
+) returns bigint
+  language plpgsql
+  security definer
+  set search_path = public, extensions
+as $$
+declare
+  v_lot    text;
+  existing bigint;
+  new_id   bigint;
+begin
+  select id into existing from mill_water_log
+   where idempotency_key = p_idempotency_key and tenant_id = current_tenant_id();
+  if existing is not null then
+    return existing;
+  end if;
+
+  -- fail closed on a CROSS-KIND key collision (one shared idempotency namespace with the
+  -- lot_event append below). If the raw key already anchors a different ledger event,
+  -- record_lot_event's ON CONFLICT DO NOTHING would silently drop the mill_water append,
+  -- leaving a water-draw row with no backing provenance event. Reject so the txn aborts.
+  if exists (select 1 from lot_event where idempotency_key = p_idempotency_key) then
+    raise exception 'idempotency_key % already anchors a different ledger event', p_idempotency_key
+      using errcode = 'unique_violation';
+  end if;
+
+  select lot_code into v_lot from ferment_batches
+   where id = p_batch_id and tenant_id = current_tenant_id();
+  if v_lot is null then
+    raise exception 'unknown ferment batch %', p_batch_id using errcode = 'foreign_key_violation';
+  end if;
+
+  insert into mill_water_log
+    (batch_id, liters, occurred_at, device_id, device_seq, idempotency_key)
+  values (p_batch_id, p_liters, p_occurred_at, p_device_id, p_device_seq, p_idempotency_key)
+  on conflict (idempotency_key) do nothing
+  returning id into new_id;
+
+  if new_id is null then
+    select id into new_id from mill_water_log
+     where idempotency_key = p_idempotency_key and tenant_id = current_tenant_id();
+    return new_id;
+  end if;
+
+  -- one shared idempotency namespace with the water row (no 'mill-water:' prefix).
+  perform record_lot_event(
+    v_lot, 'mill_water',
+    jsonb_build_object('batch_id', p_batch_id, 'liters', p_liters),
+    p_occurred_at, p_device_id, p_device_seq, p_idempotency_key
+  );
+  return new_id;
+end $$;
+
+revoke execute on function apply_ferment_recipe(uuid, text)                                                 from public;
+revoke execute on function start_ferment_batch(text, text, process_method, timestamptz, text, bigint, text) from public;
+revoke execute on function record_ferment_reading(uuid, text, numeric, timestamptz, text, bigint, text)     from public;
+revoke execute on function log_mill_water(uuid, numeric, timestamptz, text, bigint, text)                   from public;
+grant execute on function apply_ferment_recipe(uuid, text)                                                  to authenticated;
+grant execute on function start_ferment_batch(text, text, process_method, timestamptz, text, bigint, text)  to authenticated;
+grant execute on function record_ferment_reading(uuid, text, numeric, timestamptz, text, bigint, text)      to authenticated;
+grant execute on function log_mill_water(uuid, numeric, timestamptz, text, bigint, text)                    to authenticated;
+
 commit;
 
