@@ -150,3 +150,30 @@ export async function asAuthenticated<T>(
     await h.db.exec("select set_config('request.jwt.claims', '', false);");
   }
 }
+
+/**
+ * P4-S0 — run `fn` as an authenticated caller bound to a specific tenant.
+ *
+ * Stamps the EXACT claim shape `current_tenant_id()` reads (§3): the fast-path uuid
+ * lives at `app_metadata.tenant_id`, and `sub` is a real uuid (the membership lookup
+ * casts `sub::uuid`, so a non-uuid like `user-<id>` would throw). `userId` defaults to
+ * `tenantId` so the `sub`-keyed membership arm is also addressable when a test seeds a
+ * matching `tenant_users` row. Purely additive over `asAuthenticated` — it sets the
+ * same `authenticated` role and resets the GUC on teardown, so `rls-posture.db.test.ts`
+ * and every existing db test are untouched.
+ *
+ * @param tenantId  uuid of the tenant this session acts as (the app_metadata fast path).
+ * @param userId    uuid for the JWT `sub` (defaults to `tenantId`); cast-safe in current_tenant_id().
+ */
+export async function asTenant<T>(
+  h: Harness,
+  tenantId: string,
+  fn: (h: Harness) => Promise<T>,
+  userId?: string,
+): Promise<T> {
+  return asAuthenticated(h, fn, {
+    role: "authenticated",
+    sub: userId ?? tenantId, // uuid -> cast-safe in current_tenant_id()'s sub-keyed lookup
+    app_metadata: { tenant_id: tenantId },
+  });
+}
