@@ -609,6 +609,148 @@ describe("P2-S8 — AD-8 grant posture (the carried cross-slice rail)", () => {
   });
 });
 
+describe("P2-S8 — the PHI gate: the planner can NEVER schedule a pick inside an active PHI window (S12 cross-slice invariant)", () => {
+  // The S12 slice stamps phi_clears_on on every spray "so the harvest planner can
+  // never schedule a pick inside an active PHI window" (20260622106000 header). That
+  // invariant was UNENFORCED: schedule_pasada / replan_pasada fired a Harvest pick
+  // task with due = the predicted ready date and never consulted v_plot_phi_status —
+  // so a pick could land squarely inside a live pre-harvest interval (a pesticide-
+  // residue / Best-of-Panama compliance hole). The forward migration
+  // 20260623110000_phi_planner_gate.sql `create or replace`s both RPCs to fail closed.
+  //
+  // The gate is PICK-DATE-relative, not today-relative: it blocks when the proposed
+  // pick date is strictly before the plot's phi_clears_on (the first day a pick is
+  // allowed), so a far-future pick that is still inside the window is rejected while a
+  // pick ON or AFTER the clear date succeeds.
+  let h: Harness;
+
+  /** Log a real cert-gated spray with a multi-day PHI, applied just now (within the
+   *  applied_at clamp), so v_plot_phi_status.phi_clears_on ≈ current_date + phiDays. */
+  async function sprayPlot(plotId: string, phiDays: number, key: string): Promise<void> {
+    // w-agro needs a valid pesticide-handling cert (the log_spray GATE 1). Grant it via
+    // a direct table insert — the test session owns the schema / bypasses RLS, the
+    // established convention in s_p2s12_remote_sensing_ipm.db.test.ts.
+    await h.query(sql(`
+      insert into worker_certifications (worker_id, cert_kind, issued_at, expires_at, issuer)
+      values ('w-agro', 'pesticide-handling', '2025-01-01', '2030-12-31', 'MIDA Panamá')
+      on conflict do nothing;
+    `));
+    await h.query(
+      sql(`select log_spray('${plotId}', 'Verdadero 600', 'imidacloprid', ${phiDays}, 0,
+                            now() - interval '1 hour', 'w-agro', 'spray-dev', ${phiDays}, '${key}');`),
+    );
+  }
+
+  beforeEach(async () => {
+    h = await freshDb();
+    await seedFixtures(h);
+    // w-agro is the certified applicator (not in the S8 base seed — add it).
+    await h.query(sql(`
+      insert into workers (id, name, role, daily_rate_usd, attendance, started_year, phone, today_kg, crew)
+      values ('w-agro','Lucía Mendez','Agronomist',38,'present',2015,'+507 6500-0042',0,'Field Ops')
+      on conflict (id) do nothing;
+    `));
+    await h.query(
+      sql(`select record_maturation_signal('p-talamanca','2026-01-15',2200,0.7,now(),'d',1,'phi-sig');`),
+    );
+  });
+  afterEach(async () => h.close());
+
+  it("schedule_pasada RAISES when the predicted pick date lands INSIDE an active PHI window — and fires NO task / writes NO plan", async () => {
+    await sprayPlot("p-talamanca", 14, "phi-spray-sched"); // phi_clears_on ≈ current_date + 14
+    const tasksBefore = await h.query<{ n: number }>(sql(`select count(*)::int as n from tasks;`));
+
+    // a pick 3 days out is 11 days inside the toxic window → must be refused.
+    await expect(
+      h.query(
+        sql(`select schedule_pasada('p-talamanca','2026',1,(current_date + 3),'high',now(),'d',2,'sched-in-phi');`),
+      ),
+    ).rejects.toThrow(/PHI|pre-harvest|pasada gate|harvest gate/i);
+
+    // fail-closed: no plan row, no fired Harvest task landed.
+    const plan = await h.query<{ n: number }>(
+      sql(`select count(*)::int as n from pasada_schedule where idempotency_key = 'sched-in-phi';`),
+    );
+    expect(plan[0].n).toBe(0);
+    const tasksAfter = await h.query<{ n: number }>(sql(`select count(*)::int as n from tasks;`));
+    expect(tasksAfter[0].n).toBe(tasksBefore[0].n);
+  });
+
+  it("schedule_pasada SUCCEEDS for a pick date ON/AFTER phi_clears_on (the boundary control — a pick once it clears is fine)", async () => {
+    await sprayPlot("p-talamanca", 14, "phi-spray-sched-ok"); // phi_clears_on ≈ current_date + 14
+    // a pick 30 days out is past the cleared date → must succeed.
+    await h.query(
+      sql(`select schedule_pasada('p-talamanca','2026',1,(current_date + 30),'high',now(),'d',2,'sched-post-phi');`),
+    );
+    const plan = await h.query<{ n: number; status: string }>(
+      sql(`select count(*)::int as n, max(status) as status from pasada_schedule
+           where idempotency_key = 'sched-post-phi';`),
+    );
+    expect(plan[0].n).toBe(1);
+    const task = await h.query<{ n: number }>(
+      sql(`select count(*)::int as n from tasks where category = 'Harvest' and plot_id = 'p-talamanca';`),
+    );
+    expect(task[0].n).toBe(1);
+  });
+
+  it("a plot with NO open PHI window schedules normally (the gate does not over-block)", async () => {
+    // no spray on p-talamanca → no v_plot_phi_status row → schedule must succeed.
+    await h.query(
+      sql(`select schedule_pasada('p-talamanca','2026',1,(current_date + 3),'high',now(),'d',2,'sched-no-phi');`),
+    );
+    const plan = await h.query<{ n: number }>(
+      sql(`select count(*)::int as n from pasada_schedule where idempotency_key = 'sched-no-phi';`),
+    );
+    expect(plan[0].n).toBe(1);
+  });
+
+  it("replan_pasada RAISES when the NEW ready date lands INSIDE an active PHI window — and fires NO task / writes NO new plan", async () => {
+    // an initial plan exists OUTSIDE any PHI window, then a re-plan tries to move the
+    // pick INTO a freshly-opened window (the rain-front path most likely to move a date).
+    await h.query(
+      sql(`select schedule_pasada('p-talamanca','2026',1,(current_date + 60),'high',now(),'d',2,'replan-base');`),
+    );
+    await sprayPlot("p-talamanca", 14, "phi-spray-replan"); // phi_clears_on ≈ current_date + 14
+    const tasksBefore = await h.query<{ n: number }>(sql(`select count(*)::int as n from tasks;`));
+
+    await expect(
+      h.query(
+        sql(`select replan_pasada('p-talamanca','2026',1,(current_date + 5),'rain front',now(),'d',3,'replan-in-phi');`),
+      ),
+    ).rejects.toThrow(/PHI|pre-harvest|pasada gate|harvest gate/i);
+
+    // fail-closed: no new plan row, no new task, and the ORIGINAL plan is untouched
+    // (still active, still its original date — the raise rolled the supersede back).
+    const planNew = await h.query<{ n: number }>(
+      sql(`select count(*)::int as n from pasada_schedule where idempotency_key = 'replan-in-phi';`),
+    );
+    expect(planNew[0].n).toBe(0);
+    const tasksAfter = await h.query<{ n: number }>(sql(`select count(*)::int as n from tasks;`));
+    expect(tasksAfter[0].n).toBe(tasksBefore[0].n);
+    const active = await h.query<{ n: number }>(
+      sql(`select count(*)::int as n from pasada_schedule
+           where plot_id='p-talamanca' and pasada_number=1 and status <> 'superseded';`),
+    );
+    expect(active[0].n).toBe(1);
+  });
+
+  it("replan_pasada SUCCEEDS for a NEW ready date ON/AFTER phi_clears_on (re-plan around the window, then pick once it clears)", async () => {
+    await h.query(
+      sql(`select schedule_pasada('p-talamanca','2026',1,(current_date + 60),'high',now(),'d',2,'replan-ok-base');`),
+    );
+    await sprayPlot("p-talamanca", 14, "phi-spray-replan-ok"); // phi_clears_on ≈ current_date + 14
+    await h.query(
+      sql(`select replan_pasada('p-talamanca','2026',1,(current_date + 30),'rain front',now(),'d',3,'replan-post-phi');`),
+    );
+    const active = await h.query<{ ready_diff: number }>(
+      sql(`select (predicted_ready_date - current_date) as ready_diff from pasada_schedule
+           where plot_id='p-talamanca' and pasada_number=1 and status <> 'superseded';`),
+    );
+    expect(active.length).toBe(1);
+    expect(Number(active[0].ready_diff)).toBe(30);
+  });
+});
+
 describe("P2-S8 — seed.sql lands real planner data (the /plan page is exercisable on a fresh install)", () => {
   // REGRESSION (review HIGH idx 160): on a fresh seed with NO phenology, every plot
   // rendered ~0% / "No bloom logged" and the pasada calendar was empty forever — the

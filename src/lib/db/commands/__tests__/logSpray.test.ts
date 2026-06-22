@@ -30,6 +30,8 @@ const validRaw = (): Record<string, unknown> => ({
   reiHours: 24,
   appliedAt: "2026-06-20T08:00:00Z",
   workerId: "w-agro",
+  deviceId: "server",
+  deviceSeq: 42,
   idempotencyKey: "spray-2026-06-20-001",
 });
 
@@ -85,6 +87,30 @@ describe("validateSpray", () => {
     if (!r.ok) expect(r.errors.appliedAt).toBeDefined();
   });
 
+  it("rejects a future appliedAt (mirrors the DB not-future guard for a friendly inline error)", () => {
+    const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const r = validateSpray({ ...validRaw(), appliedAt: future });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.appliedAt).toMatch(/future/i);
+  });
+
+  it("accepts a slightly-skewed near-now appliedAt (small clock skew is fine)", () => {
+    const nearNow = new Date(Date.now() + 60 * 1000).toISOString();
+    const r = validateSpray({ ...validRaw(), appliedAt: nearNow });
+    expect(r.ok).toBe(true);
+  });
+
+  it("rejects a blank device id (offline-replay identity is required)", () => {
+    const r = validateSpray({ ...validRaw(), deviceId: "" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.deviceId).toBeDefined();
+  });
+
+  it("rejects a non-integer/negative device seq", () => {
+    expect(validateSpray({ ...validRaw(), deviceSeq: -1 }).ok).toBe(false);
+    expect(validateSpray({ ...validRaw(), deviceSeq: 1.5 }).ok).toBe(false);
+  });
+
   it("rejects a blank idempotency key", () => {
     const r = validateSpray({ ...validRaw(), idempotencyKey: "" });
     expect(r.ok).toBe(false);
@@ -112,6 +138,8 @@ describe("logSpray", () => {
       p_rei_hours: 24,
       p_applied_at: "2026-06-20T08:00:00Z",
       p_worker_id: "w-agro",
+      p_device_id: "server",
+      p_device_seq: 42,
       p_idempotency_key: "spray-2026-06-20-001",
     });
     expect(r.ok).toBe(true);

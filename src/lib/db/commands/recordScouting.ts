@@ -26,6 +26,10 @@ export interface ScoutingInput {
   notes: string | null;
   workerId: string | null;
   occurredAt: string;
+  /** Offline node identity — `device_id` (D5, the offline-replay key half). */
+  deviceId: string;
+  /** Per-device monotonic Lamport counter — `device_seq` (D4 replay safety). */
+  deviceSeq: number;
   idempotencyKey: string;
 }
 
@@ -61,6 +65,14 @@ export function validateScouting(
   const workerRaw = trimmed(raw.workerId);
   const workerId = workerRaw === "" ? null : workerRaw;
 
+  const deviceId = trimmed(raw.deviceId);
+  if (!deviceId) errors.deviceId = "A device id is required.";
+
+  const deviceSeq = toNumber(raw.deviceSeq);
+  if (deviceSeq === null || deviceSeq < 0 || !Number.isInteger(deviceSeq)) {
+    errors.deviceSeq = "A device sequence is required.";
+  }
+
   const idempotencyKey = trimmed(raw.idempotencyKey);
   if (!idempotencyKey) errors.idempotencyKey = "An idempotency key is required.";
 
@@ -74,6 +86,8 @@ export function validateScouting(
       notes,
       workerId,
       occurredAt,
+      deviceId,
+      deviceSeq: deviceSeq as number,
       idempotencyKey,
     },
   };
@@ -113,6 +127,8 @@ export async function recordScouting(
     p_notes: parsed.data.notes,
     p_worker_id: parsed.data.workerId,
     p_occurred_at: parsed.data.occurredAt,
+    p_device_id: parsed.data.deviceId,
+    p_device_seq: parsed.data.deviceSeq,
     p_idempotency_key: parsed.data.idempotencyKey,
   });
 
