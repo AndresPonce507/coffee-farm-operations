@@ -96,7 +96,12 @@ create table weigh_event (
   crew_id         text        references crews(id),       -- stamped from the worker's active crew
   plot_id         text        not null references plots(id),
   lot_code        text        not null references lots(code),
-  kg              numeric     not null check (kg >= 0),   -- mass conserves; never negative
+  -- kg > 0 invariant: mass conserves, never negative, never zero, never NaN. The
+  -- explicit `kg <> 'NaN'` clause is load-bearing — Postgres treats `'NaN'::numeric
+  -- > 0` as TRUE, so a plain `> 0` does NOT exclude NaN (which would poison every
+  -- Σ-kg aggregate the mill + payroll read). This CHECK is the last-resort data-layer
+  -- guard even if a future writer bypasses record_weigh_in's own guard.
+  kg              numeric     not null check (kg > 0 and kg <> 'NaN'::numeric),
   ripeness        ripeness    not null,                   -- the Phase-1 enum (underripe/ripe/overripe)
   brix            numeric,                                 -- nullable (BLE/manual brix probe later)
   scale_source    text        not null default 'manual'
@@ -209,7 +214,21 @@ declare
   v_day        date := (p_occurred_at at time zone 'UTC')::date;
   v_intake_seq bigint;
   v_dist       double precision;
+  v_inserted   text;       -- the idempotency_key the weigh_event INSERT actually landed
 begin
+  -- CONCURRENCY: this whole RPC is a non-atomic check-then-act (dedup SELECT, then
+  -- find-or-mint, then unconditional side-effects). Under the READ COMMITTED isolation
+  -- PostgREST/Supabase uses, two concurrent same-key calls (an offline-outbox replay
+  -- racing the original on two serverless instances) could BOTH pass the dedup SELECT
+  -- and BOTH apply the mass/today_kg deltas while only ONE weigh_event lands —
+  -- doubling lots.origin_kg/current_kg (the MILL-INTAKE + COGS + oversell-cap number)
+  -- and workers.today_kg. A transaction-scoped advisory lock keyed on the idempotency
+  -- key serializes same-key callers: the loser BLOCKS until the winner commits, then
+  -- its dedup SELECT below SEES the committed weigh_event and returns early before any
+  -- write. Core PostgreSQL, no extension, auto-released at txn end ($0/free-tier safe).
+  -- (hashtext returns int4 → cast to bigint for the one-arg lock form.)
+  perform pg_advisory_xact_lock(hashtext('weigh:' || p_idempotency_key)::bigint);
+
   -- exactly-once: a replay (queued retry or double-tap) returns the lot it bound to
   -- and writes NOTHING a second time.
   select lot_code into existing_lot from weigh_event where idempotency_key = p_idempotency_key;
@@ -217,8 +236,16 @@ begin
     return existing_lot;
   end if;
 
-  if p_cherries_kg is null or p_cherries_kg < 0 then
-    raise exception 'cherries_kg must be >= 0' using errcode = 'check_violation';
+  -- kg > 0 invariant (no negative / zero / NaN / Inf). The RPC is the SSOT write door
+  -- (granted to authenticated), so it rejects bad kg ITSELF with a friendly message —
+  -- not by leaking the deep harvests_cherries_pos constraint name to the field. The
+  -- explicit `= 'NaN'` test is load-bearing: `'NaN'::numeric > 0` is TRUE in Postgres,
+  -- so `not (p_cherries_kg > 0)` alone would NOT catch NaN.
+  if p_cherries_kg is null
+     or p_cherries_kg = 'NaN'::numeric
+     or not (p_cherries_kg > 0)
+     or p_cherries_kg = 'Infinity'::numeric then
+    raise exception 'cherries_kg must be > 0' using errcode = 'check_violation';
   end if;
 
   -- (a) the worker must be an ACTIVE crew member — you weigh against a real picker on
@@ -242,22 +269,48 @@ begin
   -- plot mints a JC-NNN cherry lot via the Phase-1 minter; subsequent weigh-ins reuse
   -- it. The intake carries its OWN idempotency_key + a server-minted device_seq so it
   -- never collides with the weigh_event's own (device_id, device_seq) on lot_event.
+  --
+  -- CONCURRENCY (orphan-lot race): the find-or-mint is itself a non-atomic
+  -- check-then-act with no UNIQUE(plot_id, day) on lots. Two concurrent FIRST-weighs of
+  -- the SAME plot+day (different idempotency keys, so the dedup lock above doesn't
+  -- serialize them) would both see no committed weigh_event and both enter the mint
+  -- branch — minting TWO lots via distinct lot_code_seq values, the second an orphan
+  -- with no genesis lot_event (record_lot_event's ON CONFLICT DO NOTHING swallows the
+  -- shared intake key). A plot+day advisory lock serializes the minters: the loser
+  -- blocks, then sees the winner's committed weigh_event and reuses its lot.
+  perform pg_advisory_xact_lock(hashtext('weigh-intake:' || p_plot_id || ':' || v_day::text)::bigint);
+
+  -- Reuse the plot+day lot ONLY while it is still 'cherry'. If the morning lot was
+  -- advanced (e.g. to fermentation/drying) mid-day, a late weigh must NOT grow that
+  -- now-processing lot (current_kg is monotonically non-increasing through processing)
+  -- nor append a harvest to a non-cherry lot — it falls through to mint a FRESH cherry
+  -- lot for the late intake, which is the correct traceability node.
   select we.lot_code into v_lot
     from weigh_event we
+    join lots l on l.code = we.lot_code
    where we.plot_id = p_plot_id
      and (we.occurred_at at time zone 'UTC')::date = v_day
+     and l.stage = 'cherry'
    order by we.recorded_at asc
    limit 1;
 
   if v_lot is null then
-    -- FIRST weigh-in of this plot+day: mint the lot via the Phase-1 minter, which
-    -- ALSO writes the origin harvests row ('h-<lot>') for these kg (pipeline_fixes
-    -- CRIT-2). So we do NOT add a second harvest here — the intake covered it.
+    -- FIRST (or late, post-advance) weigh-in that has no ACTIVE cherry lot for this
+    -- plot+day: mint a fresh cherry lot via the Phase-1 minter, which ALSO writes the
+    -- origin harvests row ('h-<lot>') for these kg (pipeline_fixes CRIT-2). So we do
+    -- NOT add a second harvest here — the intake covered it.
+    --
+    -- The intake idempotency key is derived from THIS weigh-in's own exactly-once
+    -- anchor (p_idempotency_key), NOT the plot+day. A plot+day key would resolve a late
+    -- weigh's mint back to an already-advanced morning lot (the minter's own idempotency
+    -- check returns the existing lot for a repeated key), re-inflating a processing lot.
+    -- The weigh key is stable across replays (the dedup SELECT above already returns
+    -- before this branch on a replay), so first-weigh mint stays idempotent.
     v_intake_seq := nextval('worker_server_seq');
     v_lot := record_cherry_intake(
       p_plot_id, p_worker_id, p_cherries_kg, v_variety,
       p_occurred_at, 'server', v_intake_seq,
-      'weigh-intake:' || p_plot_id || ':' || v_day::text
+      'weigh-intake:' || p_idempotency_key
     );
   else
     -- SUBSEQUENT weigh-in: grow the existing plot/day lot's cherry mass so Σ kg
@@ -326,10 +379,17 @@ begin
                              'lot_code', v_lot, 'kg', p_cherries_kg,
                              'ripeness', p_ripeness, 'scale_source', coalesce(p_scale_source,'manual')),
           p_occurred_at, p_device_id, p_device_seq)
-  on conflict (idempotency_key) do nothing;
+  on conflict (idempotency_key) do nothing
+  returning idempotency_key into v_inserted;
 
-  -- keep the picker's denormalized today_kg in step (Phase-1 read; derived).
-  update workers set today_kg = coalesce(today_kg, 0) + p_cherries_kg where id = p_worker_id;
+  -- keep the picker's denormalized today_kg in step (Phase-1 read; derived). GATED on
+  -- the weigh_event INSERT actually landing THIS txn (v_inserted not null): if a
+  -- concurrent same-key call slipped past the dedup SELECT and this INSERT no-op'd on
+  -- conflict, today_kg must NOT be incremented a second time (defense-in-depth with the
+  -- advisory lock above, which already serializes same-key callers).
+  if v_inserted is not null then
+    update workers set today_kg = coalesce(today_kg, 0) + p_cherries_kg where id = p_worker_id;
+  end if;
 
   return v_lot;
 end $$;

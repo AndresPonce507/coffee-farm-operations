@@ -202,6 +202,14 @@ create table pay_line (
   piece_rate_usd   numeric not null default 0,   -- Σ kg × por-obra rate (signed: reversals negative)
   hourly_usd       numeric not null default 0,   -- Σ hours × hourly rate (signed)
 
+  -- PRESENCE DAYS — the count of distinct days the worker was present in the window
+  -- (any weigh OR any clock-in). An INPUT column the RPC populates from
+  -- v_worker_days_present. This is what makes the floor PROTECT PIECE-RATE PICKERS who
+  -- never clock OUT: their paired hours are 0, but a worked day still owes a full
+  -- standard-workday minimum. Defaults to 0 (a direct INSERT that omits it falls back
+  -- to the hours-based floor, which is the conservative behavior).
+  worked_days      integer not null default 0 check (worked_days >= 0),
+
   -- the legal floor — OVERWRITTEN by the before-insert trigger from the canonical
   -- farm_season_config (layer 3). Stored so the payslip shows exactly what protected
   -- this worker. For a reversing row the floor is 0 (a reversal owes no minimum).
@@ -210,27 +218,42 @@ create table pay_line (
   -- ── THE MAKE-WHOLE (layer 1: generated, un-suppliable) ──
   -- top-up so blended earnings never fall below the legal floor. greatest(0, …)
   -- means a worker already above the floor gets ZERO top-up; one below is lifted
-  -- exactly to the floor. A reversing row (floor 0) generates 0 make-whole.
+  -- exactly to the floor. A REVERSING row (reverses_id not null) generates 0 make-whole:
+  -- it carries non-positive earnings, so a bare greatest(0, 0 − negative) would
+  -- spuriously fire a positive top-up — the `reverses_id is null` gate suppresses that so
+  -- a reversal cleanly negates its original (gross/net sum to zero across the two rows).
   make_whole_usd   numeric
-    generated always as (greatest(0, min_wage_floor_usd - (piece_rate_usd + hourly_usd))) stored,
+    generated always as (
+      case when reverses_id is null
+           then greatest(0, min_wage_floor_usd - (piece_rate_usd + hourly_usd))
+           else 0 end) stored,
 
   -- gross = blended earnings + the make-whole. Generated, so a caller can never
   -- understate it.
   gross_usd        numeric
-    generated always as (piece_rate_usd + hourly_usd
-                         + greatest(0, min_wage_floor_usd - (piece_rate_usd + hourly_usd))) stored,
+    generated always as (
+      piece_rate_usd + hourly_usd
+      + case when reverses_id is null
+             then greatest(0, min_wage_floor_usd - (piece_rate_usd + hourly_usd))
+             else 0 end) stored,
 
-  -- frozen statutory withholdings (employee share), computed at calculate-time.
-  css_usd          numeric not null default 0 check (css_usd    >= 0),
-  seguro_educativo_usd numeric not null default 0 check (seguro_educativo_usd >= 0),
-  decimo_accrual_usd numeric not null default 0 check (decimo_accrual_usd >= 0),
+  -- frozen statutory withholdings (employee share), computed at calculate-time. An
+  -- ORIGINAL row's withholdings are non-negative; a REVERSAL row's are non-positive (the
+  -- negated original) so a reversing row nets the original's net exactly to zero. Enforced
+  -- by the pay_line_reversal_sign constraint below (reversal-aware), not a bare `>= 0`.
+  css_usd          numeric not null default 0,
+  seguro_educativo_usd numeric not null default 0,
+  decimo_accrual_usd numeric not null default 0,
 
   -- net take-home = gross − withholdings (décimo is an ACCRUAL, paid out separately,
   -- so it is NOT subtracted from the in-period net; it is tracked for the 13th-month).
   net_usd          numeric
-    generated always as (piece_rate_usd + hourly_usd
-                         + greatest(0, min_wage_floor_usd - (piece_rate_usd + hourly_usd))
-                         - css_usd - seguro_educativo_usd) stored,
+    generated always as (
+      piece_rate_usd + hourly_usd
+      + case when reverses_id is null
+             then greatest(0, min_wage_floor_usd - (piece_rate_usd + hourly_usd))
+             else 0 end
+      - css_usd - seguro_educativo_usd) stored,
 
   status           text    not null default 'calculated'
                      check (status in ('calculated','approved','reversed')),
@@ -239,46 +262,68 @@ create table pay_line (
   created_at       timestamptz not null default now(),
 
   -- ── THE MAKE-WHOLE GUARD (layer 2: CHECK, fail-closed backstop) ──
-  -- gross can never fall below the floor. With the generated gross this holds by
-  -- construction; if a future migration de-generated gross, an underpaying value is
-  -- rejected at INSERT. (A reversing row has floor 0, so gross<=0 still satisfies it.)
-  constraint pay_line_make_whole_floor check (gross_usd >= min_wage_floor_usd),
-  -- a reversal carries non-positive earnings inputs; an original is non-negative.
+  -- gross can never fall below the floor on an ORIGINAL row. With the generated gross this
+  -- holds by construction; if a future migration de-generated gross, an underpaying value
+  -- is rejected at INSERT. A REVERSING row (reverses_id not null) carries non-positive
+  -- earnings to negate its original and is exempt — it owes no minimum (floor 0).
+  constraint pay_line_make_whole_floor
+    check (reverses_id is not null or gross_usd >= min_wage_floor_usd),
+  -- a reversal carries non-positive earnings inputs AND non-positive withholdings (the
+  -- negated original); an original is non-negative on both. This lets a reversing row net
+  -- the original's gross/net/withholdings exactly to zero across the worker's rows.
   constraint pay_line_reversal_sign check (
-    (reverses_id is null     and piece_rate_usd >= 0 and hourly_usd >= 0)
-    or (reverses_id is not null and piece_rate_usd <= 0 and hourly_usd <= 0)
+    (reverses_id is null
+       and piece_rate_usd >= 0 and hourly_usd >= 0
+       and css_usd >= 0 and seguro_educativo_usd >= 0 and decimo_accrual_usd >= 0)
+    or (reverses_id is not null
+       and piece_rate_usd <= 0 and hourly_usd <= 0
+       and css_usd <= 0 and seguro_educativo_usd <= 0 and decimo_accrual_usd <= 0)
   )
 );
 create index pay_line_period_idx on pay_line (pay_period_id);
 create index pay_line_worker_idx on pay_line (worker_id);
--- one ORIGINAL (non-reversal) calculated line per worker per period — re-calculating
--- requires reversing first (the snapshot is frozen, corrections are reversing rows).
+-- one LIVE original (non-reversal, non-reversed) line per worker per period. Keyed on
+-- "live" (status <> 'reversed') so that after reverse_pay_line flips an original to
+-- 'reversed', a corrected snapshot CAN be re-frozen by re-running compute_pay_period (the
+-- reversed original no longer occupies the slot). The snapshot is otherwise frozen —
+-- corrections are reversing rows, then a recompute.
 create unique index pay_line_one_original_idx
-  on pay_line (pay_period_id, worker_id) where (reverses_id is null);
+  on pay_line (pay_period_id, worker_id) where (reverses_id is null and status <> 'reversed');
 
 -- ── THE MAKE-WHOLE GUARD (layer 3: the trigger that defeats the direct bypass) ──
--- Before every INSERT, recompute min_wage_floor_usd from the CANONICAL config —
--- hours_worked × min_wage_hourly_usd — and OVERWRITE whatever the caller supplied.
--- A reversing row (reverses_id not null) is exempt: it owes no minimum, floor stays
--- 0, so it never generates a spurious make-whole. This is what makes it impossible
--- to dodge the floor with a raw `insert ... min_wage_floor_usd = 0`.
+-- Before every INSERT, recompute min_wage_floor_usd from the CANONICAL config and
+-- OVERWRITE whatever the caller supplied. The floor is the GREATER of:
+--   (a) hours_worked × min_wage_hourly      — the paired-clock-hours floor (hourly crew);
+--   (b) worked_days × standard_workday_hours × min_wage_hourly — the PRESENCE-DAY floor.
+-- (b) is what protects the ~90% piece-rate picking crew: a picker is auto-clocked-IN by
+-- the weigh-in but NEVER clocks out, so their paired hours are 0 — but a worked day
+-- still owes a full standard-workday legal minimum. Taking the GREATEST means an hourly
+-- worker with a genuinely long paired shift still gets their full actual-hours minimum,
+-- while a weigh-only picker can never collapse to a $0 floor. A reversing row
+-- (reverses_id not null) is exempt: it owes no minimum, floor stays 0, so it never
+-- generates a spurious make-whole. This is what makes it impossible to dodge the floor
+-- with a raw `insert ... min_wage_floor_usd = 0` (or a faked worked_days = 0).
 create or replace function pay_line_enforce_floor() returns trigger
   language plpgsql
   set search_path = public
 as $$
-declare v_hourly numeric;
+declare v_hourly numeric; v_workday numeric;
 begin
   if new.reverses_id is not null then
     new.min_wage_floor_usd := 0;        -- a reversal owes no minimum
     return new;
   end if;
-  select min_wage_hourly_usd into v_hourly from farm_season_config where id = 1;
-  if v_hourly is null then
-    v_hourly := 0;                       -- no config row => no floor (fail-open is wrong here, but
-  end if;                                -- a missing singleton is a bootstrap error, not a pay run)
+  select min_wage_hourly_usd, standard_workday_hours into v_hourly, v_workday
+    from farm_season_config where id = 1;
+  v_hourly  := coalesce(v_hourly, 0);   -- no config row => no floor (a missing singleton is a
+  v_workday := coalesce(v_workday, 8);  -- bootstrap error, not a pay run)
   -- the legal floor is ALWAYS recomputed from the canonical home; the caller's value
   -- (if any) is discarded. This is the un-bypassable assertion.
-  new.min_wage_floor_usd := round(coalesce(new.hours_worked, 0) * v_hourly, 2);
+  new.min_wage_floor_usd := round(
+    greatest(
+      coalesce(new.hours_worked, 0) * v_hourly,                      -- (a) paired hours
+      coalesce(new.worked_days, 0) * v_workday * v_hourly            -- (b) presence days
+    ), 2);
   return new;
 end $$;
 
@@ -300,6 +345,7 @@ begin
   if new.pay_period_id   is distinct from old.pay_period_id
      or new.worker_id    is distinct from old.worker_id
      or new.hours_worked is distinct from old.hours_worked
+     or new.worked_days  is distinct from old.worked_days
      or new.piece_rate_usd is distinct from old.piece_rate_usd
      or new.hourly_usd   is distinct from old.hourly_usd
      or new.min_wage_floor_usd is distinct from old.min_wage_floor_usd
@@ -332,6 +378,9 @@ create table disbursement (
   amount_usd      numeric not null,                 -- signed: a reversal is negative
   method          text    not null check (method in ('yappy','nequi','ach','cash-signed')),
   ref             text,                              -- the external transfer ref / receipt no.
+  -- the exactly-once anchor, in its OWN column (NOT overloaded onto `ref`, which now
+  -- carries the real Yappy/Nequi/ACH receipt). A reversal re-uses its own key namespace.
+  idempotency_key text,
   signature_ref   text,                             -- for cash-signed: the worker's signature capture
   cost_entry_id   bigint  references cost_entry(id), -- the COGS journal row this wrote
   reverses_id     bigint  references disbursement(id),
@@ -344,6 +393,24 @@ create table disbursement (
 );
 create index disbursement_period_idx on disbursement (pay_period_id);
 create index disbursement_worker_idx on disbursement (worker_id);
+-- EXACTLY-ONCE is the DB's authority, not a SELECT-then-INSERT race: a unique key
+-- scoped to ORIGINAL (non-reversal) rows. Two concurrent same-key calls collapse to ONE
+-- row (the loser hits the conflict and re-selects the winner). Reversal rows are
+-- unconstrained (they self-FK the original and carry their own keys).
+create unique index disbursement_idempotency_idx
+  on disbursement (worker_id, pay_period_id, idempotency_key)
+  where (reverses_id is null and idempotency_key is not null);
+-- ONE non-reversal disbursement per worker per period: a re-record with the SAME key is
+-- the idempotent retry (handled above); a DIFFERENT-key second pay is a double-pay and is
+-- rejected by this index (reverse first to re-pay). Mirrors the make-whole's data-layer
+-- posture — the "paid at most once" promise is enforced, not honor-system.
+create unique index disbursement_one_per_worker_period_idx
+  on disbursement (worker_id, pay_period_id)
+  where (reverses_id is null);
+-- one reversal per original (a disbursement can be reversed at most once).
+create unique index disbursement_one_reversal_idx
+  on disbursement (reverses_id)
+  where (reverses_id is not null);
 
 create or replace function disbursement_block_mutation() returns trigger
   language plpgsql
@@ -369,28 +436,61 @@ create trigger disbursement_block_mutation
 --    Both keyed to the period window [period_start, period_end].
 -- ──────────────────────────────────────────────────────────────────────────
 
--- piece-rate per worker per period: each weigh row priced at the rate effective on
--- its own day (the rate-resolver is per-date), then summed.
+-- piece-rate per worker per period, priced BY rate_basis (each weigh row priced at the
+-- contract effective on its OWN day, since the resolver is per-date and a contract can be
+-- renegotiated mid-window):
+--   per-kg   → Σ(kg × rate)                         (the kilo is the denominator);
+--   per-lata → Σ(rate) i.e. count(rows) × rate      (weigh_event is ONE ROW PER LATA);
+--   per-tarea / per-tree → NO kg relationship exists; weigh_event carries no tarea/tree
+--                count, so these CANNOT be derived from kg. The function RAISES rather
+--                than silently mis-pricing the farm's primary labor cost (~12x overpay if
+--                a per-lata rate were multiplied by kg). A missing/expired contract prices
+--                the day at 0 (no contract ⇒ no piece pay), as before.
+-- plpgsql (not sql) so it can RAISE for the no-kg bases.
 create or replace function v_worker_piece_rate(p_worker_id text, p_period_start date, p_period_end date)
 returns numeric
-  language sql
+  language plpgsql
   security invoker
   stable
   set search_path = public
 as $$
-  select coalesce(sum(
-           we.kg * coalesce(
-             (select r.rate_usd from v_active_por_obra(we.worker_id, 'picking',
-                                                       (we.occurred_at at time zone 'UTC')::date) r),
-             0)
-         ), 0)
-    from weigh_event we
-   where we.worker_id = p_worker_id
-     and (we.occurred_at at time zone 'UTC')::date between p_period_start and p_period_end;
-$$;
+declare
+  v_total numeric := 0;
+  r       record;
+begin
+  for r in
+    select we.kg,
+           c.rate_usd, c.rate_basis
+      from weigh_event we
+      left join lateral v_active_por_obra(we.worker_id, 'picking',
+                  (we.occurred_at at time zone 'UTC')::date) c on true
+     where we.worker_id = p_worker_id
+       and (we.occurred_at at time zone 'UTC')::date between p_period_start and p_period_end
+  loop
+    if r.rate_basis is null or r.rate_usd is null then
+      -- no active contract on that day ⇒ that weigh contributes no piece pay.
+      continue;
+    elsif r.rate_basis = 'per-kg' then
+      v_total := v_total + r.kg * r.rate_usd;
+    elsif r.rate_basis = 'per-lata' then
+      v_total := v_total + r.rate_usd;          -- one weigh_event row = one lata
+    else
+      -- per-tarea / per-tree: kg is meaningless for these; fail loud until a per-event
+      -- tarea/tree count is captured. Silent mis-pay of the primary labor cost is worse.
+      raise exception 'piece-rate basis % for worker % cannot be priced from weigh kg — capture a tarea/tree count first',
+        r.rate_basis, p_worker_id using errcode = 'feature_not_supported';
+    end if;
+  end loop;
+  return coalesce(v_total, 0);
+end $$;
 
--- hours per worker per period from paired clock-in→clock-out attendance events.
--- Pairs each clock-in with the NEXT clock-out the same UTC day; unpaired in = 0.
+-- hours per worker per period from clock-in→clock-out attendance events, INTERVAL-
+-- STITCHED so overlapping/duplicate punches are not double-counted. An interval OPENS
+-- only on a clock-in taken while currently OUT (a second clock-in before a clock-out is
+-- ignored), and closes on the next event iff it is a clock-out. A lone trailing
+-- clock-in contributes 0 (the conservative "unpaired in = 0" behavior is preserved).
+-- This defeats the everyday "forgot the pre-lunch clock-out, re-clocked-in" pattern
+-- (clock-in 08:00, clock-in 13:00, clock-out 17:00 = 9h, not 9h+4h).
 create or replace function v_worker_hours(p_worker_id text, p_period_start date, p_period_end date)
 returns numeric
   language sql
@@ -398,35 +498,65 @@ returns numeric
   stable
   set search_path = public
 as $$
-  with day_events as (
-    select (occurred_at at time zone 'UTC')::date as d, event_kind, occurred_at
+  with ev as (
+    select (occurred_at at time zone 'UTC')::date as d, event_kind, occurred_at,
+           row_number() over (
+             partition by (occurred_at at time zone 'UTC')::date
+             order by occurred_at, case event_kind when 'clock-in' then 0 else 1 end
+           ) as rn
       from attendance_event
      where worker_id = p_worker_id
        and (occurred_at at time zone 'UTC')::date between p_period_start and p_period_end
        and event_kind in ('clock-in','clock-out')
   ),
-  paired as (
-    select ci.d,
-           ci.occurred_at as in_at,
-           (select min(co.occurred_at) from day_events co
-             where co.d = ci.d and co.event_kind = 'clock-out' and co.occurred_at >= ci.occurred_at) as out_at
-      from day_events ci
-     where ci.event_kind = 'clock-in'
+  state as (
+    -- net open clock-ins BEFORE this row (0 = currently OUT). A clock-in taken while
+    -- already IN (open_before > 0) is a duplicate punch and does NOT open its own interval.
+    select d, event_kind, occurred_at,
+           coalesce(sum(case when event_kind = 'clock-in' then 1 else -1 end)
+                    over (partition by d order by rn
+                          rows between unbounded preceding and 1 preceding), 0) as open_before
+      from ev
+  ),
+  opens as (
+    -- the OPENING clock-ins (each is a transition from OUT → IN).
+    select d, occurred_at as in_at from state
+     where event_kind = 'clock-in' and open_before = 0
+  ),
+  intervals as (
+    -- pair each opening clock-in with the NEXT clock-out at/after it the same day
+    -- (skipping any intervening duplicate clock-ins). A lone trailing opening clock-in
+    -- with no following clock-out contributes 0 (conservative "unpaired in = 0").
+    select o.in_at,
+           (select min(s.occurred_at) from state s
+             where s.d = o.d and s.event_kind = 'clock-out' and s.occurred_at >= o.in_at) as out_at
+      from opens o
   )
   select coalesce(sum(
            case when out_at is not null
                 then extract(epoch from (out_at - in_at)) / 3600.0
                 else 0 end
          ), 0)::numeric
-    from paired;
+    from intervals;
 $$;
 
--- the days-worked count (distinct clock-in days) — for the workday-based floor:
--- the legal minimum is per-hour, applied to the hours actually worked.
-create or replace function v_worker_hours_total(p_worker_id text, p_period_start date, p_period_end date)
-returns numeric
-  language sql security invoker stable set search_path = public
-as $$ select v_worker_hours(p_worker_id, p_period_start, p_period_end); $$;
+-- v_worker_days_present — the count of distinct UTC days the worker was PRESENT in the
+-- window. A weigh-in auto-stamps a clock-in, so a weigh-only picking day counts. This is
+-- the PRESENCE basis for the make-whole floor (a worked day owes a full standard-workday
+-- minimum even when the worker never clocked out). 'rest-day'/'absent' do not count.
+create or replace function v_worker_days_present(p_worker_id text, p_period_start date, p_period_end date)
+returns integer
+  language sql
+  security invoker
+  stable
+  set search_path = public
+as $$
+  select count(distinct (occurred_at at time zone 'UTC')::date)::int
+    from attendance_event
+   where worker_id = p_worker_id
+     and event_kind in ('clock-in','clock-out')
+     and (occurred_at at time zone 'UTC')::date between p_period_start and p_period_end;
+$$;
 
 -- v_worker_pay — the load-bearing read view: every CALCULATED (frozen, non-reversed)
 -- pay_line with its full breakdown, joined to the worker + period. The cockpit reads
@@ -546,6 +676,7 @@ declare
   r            record;
   v_piece      numeric;
   v_hours      numeric;
+  v_days       integer;
   v_hourly_pay numeric;
   v_hourly_rate numeric;
   v_workday    numeric;
@@ -560,18 +691,30 @@ begin
   values (p_period_id, p_period_start, p_period_end, p_season, 'open')
   on conflict (id) do nothing;
 
-  -- idempotent: if any original lines already exist for this period, do nothing.
-  if exists (select 1 from pay_line where pay_period_id = p_period_id and reverses_id is null) then
+  -- idempotent: if any LIVE original lines (non-reversed) already exist for this period,
+  -- do nothing — the snapshot is frozen. A period whose originals were all REVERSED can be
+  -- recomputed (status-aware, matching pay_line_one_original_idx) to re-freeze a correction.
+  if exists (select 1 from pay_line
+              where pay_period_id = p_period_id and reverses_id is null and status <> 'reversed') then
     return p_period_id;
   end if;
 
   select standard_workday_hours into v_workday from farm_season_config where id = 1;
   v_workday := coalesce(v_workday, 8);
   select * into st from v_statutory_effective(p_period_end);
+  -- FAIL CLOSED: no statutory_rates row covers this period (e.g. a backdated/historical
+  -- window before the earliest effective_from). Without a row the withholdings would
+  -- silently freeze at $0 (a fail-OPEN on legally-required CSS/Seguro deductions, and
+  -- the snapshot is append-only). Refuse to freeze rather than under-withhold.
+  if not found then
+    raise exception 'no statutory_rates effective on or before % — configure rates for this period before computing payroll', p_period_end
+      using errcode = 'no_data_found';
+  end if;
 
   for r in select id, daily_rate_usd from workers loop
     v_piece := v_worker_piece_rate(r.id, p_period_start, p_period_end);
     v_hours := v_worker_hours(r.id, p_period_start, p_period_end);
+    v_days  := v_worker_days_present(r.id, p_period_start, p_period_end);
     -- hourly rate from the daily rate over a standard workday (the only rate the
     -- flat workers row carries today; a dedicated hourly column is a later refinement).
     v_hourly_rate := case when v_workday > 0 then coalesce(r.daily_rate_usd, 0) / v_workday else 0 end;
@@ -588,12 +731,13 @@ begin
     v_dec := round(v_gross * coalesce(st.decimo_accrual_pct, 0)   / 100.0, 2);
 
     -- INSERT the line. min_wage_floor_usd is supplied as 0; the BEFORE INSERT trigger
-    -- OVERWRITES it from the canonical config (hours × min_wage_hourly). make_whole +
-    -- gross + net are GENERATED. So this insert CANNOT underpay — the floor is the
-    -- table's, not this RPC's.
-    insert into pay_line (pay_period_id, worker_id, hours_worked, piece_rate_usd, hourly_usd,
+    -- OVERWRITES it from the canonical config (greatest of hours × min_wage and
+    -- worked_days × standard_workday × min_wage). make_whole + gross + net are
+    -- GENERATED. So this insert CANNOT underpay — the floor is the table's, not the RPC's,
+    -- and a piece-rate picker's worked DAYS drive a real floor even with 0 paired hours.
+    insert into pay_line (pay_period_id, worker_id, hours_worked, worked_days, piece_rate_usd, hourly_usd,
                           min_wage_floor_usd, css_usd, seguro_educativo_usd, decimo_accrual_usd, status)
-    values (p_period_id, r.id, v_hours, v_piece, v_hourly_pay,
+    values (p_period_id, r.id, v_hours, v_days, v_piece, v_hourly_pay,
             0, v_css, v_seg, v_dec, 'calculated');
   end loop;
 
@@ -625,14 +769,33 @@ begin
       using errcode = 'check_violation';
   end if;
   update pay_line set status = 'approved' where id = p_pay_line_id;
+
+  -- advance the PERIOD to 'approved' once NO non-reversed line in that period is still
+  -- merely 'calculated'. Without this the documented open→calculated→approved→paid
+  -- lifecycle never reaches 'approved', so record_disbursement's close-out (gated on
+  -- status='approved') is a permanent no-op and every real run strands in 'calculated'.
+  -- The forward-only period guard already permits calculated→approved.
+  update pay_period pp
+     set status = 'approved'
+   where pp.id = (select pay_period_id from pay_line where id = p_pay_line_id)
+     and pp.status = 'calculated'
+     and not exists (
+       select 1 from pay_line pl
+        where pl.pay_period_id = pp.id
+          and pl.reverses_id is null
+          and pl.status = 'calculated'
+     );
   return p_pay_line_id;
 end $$;
 
 -- record_disbursement — the IRREVERSIBLE money-shaped action (manual confirm; NO
 -- automation path reaches it). Records a payment against a worker+period and writes
--- the matching Phase-1 cost_entry (direct-labor COGS). Idempotent on idempotency_key
--- (carried as the ref so a retry is one disbursement). Requires the worker's line be
--- APPROVED first (no paying an un-reviewed run). Returns the disbursement id.
+-- the matching Phase-1 cost_entry (direct-labor COGS). EXACTLY-ONCE is backed by the
+-- disbursement_idempotency_idx UNIQUE (a concurrent/replayed same-key call collapses to
+-- ONE row + ONE cost_entry; the retry returns the original). The recorded amount is
+-- RECONCILED against the approved line's net (an over/under-payment is rejected, so a
+-- $0.01 cannot close a period). The external receipt (p_ref) is persisted in `ref`.
+-- Requires the worker's line be APPROVED first. Returns the disbursement id.
 create or replace function record_disbursement(
   p_pay_period_id   text,
   p_worker_id       text,
@@ -650,13 +813,16 @@ declare
   v_existing bigint;
   v_line     bigint;
   v_status   text;
+  v_net      numeric;
   v_cost     bigint;
   v_new      bigint;
 begin
-  -- exactly-once: the idempotency_key is stored as the disbursement ref namespace.
+  -- exactly-once FAST PATH: a prior original disbursement under this key is the retry.
+  -- (The UNIQUE index below is the real authority under concurrency; this just short-
+  -- circuits the common sequential replay without writing an orphan cost_entry.)
   select id into v_existing from disbursement
    where worker_id = p_worker_id and pay_period_id = p_pay_period_id
-     and ref = p_idempotency_key;
+     and idempotency_key = p_idempotency_key and reverses_id is null;
   if v_existing is not null then
     return v_existing;
   end if;
@@ -664,14 +830,18 @@ begin
   if p_amount_usd is null or p_amount_usd < 0 then
     raise exception 'disbursement amount must be >= 0' using errcode = 'check_violation';
   end if;
+  if p_idempotency_key is null or p_idempotency_key = '' then
+    raise exception 'a disbursement requires an idempotency key (the exactly-once anchor)'
+      using errcode = 'check_violation';
+  end if;
   if p_method = 'cash-signed' and (p_signature_ref is null or p_signature_ref = '') then
     raise exception 'a cash-signed disbursement requires a signature reference'
       using errcode = 'check_violation';
   end if;
 
   -- the worker must have an APPROVED original line for this period (fail-closed: no
-  -- paying an un-reviewed/un-calculated run).
-  select id, status into v_line, v_status from pay_line
+  -- paying an un-reviewed/un-calculated run). Read net_usd to RECONCILE the amount.
+  select id, status, net_usd into v_line, v_status, v_net from pay_line
    where pay_period_id = p_pay_period_id and worker_id = p_worker_id and reverses_id is null
    limit 1;
   if v_line is null then
@@ -683,37 +853,161 @@ begin
       using errcode = 'check_violation';
   end if;
 
-  -- write the Phase-1 COGS labor cost_entry. allocation_rule = 'direct-labor' so cost
-  -- reports bucket payroll as LABOR (not overhead); target_kind = 'farm' because a pay
-  -- period spans the whole roster, not a single lot (the cost_entry CHECK allows any
-  -- rule with a farm target). Payroll IS COGS — no double-keying.
-  insert into cost_entry (driver, allocation_rule, target_kind, target_code, amount_usd, memo, occurred_at)
-  values ('worker-day', 'direct-labor', 'farm', null, p_amount_usd,
-          'payroll disbursement: ' || p_worker_id || ' / ' || p_pay_period_id || ' (' || p_method || ')',
-          now())
-  returning id into v_cost;
+  -- AMOUNT RECONCILIATION: the recorded payment must equal the approved net owed (within
+  -- a cent of rounding tolerance). This binds the irreversible money record + the COGS
+  -- entry to the make-whole-protected net — a worker owed $16.00 cannot be recorded paid
+  -- $0.01 (defeating the floor at pay-out) nor $1,000,000 (overpay/COGS inflation). The
+  -- current slice has no advances/partial-payment concept (a flagged FUTURE roadmap item),
+  -- so net IS the full take-home owed; a disbursement records exactly it.
+  if abs(p_amount_usd - v_net) > 0.01 then
+    raise exception 'disbursement %.2f must equal the approved net %.2f owed to worker % (period %); corrections are reversing rows',
+      p_amount_usd, v_net, p_worker_id, p_pay_period_id using errcode = 'check_violation';
+  end if;
 
-  insert into disbursement (pay_period_id, worker_id, pay_line_id, amount_usd, method, ref,
-                            signature_ref, cost_entry_id)
-  values (p_pay_period_id, p_worker_id, v_line, p_amount_usd, p_method, p_idempotency_key,
-          p_signature_ref, v_cost)
-  returning id into v_new;
+  -- Write the COGS cost_entry + the disbursement TOGETHER inside a sub-block so that, if
+  -- a concurrent/earlier winner or a different-key second pay trips the unique index, the
+  -- whole pair ROLLS BACK to the savepoint — the loser never orphans a cost_entry, and
+  -- the disbursement is append-only (no post-insert UPDATE needed to link the COGS row).
+  -- allocation_rule = 'direct-labor' buckets payroll as LABOR; target_kind = 'farm'
+  -- because a pay period spans the whole roster. Payroll IS COGS — no double-keying.
+  begin
+    insert into cost_entry (driver, allocation_rule, target_kind, target_code, amount_usd, memo, occurred_at)
+    values ('worker-day', 'direct-labor', 'farm', null, p_amount_usd,
+            'payroll disbursement: ' || p_worker_id || ' / ' || p_pay_period_id || ' (' || p_method || ')',
+            now())
+    returning id into v_cost;
 
-  -- advance the period to 'paid' once every approved worker WHO IS OWED MONEY has a
-  -- disbursement. A zero-pay line (a rostered worker with no hours/weigh in the window)
-  -- owes nothing, so it does NOT need a $0 disbursement to let the period close — this
-  -- avoids a complete-roster period stranding in 'approved' on noise lines.
+    insert into disbursement (pay_period_id, worker_id, pay_line_id, amount_usd, method, ref,
+                              idempotency_key, signature_ref, cost_entry_id)
+    values (p_pay_period_id, p_worker_id, v_line, p_amount_usd, p_method, p_ref,
+            p_idempotency_key, p_signature_ref, v_cost)
+    returning id into v_new;
+  exception when unique_violation then
+    -- the unique index arbitrated. Either a same-key original already exists (idempotent
+    -- retry → return it) or a DIFFERENT-key second pay hit the one-per-worker-period
+    -- guard (a double-pay → reject). The cost_entry insert above is rolled back with it.
+    select id into v_existing from disbursement
+     where worker_id = p_worker_id and pay_period_id = p_pay_period_id
+       and idempotency_key = p_idempotency_key and reverses_id is null;
+    if v_existing is not null then
+      return v_existing;
+    end if;
+    raise exception 'worker % already has a disbursement for period % — reverse it first to re-pay', p_worker_id, p_pay_period_id
+      using errcode = 'unique_violation';
+  end;
+
+  -- advance the period to 'paid' once every approved worker WHO IS OWED MONEY has been
+  -- FULLY disbursed (Σ of their non-reversed disbursements >= net). Existence alone is
+  -- not enough — that let a $0.01 disbursement close a period. A zero-pay line (a rostered
+  -- worker with no hours/weigh) owes nothing, so it does not block the close.
   if not exists (
     select 1 from pay_line pl
      where pl.pay_period_id = p_pay_period_id and pl.reverses_id is null and pl.status = 'approved'
        and pl.net_usd > 0
-       and not exists (select 1 from disbursement d
-                        where d.pay_period_id = pl.pay_period_id and d.worker_id = pl.worker_id
-                          and d.reverses_id is null)
+       and coalesce((select sum(d.amount_usd) from disbursement d
+                      where d.pay_period_id = pl.pay_period_id and d.worker_id = pl.worker_id), 0)
+           < pl.net_usd - 0.01
   ) then
     update pay_period set status = 'paid' where id = p_pay_period_id and status = 'approved';
   end if;
 
+  return v_new;
+end $$;
+
+-- reverse_pay_line — the append-only CORRECTION door for a mis-keyed/mis-rated pay line
+-- (the "corrections are reversing rows, never UPDATE" discipline the table is built for).
+-- Appends a NEGATIVE reversing pay_line (reverses_id set; earnings + withholdings negated
+-- so the original nets to zero across the two rows) and flips the original to 'reversed'
+-- (the one narrow status-only UPDATE the block trigger permits). Idempotent on the
+-- original id (a second call returns the existing reversing row). After reversing, the
+-- corrected snapshot can be re-frozen by re-running compute_pay_period. Owner action.
+create or replace function reverse_pay_line(
+  p_pay_line_id     bigint,
+  p_memo            text default null,
+  p_idempotency_key text default null
+) returns bigint
+  language plpgsql
+  security definer
+  set search_path = public, extensions
+as $$
+declare v record; v_existing bigint; v_new bigint;
+begin
+  select * into v from pay_line where id = p_pay_line_id and reverses_id is null;
+  if not found then
+    raise exception 'no original pay_line %', p_pay_line_id using errcode = 'no_data_found';
+  end if;
+  -- idempotent: an already-reversed original returns its existing reversing row.
+  select id into v_existing from pay_line where reverses_id = p_pay_line_id limit 1;
+  if v_existing is not null then
+    return v_existing;
+  end if;
+
+  -- the reversing row negates the original's FULL gross (piece + hourly + the original's
+  -- make-whole, since make-whole is suppressed on reversal rows) and its withholdings, so
+  -- the worker's net across the original + reversal sums to zero. min_wage_floor is forced
+  -- to 0 by the floor trigger for a reversal; worked_days 0 (no floor on a reversal).
+  insert into pay_line (pay_period_id, worker_id, hours_worked, worked_days,
+                        piece_rate_usd, hourly_usd, min_wage_floor_usd,
+                        css_usd, seguro_educativo_usd, decimo_accrual_usd,
+                        status, reverses_id, memo)
+  values (v.pay_period_id, v.worker_id, 0, 0,
+          -(v.piece_rate_usd + v.make_whole_usd), -v.hourly_usd, 0,
+          -v.css_usd, -v.seguro_educativo_usd, -v.decimo_accrual_usd,
+          'calculated', p_pay_line_id, coalesce(p_memo, 'reversal of pay_line ' || p_pay_line_id))
+  returning id into v_new;
+
+  -- flip the original to 'reversed' (status-only UPDATE — the one transition the block
+  -- trigger allows; from 'calculated' or 'approved').
+  update pay_line set status = 'reversed' where id = p_pay_line_id;
+  return v_new;
+end $$;
+
+-- reverse_disbursement — the append-only CORRECTION door for a wrong/duplicate
+-- disbursement. Appends a NEGATIVE reversing disbursement (reverses_id set; amount
+-- negated) AND a matching NEGATIVE, LINKED cost_entry (reverses_id → the original's
+-- cost_entry) so BOTH the payment ledger and the COGS journal net to zero and stay
+-- traceable. Idempotent on the original id (disbursement_one_reversal_idx backs it).
+-- Once reversed, the freed worker+period slot lets a corrected payment be re-recorded.
+create or replace function reverse_disbursement(
+  p_disbursement_id bigint,
+  p_idempotency_key text default null
+) returns bigint
+  language plpgsql
+  security definer
+  set search_path = public, extensions
+as $$
+declare v record; v_existing bigint; v_cost bigint; v_new bigint;
+begin
+  select * into v from disbursement where id = p_disbursement_id and reverses_id is null;
+  if not found then
+    raise exception 'no original disbursement %', p_disbursement_id using errcode = 'no_data_found';
+  end if;
+  -- idempotent: an already-reversed disbursement returns its existing reversing row.
+  select id into v_existing from disbursement where reverses_id = p_disbursement_id limit 1;
+  if v_existing is not null then
+    return v_existing;
+  end if;
+
+  -- the matching negative, LINKED COGS reversal (do NOT leave the COGS correction
+  -- unlinked — keep the two ledgers consistent and traceable).
+  if v.cost_entry_id is not null then
+    insert into cost_entry (driver, allocation_rule, target_kind, target_code, amount_usd,
+                            reverses_id, memo, occurred_at)
+    values ('worker-day', 'direct-labor', 'farm', null, -v.amount_usd,
+            v.cost_entry_id,
+            'reversal of payroll disbursement ' || p_disbursement_id, now())
+    returning id into v_cost;
+  end if;
+
+  -- the negative reversing disbursement. A reversal carries no idempotency_key namespace
+  -- collision (the unique index is scoped to originals); cash-signed reversals reuse the
+  -- original's signature reference to satisfy the signature CHECK.
+  insert into disbursement (pay_period_id, worker_id, pay_line_id, amount_usd, method, ref,
+                            idempotency_key, signature_ref, cost_entry_id, reverses_id)
+  values (v.pay_period_id, v.worker_id, v.pay_line_id, -v.amount_usd, v.method,
+          coalesce(p_idempotency_key, 'reversal:' || p_disbursement_id),
+          'reversal:' || p_disbursement_id, v.signature_ref, v_cost, p_disbursement_id)
+  returning id into v_new;
   return v_new;
 end $$;
 
@@ -752,10 +1046,12 @@ grant select on v_pay_period_summary  to authenticated;
 revoke execute on function compute_pay_period(text, date, date, text, text)                          from public;
 revoke execute on function approve_pay_line(bigint)                                                  from public;
 revoke execute on function record_disbursement(text, text, numeric, text, text, text, text)          from public;
+revoke execute on function reverse_pay_line(bigint, text, text)                                       from public;
+revoke execute on function reverse_disbursement(bigint, text)                                         from public;
 revoke execute on function v_statutory_effective(date)                                               from public;
 revoke execute on function v_worker_piece_rate(text, date, date)                                      from public;
 revoke execute on function v_worker_hours(text, date, date)                                           from public;
-revoke execute on function v_worker_hours_total(text, date, date)                                     from public;
+revoke execute on function v_worker_days_present(text, date, date)                                    from public;
 revoke execute on function pay_line_enforce_floor()                                                   from public;
 revoke execute on function pay_line_block_mutation()                                                  from public;
 revoke execute on function pay_period_guard_mutation()                                                from public;
@@ -764,9 +1060,11 @@ revoke execute on function disbursement_block_mutation()                        
 grant execute on function compute_pay_period(text, date, date, text, text)                           to authenticated;
 grant execute on function approve_pay_line(bigint)                                                   to authenticated;
 grant execute on function record_disbursement(text, text, numeric, text, text, text, text)           to authenticated;
+grant execute on function reverse_pay_line(bigint, text, text)                                        to authenticated;
+grant execute on function reverse_disbursement(bigint, text)                                          to authenticated;
 grant execute on function v_statutory_effective(date)                                                to authenticated;
 grant execute on function v_worker_piece_rate(text, date, date)                                       to authenticated;
 grant execute on function v_worker_hours(text, date, date)                                            to authenticated;
-grant execute on function v_worker_hours_total(text, date, date)                                      to authenticated;
+grant execute on function v_worker_days_present(text, date, date)                                     to authenticated;
 
 commit;

@@ -37,11 +37,14 @@ describe("P2-S7 — payroll seed dogfood (seed.sql replays end-to-end)", () => {
               min_wage_floor_usd as floor, net_usd as net
          from pay_line where pay_period_id = 'pp-2026-06-w3' and worker_id = 'w-06' and reverses_id is null;`,
     );
-    // w-06: 1h clocked × (22 daily / 8h) = 2.75 hourly; floor = 1h × 3.00 = 3.00.
-    // make-whole lifts gross from 2.75 to 3.00.
-    expect(Number(r[0].floor)).toBeCloseTo(3.0, 2);
+    // w-06 (Lucía): 1h clocked × (22 daily / 8h) = 2.75 hourly; she has NO weigh_event
+    // rows (her per-lata contract has nothing to price), so piece = 0. The floor is now
+    // PRESENCE-DAY based (the D02 fix): 1 worked day × 8h standard workday × $3.00/hr =
+    // $24.00 — protecting the piece-rate picker the OLD hours-only floor ($3.00) under-
+    // protected. The make-whole lifts gross from 2.75 to the $24.00 legal day-floor.
+    expect(Number(r[0].floor)).toBeCloseTo(24.0, 2);
     expect(Number(r[0].made_whole)).toBeGreaterThan(0);
-    expect(Number(r[0].gross)).toBeCloseTo(3.0, 2);
+    expect(Number(r[0].gross)).toBeCloseTo(24.0, 2);
   });
 
   it("the period summary view surfaces the made-whole count for the dogfood banner", async () => {
