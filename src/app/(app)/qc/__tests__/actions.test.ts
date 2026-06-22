@@ -34,6 +34,7 @@ vi.mock("next/cache", () => ({
 import {
   placeQcHoldAction,
   recordCuppingSessionAction,
+  recordDefectAction,
   releaseQcHoldAction,
   QC_IDLE,
 } from "@/app/(app)/qc/actions";
@@ -303,6 +304,114 @@ describe("recordCuppingSessionAction", () => {
     const result = await recordCuppingSessionAction(
       QC_IDLE,
       form({ greenLotCode: "JC-9001", cupperId: "c-1", protocol: "sca-cva" }),
+    );
+
+    expect(result.status).toBe("error");
+    expect(revalidatePathMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("recordDefectAction", () => {
+  it("rejects a missing category WITHOUT a write round-trip", async () => {
+    const { client, cmd } = makeClient();
+    getSupabaseMock.mockReturnValue(client);
+
+    const result = await recordDefectAction(
+      QC_IDLE,
+      form({ greenLotCode: "JC-9001", defectKind: "full black", count: "3" }),
+    );
+
+    expect(result.status).toBe("error");
+    expect(cmd()).toHaveLength(0);
+    expect(revalidatePathMock).not.toHaveBeenCalled();
+  });
+
+  it("records a defect with the synthetic server envelope and revalidates", async () => {
+    const { client, cmd } = makeClient({ data: 17 });
+    getSupabaseMock.mockReturnValue(client);
+
+    const result = await recordDefectAction(
+      QC_IDLE,
+      form({
+        greenLotCode: "JC-9001",
+        defectKind: "quaker",
+        count: "5",
+        category: "secondary",
+        idempotencyKey: "idem-def-1",
+      }),
+    );
+
+    expect(result.status).toBe("success");
+    expect(cmd()).toHaveLength(1); // the command rpc fires exactly once
+    const [name, args] = cmd()[0];
+    expect(name).toBe("record_defect");
+    expect(args.p_green_lot_code).toBe("JC-9001");
+    expect(args.p_defect_kind).toBe("quaker");
+    expect(args.p_count).toBe(5);
+    expect(args.p_category).toBe("secondary");
+    expect(args.p_device_id).toBe("server");
+    // device_seq is a UNIQUE monotonic draw (the C1 fix) — never the constant 0.
+    expect(typeof args.p_device_seq).toBe("number");
+    expect(args.p_device_seq).toBeGreaterThan(0);
+    expect(args.p_idempotency_key).toBe("idem-def-1");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/qc");
+  });
+
+  /**
+   * The defect-ledger C1 guard — green_defects carries `unique(device_id,device_seq)`,
+   * so two online defect rows must each draw a DISTINCT server device_seq or the
+   * second INSERT throws on `green_defects_device_id_device_seq_key` and the tally
+   * never lands. Two writes must yield two distinct seqs.
+   */
+  it("draws a DISTINCT server device_seq for each defect (C1 unique-key guard)", async () => {
+    const { client, cmd } = makeClient({ data: 17 });
+    getSupabaseMock.mockReturnValue(client);
+
+    await recordDefectAction(
+      QC_IDLE,
+      form({
+        greenLotCode: "JC-9001",
+        defectKind: "full black",
+        count: "2",
+        category: "primary",
+        idempotencyKey: "def-key-1",
+      }),
+    );
+    await recordDefectAction(
+      QC_IDLE,
+      form({
+        greenLotCode: "JC-9001",
+        defectKind: "sour",
+        count: "1",
+        category: "primary",
+        idempotencyKey: "def-key-2",
+      }),
+    );
+
+    const calls = cmd();
+    expect(calls).toHaveLength(2);
+    const seq1 = calls[0][1].p_device_seq as number;
+    const seq2 = calls[1][1].p_device_seq as number;
+    expect(seq1).toBeGreaterThan(0);
+    expect(seq2).toBeGreaterThan(0);
+    expect(seq2).not.toBe(seq1);
+  });
+
+  it("surfaces a labelled DB error as a CLEAN error state (no revalidate)", async () => {
+    const { client } = makeClient({
+      data: null,
+      error: { message: "duplicate key value violates unique constraint" },
+    });
+    getSupabaseMock.mockReturnValue(client);
+
+    const result = await recordDefectAction(
+      QC_IDLE,
+      form({
+        greenLotCode: "JC-9001",
+        defectKind: "full black",
+        count: "3",
+        category: "primary",
+      }),
     );
 
     expect(result.status).toBe("error");

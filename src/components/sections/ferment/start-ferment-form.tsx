@@ -102,16 +102,23 @@ export function StartFermentForm({
             id="ferment-recipe"
             name="recipeId"
             defaultValue=""
+            required
             disabled={pending}
             className={FIELD}
+            aria-invalid={fieldError("recipeId") ? true : undefined}
           >
-            <option value="">No recipe (apply later)</option>
+            <option value="" disabled>
+              Choose a recipe…
+            </option>
             {pickable.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.name} · v{r.version}
               </option>
             ))}
           </select>
+          {fieldError("recipeId") && (
+            <p className="text-xs text-cherry">{fieldError("recipeId")}</p>
+          )}
         </div>
 
         <div className="space-y-1">

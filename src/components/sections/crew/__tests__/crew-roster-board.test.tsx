@@ -97,6 +97,80 @@ describe("CrewRosterBoard", () => {
     expect(screen.getByTestId("lang-w-1")).toHaveTextContent("es · ngäbere");
   });
 
+  // The es · ngäbere chip is the single affordance built for a ~90% Ngäbe-Buglé
+  // crew, so its foreground/background MUST clear WCAG-AA for normal text
+  // (>= 4.5:1) — the component doc-comment promises "WCAG-AA on glass" and the
+  // chip's font is 11px/medium (well under the large-text cutoff). This computes
+  // the real contrast from the resolved theme tokens the chip's Tailwind classes
+  // map to, so it fails loudly if the chip ever drifts back to a failing pair.
+  it("renders the es · ngäbere chip with WCAG-AA contrast (>= 4.5:1)", () => {
+    // Resolved @theme tokens (src/app/globals.css). Tailwind v4 maps
+    // bg-<t>/text-<t> -> var(--color-<t>); jsdom does not apply the stylesheet,
+    // so we resolve the chip's color classes against the token table here.
+    const TOKEN_HEX: Record<string, string> = {
+      "sky": "#3b6ea5",
+      "sky-100": "#d8e4f0",
+      "muted": "#f2ece2",
+      "muted-fg": "#6c6155",
+      "coffee": "#45361f",
+      "coffee-200": "#d8c7ad",
+    };
+
+    const srgbToLin = (c: number) => {
+      const s = c / 255;
+      return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+    };
+    const luminance = (hex: string) => {
+      const n = hex.replace("#", "");
+      const r = parseInt(n.slice(0, 2), 16);
+      const g = parseInt(n.slice(2, 4), 16);
+      const b = parseInt(n.slice(4, 6), 16);
+      return (
+        0.2126 * srgbToLin(r) +
+        0.7152 * srgbToLin(g) +
+        0.0722 * srgbToLin(b)
+      );
+    };
+    const contrast = (a: string, b: string) => {
+      const la = luminance(a);
+      const lb = luminance(b);
+      const [hi, lo] = la > lb ? [la, lb] : [lb, la];
+      return (hi + 0.05) / (lo + 0.05);
+    };
+
+    render(
+      <CrewRosterBoard members={[member({ languages: ["es", "ngäbere"] })]} />,
+    );
+    const chip = screen.getByTestId("lang-w-1");
+    const classes = chip.className.split(/\s+/);
+
+    // Resolve a color token for a Tailwind prefix, skipping non-color utilities
+    // that share it (e.g. text-[11px], text-medium) by keeping only candidates
+    // whose token is a known palette entry.
+    const tokenFromClass = (prefix: string) => {
+      const candidates = classes
+        .filter((c) => c.startsWith(prefix))
+        // Strip the prefix and any opacity modifier (e.g. bg-coffee-200/50).
+        .map((c) => c.slice(prefix.length).split("/")[0]);
+      return candidates.find((t) => t in TOKEN_HEX);
+    };
+
+    const bgToken = tokenFromClass("bg-");
+    const fgToken = tokenFromClass("text-");
+    expect(bgToken, "chip has no resolvable bg color token").toBeDefined();
+    expect(fgToken, "chip has no resolvable text color token").toBeDefined();
+
+    const bgHex = TOKEN_HEX[bgToken!];
+    const fgHex = TOKEN_HEX[fgToken!];
+    // Guard: the chip's tokens must be ones we can resolve, else the assertion
+    // would silently no-op on a future class swap.
+    expect(bgHex, `unknown bg token "${bgToken}"`).toBeDefined();
+    expect(fgHex, `unknown fg token "${fgToken}"`).toBeDefined();
+
+    const ratio = contrast(fgHex, bgHex);
+    expect(ratio).toBeGreaterThanOrEqual(4.5);
+  });
+
   it("renders an empty state when there are no crews", () => {
     render(<CrewRosterBoard members={[]} />);
     expect(screen.getByText("No crews on the roster")).toBeInTheDocument();

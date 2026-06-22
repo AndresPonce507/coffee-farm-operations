@@ -71,4 +71,32 @@ describe("projectCutPoint", () => {
     expect(r.cutReached).toBe(true);
     expect(r.latestPh).toBeCloseTo(4.1, 6);
   });
+
+  // hoursToCut is the LEAD TIME the cockpit renders ("projected cut ~Xh away") — the
+  // before-it-closes signal the slice promises. It is the guarded delta the UI needs so
+  // the consumer is a plain prop pass-through (no arithmetic, no null/negative foot-gun).
+  it("exposes the projected lead time (hoursToCut) ahead of the window close", () => {
+    // pH falls 0.5/hour from h2; target 4.2 reached at ~h4 → ~2h of lead from h2.
+    const r = projectCutPoint(series([2, 5.2], [3, 4.7]), 4.2);
+    expect(r.projectedHours).toBeCloseTo(4, 1);
+    expect(r.hoursToCut).toBeCloseTo(1, 1); // projected ~h4 minus latest h3
+  });
+
+  it("reports zero lead time once the cut is already reached (window is now)", () => {
+    const r = projectCutPoint(series([0, 5.6], [4, 4.1]), 4.2);
+    expect(r.cutReached).toBe(true);
+    expect(r.hoursToCut).toBe(0); // never negative — the window is now, not in the past
+  });
+
+  it("has no lead time when there is no projection (null, not negative)", () => {
+    const none = projectCutPoint(series([0, 5.0], [2, 5.0]), 4.2); // flat → no projection
+    expect(none.projectedHours).toBeNull();
+    expect(none.hoursToCut).toBeNull();
+
+    const noTarget = projectCutPoint(series([0, 5.6], [2, 5.0]), null);
+    expect(noTarget.hoursToCut).toBeNull();
+
+    const empty = projectCutPoint([], 4.2);
+    expect(empty.hoursToCut).toBeNull();
+  });
 });

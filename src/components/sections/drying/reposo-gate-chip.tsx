@@ -47,7 +47,14 @@ export function ReposoGateChip({
         "shadow-[0_1px_2px_rgba(27,23,18,0.14)]",
         ready
           ? "bg-forest-100 text-forest-600"
-          : "bg-cherry-100 text-cherry",
+          // Blocked is the most-shown state, read outdoors in glare. Plain
+          // `text-cherry` (#b5482e) on the cherry-100 tint is only 4.124:1 — under
+          // the WCAG-AA 4.5:1 floor for this 12px-semibold label. Darken the TEXT to
+          // #8f3522 (6.0:1 on the tint, 7.78:1 on white) while keeping the red tint.
+          // Mirrors the honey-700/forest-600 "darker text on light bg" pattern; an
+          // inline hex (not a token) because the shared globals.css/badge tokens are
+          // out of this slice's edit scope.
+          : "bg-cherry-100 text-[#8f3522]",
         className,
       )}
     >

@@ -2,7 +2,7 @@ import { CalendarClock, Leaf, Mountain, Sprout } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { cn, num } from "@/lib/utils";
+import { cn, longDate, num } from "@/lib/utils";
 import type { PlotReadiness } from "@/lib/types";
 
 import {
@@ -106,7 +106,7 @@ export function ReadinessList({ rows }: { rows: PlotReadiness[] }) {
                 <span className="inline-flex items-center gap-1.5 text-muted-fg">
                   <CalendarClock className="h-3.5 w-3.5" aria-hidden />
                   {r.predictedReadyDate ? (
-                    <>Ready ~ {r.predictedReadyDate}</>
+                    <>Ready ~ {longDate(r.predictedReadyDate)}</>
                   ) : (
                     <span className="italic">No bloom logged — date unknown</span>
                   )}

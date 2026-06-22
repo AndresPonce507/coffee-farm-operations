@@ -31,6 +31,22 @@ export interface CutPointProjection {
    * the cut is already reached, this is the latest reading's hours (the window is now).
    */
   projectedHours: number | null;
+  /**
+   * The PROJECTED LEAD TIME, in hours, from the latest reading until the cut — i.e.
+   * `projectedHours - latestHours`, clamped to ≥ 0. This is the "cut in ~X h" / "~N min
+   * before the window closes" number the cockpit renders to give the family advance
+   * warning. Null whenever there is no projection (no target / no readings / flat /
+   * rising); 0 once the cut is already reached (the window is now, never in the past).
+   * Exposed as a derived, guarded field so the UI is a plain pass-through — no arithmetic
+   * and no null/negative foot-gun in the render path.
+   */
+  hoursToCut: number | null;
+}
+
+/** Derive the guarded lead time (≥ 0) from a projection's absolute crossing time. */
+function leadTime(projectedHours: number | null, latestHours: number | null): number | null {
+  if (projectedHours === null || latestHours === null) return null;
+  return Math.max(0, projectedHours - latestHours);
 }
 
 const EMPTY: CutPointProjection = {
@@ -38,6 +54,7 @@ const EMPTY: CutPointProjection = {
   latestPh: null,
   latestHours: null,
   projectedHours: null,
+  hoursToCut: null,
 };
 
 /**
@@ -61,14 +78,20 @@ export function projectCutPoint(
     latestPh: latest.ph,
     latestHours: latest.hoursElapsed,
     projectedHours: null,
+    hoursToCut: null,
   };
 
   // No recipe target => surface the latest reading for the curve, but never project.
   if (targetPh === null || !Number.isFinite(targetPh)) return base;
 
-  // Already at/through the target — the window is closing now.
+  // Already at/through the target — the window is closing now (zero lead time).
   if (latest.ph <= targetPh) {
-    return { ...base, cutReached: true, projectedHours: latest.hoursElapsed };
+    return {
+      ...base,
+      cutReached: true,
+      projectedHours: latest.hoursElapsed,
+      hoursToCut: leadTime(latest.hoursElapsed, latest.hoursElapsed),
+    };
   }
 
   // Still above target: extrapolate the recent slope to project the crossing. Use the
@@ -81,5 +104,10 @@ export function projectCutPoint(
 
   const slope = dPh / dH; // pH per hour, negative
   const hoursToTarget = (targetPh - latest.ph) / slope; // both negative → positive
-  return { ...base, projectedHours: latest.hoursElapsed + hoursToTarget };
+  const projectedHours = latest.hoursElapsed + hoursToTarget;
+  return {
+    ...base,
+    projectedHours,
+    hoursToCut: leadTime(projectedHours, latest.hoursElapsed),
+  };
 }

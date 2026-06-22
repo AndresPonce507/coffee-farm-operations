@@ -130,7 +130,10 @@ function WorkerCard({
         {ngabere ? (
           <span
             data-testid={`lang-${member.workerId}`}
-            className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky ring-1 ring-sky/15"
+            // bg-muted/text-muted-fg (5.14:1) — clears WCAG-AA for 11px normal
+            // text and mirrors the sibling chip in crew-rehire-strip.tsx. The
+            // prior bg-sky-100/text-sky pair measured only 4.11:1 (AA fail).
+            className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-fg ring-1 ring-line"
           >
             <Languages className="h-3 w-3" aria-hidden="true" />
             es · ngäbere

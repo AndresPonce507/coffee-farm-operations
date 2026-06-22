@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/ui/page-header";
 import { DryingBoard } from "@/components/sections/drying/drying-board";
 import { StationOccupancyBoard } from "@/components/sections/drying/station-occupancy-board";
+import { DryingWriteActions } from "@/components/sections/drying/drying-write-actions";
 import {
   getDryingLots,
   getStationOccupancy,
@@ -25,8 +26,16 @@ import {
  * impossible to oversubscribe) and surfaces a weather-coupled "cover the beds"
  * alert when rain is forecast for an open-air station.
  *
+ * The header carries the slice's two WRITE affordances — "Record reading" (append
+ * a moisture reading, the EVIDENCE the gate reads) and "Assign station" (commit a
+ * lot to a bed) — each a client island opening the shared glass Dialog over its
+ * single SECURITY DEFINER write door. Advancing a rest-stable lot drying→milled is
+ * done from /processing's pipeline control (the SAME gate-enforcing RPC), so the
+ * board's "Advance to mill" affordance stays a courtesy-disabled status chip here.
+ *
  * Server component: awaits the three derived reads in parallel and composes the
- * header above the boards. No client JS. The app shell comes from (app)/layout.tsx.
+ * header (with the client write islands) above the boards. The app shell comes
+ * from (app)/layout.tsx.
  */
 export default async function DryingPage() {
   const [lots, stations, weatherRisk] = await Promise.all([
@@ -35,12 +44,18 @@ export default async function DryingPage() {
     getDryingWeatherRisk(),
   ]);
 
+  // Resting lot codes — the candidates a moisture reading / station assignment can
+  // target (the gate's universe). Stations pass through with their live headroom.
+  const lotCodes = lots.map((l) => l.lotCode);
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Drying & reposo"
         subtitle="The rest that defines the cup — moisture, stations, and the reposo gate"
-      />
+      >
+        <DryingWriteActions lots={lotCodes} stations={stations} />
+      </PageHeader>
 
       <DryingBoard lots={lots} />
 

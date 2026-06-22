@@ -32,4 +32,29 @@ describe("CupperDriftCard (smoke)", () => {
     render(<CupperDriftCard drift={[]} />);
     expect(screen.getByText(/no calibration/i)).toBeInTheDocument();
   });
+
+  it("renders the human-readable cupper name as the primary identity when a name map is supplied", () => {
+    const nameById = new Map([
+      ["w-cup-2", "Eduardo Pérez"],
+      ["w-cup-1", "Tomás Atencio"],
+    ]);
+    render(<CupperDriftCard drift={DRIFT} nameById={nameById} />);
+    // the calibration-bias evidence must label each cupper by NAME, not an opaque code.
+    expect(screen.getByText("Eduardo Pérez")).toBeInTheDocument();
+    expect(screen.getByText("Tomás Atencio")).toBeInTheDocument();
+  });
+
+  it("falls back to the raw cupper id when no name is mapped", () => {
+    const nameById = new Map([["w-cup-1", "Tomás Atencio"]]);
+    render(<CupperDriftCard drift={DRIFT} nameById={nameById} />);
+    // w-cup-2 is unmapped → the raw id stays visible so nothing is silently dropped.
+    expect(screen.getAllByText("w-cup-2").length).toBeGreaterThan(0);
+    // the mapped one resolves to its name.
+    expect(screen.getByText("Tomás Atencio")).toBeInTheDocument();
+  });
+
+  it("renders the raw id (no crash) when no name map is supplied at all", () => {
+    render(<CupperDriftCard drift={DRIFT} />);
+    expect(screen.getAllByText("w-cup-2").length).toBeGreaterThan(0);
+  });
 });

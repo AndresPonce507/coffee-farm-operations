@@ -4,9 +4,10 @@ import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { CuppingScoresheet } from "@/components/sections/qc/cupping-scoresheet";
 import { CupToCausePanel } from "@/components/sections/qc/cup-to-cause-panel";
+import { DefectEntryForm } from "@/components/sections/qc/defect-entry-form";
 import { QcHoldBanner } from "@/components/sections/qc/qc-hold-banner";
 import { getLotGenealogy } from "@/lib/db/lots";
-import { getQcStatus } from "@/lib/db/qc";
+import { getGreenDefects, getQcStatus } from "@/lib/db/qc";
 import { getWorkers } from "@/lib/db/workers";
 
 /**
@@ -32,10 +33,11 @@ export default async function CuppingPage({
   const { lot } = await params;
   const lotCode = decodeURIComponent(lot);
 
-  const [genealogy, qcStatus, workers] = await Promise.all([
+  const [genealogy, qcStatus, workers, defects] = await Promise.all([
     getLotGenealogy(lotCode).catch(() => ({ nodes: [], edges: [] })),
     getQcStatus().catch(() => []),
     getWorkers().catch(() => []),
+    getGreenDefects(lotCode).catch(() => []),
   ]);
 
   const status = qcStatus.find((s) => s.greenLotCode === lotCode) ?? null;
@@ -61,7 +63,10 @@ export default async function CuppingPage({
       )}
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <CuppingScoresheet lotCode={lotCode} cuppers={cuppers} />
+        <div className="space-y-6">
+          <CuppingScoresheet lotCode={lotCode} cuppers={cuppers} />
+          <DefectEntryForm lotCode={lotCode} defects={defects} />
+        </div>
         <CupToCausePanel lotCode={lotCode} genealogy={genealogy} status={status} />
       </div>
     </div>

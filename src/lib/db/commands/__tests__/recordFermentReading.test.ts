@@ -69,6 +69,32 @@ describe("validateFermentReading", () => {
     if (!r.ok) expect(r.errors.value).toMatch(/ph|0|14/i);
   });
 
+  it("rejects a temp outside the −5–60 °C range (sensor-fault guard)", () => {
+    const r = validateFermentReading({ ...validRaw(), kind: "temp", value: "9999" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.value).toMatch(/temp/i);
+  });
+
+  it("accepts a legitimately cold temp at the −5 °C floor", () => {
+    // A wet-ferment tank can sit at/below 0 °C; the floor mirrors the DB CHECK
+    // (temp −5..60), so the validator must not reject what the ledger accepts.
+    const r = validateFermentReading({ ...validRaw(), kind: "temp", value: "-3" });
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.data.value).toBe(-3);
+  });
+
+  it("rejects a negative Brix (probe-in-air guard)", () => {
+    const r = validateFermentReading({ ...validRaw(), kind: "brix", value: "-5" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.value).toMatch(/brix/i);
+  });
+
+  it("rejects a Brix above the 40 °Bx ceiling", () => {
+    const r = validateFermentReading({ ...validRaw(), kind: "brix", value: "41" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.value).toMatch(/brix/i);
+  });
+
   it("rejects a non-ISO occurredAt", () => {
     const r = validateFermentReading({ ...validRaw(), occurredAt: "soon" });
     expect(r.ok).toBe(false);
@@ -131,6 +157,26 @@ describe("recordFermentReading", () => {
     if (!result.ok) {
       expect(result.message).toMatch(/again|retry|already/i);
       expect(result.message).not.toMatch(/duplicate key value/i);
+    }
+  });
+
+  it("maps the value-range CHECK (23514) to a FRIENDLY out-of-range message", async () => {
+    // Belt-and-braces: even if a value slips past the validator (e.g. a future
+    // caller or a UI bug), the DB CHECK `ferment_readings_value_range` fails
+    // closed and the raw constraint text must never leak to the family.
+    const { store } = fakeStore({
+      data: null,
+      error: {
+        message:
+          'new row for relation "ferment_readings" violates check constraint "ferment_readings_value_range"',
+        code: "23514",
+      },
+    });
+    const result = await recordFermentReading(store, validRaw());
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toMatch(/range|probe|re-log|check/i);
+      expect(result.message).not.toMatch(/check constraint|ferment_readings_value_range/i);
     }
   });
 

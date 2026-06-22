@@ -135,6 +135,60 @@ describe("P2-S6 QC — QC-HOLD blocks commerce (fail-closed, the teeth)", () => 
       ),
     ).rejects.toThrow(/qc[\s_-]?hold|held|quarantine|cannot.*reserv|on hold/i);
   });
+
+  // The QC gate must cover UPDATE too — matching the prevent_oversell family it
+  // extends (which fires BEFORE INSERT OR UPDATE). The grant posture (INSERT-only)
+  // is the outer wall, so this UPDATE runs as the owner harness role to exercise the
+  // trigger directly. Pins the gate symmetry so it can never silently reopen: if a
+  // future refactor narrows _prevent_held_lot_commit's trigger to BEFORE INSERT only,
+  // these go RED. Use a separate clear lot so the JC-9001 state above is untouched.
+  it("REJECTS amending (UPDATE) an existing reservation once its lot is held", async () => {
+    await h.query(
+      `insert into lots (code, stage, variety, origin_kg, current_kg, minted_at)
+         values ('JC-910', 'milled', 'Geisha', 40, 40, now());`,
+    );
+    await materialize(h, "JC-910", "JC-9101", 40);
+    await h.query(
+      `insert into lot_reservations (green_lot_code, buyer, kg) values ('JC-9101','Echo',10);`,
+    );
+    await h.query(`select place_qc_hold('JC-9101','off-flavor', now(), 'srv', 20, 'hold-9101');`);
+    // a kg bump on the existing reservation re-validates against the now-held lot
+    await expect(
+      h.query(`update lot_reservations set kg = 20 where green_lot_code = 'JC-9101';`),
+    ).rejects.toThrow(/qc[\s_-]?hold|held|quarantine|cannot.*reserv|on hold/i);
+  });
+
+  it("REJECTS re-pointing (UPDATE) a reservation onto a held lot", async () => {
+    await h.query(
+      `insert into lots (code, stage, variety, origin_kg, current_kg, minted_at)
+         values ('JC-911', 'milled', 'Geisha', 40, 40, now());`,
+    );
+    await materialize(h, "JC-911", "JC-9111", 40);
+    // a CLEAR lot we can put a reservation on, then re-point it onto the held JC-9101
+    await h.query(
+      `insert into lot_reservations (green_lot_code, buyer, kg) values ('JC-9111','Foxtrot',5);`,
+    );
+    await expect(
+      h.query(
+        `update lot_reservations set green_lot_code = 'JC-9101' where green_lot_code = 'JC-9111';`,
+      ),
+    ).rejects.toThrow(/qc[\s_-]?hold|held|quarantine|cannot.*reserv|on hold/i);
+  });
+
+  it("REJECTS amending (UPDATE) an existing shipment once its lot is held", async () => {
+    await h.query(
+      `insert into lots (code, stage, variety, origin_kg, current_kg, minted_at)
+         values ('JC-912', 'milled', 'Geisha', 40, 40, now());`,
+    );
+    await materialize(h, "JC-912", "JC-9121", 40);
+    await h.query(
+      `insert into lot_shipments (green_lot_code, destination, kg) values ('JC-9121','Port',10);`,
+    );
+    await h.query(`select place_qc_hold('JC-9121','off-flavor', now(), 'srv', 21, 'hold-9121');`);
+    await expect(
+      h.query(`update lot_shipments set kg = 20 where green_lot_code = 'JC-9121';`),
+    ).rejects.toThrow(/qc[\s_-]?hold|held|quarantine|cannot.*ship|on hold/i);
+  });
 });
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -176,6 +230,72 @@ describe("P2-S6 QC — qc_holds is an append-only ledger, place/release are idem
     await expect(
       h.query(`delete from qc_holds where green_lot_code='JC-9001';`),
     ).rejects.toThrow(/append-only|immutable|blocked|permission|denied/i);
+  });
+
+  // ── _qc_holds_guard_mutation branches (b)/(c)/(d) — the DELETE branch is pinned
+  // above; these pin the one-way-release contract the migration's comment calls
+  // "fragile" and load-bearing. They run as the table owner (the exact path the
+  // DEFINER release RPC takes), so they hit the trigger directly — a future refactor
+  // that drops the released_at check or the column-distinct comparison goes RED here
+  // instead of silently letting quarantine history be rewritten/reverted.
+
+  // (b) re-stamp/re-open of an ALREADY-released hold is rejected. JC-9001's hold was
+  // released in an earlier test in this block. Re-stamp released_at to a NEW non-null
+  // value (a null value would trip branch (d) first, never reaching branch (b)).
+  it("blocks re-stamping an already-released qc_holds row (no re-open)", async () => {
+    await expect(
+      h.query(
+        `update qc_holds set released_at = now() + interval '1 day', released_by = 'attacker'
+           where green_lot_code = 'JC-9001';`,
+      ),
+    ).rejects.toThrow(/already released|re-open/i);
+  });
+
+  // (c) re-keying any identity column is rejected. Needs a STILL-OPEN hold (JC-9001's
+  // is released, which would fire branch (b) first) — materialize a fresh lot + place
+  // a fresh open hold so the column-distinct branch is the one that fires.
+  it("blocks re-keying any column other than the release stamp on an open hold", async () => {
+    await h.query(
+      `insert into lots (code, stage, variety, origin_kg, current_kg, minted_at)
+         values ('JC-901', 'milled', 'Geisha', 50, 50, now());`,
+    );
+    await materialize(h, "JC-901", "JC-9011", 50);
+    await h.query(`select place_qc_hold('JC-9011','open look', now(), 'srv', 10, 'k-rekey');`);
+    // Re-key a non-release column WHILE stamping a valid release, so it can only be
+    // branch (c) (the column-distinct check) that rejects it — not branch (d). This
+    // isolates branch (c): drop the column-distinct comparison and this UPDATE is
+    // silently allowed (released_at is non-null, so branch (d) passes too).
+    await expect(
+      h.query(
+        `update qc_holds set reason = 'rewritten', released_at = now(), released_by = 'x'
+           where green_lot_code = 'JC-9011';`,
+      ),
+    ).rejects.toThrow(/only a release stamp|append-only/i);
+  });
+
+  // (d) an UPDATE that does NOT stamp a release (released_at) is rejected. Touch a
+  // non-key column (released_by) WITHOUT setting released_at, on a still-open hold.
+  it("blocks an UPDATE on an open hold that does not stamp a release", async () => {
+    await h.query(
+      `insert into lots (code, stage, variety, origin_kg, current_kg, minted_at)
+         values ('JC-902', 'milled', 'Geisha', 50, 50, now());`,
+    );
+    await materialize(h, "JC-902", "JC-9021", 50);
+    await h.query(`select place_qc_hold('JC-9021','open look', now(), 'srv', 11, 'k-nostamp');`);
+    await expect(
+      h.query(`update qc_holds set released_by = 'x' where green_lot_code = 'JC-9021';`),
+    ).rejects.toThrow(/must stamp a release/i);
+  });
+
+  // place_qc_hold's in-function existence pre-check raises a CLEAN 'unknown green lot'
+  // (errcode foreign_key_violation) BEFORE the table FK would. Assert on the clean
+  // message specifically (not the broad FK fallback) so removing the pre-check — which
+  // would degrade the error to a raw constraint message — goes RED. Use a key not
+  // reused elsewhere so the idempotency short-circuit can't mask the existence check.
+  it("rejects a hold on a non-existent green lot with the clean 'unknown green lot' message", async () => {
+    await expect(
+      h.query(`select place_qc_hold('JC-NOPE','off-flavor', now(), 'srv', 999, 'k-phantom');`),
+    ).rejects.toThrow(/unknown green lot/i);
   });
 });
 
@@ -298,6 +418,33 @@ describe("P2-S6 QC — v_cup_final_score totals per protocol (derived, never sto
       `select final_score::numeric as final_score from v_cup_final_score where session_id=${sid};`,
     );
     expect(Number(r[0].final_score)).toBeCloseTo(86, 6);
+  });
+
+  // The final cup total is a VIEW (v_cup_final_score), NOT a column on green_lots.
+  // green_lots.cupping_score is the materialize-time grade input that drives the
+  // generated sca_grade band — a different number from the cup final. Recording a
+  // session/scores must leave green_lots.cupping_score untouched. Pins the
+  // view-not-column separation: a future change that writes the cup total back into
+  // green_lots.cupping_score (silently flipping the commercial SCA grade) goes RED.
+  it("a cupping session does not mutate green_lots.cupping_score (final is a VIEW, not a column)", async () => {
+    const before = await h.query<{ cupping_score: number }>(
+      `select cupping_score::numeric as cupping_score from green_lots where lot_code='JC-9001';`,
+    );
+    const sid = await recordSession(h, "JC-9001", "w-cup-1", "sca-cva", { key: "no-writeback" });
+    let seq = 200;
+    for (const [a, v] of [
+      ["fragrance", 8],
+      ["flavor", 7],
+      ["acidity", 8],
+    ] as [string, number][]) {
+      await h.query(`select record_cup_score(${sid},'${a}',${v},'srv',${seq},'nw-${a}');`);
+      seq += 1;
+    }
+    const after = await h.query<{ cupping_score: number }>(
+      `select cupping_score::numeric as cupping_score from green_lots where lot_code='JC-9001';`,
+    );
+    // 84.5 (the fixture grade), unchanged — the final lives in v_cup_final_score.
+    expect(Number(after[0].cupping_score)).toBe(Number(before[0].cupping_score));
   });
 });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   CheckCircle2,
@@ -14,6 +14,10 @@ import {
 import { useSyncStatus } from "@/lib/offline/useSyncStatus";
 import type { OutboxEntry } from "@/lib/offline/outbox";
 import { SyncStatusPill } from "./sync-status";
+
+/** Elements that can hold keyboard focus inside the drawer, in DOM order. */
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
  * SyncStatus — the stateful island wired into the shell (P2-S0). It owns the
@@ -74,9 +78,78 @@ function OutboxDrawer({
   onDismiss: (uuid: string) => void;
   onClose: () => void;
 }) {
+  const panelRef = useRef<HTMLElement>(null);
+  // The element focused right before the drawer opened, restored on close.
+  const restoreRef = useRef<HTMLElement | null>(null);
+
+  // Escape-to-close + body scroll-lock. The Escape listener is document-level
+  // (NOT an in-subtree React onKeyDown): the trigger pill lives OUTSIDE this
+  // portal, so a subtree handler would never receive the key until the user had
+  // already clicked into the drawer. Body overflow is restored to its prior
+  // value on cleanup (mirrors mobile-nav.tsx / the shared Dialog).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onClose]);
+
+  // Focus management — on open, remember the previously-focused element (the
+  // pill) and move focus to the first focusable inside the panel (or the panel
+  // itself). On close/unmount, restore focus there so keyboard users land back
+  // on the pill instead of orphaned on <body>.
+  useEffect(() => {
+    restoreRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    const panel = panelRef.current;
+    if (panel) {
+      const first = panel.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+      (first ?? panel).focus();
+    }
+    return () => {
+      restoreRef.current?.focus?.();
+    };
+  }, []);
+
   if (typeof document === "undefined") return null;
 
   const empty = pending.length === 0 && deadLetters.length === 0;
+
+  // Keep Tab/Shift+Tab inside the drawer by wrapping at the edges, so Tab can't
+  // walk out into the page behind the (aria-modal) drawer.
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== "Tab") return;
+    const panel = panelRef.current;
+    if (!panel) return;
+    const focusables = Array.from(
+      panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+    );
+    if (focusables.length === 0) {
+      e.preventDefault();
+      panel.focus();
+      return;
+    }
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const activeEl = document.activeElement;
+    if (e.shiftKey) {
+      if (activeEl === first || !panel.contains(activeEl)) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else if (activeEl === last || !panel.contains(activeEl)) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
 
   return createPortal(
     <div
@@ -84,9 +157,7 @@ function OutboxDrawer({
       role="dialog"
       aria-modal="true"
       aria-label="Sync activity"
-      onKeyDown={(e) => {
-        if (e.key === "Escape") onClose();
-      }}
+      onKeyDown={onKeyDown}
     >
       <button
         type="button"
@@ -95,7 +166,11 @@ function OutboxDrawer({
         onClick={onClose}
         className="absolute inset-0 cursor-default bg-forest/40 backdrop-blur-sm motion-safe:animate-fade-in"
       />
-      <aside className="relative z-10 flex h-full w-full max-w-sm flex-col border-l border-white/60 bg-white/85 shadow-[-24px_0_64px_-20px_rgba(0,41,29,0.45)] backdrop-blur-xl motion-safe:animate-slide-in-right">
+      <aside
+        ref={panelRef}
+        tabIndex={-1}
+        className="relative z-10 flex h-full w-full max-w-sm flex-col border-l border-white/60 bg-white/85 shadow-[-24px_0_64px_-20px_rgba(0,41,29,0.45)] backdrop-blur-xl outline-none motion-safe:animate-slide-in-right"
+      >
         <header className="flex items-center justify-between border-b border-line px-5 py-4">
           <div>
             <h2 className="font-display text-base font-semibold text-ink">

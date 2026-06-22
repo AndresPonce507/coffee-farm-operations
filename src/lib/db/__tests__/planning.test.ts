@@ -115,10 +115,13 @@ vi.mock("@/lib/supabase/server", () => ({
 function stubQuery<T>(data: T, error: { message: string } | null = null) {
   const builder = makeBuilder({ data, error });
   // getSupabase() resolves to a (non-thenable) client whose .from() returns the
-  // chainable, thenable builder. `from` is a spy so we can assert the table name.
+  // chainable, thenable builder. `from` is a spy so we can assert the table name;
+  // `order` is exposed so we can assert the ORDER contract (most-ready-first /
+  // wave-up-the-mountain) the getter docstrings promise — the spy lives on the
+  // inner builder, so the bare `{ from }` shape hid it from every test.
   const from = vi.fn(() => builder);
   getSupabaseMock.mockReturnValue({ from });
-  return { from };
+  return { from, order: builder.order };
 }
 
 afterEach(() => {
@@ -147,6 +150,11 @@ describe("getHarvestReadiness — reads v_harvest_readiness, ranked most-ready-f
     ]);
     const rows = await getHarvestReadiness();
     expect(builder.from).toHaveBeenCalledWith("v_harvest_readiness");
+    // The "most-ready-first" ranking S5's morning dispatch consumes is sourced
+    // SOLELY by this descending order (the view has no terminal ORDER BY and the
+    // ReadinessList consumer never re-sorts). Pin the direction so a refactor/
+    // fat-finger flip to ascending — greenest, weeks-early plots first — fails here.
+    expect(builder.order).toHaveBeenCalledWith("readiness", { ascending: false });
     expect(rows).toHaveLength(1);
     expect(rows[0].plotId).toBe("p-cuesta-piedra");
     expect(rows[0].readiness).toBe(1);
@@ -180,6 +188,15 @@ describe("getPasadaCalendar — reads v_pasada_calendar (active plans only)", ()
     ]);
     const rows = await getPasadaCalendar();
     expect(builder.from).toHaveBeenCalledWith("v_pasada_calendar");
+    // The timeline reads as a wave moving up the mountain: ready-date asc, then
+    // altitude asc as the tiebreak. Pin both legs in sequence so flipping either
+    // direction or dropping the altitude tiebreak fails here.
+    expect(builder.order).toHaveBeenNthCalledWith(1, "predicted_ready_date", {
+      ascending: true,
+    });
+    expect(builder.order).toHaveBeenNthCalledWith(2, "altitude_masl", {
+      ascending: true,
+    });
     expect(rows).toHaveLength(1);
     expect(rows[0].pasadaNumber).toBe(1);
   });

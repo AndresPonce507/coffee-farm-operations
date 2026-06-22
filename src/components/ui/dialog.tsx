@@ -121,23 +121,34 @@ export function Dialog({
         onClick={onClose}
         className="absolute inset-0 cursor-default bg-forest/40 backdrop-blur-sm"
       />
+      {/* Panel is height-capped (`max-h-[85svh]`) and laid out as a column so a
+          non-shrinking header stays pinned while an overflowing body scrolls.
+          Without this, an unbounded ledger (e.g. a multi-season attendance
+          timeline rendered via the crew rehire strip) grows past the viewport
+          and — since the overlay is `fixed inset-0 grid place-items-center` with
+          body scroll locked — overflows off BOTH edges, pushing the title + X
+          off-screen and trapping touch users. Mirrors the audit-drawer idiom
+          (header + `min-h-0 flex-1 overflow-y-auto` body). */}
       <div
         ref={panelRef}
         tabIndex={-1}
-        className="animate-rise relative z-10 w-full max-w-md rounded-2xl border border-white/60 bg-white/85 p-6 shadow-[0_24px_64px_-20px_rgba(0,41,29,0.45)] backdrop-blur-xl outline-none"
+        className="animate-rise relative z-10 flex max-h-[85svh] w-full max-w-md flex-col rounded-2xl border border-white/60 bg-white/85 shadow-[0_24px_64px_-20px_rgba(0,41,29,0.45)] backdrop-blur-xl outline-none"
       >
-        <div className="mb-4 flex items-center justify-between">
+        {/* Pinned header — title + close stay reachable while the body scrolls. */}
+        <div className="flex shrink-0 items-center justify-between px-6 pt-6 pb-4">
           <h2 className="font-display text-lg font-semibold text-ink">{title}</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="grid h-8 w-8 place-items-center rounded-lg text-muted-fg transition hover:bg-white/60 hover:text-ink"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted-fg transition hover:bg-white/60 hover:text-ink"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        {children}
+        {/* Scrollable body — overflowing content stays reachable instead of
+            spilling off the top/bottom of the viewport. */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">{children}</div>
       </div>
     </div>,
     document.body,

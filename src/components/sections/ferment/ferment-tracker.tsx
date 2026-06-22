@@ -4,6 +4,7 @@ import type {
   FermentBatch,
   FermentCurvePoint,
   FermentCutpoint,
+  FermentReadingKind,
   WaterPerKg,
 } from "@/lib/db/ferment";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,49 @@ import { CutpointAlert } from "./cutpoint-alert";
 import { FermentCurve } from "./ferment-curve";
 import { LogReadingForm } from "./log-reading-form";
 import { WaterChip } from "./water-chip";
+
+/**
+ * The latest reading for a kind, formatted with its unit so a sighted user can read the
+ * scale of the curve at a glance — the curves themselves are unitless squiggles. We sort
+ * by hoursElapsed (the same x-domain the curve plots on) so "latest" is the rightmost
+ * point, not whatever happened to come last in the array.
+ */
+function latestReadout(
+  curve: FermentCurvePoint[],
+  kind: FermentReadingKind,
+): string | null {
+  const series = curve
+    .filter((p) => p.readingKind === kind)
+    .sort((a, b) => a.hoursElapsed - b.hoursElapsed);
+  if (series.length === 0) return null;
+  const v = series[series.length - 1].value;
+  switch (kind) {
+    case "ph":
+      return `pH ${v.toFixed(1)}`;
+    case "temp":
+      return `${v.toFixed(1)} °C`;
+    case "brix":
+      return `${v.toFixed(1)} °Bx`;
+  }
+}
+
+/** A glass chip echoing the latest reading value beside a curve's title. */
+function LatestChip({
+  kind,
+  value,
+}: {
+  kind: FermentReadingKind;
+  value: string;
+}) {
+  return (
+    <span
+      data-testid={`ferment-latest-${kind}`}
+      className="rounded-md bg-white/70 px-2 py-0.5 font-mono text-sm font-semibold tabular-nums text-ink shadow-sm"
+    >
+      {value}
+    </span>
+  );
+}
 
 /**
  * FermentTracker — the per-batch make-quality cockpit (P2-S3). Composes the live curve
@@ -44,6 +88,10 @@ export function FermentTracker({
 }) {
   const live = batch.endedAt === null;
   const targetPh = cutpoint?.targetPh ?? null;
+
+  const latestPh = latestReadout(curve, "ph");
+  const latestTemp = latestReadout(curve, "temp");
+  const latestBrix = latestReadout(curve, "brix");
 
   return (
     <div className="space-y-6">
@@ -91,6 +139,7 @@ export function FermentTracker({
                 Live acidity vs the recipe target band — the curve the cut is made on
               </CardDescription>
             </div>
+            {latestPh && <LatestChip kind="ph" value={latestPh} />}
           </CardHeader>
           <CardContent className="pt-2">
             <FermentCurve points={curve} targetPh={targetPh} kind="ph" />
@@ -100,6 +149,7 @@ export function FermentTracker({
         <Card className="animate-rise xl:col-span-2">
           <CardHeader>
             <CardTitle>Temperature</CardTitle>
+            {latestTemp && <LatestChip kind="temp" value={latestTemp} />}
           </CardHeader>
           <CardContent className="pt-2">
             <FermentCurve points={curve} targetPh={null} kind="temp" />
@@ -109,6 +159,7 @@ export function FermentTracker({
         <Card className="animate-rise">
           <CardHeader>
             <CardTitle>Brix</CardTitle>
+            {latestBrix && <LatestChip kind="brix" value={latestBrix} />}
           </CardHeader>
           <CardContent className="pt-2">
             <FermentCurve points={curve} targetPh={null} kind="brix" />

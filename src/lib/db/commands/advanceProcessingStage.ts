@@ -154,7 +154,10 @@ export type AdvanceProcessingStageResult =
  *   - an UNKNOWN lot raises a foreign_key_violation (SQLSTATE 23503) — the
  *     lot_code has no row to advance;
  *   - a replayed/duplicated event collides on the lot_event
- *     `(device_id, device_seq)` unique key (SQLSTATE 23505) — a retry artefact.
+ *     `(device_id, device_seq)` unique key (SQLSTATE 23505) — a retry artefact;
+ *   - the reposo (rest-stability) gate blocks a drying→milled move on a lot that
+ *     hasn't rested long enough / isn't moisture-stable — raised as a labelled
+ *     `check_violation` whose trailing parens carry the human reason.
  * SQLSTATE codes are matched first (most robust), with a message fallback for the
  * CHECK-violation variants whose code overlaps.
  */
@@ -182,6 +185,16 @@ function friendlyRpcError(
   }
   if (/invalid input value for enum|batch_stage/i.test(error.message)) {
     return `"${toStage}" isn't a valid pipeline stage. (${error.message})`;
+  }
+  // The reposo (rest-stability) gate — a drying->milled move on a lot that
+  // hasn't rested long enough / isn't moisture-stable. Raised as a labelled
+  // check_violation; surface the human reason (carried in the trailing parens
+  // from reposo_status), never the raw `reposo gate:` engine prefix.
+  if (/reposo gate|rest-stable/i.test(error.message)) {
+    const reason = error.message.match(/\(([^)]*)\)\s*$/)?.[1]?.trim();
+    return reason
+      ? `Lot ${lotCode} isn't rested enough to mill yet — ${reason}. It needs to finish its reposo (rest until moisture settles into band) first.`
+      : `Lot ${lotCode} isn't rested enough to mill yet — it needs to finish its reposo first.`;
   }
   return null;
 }

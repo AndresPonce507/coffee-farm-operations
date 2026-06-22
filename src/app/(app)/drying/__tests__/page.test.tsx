@@ -60,4 +60,18 @@ describe("/drying page (smoke)", () => {
     expect(screen.getByRole("status")).toHaveAttribute("data-ready", "false");
     expect(screen.getByRole("button", { name: /Mill — locked/i })).toBeDisabled();
   });
+
+  // Review finding #54 — the slice must ship reachable WRITE surfaces (record a
+  // moisture reading + assign a lot to a station), not just a read-only dashboard.
+  it("renders the drying write triggers (record reading + assign station)", async () => {
+    const ui = await DryingPage();
+    render(ui);
+
+    expect(
+      screen.getByRole("button", { name: /record reading/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /assign station/i }),
+    ).toBeInTheDocument();
+  });
 });

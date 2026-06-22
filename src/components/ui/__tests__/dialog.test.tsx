@@ -144,4 +144,66 @@ describe("Dialog", () => {
     const dialog = screen.getByRole("dialog");
     expect(dialog.contains(document.activeElement)).toBe(true);
   });
+
+  // FINDING #46 — the panel must CAP its height and SCROLL its body. The crew
+  // rehire strip drops the worker-profile sheet (an unbounded, append-only
+  // attendance ledger) into this primitive; with no max-h / overflow the panel
+  // grows past the viewport and overflows symmetrically off both edges (the
+  // overlay is `fixed inset-0 grid place-items-center` and body scroll is
+  // locked), pushing the title + close buttons off-screen and stranding touch
+  // users. The panel must be height-capped and its body scrollable so the
+  // header (title + X) stays pinned while overflowing content scrolls.
+  it("caps the panel height and scrolls a long body so the header never overflows off-screen", () => {
+    // A body taller than any viewport — simulating a multi-season ledger.
+    const rows = Array.from({ length: 60 }, (_, i) => (
+      <p key={i} data-testid="ledger-row">
+        Attendance event {i + 1}
+      </p>
+    ));
+    render(
+      <Dialog open onClose={() => {}} title="Worker profile">
+        {rows}
+      </Dialog>,
+    );
+
+    const dialog = screen.getByRole("dialog");
+
+    // The panel itself is height-capped (so it can never exceed the viewport).
+    const panel = dialog.querySelector<HTMLElement>(".max-h-\\[85svh\\]");
+    expect(panel).not.toBeNull();
+
+    // The long children live inside a scroll container so they are reachable.
+    const firstRow = screen.getAllByTestId("ledger-row")[0];
+    const scrollContainer = firstRow.closest(".overflow-y-auto");
+    expect(scrollContainer).not.toBeNull();
+    // …and that scroll container is the height-capped panel's own descendant.
+    expect(panel?.contains(scrollContainer)).toBe(true);
+  });
+
+  // FINDING #46 — the title + Close affordance must stay in the DOM (and outside
+  // the scroll region) even when the body overflows, so touch users always have a
+  // reachable dismiss control instead of being trapped with only Escape.
+  it("keeps the title and Close control mounted and outside the scrollable body when content overflows", () => {
+    const rows = Array.from({ length: 60 }, (_, i) => (
+      <p key={i} data-testid="ledger-row">
+        Attendance event {i + 1}
+      </p>
+    ));
+    render(
+      <Dialog open onClose={() => {}} title="Worker profile">
+        {rows}
+      </Dialog>,
+    );
+
+    // Title heading + the explicit close button both still render.
+    expect(
+      screen.getByRole("heading", { name: "Worker profile" }),
+    ).toBeInTheDocument();
+    const closeBtn = screen.getByRole("button", { name: "Close dialog" });
+    expect(closeBtn).toBeInTheDocument();
+
+    // The close button is NOT inside the scrollable body — it lives in the
+    // pinned header, so it stays visible while the ledger scrolls beneath it.
+    expect(closeBtn.closest(".overflow-y-auto")).toBeNull();
+  });
 });

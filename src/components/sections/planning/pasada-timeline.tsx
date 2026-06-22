@@ -1,4 +1,4 @@
-import { CalendarDays, CloudRain, Mountain } from "lucide-react";
+import { CalendarDays, CloudRain, ListTodo, Mountain } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -89,6 +89,11 @@ export function PasadaTimeline({ plans }: { plans: PasadaPlan[] }) {
                       </span>
                     ) : null}
                   </div>
+                  {p.firedTaskId ? (
+                    <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-cherry">
+                      <ListTodo className="h-3.5 w-3.5" aria-hidden /> On the board
+                    </p>
+                  ) : null}
                 </div>
 
                 <span

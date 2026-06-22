@@ -63,10 +63,22 @@ describe("DryingBoard (smoke)", () => {
     expect(btn).toHaveAttribute("title", expect.stringMatching(/Blocked by the reposo gate/i));
   });
 
-  it("ENABLES the advance-to-mill button on a rest-stable lot", () => {
+  it("renders the rest-stable advance affordance as a real link to /processing (not a dead button)", () => {
     render(<DryingBoard lots={[readyLot]} />);
-    const btn = screen.getByRole("button", { name: /Advance to mill/i });
-    expect(btn).not.toBeDisabled();
+    const card = screen.getByTestId("drying-lot-card");
+    // The ready affordance must be an honest, navigable control — a link to the
+    // Processing surface where AdvanceStageControl performs the real advance —
+    // never an enabled primary CTA with no handler. It carries a per-lot
+    // accessible name so multiple advance links on the board are distinguishable.
+    const advance = within(card).getByRole("link", {
+      name: /Advance lot JC-572 to milling/i,
+    });
+    expect(advance).toHaveAttribute("href", "/processing");
+    expect(advance).toHaveTextContent(/Advance to mill/i);
+    // And there must be NO inert advance button on the ready card.
+    expect(
+      within(card).queryByRole("button", { name: /Advance to mill/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("summarizes how many lots are clear vs resting in the header", () => {
