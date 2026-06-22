@@ -584,12 +584,18 @@ as $$
    limit 1;
 $$;
 
--- v_worker_certs_valid — every cert that is valid (not expired) as of today. The
--- single source the S12 spray gate consults.
+-- v_worker_certs_valid — every cert that is currently in force as of today. The
+-- single source the S12 spray gate consults. Bounds BOTH ends of the window: a cert
+-- is valid today only if it has already been issued (issued_at <= current_date) AND
+-- has not yet expired (expires_at null or >= current_date). Without the lower bound a
+-- future-issued cert (a data-entry slip, or a cert recorded ahead of course
+-- completion) would read as valid today and let an untrained applicator pass the
+-- fail-closed spray gate.
 create view v_worker_certs_valid with (security_invoker = on) as
   select worker_id, cert_kind, issued_at, expires_at, issuer
     from worker_certifications
-   where expires_at is null or expires_at >= current_date;
+   where issued_at <= current_date
+     and (expires_at is null or expires_at >= current_date);
 
 -- ──────────────────────────────────────────────────────────────────────────
 -- 10. Command RPCs (ADR-002 — SECURITY DEFINER, pinned search_path, mutate the

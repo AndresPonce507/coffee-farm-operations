@@ -254,21 +254,25 @@ describe("P2-S12 — log_spray CERTIFICATION gate (fail-closed, the slice's keys
 
   it("SUCCEEDS for an applicator with a VALID cert, and stamps the PHI window", async () => {
     await grantCert(h, "w-agro", "2027-12-31"); // valid through next year
+    // applied just now — the applied_at clamp (no backdating/future) requires a
+    // recent honest timestamp; a fixed wall-clock date would drift past the clamp.
     const id = await h.query<{ log_spray: number }>(
       sql(`select log_spray(
         'p-talamanca', 'Verdadero 600', 'imidacloprid', 14, 24,
-        '2026-06-20T08:00:00Z', 'w-agro', 'dev', 3, 'spray-valid'
+        now() - interval '1 hour', 'w-agro', 'dev', 3, 'spray-valid'
       ) as log_spray;`),
     );
     expect(Number(id[0].log_spray)).toBeGreaterThan(0);
 
-    const row = await h.query<{ phi_clears_on: string; worker_id: string }>(
-      sql(`select to_char(phi_clears_on,'YYYY-MM-DD') as phi_clears_on, worker_id
+    const row = await h.query<{ phi_clears_on: string; worker_id: string; expected: string }>(
+      sql(`select to_char(phi_clears_on,'YYYY-MM-DD')                                  as phi_clears_on,
+                  worker_id,
+                  to_char(((now() - interval '1 hour') + interval '14 days')::date,'YYYY-MM-DD') as expected
            from spray_application where idempotency_key = 'spray-valid';`),
     );
     expect(row[0].worker_id).toBe("w-agro");
-    // applied 2026-06-20 + 14 PHI days → clears 2026-07-04
-    expect(row[0].phi_clears_on).toBe("2026-07-04");
+    // applied now + 14 PHI days → the stamped phi_clears_on
+    expect(row[0].phi_clears_on).toBe(row[0].expected);
   });
 
   it("the PHI window surfaces on v_plot_phi_status as active (blocks a pick) and on the planner", async () => {
@@ -280,10 +284,13 @@ describe("P2-S12 — log_spray CERTIFICATION gate (fail-closed, the slice's keys
   });
 
   it("is exactly-once — a valid spray replay returns the same id and writes one row", async () => {
+    // Same idempotency_key 'spray-valid' as the prior test — the replay guard short-
+    // circuits BEFORE the applied_at clamp, so a later (still-recent) timestamp here
+    // returns the original id without re-validating or inserting a second row.
     const again = await h.query<{ log_spray: number }>(
       sql(`select log_spray(
         'p-talamanca', 'Verdadero 600', 'imidacloprid', 14, 24,
-        '2026-06-20T08:00:00Z', 'w-agro', 'dev', 3, 'spray-valid'
+        now() - interval '1 hour', 'w-agro', 'dev', 3, 'spray-valid'
       ) as log_spray;`),
     );
     expect(Number(again[0].log_spray)).toBeGreaterThan(0);
@@ -331,6 +338,207 @@ describe("P2-S12 — log_spray PHI/REI gate (re-entry conflict, fail-closed)", (
       sql(`select count(*)::int as n from spray_application where idempotency_key = 'rei-conflict';`),
     );
     expect(rows[0].n).toBe(0); // fail-closed
+  });
+});
+
+// ─────────────── log_spray applied_at clamp (the PHI-bypass keystone) ────────
+// The load-bearing S12 compliance invariant: a spray cannot be logged with a
+// backdated/forged applied_at that fakes a clear PHI/REI window. The entire safety
+// window (phi_clears_on / rei_clears_at) is derived from applied_at, and
+// v_plot_phi_status.phi_active is exactly (phi_clears_on >= current_date), so a
+// client-controlled applied_at pushed into the past makes a freshly-sprayed plot
+// look PHI-clear while the chemical is still toxic. The DB write door must clamp it.
+describe("P2-S12 — log_spray clamps applied_at (no backdated/future PHI bypass)", () => {
+  let h: Harness;
+  beforeAll(async () => {
+    h = await freshDb();
+    await seedFixtures(h);
+    await grantCert(h, "w-agro", "2027-12-31");
+  });
+  afterAll(async () => h.close());
+
+  it("RAISES for a materially BACKDATED applied_at (PHI window cannot be faked clear)", async () => {
+    // Spray imidacloprid (PHI 14d) physically TODAY, but logged 15 days in the past.
+    // Pre-fix: phi_clears_on = today-1 → phi_active=false the instant it lands.
+    await expect(
+      h.query(sql(`select log_spray(
+        'p-las-lagunas', 'Verdadero 600', 'imidacloprid', 14, 24,
+        now() - interval '15 days', 'w-agro', 'dev', 10, 'spray-backdated'
+      );`)),
+    ).rejects.toThrow(/spray gate|applied_at|past/i);
+    const rows = await h.query<{ n: number }>(
+      sql(`select count(*)::int as n from spray_application where idempotency_key = 'spray-backdated';`),
+    );
+    expect(rows[0].n).toBe(0); // fail-closed: nothing written
+  });
+
+  it("when an honest spray IS logged, its PHI window stays active (no bypass remains)", async () => {
+    // A spray applied now with PHI 14d MUST leave the plot PHI-active.
+    await h.query(sql(`select log_spray(
+      'p-las-lagunas', 'Verdadero 600', 'imidacloprid', 14, 24,
+      now(), 'w-agro', 'dev', 11, 'spray-honest'
+    );`));
+    const phi = await h.query<{ phi_active: boolean }>(
+      sql(`select phi_active from v_plot_phi_status where plot_id = 'p-las-lagunas';`),
+    );
+    expect(phi[0].phi_active).toBe(true);
+  });
+
+  it("RAISES for a FUTURE applied_at beyond the clock-skew tolerance", async () => {
+    await expect(
+      h.query(sql(`select log_spray(
+        'p-talamanca', 'Verdadero 600', 'imidacloprid', 14, 24,
+        '2027-01-01T00:00:00Z', 'w-agro', 'dev', 12, 'spray-future'
+      );`)),
+    ).rejects.toThrow(/spray gate|applied_at|future/i);
+    const rows = await h.query<{ n: number }>(
+      sql(`select count(*)::int as n from spray_application where idempotency_key = 'spray-future';`),
+    );
+    expect(rows[0].n).toBe(0);
+  });
+
+  it("RAISES for a NULL applied_at with a clean message", async () => {
+    await expect(
+      h.query(sql(`select log_spray(
+        'p-talamanca', 'Verdadero 600', 'imidacloprid', 14, 24,
+        null, 'w-agro', 'dev', 13, 'spray-nullapplied'
+      );`)),
+    ).rejects.toThrow(/spray gate|applied_at|required/i);
+  });
+});
+
+// ─────────────── v_worker_certs_valid lower bound (future cert) ──────────────
+// A cert whose issued_at is in the FUTURE must NOT be valid today — otherwise an
+// untrained applicator with a not-yet-effective pesticide-handling cert passes the
+// fail-closed GATE 1. The view (the single source GATE 1 trusts) must bound issued_at.
+describe("P2-S12 — a FUTURE-issued cert is NOT valid today (spray gate stays closed)", () => {
+  let h: Harness;
+  beforeAll(async () => {
+    h = await freshDb();
+    await seedFixtures(h);
+  });
+  afterAll(async () => h.close());
+
+  it("a future-issued pesticide-handling cert does NOT appear in v_worker_certs_valid", async () => {
+    await h.query(sql(`
+      insert into worker_certifications (worker_id, cert_kind, issued_at, expires_at, issuer)
+      values ('w-06', 'pesticide-handling', '2027-01-01', '2030-01-01', 'MIDA Panamá');
+    `));
+    const rows = await h.query<{ n: number }>(
+      sql(`select count(*)::int as n from v_worker_certs_valid
+           where worker_id = 'w-06' and cert_kind = 'pesticide-handling';`),
+    );
+    expect(rows[0].n).toBe(0);
+  });
+
+  it("log_spray RAISES for a worker holding ONLY a future-issued cert", async () => {
+    await expect(
+      h.query(sql(`select log_spray(
+        'p-cuesta-piedra', 'Verdadero 600', 'imidacloprid', 14, 24, now(), 'w-06',
+        'dev', 20, 'spray-futurecert'
+      );`)),
+    ).rejects.toThrow(/spray gate|certification|cert/i);
+    const rows = await h.query<{ n: number }>(
+      sql(`select count(*)::int as n from spray_application where idempotency_key = 'spray-futurecert';`),
+    );
+    expect(rows[0].n).toBe(0);
+  });
+});
+
+// ─────────────── v_plot_phi_status must not mask a newer spray's REI ─────────
+// distinct-on max(phi_clears_on) returns ONE row per plot — the spray with the
+// longest PHI. When an OLD long-PHI spray (REI long cleared) coexists with a NEWER
+// short-PHI spray whose REI is still OPEN, the old row wins and rei_active is read
+// off the wrong spray → the live re-entry hazard is hidden. Aggregate over all sprays.
+describe("P2-S12 — v_plot_phi_status surfaces ANY still-active REI (no max-PHI masking)", () => {
+  let h: Harness;
+  beforeAll(async () => {
+    h = await freshDb();
+    await seedFixtures(h);
+    await grantCert(h, "w-agro", "2027-12-31");
+    // OLD spray: huge PHI (365d), tiny REI (1h) → REI long cleared, but it wins
+    // distinct-on max(phi_clears_on). Insert directly (append-only ledger) so we can
+    // place it in the past without tripping the new applied_at clamp on log_spray.
+    await h.query(sql(`
+      insert into spray_application (plot_id, product, active_ingredient, phi_days, rei_hours,
+                                     applied_at, phi_clears_on, rei_clears_at, worker_id,
+                                     device_id, device_seq, idempotency_key)
+      values ('p-talamanca', 'OldProd', 'ai-old', 365, 1,
+              now() - interval '30 days',
+              (now() - interval '30 days' + interval '365 days')::date,
+              now() - interval '30 days' + interval '1 hour',
+              'w-agro', 'seed', 100, 'phi-old');
+    `));
+    // NEW spray today: short PHI (1d), long REI (240h ≈ 10 days, still OPEN).
+    await h.query(sql(`select log_spray(
+      'p-talamanca', 'NewProd', 'ai-new', 1, 240, now(), 'w-agro', 'dev', 101, 'phi-new'
+    );`));
+  });
+  afterAll(async () => h.close());
+
+  it("reports rei_active=true because the NEWER spray's REI is still open", async () => {
+    const phi = await h.query<{ rei_active: boolean; phi_active: boolean }>(
+      sql(`select rei_active, phi_active from v_plot_phi_status where plot_id = 'p-talamanca';`),
+    );
+    expect(phi.length).toBe(1);
+    expect(phi[0].rei_active).toBe(true); // pre-fix: false (read off the OLD max-PHI row)
+  });
+});
+
+// ─────────────── NULL idempotency-key guard (exactly-once cannot be bypassed) ─
+// idempotency_key is a nullable UNIQUE column; the replay guard is `where
+// idempotency_key = p_idempotency_key`, which is UNKNOWN for NULL (never matches),
+// and a NULL never conflicts in a UNIQUE index — so every NULL-key call inserts a
+// fresh row (and record_scouting fires a fresh control task). Mirror the sibling
+// harvest-planner guard: a NULL/blank key is rejected.
+describe("P2-S12 — NULL idempotency_key is rejected (no exactly-once bypass)", () => {
+  let h: Harness;
+  beforeAll(async () => {
+    h = await freshDb();
+    await seedFixtures(h);
+    await grantCert(h, "w-agro", "2027-12-31");
+  });
+  afterAll(async () => h.close());
+
+  it("record_scouting RAISES on a NULL key and fires NO task / writes NO row", async () => {
+    const tasksBefore = await h.query<{ n: number }>(sql(`select count(*)::int as n from tasks;`));
+    const obsBefore = await h.query<{ n: number }>(sql(`select count(*)::int as n from scouting_observation;`));
+    await expect(
+      h.query(sql(`select record_scouting(
+        'p-cuesta-piedra', 'broca', 8, 'borings', 'w-agro', now(), 'scout', 1, null
+      );`)),
+    ).rejects.toThrow(/idempotency_key is required/i);
+    const tasksAfter = await h.query<{ n: number }>(sql(`select count(*)::int as n from tasks;`));
+    const obsAfter = await h.query<{ n: number }>(sql(`select count(*)::int as n from scouting_observation;`));
+    expect(tasksAfter[0].n).toBe(tasksBefore[0].n);
+    expect(obsAfter[0].n).toBe(obsBefore[0].n);
+  });
+
+  it("record_scouting RAISES on a blank key", async () => {
+    await expect(
+      h.query(sql(`select record_scouting(
+        'p-cuesta-piedra', 'broca', 8, 'borings', 'w-agro', now(), 'scout', 2, '   '
+      );`)),
+    ).rejects.toThrow(/idempotency_key is required/i);
+  });
+
+  it("log_spray RAISES on a NULL key and writes NO spray row", async () => {
+    const before = await h.query<{ n: number }>(sql(`select count(*)::int as n from spray_application;`));
+    await expect(
+      h.query(sql(`select log_spray(
+        'p-talamanca', 'Verdadero 600', 'imidacloprid', 14, 24, now(), 'w-agro', 'dev', 5, null
+      );`)),
+    ).rejects.toThrow(/idempotency_key is required/i);
+    const after = await h.query<{ n: number }>(sql(`select count(*)::int as n from spray_application;`));
+    expect(after[0].n).toBe(before[0].n);
+  });
+
+  it("log_spray RAISES on a blank key", async () => {
+    await expect(
+      h.query(sql(`select log_spray(
+        'p-talamanca', 'Verdadero 600', 'imidacloprid', 14, 24, now(), 'w-agro', 'dev', 6, ''
+      );`)),
+    ).rejects.toThrow(/idempotency_key is required/i);
   });
 });
 

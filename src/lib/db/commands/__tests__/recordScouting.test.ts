@@ -27,6 +27,8 @@ const validRaw = (): Record<string, unknown> => ({
   notes: "borings on the south rows",
   workerId: "w-agro",
   occurredAt: "2026-06-21T09:00:00Z",
+  deviceId: "server",
+  deviceSeq: 11,
   idempotencyKey: "scout-001",
 });
 
@@ -62,6 +64,15 @@ describe("validateScouting", () => {
     }
   });
 
+  it("rejects a blank device id (offline-replay identity is required)", () => {
+    expect(validateScouting({ ...validRaw(), deviceId: "" }).ok).toBe(false);
+  });
+
+  it("rejects a non-integer/negative device seq", () => {
+    expect(validateScouting({ ...validRaw(), deviceSeq: -1 }).ok).toBe(false);
+    expect(validateScouting({ ...validRaw(), deviceSeq: 2.5 }).ok).toBe(false);
+  });
+
   it("rejects a blank idempotency key", () => {
     expect(validateScouting({ ...validRaw(), idempotencyKey: "" }).ok).toBe(false);
   });
@@ -86,6 +97,8 @@ describe("recordScouting", () => {
       p_notes: "borings on the south rows",
       p_worker_id: "w-agro",
       p_occurred_at: "2026-06-21T09:00:00Z",
+      p_device_id: "server",
+      p_device_seq: 11,
       p_idempotency_key: "scout-001",
     });
     expect(r.ok).toBe(true);

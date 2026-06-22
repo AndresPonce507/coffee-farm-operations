@@ -271,24 +271,35 @@ create view v_ipm_threshold with (security_invoker = on) as
   join plots p on p.id = l.plot_id;
 
 -- ──────────────────────────────────────────────────────────────────────────
--- 7. v_plot_phi_status — the active PHI/REI window per plot (the most-recent spray
---    whose PHI window has not yet cleared). Drives the countdown chips AND the
---    harvest-planning block: phi_active = a pick CANNOT be scheduled inside it.
+-- 7. v_plot_phi_status — the active PHI/REI window per plot. Drives the countdown
+--    chips AND the harvest-planning block: phi_active = a pick CANNOT be scheduled
+--    inside it; rei_active = a worker CANNOT re-enter.
+--
+--    phi_active / rei_active are PLOT-LEVEL aggregates over ALL sprays — phi_active
+--    is true if ANY spray's PHI is still open, rei_active is true if ANY spray's REI
+--    is still open. They must NOT be read off a single "winning" row: PHI and REI are
+--    INDEPENDENT intervals, so an OLD long-PHI spray (REI long cleared) collapsing the
+--    plot to one row would mask a NEWER short-PHI spray whose REI is still open —
+--    telling a worker the plot is safe to re-enter while a live re-entry interval is
+--    open. The representative product/applied_at name the hazardous spray (the one
+--    whose REI is open, else the longest-PHI one), not an arbitrary stale row.
 -- ──────────────────────────────────────────────────────────────────────────
 create view v_plot_phi_status with (security_invoker = on) as
-  select distinct on (s.plot_id)
-    s.plot_id,
+  select
+    p.id   as plot_id,
     p.name as plot_name,
-    s.product,
-    s.active_ingredient,
-    s.applied_at,
-    s.phi_clears_on,
-    s.rei_clears_at,
-    (s.phi_clears_on >= current_date) as phi_active,
-    (s.rei_clears_at >= now())        as rei_active
+    (array_agg(s.product
+       order by (s.rei_clears_at >= now()) desc, s.phi_clears_on desc))[1] as product,
+    (array_agg(s.active_ingredient
+       order by (s.rei_clears_at >= now()) desc, s.phi_clears_on desc))[1] as active_ingredient,
+    max(s.applied_at)                        as applied_at,
+    max(s.phi_clears_on)                      as phi_clears_on,
+    max(s.rei_clears_at)                      as rei_clears_at,
+    bool_or(s.phi_clears_on >= current_date)  as phi_active,
+    bool_or(s.rei_clears_at >= now())         as rei_active
   from spray_application s
   join plots p on p.id = s.plot_id
-  order by s.plot_id, s.phi_clears_on desc;
+  group by p.id, p.name;
 
 -- v_spray_history — the full append-only spray log per plot (history surface).
 create view v_spray_history with (security_invoker = on) as
@@ -383,6 +394,17 @@ declare
   plot_name  text;
   prio       priority;
 begin
+  -- exactly-once must not silently depend on the caller sending a non-null key:
+  -- `idempotency_key = NULL` is UNKNOWN (never short-circuits the replay guard) and a
+  -- UNIQUE column permits unlimited NULLs, so a NULL key would let every call insert a
+  -- fresh observation AND fire a fresh control task onto the board (duplicate pest-
+  -- control tasks for one scout). Reject it up front — mirrors the harvest-planner
+  -- sibling RPCs (record_maturation_signal et al.).
+  if p_idempotency_key is null or btrim(p_idempotency_key) = '' then
+    raise exception 'idempotency_key is required'
+      using errcode = 'invalid_parameter_value';
+  end if;
+
   select id into existing from scouting_observation where idempotency_key = p_idempotency_key;
   if existing is not null then
     return existing;                                     -- exactly-once replay
@@ -472,6 +494,16 @@ declare
   v_phi_clears  date;
   v_rei_clears  timestamptz;
 begin
+  -- exactly-once must not silently depend on the caller sending a non-null key:
+  -- `idempotency_key = NULL` is UNKNOWN (never short-circuits the replay guard) and a
+  -- UNIQUE column permits unlimited NULLs, so a NULL key would let every call insert a
+  -- fresh cert/PHI-gated spray row (a compliance-record duplication). Reject it up
+  -- front — mirrors the harvest-planner sibling RPCs (schedule_pasada et al.).
+  if p_idempotency_key is null or btrim(p_idempotency_key) = '' then
+    raise exception 'idempotency_key is required'
+      using errcode = 'invalid_parameter_value';
+  end if;
+
   select id into existing from spray_application where idempotency_key = p_idempotency_key;
   if existing is not null then
     return existing;                                     -- exactly-once replay
@@ -482,6 +514,29 @@ begin
   end if;
   if not exists (select 1 from workers where id = p_worker_id) then
     raise exception 'unknown worker %', p_worker_id using errcode = 'foreign_key_violation';
+  end if;
+
+  -- APPLIED_AT CLAMP (fail-closed). The ENTIRE PHI/REI safety window is derived from
+  -- p_applied_at, and v_plot_phi_status.phi_active is exactly (phi_clears_on >=
+  -- current_date) — so a client-controlled applied_at is fully attacker-derivable. A
+  -- spray logged into the PAST produces a phi_clears_on already <= current_date (the
+  -- plot looks PHI-clear while the chemical is still toxic) and a rei_clears_at that
+  -- lands already-expired (re-entry inside the real REI). A spray logged into the
+  -- FUTURE poisons the countdown chips and the append-only compliance ledger. Clamp
+  -- to a tight window around now() — small clock-skew tolerance forward, a couple of
+  -- days back for a genuinely-delayed offline (Ngäbe-Buglé field) entry — so the
+  -- PHI/REI clock can never be shortened by a fabricated timestamp.
+  if p_applied_at is null then
+    raise exception 'spray gate: applied_at is required'
+      using errcode = 'check_violation';
+  end if;
+  if p_applied_at > now() + interval '5 minutes' then
+    raise exception 'spray gate: applied_at % is in the future — refused', p_applied_at
+      using errcode = 'check_violation';
+  end if;
+  if p_applied_at < now() - interval '2 days' then
+    raise exception 'spray gate: applied_at % is implausibly far in the past — refused', p_applied_at
+      using errcode = 'check_violation';
   end if;
 
   -- GATE 1 — CERTIFICATION (fail-closed). The applicator MUST hold a currently

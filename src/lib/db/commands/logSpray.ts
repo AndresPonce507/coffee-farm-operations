@@ -37,9 +37,21 @@ export interface SprayInput {
   appliedAt: string;
   /** The applicator — the cert-gated worker (`worker_id`, required). */
   workerId: string;
+  /** Offline node identity — `device_id` (D5, the offline-replay key half). */
+  deviceId: string;
+  /** Per-device monotonic Lamport counter — `device_seq` (D4 replay safety). */
+  deviceSeq: number;
   /** Exactly-once anchor — the DB dedupes on this (`idempotency_key`). */
   idempotencyKey: string;
 }
+
+/**
+ * The skew window the DB's not-future guard allows (`now() + 5 minutes`,
+ * migration 20260622106000). Mirrored here only so an obviously-future
+ * `applied_at` surfaces as a friendly inline error before the round-trip — the
+ * SQL guard is the real, un-bypassable enforcement (ADR-002).
+ */
+const FUTURE_SKEW_MS = 5 * 60 * 1000;
 
 /**
  * Pure validation of a raw spray record — mirrors the `log_spray` DB constraints
@@ -81,10 +93,23 @@ export function validateSpray(
   const appliedAt = trimmed(raw.appliedAt);
   if (!isISOTimestamp(appliedAt)) {
     errors.appliedAt = "A valid application time is required.";
+  } else if (Date.parse(appliedAt) > Date.now() + FUTURE_SKEW_MS) {
+    // Mirror the DB not-future guard so a back-/forward-dated applied_at that
+    // would fake a clear window surfaces as a clear inline error. The SQL RPC
+    // is the real enforcement — it RAISES fail-closed regardless of this check.
+    errors.appliedAt = "The application time can't be in the future.";
   }
 
   const aiRaw = trimmed(raw.activeIngredient);
   const activeIngredient = aiRaw === "" ? null : aiRaw;
+
+  const deviceId = trimmed(raw.deviceId);
+  if (!deviceId) errors.deviceId = "A device id is required.";
+
+  const deviceSeq = toNumber(raw.deviceSeq);
+  if (deviceSeq === null || deviceSeq < 0 || !Number.isInteger(deviceSeq)) {
+    errors.deviceSeq = "A device sequence is required.";
+  }
 
   const idempotencyKey = trimmed(raw.idempotencyKey);
   if (!idempotencyKey) errors.idempotencyKey = "An idempotency key is required.";
@@ -100,6 +125,8 @@ export function validateSpray(
       reiHours,
       appliedAt,
       workerId,
+      deviceId,
+      deviceSeq: deviceSeq as number,
       idempotencyKey,
     },
   };
@@ -142,6 +169,8 @@ export async function logSpray(
     p_rei_hours: parsed.data.reiHours,
     p_applied_at: parsed.data.appliedAt,
     p_worker_id: parsed.data.workerId,
+    p_device_id: parsed.data.deviceId,
+    p_device_seq: parsed.data.deviceSeq,
     p_idempotency_key: parsed.data.idempotencyKey,
   });
 
