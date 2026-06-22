@@ -1,0 +1,106 @@
+# Janson Coffee — Jobs To Be Done (SSOT)
+# Bootstrapped during DISCUSS wave for feature phase-5-connected-estate (2026-06-22).
+# Every user story carries a `job_id` referencing one of these (or `infrastructure-only`
+# with an infrastructure_rationale). N stories : 1 job is expected.
+#
+# Grounding: the app is a Next.js 15 / Supabase farm-ops cockpit for a real family farm
+# (Janson Coffee, Volcán, Chiriquí, Panamá). ~58 tables on an append-only hash-chained
+# `lot_event` spine; all writes flow through SECURITY DEFINER command RPCs; reactive
+# propagation already exists via SQL views/matviews (mv_lot_cost, season_summary_view,
+# v_weigh_*). 17 tabs. The Phase-5 mandate: "No dead UI — wire everything, deepen
+# everything."
+
+schema_version: 1
+
+jobs:
+  - id: J1
+    co_primary: true
+    name: "Enter-once, trust-everywhere"
+    job_story: >
+      When I (the owner or agronomist) record one field fact — a picker's weigh-in, a
+      stage advance, a cost — I want every downstream number it touches (pay, attendance,
+      lot mass, mill intake, COGS, the season headline) to update by itself, so I can
+      trust the whole cockpit without re-entering the same fact in five screens.
+    functional: "Record a fact once; all derived numbers reconcile automatically."
+    emotional: "Confidence that the numbers agree — no nagging 'did I update the other screen?'"
+    social: "Show a buyer/auditor figures that provably trace to one entered truth."
+    forces:
+      push: "Re-keying the same weight into pay, mill, and traceability is error-prone and slow; numbers disagree and nobody knows which is right."
+      pull: "One tap ripples everywhere; the season headline already reflects this morning's picking."
+      anxiety: "If the auto-ripple is wrong I won't notice until payroll or a buyer does."
+      habit: "Today figures live in a paper notebook and three spreadsheets that are reconciled by hand on Sundays."
+    opportunity:
+      importance: 9
+      satisfaction: 3
+      score: 15  # importance + (importance - satisfaction)
+    grounding:
+      reactive_spine: "record_weigh_in (20260622102000) ripples to PAY, ATTENDANCE, TRACEABILITY (record_cherry_intake -> harvests + lots + lot_edges), MILL-INTAKE (v_weigh_by_lot, v_lot_weigh_reconciliation); workers.today_kg feeds the dashboard; season_summary_view sums harvests; mv_lot_cost refreshes on the cost write path."
+
+  - id: J2
+    co_primary: false
+    name: "One place, whole story"
+    job_story: >
+      When I'm asked about a specific lot, plot, worker, crew, batch, or pay-period, I
+      want to open ONE dossier and see its entire life across every tab, so I can answer
+      the question without hopping between seventeen screens and stitching it together.
+    functional: "Click any entity and see its full cross-tab history in one view."
+    emotional: "Relief — the answer is in one place, not scattered."
+    social: "Hand a buyer a single shareable lot dossier (lineage + EUDR + cost + cup score)."
+    forces:
+      push: "Answering 'what happened to lot JC-712?' means visiting Harvests, Processing, Ferment, Drying, QC, Costing, EUDR separately."
+      pull: "A lot's genealogy graph + EUDR dossier already render at /lots/[code] — but nothing links to it."
+      anxiety: "A dossier that's incomplete is worse than none — it must show the whole story."
+      habit: "The owner keeps the whole story in his head and a binder."
+    opportunity:
+      importance: 8
+      satisfaction: 2
+      score: 14
+    grounding:
+      existing_dossiers: "/lots/[code] (genealogy + EUDR, getLotGenealogy/getLotEudrDossier), /ferment/[batch], /qc/cup/[lot] already exist and are deep, but are ORPHANS — sidebar NAV (sidebar.tsx) links to none of them; the lot page's own S9 note says nav wiring is 'a later slice'."
+      missing_dossiers: "No /plots/[id], /workers/[id], /crew/[id], /dispatch/[id], /pay-period/[id], drying-station, spray-record dossiers yet."
+
+  - id: J3
+    co_primary: false
+    name: "A mistake can't slip through"
+    job_story: >
+      When a condition that should block work exists — an active pre-harvest interval
+      after a spray, a QC hold, out-of-spec moisture — I want the system to auto-block or
+      flag it everywhere it matters, so an unsafe or non-compliant action can't slip
+      through because someone didn't check the right tab.
+    functional: "Cross-tab guards auto-block/flag PHI, QC-hold, moisture violations."
+    emotional: "Peace of mind that the system has my back on food safety and compliance."
+    social: "Protect a ~90% Ngäbe-Buglé crew and the farm's Best-of-Panama / EUDR standing."
+    forces:
+      push: "A pick scheduled inside a live pesticide-residue window is a food-safety and EUDR hole nobody catches manually."
+      pull: "The planner already refuses a pick before phi_clears_on (S12-B, fail-closed)."
+      anxiety: "An over-eager block that stops legitimate work in the field."
+      habit: "Today PHI/holds are tracked, if at all, on a clipboard."
+    opportunity:
+      importance: 8
+      satisfaction: 4
+      score: 12
+    grounding:
+      live_gate: "schedule_pasada / replan_pasada consult v_plot_phi_status.phi_clears_on, fail-closed (20260623110000_phi_planner_gate). place_qc_hold, record_moisture exist as the QC/moisture spine to extend cross-tab."
+
+  - id: J4
+    co_primary: true   # CO-PRIMARY with J1 per Andres's mandate
+    name: "Every tab real + every click wired"
+    job_story: >
+      When I open any of the seventeen tabs and touch any control, I want it to do
+      something real — read or write live data, open a connected dossier, or trigger a
+      cross-tab effect — so the cockpit is a working instrument end to end, never a demo
+      with dead buttons or mock numbers.
+    functional: "Every tab is materially deep; every interactive element is wired to real data or a real action."
+    emotional: "Pride and trust — nothing on screen is fake; every click pays off."
+    social: "A portfolio-grade, demoable estate cockpit the family and a buyer can actually use."
+    forces:
+      push: "Thin/demo tabs and cosmetic controls erode trust the moment a click does nothing."
+      pull: "The backend (RPCs + views) already exists for most tabs — the wiring is the gap, not the data."
+      anxiety: "Wiring everything at once risks half-finished tabs; depth must land WITH the wiring, per slice."
+      habit: "Phase-1 shipped a beautiful but mock-bound dashboard (page.tsx: 'every section reads from canonical mock data')."
+    opportunity:
+      importance: 10
+      satisfaction: 2
+      score: 18
+    grounding:
+      mock_coupling: "Dashboard sections are prop-less Server Components reading src/lib/data/* mock despite live src/lib/db/* getters + season_summary_view existing. The per-tab wire-up audit (wire-up-audit.md) enumerates every element's state."

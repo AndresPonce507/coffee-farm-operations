@@ -1,0 +1,19 @@
+schema_version: 1
+persona:
+  id: picker
+  name: "Lupita (the Picker)"
+  role: "Cherry picker (Ngäbe-Buglé, seasonal migrant)"
+  context: >
+    One of ~90% Ngäbe-Buglé migrant pickers. Paid por obra (by the lata/kg). Interacts with
+    the app only at the weigh station — badged by the crew-lead — and cares that her weight,
+    and therefore her pay, is captured correctly and that she can see her running total for
+    the day. Limited literacy assumed; offline; gloves on.
+  primary_jobs: [J1]
+  goals:
+    - "My weight is recorded right and I can see my total for the day."
+    - "My pay matches what I picked."
+  frustrations:
+    - "A weigh-in that's slow, fiddly, or that I can't confirm."
+    - "Doubt that the number is correct."
+  constraints: ["offline", "glove-friendly", "minimal text / large clear numbers", "es-PA / Ngäbere-aware"]
+  success_signal: "Sees her running kg-today tally tick up the instant her lata is weighed."

@@ -1,0 +1,20 @@
+schema_version: 1
+persona:
+  id: agronomist
+  name: "Inés (the Agronomist)"
+  role: "Agronomist / quality lead"
+  context: >
+    Owns plant health, spray records, scouting, drying/reposo, and cupping quality. Works
+    desktop in the office and phone in the field. Must keep picks out of active pre-harvest
+    intervals and lots free of QC/moisture problems. Reads satellite + scouting to decide
+    where to act.
+  primary_jobs: [J3, J2, J4]
+  goals:
+    - "Never let a pick be scheduled inside an active PHI window."
+    - "See a plot's spray + scouting + satellite + PHI status in one place."
+    - "Trace a cup score back to the exact lot, drying station, and ferment batch."
+  frustrations:
+    - "PHI windows tracked on a clipboard; a pick can land in a residue window unnoticed."
+    - "Scouting, satellite, and spray data live in separate tabs that don't talk."
+  constraints: ["food-safety + EUDR compliance is non-negotiable", "es-PA first", "$0"]
+  success_signal: "The planner refuses an unsafe pick and explains why in a human sentence."

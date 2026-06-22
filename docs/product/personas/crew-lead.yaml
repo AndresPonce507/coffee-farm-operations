@@ -1,0 +1,20 @@
+schema_version: 1
+persona:
+  id: crew-lead
+  name: "Marcelino (the Crew-lead / Dispatcher)"
+  role: "Crew-lead and dispatcher"
+  context: >
+    Leads a picking crew (~90% Ngäbe-Buglé migrant pickers) and dispatches crews to plots.
+    Phone-first, frequently signal-dead at 1,700 masl. Runs the weigh station — the single
+    most-used screen on the farm. Needs the per-picker tally to be correct and instant, and
+    dispatch to reach crews and come back acknowledged.
+  primary_jobs: [J1, J4, J2]
+  goals:
+    - "Weigh a picker in under 3 seconds, glove-friendly, offline."
+    - "See today's per-picker and per-plot tallies update live as latas are emptied."
+    - "Send a crew to a plot and know they got it."
+  frustrations:
+    - "Re-keying weights; tallies that lag or disagree with pay."
+    - "No signal in the field breaking the capture."
+  constraints: ["offline-first", "glove-friendly large tap targets", "es-PA first", "$0"]
+  success_signal: "A tap at 1,700 masl with no signal is durable and the tally updates."
