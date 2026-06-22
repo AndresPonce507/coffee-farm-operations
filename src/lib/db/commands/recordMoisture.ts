@@ -117,6 +117,17 @@ function friendlyRpcError(
   if (error.code === "23503" || /foreign key constraint/i.test(error.message)) {
     return `Lot ${lotCode} doesn't exist — choose a lot that's in the mill.`;
   }
+  // `moisture_readings` carries BOTH unique(idempotency_key) AND
+  // unique(device_id, device_seq). The RPC short-circuits a genuine replay on
+  // `idempotency_key` BEFORE the INSERT, so the only path to a 23505 reaching here
+  // is a NON-replay collision on `(device_id, device_seq)` — a distinct reading
+  // that was rejected and LOST (e.g. two devices sharing a `device_id`, or a
+  // reused/forked sequence counter). Disambiguate by constraint NAME, not bare
+  // SQLSTATE, so a dropped reading surfaces as a real error instead of the
+  // benign "already recorded" message. (#131)
+  if (/device_id_device_seq/i.test(error.message)) {
+    return "This reading clashed with another from the same device — its sequence number was reused. Re-sync the device and try again.";
+  }
   if (
     error.code === "23505" ||
     /duplicate key value|unique constraint/i.test(error.message)

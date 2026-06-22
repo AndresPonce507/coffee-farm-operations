@@ -42,6 +42,77 @@ export function registerCommand(rpc: string, action: ActionFn): void {
   registry.set(rpc, action);
 }
 
+/**
+ * The built-in command handler for the genesis field event, `record_weigh_in`
+ * (P2-S2). Without this, every offline-captured weigh-in would dead-letter at
+ * `routerTransport` ("No handler registered") and NEVER reach the server —
+ * silent field-data loss on the most-used screen. This is the transport the S0
+ * outbox replays each queued weigh-in against on reconnect.
+ *
+ * It bridges the durable queue envelope to the Server Action:
+ *   - the queued `args` are the snake_case `p_*` RPC envelope; the action reads
+ *     camelCase form fields and rebuilds that envelope server-side, so we map
+ *     `p_*` back to the field names and post a `FormData` (the action's input);
+ *   - the outbox-stamped monotonic `deviceSeq` (not the raw client `0`) is sent
+ *     so the replay carries the same `(device_id, device_seq)` the queue minted;
+ *   - a `success` result → `{ ok: true }` (entry marked `done`);
+ *   - a deterministic `error` result → `{ ok: false, message }` (dead-letter,
+ *     surfaced for the operator — never blindly retried);
+ *   - a THROW (the RSC/Server-Action call itself failed: offline, 5xx) is left
+ *     to propagate so `routerTransport` classifies it `network-error` and the
+ *     entry STAYS queued for the next reconnect — no loss, no false dead-letter.
+ */
+const recordWeighInHandler: ActionFn = async (envelope) => {
+  // Lazy import so the `"use server"` graph (next/cache, Supabase) is pulled in
+  // only when a weigh-in actually drains — never at module load (keeps the
+  // runtime importable in any environment, SSR or test, and tree-light).
+  const { recordWeighInAction } = await import("@/app/(app)/weigh/actions");
+
+  const a = envelope.args;
+  const form = new FormData();
+  const set = (key: string, value: unknown) => {
+    if (value !== null && value !== undefined) form.set(key, String(value));
+  };
+  // p_* RPC envelope → the camelCase form fields recordWeighInAction reads.
+  set("workerId", a.p_worker_id);
+  set("plotId", a.p_plot_id);
+  set("cherriesKg", a.p_cherries_kg);
+  set("ripeness", a.p_ripeness);
+  set("brix", a.p_brix);
+  set("scaleSource", a.p_scale_source);
+  set("capturedLat", a.p_captured_lat);
+  set("capturedLng", a.p_captured_lng);
+  // Envelope identity wins over the (placeholder) args copies: occurred_at and
+  // the exactly-once key live on the entry; device_seq is the outbox-stamped
+  // monotonic value, not the client-side `0` the capture surface enqueues.
+  set("occurredAt", envelope.occurredAt);
+  set("deviceId", envelope.deviceId);
+  set("deviceSeq", envelope.deviceSeq);
+  set("idempotencyKey", envelope.idempotencyKey);
+
+  // A THROW here (network/RSC failure) intentionally escapes to routerTransport,
+  // which maps it to network-error so the entry stays queued.
+  const result = await recordWeighInAction(form);
+  if (result.status === "success") return { ok: true };
+  // Any non-success resolution is a deterministic server-side rejection →
+  // dead-letter, surfacing the message (only the "error" variant carries one).
+  return {
+    ok: false,
+    message: result.status === "error" ? result.message : undefined,
+  };
+};
+
+/**
+ * Register the built-in command handlers (idempotent). Called once when the
+ * runtime is constructed so the genesis weigh-in path is live the moment any
+ * surface enqueues — no separate init island required for the core capture loop.
+ */
+function registerBuiltins(): void {
+  if (!registry.has("record_weigh_in")) {
+    registry.set("record_weigh_in", recordWeighInHandler);
+  }
+}
+
 /** The router transport — dispatches each entry to its registered action. */
 function routerTransport(): CommandTransport {
   return {
@@ -82,6 +153,11 @@ let runtime: Runtime | null = null;
 /** Build (once) and return the tab-singleton runtime. */
 export function getRuntime(): Runtime {
   if (runtime) return runtime;
+
+  // Wire the built-in field-capture handlers (record_weigh_in, …) before the
+  // outbox can drain, so a queued genesis weigh-in delivers instead of
+  // dead-lettering for a missing handler.
+  registerBuiltins();
 
   const enabled = offlineEnabled();
   // Durable IndexedDB when capable; in-memory keeps online-only fully working.

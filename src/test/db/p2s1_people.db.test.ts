@@ -251,6 +251,338 @@ describe("P2-S1 — por-obra contracts (supersede + rate immutability + resolver
   });
 });
 
+describe("P2-S1 — por-obra resolver is window-authoritative (the supersede chain is audit metadata, not a resolution filter)", () => {
+  // REGRESSION (review HIGH idx 6/30/60): the supersede UPDATE in
+  // sign_por_obra_contract is window-blind — signing ANY contract stamps
+  // superseded_by on every still-open contract for the worker+task. v_active_por_obra
+  // previously filtered `superseded_by is null`, so the moment a second contract was
+  // signed the first vanished from the resolver for ANY date — INCLUDING dates inside
+  // its own effective window. A back-pay / audit / late-offline-sync lookup of a
+  // historical piece-rate then priced the day at NOTHING (a money/compliance failure
+  // for the piece-rate crew). The fix makes the date WINDOW the sole resolution
+  // authority. Each case below RETURNS ZERO ROWS on the pre-fix resolver.
+  let h: Harness;
+  beforeAll(async () => {
+    h = await freshDb();
+    await seedPeople(h);
+  });
+  afterAll(async () => h.close());
+
+  it("a non-overlapping FUTURE contract stays resolvable after a current-season contract is signed", async () => {
+    // pre-sign next season's rate, THEN sign this season's — non-overlapping windows.
+    await h.query(
+      `select sign_por_obra_contract('w-06','picking','per-lata',5.00,'2027-01-01','2027-12-31','fut-sig','fut-key');`,
+    );
+    await h.query(
+      `select sign_por_obra_contract('w-06','picking','per-lata',3.50,'2026-06-01','2026-12-31','now-sig','now-key');`,
+    );
+    // the 2027 rate the worker pre-agreed to still resolves inside its own window.
+    const r = await h.query<{ rate_usd: string }>(
+      `select rate_usd from v_active_por_obra('w-06','picking','2027-06-15');`,
+    );
+    expect(r.length).toBe(1);
+    expect(Number(r[0].rate_usd)).toBeCloseTo(5.0, 2);
+    // and the 2026 rate resolves inside its window.
+    const r2 = await h.query<{ rate_usd: string }>(
+      `select rate_usd from v_active_por_obra('w-06','picking','2026-08-15');`,
+    );
+    expect(Number(r2[0].rate_usd)).toBeCloseTo(3.5, 2);
+  });
+
+  it("a CLOSED historical window stays resolvable after a later contract is signed", async () => {
+    // A: closed Jan–Mar @3.00, then B: open from Jun @4.00 (the idx 60 scenario).
+    await h.query(
+      `select sign_por_obra_contract('w-08','picking','per-lata',3.00,'2026-01-01','2026-03-31','h-sig-a','h-key-a');`,
+    );
+    await h.query(
+      `select sign_por_obra_contract('w-08','picking','per-lata',4.00,'2026-06-01',null,'h-sig-b','h-key-b');`,
+    );
+    // Feb is inside A's window — it must still price at 3.00, not nothing.
+    const feb = await h.query<{ rate_usd: string }>(
+      `select rate_usd from v_active_por_obra('w-08','picking','2026-02-15');`,
+    );
+    expect(feb.length).toBe(1);
+    expect(Number(feb[0].rate_usd)).toBeCloseTo(3.0, 2);
+    // Jul is inside B's window — it prices at 4.00.
+    const jul = await h.query<{ rate_usd: string }>(
+      `select rate_usd from v_active_por_obra('w-08','picking','2026-07-15');`,
+    );
+    expect(Number(jul[0].rate_usd)).toBeCloseTo(4.0, 2);
+  });
+
+  it("an OPEN-ENDED contract superseded by a NARROWER, BOUNDED window stays resolvable on its own dates (the idx 155 partial-window strand)", async () => {
+    // The finding's exact scenario: an open-ended 'picking' rate from Jun-01 @3.00,
+    // THEN a later, NARROWER 'picking' contract bounded to July only @5.00. The signing
+    // RPC stamps superseded_by on the June row regardless of window, so a resolver that
+    // filtered `superseded_by is null` strands June: the worker's June latas would price
+    // at NOTHING. With the window as sole authority, June still resolves to 3.00.
+    await h.query(
+      `select sign_por_obra_contract('w-09','picking','per-lata',3.00,'2026-06-01',null,'pw-sig-a','pw-key-a');`,
+    );
+    await h.query(
+      `select sign_por_obra_contract('w-09','picking','per-lata',5.00,'2026-07-01','2026-07-31','pw-sig-b','pw-key-b');`,
+    );
+    // the June row got superseded (audit lineage stamped) — but is NOT deleted.
+    const superseded = await h.query<{ superseded_by: number | null }>(
+      `select superseded_by from por_obra_contracts where signature_ref='pw-sig-a';`,
+    );
+    expect(superseded[0].superseded_by).not.toBeNull();
+    // Jun-15 is inside the open-ended June window AND outside July's — it must STILL
+    // price at 3.00, the rate the worker actually picked under. (0 rows on pre-fix.)
+    const jun = await h.query<{ rate_usd: string }>(
+      `select rate_usd from v_active_por_obra('w-09','picking','2026-06-15');`,
+    );
+    expect(jun.length).toBe(1);
+    expect(Number(jun[0].rate_usd)).toBeCloseTo(3.0, 2);
+    // Jul-15 is covered by the bounded July contract — it prices at 5.00.
+    const jul = await h.query<{ rate_usd: string }>(
+      `select rate_usd from v_active_por_obra('w-09','picking','2026-07-15');`,
+    );
+    expect(Number(jul[0].rate_usd)).toBeCloseTo(5.0, 2);
+    // Aug-15: July's bounded window has ended; the open-ended June contract CONTINUES,
+    // so it resolves back to 3.00 (the open contract is not killed by a finite gap).
+    const aug = await h.query<{ rate_usd: string }>(
+      `select rate_usd from v_active_por_obra('w-09','picking','2026-08-15');`,
+    );
+    expect(aug.length).toBe(1);
+    expect(Number(aug[0].rate_usd)).toBeCloseTo(3.0, 2);
+  });
+
+  it("an OVERLAPPING renegotiation resolves later-effective inside the overlap, earlier-effective outside it", async () => {
+    // A: open from Jun-01 @3.50, B: open from Jun-10 @4.00 (both open, overlapping).
+    await h.query(
+      `select sign_por_obra_contract('w-13','picking','per-lata',3.50,'2026-06-01',null,'o-sig-a','o-key-a');`,
+    );
+    await h.query(
+      `select sign_por_obra_contract('w-13','picking','per-lata',4.00,'2026-06-10',null,'o-sig-b','o-key-b');`,
+    );
+    // Jun-05 is inside A's EXCLUSIVE pre-B window → the historically-agreed 3.50.
+    const pre = await h.query<{ rate_usd: string }>(
+      `select rate_usd from v_active_por_obra('w-13','picking','2026-06-05');`,
+    );
+    expect(pre.length).toBe(1);
+    expect(Number(pre[0].rate_usd)).toBeCloseTo(3.5, 2);
+    // Jun-20 is covered by both → the later-effective 4.00.
+    const post = await h.query<{ rate_usd: string }>(
+      `select rate_usd from v_active_por_obra('w-13','picking','2026-06-20');`,
+    );
+    expect(Number(post[0].rate_usd)).toBeCloseTo(4.0, 2);
+  });
+});
+
+describe("P2-S1 — verify_chain is attendance/worker-stream aware (the chain-verified badge actually verifies)", () => {
+  // REGRESSION (review HIGH idx 24/59): the Phase-1 verify_chain iterated ONLY
+  // lot_event, but the attendance ledger lives in attendance_event ('attendance:<id>')
+  // and the worker life-stream in worker_stream_event ('worker:<id>'). So
+  // verify_chain('attendance:<id>') found zero lot_event rows and returned a vacuous
+  // `true` — the "Chain verified" badge was a permanent false-positive that could never
+  // go amber even on a corrupted attendance ledger. The redefinition branches on the
+  // stream_key prefix and recomputes over the correct table.
+  let h: Harness;
+  beforeAll(async () => {
+    h = await freshDb();
+    await seedPeople(h);
+    await h.query(
+      `select record_attendance('w-06','clock-in',null,${DEV},'dev-A',1,'vc-att-1');`,
+    );
+    await h.query(
+      `select record_attendance('w-06','clock-out',null,'2026-06-22T18:00:00Z','dev-A',2,'vc-att-2');`,
+    );
+    // a worker-stream event too (enroll appends a WORKER_ENROLLED row).
+    await h.query(
+      `select enroll_crew_member('w-06','crew-norte',${DEV},'server',next_server_seq(),'vc-enr-1');`,
+    );
+  });
+  afterAll(async () => h.close());
+
+  it("verify_chain('attendance:<id>') is TRUE on a clean attendance ledger (and actually reads attendance_event)", async () => {
+    // sanity: the rows live in attendance_event, NOT lot_event.
+    const att = await h.query<{ n: number }>(
+      `select count(*)::int as n from attendance_event where stream_key='attendance:w-06';`,
+    );
+    expect(att[0].n).toBe(2);
+    const lot = await h.query<{ n: number }>(
+      `select count(*)::int as n from lot_event where stream_key='attendance:w-06';`,
+    );
+    expect(lot[0].n).toBe(0);
+    const r = await asAuthenticated(h, (hh) =>
+      hh.query<{ ok: boolean }>(`select verify_chain('attendance:w-06') as ok;`),
+    );
+    expect(r[0].ok).toBe(true);
+  });
+
+  it("verify_chain('attendance:<id>') FLIPS to FALSE once a stored attendance hash is tampered", async () => {
+    // mimic an attacker with raw DB access: disable the append-only block trigger,
+    // re-forge one row's payload (the hash no longer matches), re-enable. The pre-fix
+    // verify_chain (lot_event only) returns true regardless — this is the red→green.
+    await h.query(
+      `alter table attendance_event disable trigger attendance_event_block_mutation;`,
+    );
+    await h.query(
+      `update attendance_event set payload = '{"tampered": true}'::jsonb
+         where stream_key='attendance:w-06' and device_seq = 2;`,
+    );
+    await h.query(
+      `alter table attendance_event enable trigger attendance_event_block_mutation;`,
+    );
+    const r = await asAuthenticated(h, (hh) =>
+      hh.query<{ ok: boolean }>(`select verify_chain('attendance:w-06') as ok;`),
+    );
+    expect(r[0].ok).toBe(false);
+  });
+
+  it("verify_chain('worker:<id>') is TRUE on a clean worker stream and FALSE after tamper", async () => {
+    const clean = await asAuthenticated(h, (hh) =>
+      hh.query<{ ok: boolean }>(`select verify_chain('worker:w-06') as ok;`),
+    );
+    expect(clean[0].ok).toBe(true);
+    await h.query(
+      `alter table worker_stream_event disable trigger worker_stream_event_block_mutation;`,
+    );
+    await h.query(
+      `update worker_stream_event set payload = '{"tampered": true}'::jsonb
+         where stream_key='worker:w-06';`,
+    );
+    await h.query(
+      `alter table worker_stream_event enable trigger worker_stream_event_block_mutation;`,
+    );
+    const tampered = await asAuthenticated(h, (hh) =>
+      hh.query<{ ok: boolean }>(`select verify_chain('worker:w-06') as ok;`),
+    );
+    expect(tampered[0].ok).toBe(false);
+  });
+});
+
+describe("P2-S1 — exactly-once is namespaced per command kind (a shared key cannot return a foreign event)", () => {
+  // REGRESSION (review HIGH idx 40): enroll / rehire / sign / certify all write the
+  // single worker_stream_event ledger and each takes a caller-supplied idempotency_key.
+  // The old GLOBAL unique on the key let a key reused across command types
+  // short-circuit on a FOREIGN command's event (a rehire reusing an enroll key
+  // returned the enroll's event and reported success while opening no membership and
+  // skipping the eligibility gate; a sign reusing an enroll key returned NULL and
+  // dropped the contract). The (kind, idempotency_key) namespace makes each replay
+  // guard match only its OWN command kind.
+  let h: Harness;
+  beforeAll(async () => {
+    h = await freshDb();
+    await seedPeople(h);
+  });
+  afterAll(async () => h.close());
+
+  it("rehire reusing an enroll's key still OPENS its own membership (does not return the enroll event)", async () => {
+    await h.query(
+      `select enroll_crew_member('w-06','crew-norte',${DEV},'server',next_server_seq(),'shared-k1');`,
+    );
+    const before = await h.query<{ n: number }>(
+      `select count(*)::int as n from crew_memberships where worker_id='w-06';`,
+    );
+    // rehire with the SAME key — must perform its OWN rehire, not short-circuit.
+    await h.query(
+      `select rehire_worker('w-06','crew-tizingal','2026-2027',${DEV},'server',next_server_seq(),'shared-k1');`,
+    );
+    const after = await h.query<{ n: number }>(
+      `select count(*)::int as n from crew_memberships where worker_id='w-06';`,
+    );
+    expect(after[0].n).toBe(before[0].n + 1);
+    // a WORKER_REHIRED event exists under that key+kind (the rehire really happened).
+    const reh = await h.query<{ n: number }>(
+      `select count(*)::int as n from worker_stream_event
+         where idempotency_key='shared-k1' and kind='WORKER_REHIRED';`,
+    );
+    expect(reh[0].n).toBe(1);
+  });
+
+  it("rehire reusing an enroll's key still ENFORCES the eligibility gate (no foreign-event bypass)", async () => {
+    await h.query(`update worker_identity set rehire_eligible=false where worker_id='w-07';`);
+    await h.query(
+      `select enroll_crew_member('w-07','crew-norte',${DEV},'server',next_server_seq(),'shared-k2');`,
+    );
+    // a barred worker rehire under the same key must STILL raise (gate not skipped).
+    await expect(
+      h.query(
+        `select rehire_worker('w-07','crew-tizingal','2026-2027',${DEV},'server',next_server_seq(),'shared-k2');`,
+      ),
+    ).rejects.toThrow(/not rehire-eligible/i);
+  });
+
+  it("sign_por_obra reusing an enroll's key still WRITES its own contract (does not return NULL)", async () => {
+    await h.query(
+      `select enroll_crew_member('w-08','crew-norte',${DEV},'server',next_server_seq(),'shared-k3');`,
+    );
+    const id = await h.query<{ sign_por_obra_contract: number | null }>(
+      `select sign_por_obra_contract('w-08','picking','per-lata',3.50,'2026-06-01',null,'sig-shared','shared-k3') as sign_por_obra_contract;`,
+    );
+    expect(id[0].sign_por_obra_contract).not.toBeNull();
+    const n = await h.query<{ n: number }>(
+      `select count(*)::int as n from por_obra_contracts where worker_id='w-08' and signature_ref='sig-shared';`,
+    );
+    expect(n[0].n).toBe(1);
+  });
+
+  it("a TRUE replay (same key AND same kind) is still exactly-once", async () => {
+    const a = await h.query<{ enroll_crew_member: string }>(
+      `select enroll_crew_member('w-09','crew-tizingal',${DEV},'server',next_server_seq(),'replay-k') as enroll_crew_member;`,
+    );
+    const b = await h.query<{ enroll_crew_member: string }>(
+      `select enroll_crew_member('w-09','crew-tizingal',${DEV},'server',next_server_seq(),'replay-k') as enroll_crew_member;`,
+    );
+    expect(a[0].enroll_crew_member).toBe(b[0].enroll_crew_member);
+    const n = await h.query<{ n: number }>(
+      `select count(*)::int as n from worker_stream_event
+         where idempotency_key='replay-k' and kind='WORKER_ENROLLED';`,
+    );
+    expect(n[0].n).toBe(1);
+  });
+});
+
+describe("P2-S1 — same-crew re-enroll appends NO spurious WORKER_ENROLLED event", () => {
+  // REGRESSION (review MED idx 62): the membership UPDATE/INSERT are guarded, but the
+  // WORKER_ENROLLED event insert previously ran UNCONDITIONALLY. A same-crew re-enroll
+  // with a FRESH key (a deliberate, distinct action, not a replay) is a true no-op for
+  // the membership but appended a permanent, hash-chained event recording an
+  // enrollment that never happened. The fix only appends the event when the membership
+  // actually changed.
+  let h: Harness;
+  beforeAll(async () => {
+    h = await freshDb();
+    await seedPeople(h);
+    // w-06 is in crew-tizingal (backfill). Move them to crew-norte (a real change).
+    await h.query(
+      `select enroll_crew_member('w-06','crew-norte',${DEV},'server',next_server_seq(),'sce-move');`,
+    );
+  });
+  afterAll(async () => h.close());
+
+  it("re-enrolling into the SAME active crew with a fresh key adds no new event and no new membership", async () => {
+    const evBefore = await h.query<{ n: number }>(
+      `select count(*)::int as n from worker_stream_event
+         where stream_key='worker:w-06' and kind='WORKER_ENROLLED';`,
+    );
+    const memBefore = await h.query<{ n: number }>(
+      `select count(*)::int as n from crew_memberships where worker_id='w-06';`,
+    );
+    // already active in crew-norte; a fresh-key re-enroll is a true no-op.
+    await h.query(
+      `select enroll_crew_member('w-06','crew-norte',${DEV},'server',next_server_seq(),'sce-noop');`,
+    );
+    const evAfter = await h.query<{ n: number }>(
+      `select count(*)::int as n from worker_stream_event
+         where stream_key='worker:w-06' and kind='WORKER_ENROLLED';`,
+    );
+    const memAfter = await h.query<{ n: number }>(
+      `select count(*)::int as n from crew_memberships where worker_id='w-06';`,
+    );
+    expect(evAfter[0].n).toBe(evBefore[0].n); // no spurious append
+    expect(memAfter[0].n).toBe(memBefore[0].n); // no spurious membership
+    // exactly one ACTIVE membership remains, still crew-norte.
+    const active = await h.query<{ crew_id: string }>(
+      `select crew_id from crew_memberships where worker_id='w-06' and left_at is null;`,
+    );
+    expect(active.length).toBe(1);
+    expect(active[0].crew_id).toBe("crew-norte");
+  });
+});
+
 describe("P2-S1 — certification ledger + validity view", () => {
   let h: Harness;
   beforeAll(async () => {
@@ -407,10 +739,26 @@ describe("P2-S1 — hash-chain verifies on the worker ledgers", () => {
     await h.query(
       `select record_attendance('w-06','clock-out',null,'2026-06-22T18:00:00Z','dev-A',2,'att-c2');`,
     );
+    // two events on the PII-scoped worker:w-06 stream (a cert then a rehire), so its
+    // hash chain has a genuine prev->hash link to verify (idx 154).
+    await h.query(
+      `select record_certification('w-06','pesticide-handling','2026-01-01','2027-01-01','MIDA','wsc-doc','wsc-cert');`,
+    );
+    await h.query(
+      `select rehire_worker('w-06','crew-norte','2026-2027',${DEV},'server',next_server_seq(),'wsc-rehire');`,
+    );
   });
   afterAll(async () => h.close());
 
-  it("each attendance event chains prev_hash -> hash (the first is null-prev)", async () => {
+  // The corrected fix for idx 154: a naive prev_hash===prior-hash LINKAGE assertion is
+  // a false sense of security — a "stop folding prev_hash into the digest" trigger
+  // regression STILL sets the prev_hash column from the head; it only omits prev_hash
+  // from the digest input, so the linkage check passes on the broken trigger. The
+  // assertions below RECOMPUTE each row's hash from
+  //   digest(coalesce(prev_hash,'') || lot_event_canonical_bytes(...), 'sha256')
+  // and compare to the stored hash — which DOES go red on that mutant.
+
+  it("each attendance event chains prev_hash -> hash AND every stored hash recomputes", async () => {
     const rows = await h.query<{ prev_hash: string | null; hash: string }>(
       `select encode(prev_hash,'hex') as prev_hash, encode(hash,'hex') as hash
          from attendance_event where worker_id='w-06' order by device_seq;`,
@@ -419,6 +767,47 @@ describe("P2-S1 — hash-chain verifies on the worker ledgers", () => {
     expect(rows[0].hash).toBeTruthy();
     // the second event's prev_hash is the first event's hash (chained).
     expect(rows[1].prev_hash).toBe(rows[0].hash);
+    // and every stored hash equals the recompute over its own canonical bytes — this
+    // catches a trigger that stops folding prev_hash into the digest (linkage misses it).
+    const ok = await h.query<{ ok: boolean }>(
+      `select bool_and(recomputed = stored) as ok from (
+         select encode(extensions.digest(
+                  coalesce(prev_hash, ''::bytea)
+                    || lot_event_canonical_bytes(stream_key, event_kind, payload,
+                                                 occurred_at, device_id, device_seq),
+                  'sha256'),'hex') as recomputed,
+                encode(hash,'hex') as stored
+           from attendance_event where stream_key='attendance:w-06' order by device_seq
+       ) c;`,
+    );
+    expect(ok[0].ok).toBe(true);
+  });
+
+  it("the PII worker_stream_event chain is null-prev first AND every stored hash recomputes (idx 154)", async () => {
+    // the cert + rehire both wrote the worker:w-06 stream — a real two-row PII ledger.
+    const rows = await h.query<{ prev_hash: string | null; hash: string }>(
+      `select encode(prev_hash,'hex') as prev_hash, encode(hash,'hex') as hash
+         from worker_stream_event where stream_key='worker:w-06' order by device_seq;`,
+    );
+    expect(rows.length).toBeGreaterThanOrEqual(2);
+    expect(rows[0].prev_hash).toBeNull();
+    expect(rows[0].hash).toBeTruthy();
+    // RECOMPUTE: every stored hash == digest(coalesce(prev_hash,'') || canonical_bytes).
+    // This pins the worker_stream_event_set_hash trigger — a regression that stopped
+    // folding prev_hash into the digest (the mutant the naive linkage test misses)
+    // makes recomputed != stored here, so the chain is no longer unpinned.
+    const ok = await h.query<{ ok: boolean }>(
+      `select bool_and(recomputed = stored) as ok from (
+         select encode(extensions.digest(
+                  coalesce(prev_hash, ''::bytea)
+                    || lot_event_canonical_bytes(stream_key, kind, payload,
+                                                 occurred_at, device_id, device_seq),
+                  'sha256'),'hex') as recomputed,
+                encode(hash,'hex') as stored
+           from worker_stream_event where stream_key='worker:w-06' order by device_seq
+       ) c;`,
+    );
+    expect(ok[0].ok).toBe(true);
   });
 });
 

@@ -6,6 +6,7 @@ import { getHarvestReadiness, getPasadaCalendar } from "@/lib/db/planning";
 import { num } from "@/lib/utils";
 
 import { PasadaTimeline } from "./pasada-timeline";
+import { PlanActions } from "./plan-actions.client";
 import { ReadinessList } from "./readiness-list";
 import { readinessTone } from "./readiness";
 
@@ -72,6 +73,26 @@ export async function HarvestPlanner() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Write doors — schedule a pasada (fires a task), re-plan around rain
+          (append-only supersede), log a maturation signal. The client island holds
+          the interactivity; this Server Component just feeds it the read-model rows. */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs text-muted-fg">
+          Plan the picker&rsquo;s morning — schedule a pass, re-plan around a rain
+          front, or log a bloom / GDD / NDVI signal.
+        </p>
+        <PlanActions
+          plots={readiness.map((r) => ({ plotId: r.plotId, plotName: r.plotName }))}
+          plans={calendar.map((p) => ({
+            id: p.id,
+            plotId: p.plotId,
+            plotName: p.plotName,
+            season: p.season,
+            pasadaNumber: p.pasadaNumber,
+          }))}
+        />
+      </div>
 
       {/* Two columns: readiness rank (left) + pasada timeline (right) */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">

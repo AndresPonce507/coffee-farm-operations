@@ -145,7 +145,7 @@ select _backfill_people();
 -- ──────────────────────────────────────────────────────────────────────────
 create table worker_stream_event (
   event_uid       uuid        primary key default gen_random_uuid(),
-  idempotency_key text        unique,
+  idempotency_key text,
   stream_key      text        not null,                  -- 'worker:<id>'
   kind            text        not null,
   payload         jsonb       not null default '{}'::jsonb
@@ -156,6 +156,18 @@ create table worker_stream_event (
   device_seq      bigint      not null,
   prev_hash       bytea,
   hash            bytea,
+  -- Exactly-once is anchored PER COMMAND KIND, not on a single global key. Four
+  -- worker-life RPCs (enroll / rehire / por-obra-sign / certify) write this one
+  -- ledger and each takes a caller-supplied idempotency_key; a GLOBAL unique on the
+  -- key alone let a key reused across command types short-circuit on a FOREIGN
+  -- command's event (a rehire reusing an enroll key returned the enroll's event and
+  -- reported "rehired" while opening no membership and skipping the eligibility gate;
+  -- a sign/certify reusing an enroll key read an absent contract_id/cert_id and
+  -- returned NULL, silently dropping the contract/cert). Namespacing the dedupe by
+  -- (kind, idempotency_key) means the SAME client key under two different kinds
+  -- yields two independent events, and each RPC's replay guard + on-conflict target
+  -- this pair so a replay only ever matches its OWN command kind.
+  unique (kind, idempotency_key),
   unique (device_id, device_seq)
 );
 create index worker_stream_event_stream_idx on worker_stream_event (stream_key, device_seq);
@@ -370,6 +382,90 @@ create trigger worker_certifications_block_mutation
   for each row execute function worker_certifications_block_mutation();
 
 -- ──────────────────────────────────────────────────────────────────────────
+-- 7a. verify_chain — make the Phase-1 corruption detector STREAM-AWARE. The
+--     attendance ledger lives in its OWN table (attendance_event, stream_key
+--     'attendance:<id>') and the worker life-stream in worker_stream_event
+--     ('worker:<id>'), NOT in lot_event. The Phase-1 verify_chain (defined in
+--     20260621092000) iterates ONLY lot_event, so verify_chain('attendance:<id>')
+--     found ZERO rows and returned a VACUOUS `true` — the "Chain verified" badge on
+--     every worker profile was a permanent false-positive that verified nothing (it
+--     could never go amber even on a fully-corrupted attendance ledger). Redefine it
+--     here (after both worker ledgers exist) to branch on the stream_key prefix and
+--     recompute over the correct table. Attendance folds event_kind into the `kind`
+--     slot of canonical bytes (matching attendance_event_set_hash), worker_stream and
+--     lot_event use `kind`. CREATE OR REPLACE keeps the existing grants
+--     (verify_chain(text): revoked from public, granted to authenticated) — restated
+--     in section 12 to be safe. Same caveat as lot_event: this proves INTERNAL
+--     CONSISTENCY, not authenticity (the primary tamper guards are the append-only
+--     block triggers + force-RLS + no write grant).
+-- ──────────────────────────────────────────────────────────────────────────
+create or replace function verify_chain(stream_key text)
+  returns boolean
+  language plpgsql
+  stable
+  security definer
+  set search_path = public, extensions
+as $$
+declare
+  r           record;
+  expect_prev bytea := null;
+  recomputed  bytea;
+begin
+  if verify_chain.stream_key like 'attendance:%' then
+    for r in
+      select * from attendance_event e
+       where e.stream_key = verify_chain.stream_key
+       order by e.device_seq
+    loop
+      if r.prev_hash is distinct from expect_prev then return false; end if;
+      recomputed := extensions.digest(
+        coalesce(r.prev_hash, ''::bytea)
+          || lot_event_canonical_bytes(r.stream_key, r.event_kind, r.payload,
+                                       r.occurred_at, r.device_id, r.device_seq),
+        'sha256'
+      );
+      if recomputed is distinct from r.hash then return false; end if;
+      expect_prev := recomputed;
+    end loop;
+    return true;
+  elsif verify_chain.stream_key like 'worker:%' then
+    for r in
+      select * from worker_stream_event e
+       where e.stream_key = verify_chain.stream_key
+       order by e.device_seq
+    loop
+      if r.prev_hash is distinct from expect_prev then return false; end if;
+      recomputed := extensions.digest(
+        coalesce(r.prev_hash, ''::bytea)
+          || lot_event_canonical_bytes(r.stream_key, r.kind, r.payload,
+                                       r.occurred_at, r.device_id, r.device_seq),
+        'sha256'
+      );
+      if recomputed is distinct from r.hash then return false; end if;
+      expect_prev := recomputed;
+    end loop;
+    return true;
+  else
+    for r in
+      select * from lot_event e
+       where e.stream_key = verify_chain.stream_key
+       order by e.device_seq
+    loop
+      if r.prev_hash is distinct from expect_prev then return false; end if;
+      recomputed := extensions.digest(
+        coalesce(r.prev_hash, ''::bytea)
+          || lot_event_canonical_bytes(r.stream_key, r.kind, r.payload,
+                                       r.occurred_at, r.device_id, r.device_seq),
+        'sha256'
+      );
+      if recomputed is distinct from r.hash then return false; end if;
+      expect_prev := recomputed;
+    end loop;
+    return true;
+  end if;
+end $$;
+
+-- ──────────────────────────────────────────────────────────────────────────
 -- 8. workers.crew + workers.attendance as DERIVED columns. They already exist
 --    (Phase-1) and stay; the people RPCs keep them in sync so Phase-1 reads survive.
 --    A helper resyncs workers.crew from the active membership + workers.attendance
@@ -450,9 +546,22 @@ create view worker_attendance_today with (security_invoker = on) as
    where a.occurred_at::date = current_date
    order by a.worker_id, a.occurred_at desc, a.recorded_at desc;
 
--- v_active_por_obra — the rate-resolver payroll calls: the EFFECTIVE, non-superseded
--- contract for a worker+task on a date (the row whose window contains the date and
--- which nothing supersedes). Exposed as a function so callers pass (worker, task, date).
+-- v_active_por_obra — the rate-resolver payroll calls: the EFFECTIVE contract for a
+-- worker+task on a date (the row whose effective window contains the date). The DATE
+-- WINDOW is the SOLE resolution authority; `superseded_by` is AUDIT METADATA only
+-- (the supersede chain records lineage / contract-history, it is NOT a resolution
+-- filter). Filtering on `superseded_by is null` here was window-blind and wrong: the
+-- supersede UPDATE in sign_por_obra_contract stamps EVERY still-open contract for the
+-- worker+task regardless of date window, so the moment a second contract is signed the
+-- first becomes invisible to this resolver for ANY date — including dates inside its
+-- OWN effective window (a back-pay / audit / late-offline-sync lookup of a historical
+-- piece-rate then prices the day at nothing). With the window as the sole authority,
+-- `order by effective_from desc, id desc limit 1` already picks the right row: an
+-- overlapping renegotiation resolves to the later-effective contract on dates both
+-- windows cover, to the earlier (historically-agreed) contract on dates only it
+-- covers, and a same-day correction tiebreaks on the later id. The rate a worker
+-- agreed to on a given day stays forever auditable (migration header invariant).
+-- Exposed as a function so callers pass (worker, task, date).
 create or replace function v_active_por_obra(
   p_worker_id text, p_task_kind text, p_on_date date
 ) returns table (
@@ -469,7 +578,6 @@ as $$
     from por_obra_contracts c
    where c.worker_id = p_worker_id
      and c.task_kind = p_task_kind
-     and c.superseded_by is null
      and c.effective_from <= p_on_date
      and (c.effective_to is null or c.effective_to >= p_on_date)
    order by c.effective_from desc, c.id desc
@@ -550,9 +658,13 @@ create or replace function enroll_crew_member(
   security definer
   set search_path = public, extensions
 as $$
-declare existing uuid; new_uid uuid;
+declare existing uuid; new_uid uuid; v_changed boolean := false;
 begin
-  select event_uid into existing from worker_stream_event where idempotency_key = p_idempotency_key;
+  -- replay guard is scoped to THIS command kind (see worker_stream_event's
+  -- (kind, idempotency_key) namespace note) so a key reused under another command
+  -- type can never short-circuit on a foreign event.
+  select event_uid into existing from worker_stream_event
+   where idempotency_key = p_idempotency_key and kind = 'WORKER_ENROLLED';
   if existing is not null then
     return existing;
   end if;
@@ -567,6 +679,7 @@ begin
   update crew_memberships
      set left_at = p_occurred_at
    where worker_id = p_worker_id and left_at is null and crew_id <> p_crew_id;
+  if found then v_changed := true; end if;
 
   -- open a new membership only if not already actively in this crew.
   if not exists (
@@ -575,20 +688,34 @@ begin
   ) then
     insert into crew_memberships (worker_id, crew_id, joined_at)
     values (p_worker_id, p_crew_id, p_occurred_at);
+    v_changed := true;
   end if;
 
-  insert into worker_stream_event (idempotency_key, stream_key, kind, payload,
-                                   occurred_at, device_id, device_seq)
-  values (p_idempotency_key, 'worker:' || p_worker_id, 'WORKER_ENROLLED',
-          jsonb_build_object('worker_id', p_worker_id, 'crew_id', p_crew_id),
-          p_occurred_at, p_device_id, p_device_seq)
-  on conflict (idempotency_key) do nothing
-  returning event_uid into new_uid;
-  if new_uid is null then
-    select event_uid into new_uid from worker_stream_event where idempotency_key = p_idempotency_key;
+  -- Only append the WORKER_ENROLLED event + resync when the membership actually
+  -- CHANGED. A same-crew re-enroll (already active in the target crew, fresh key) is
+  -- a true no-op: the membership logic above leaves it untouched, so appending a
+  -- WORKER_ENROLLED row to the immutable hash-chained ledger would record an
+  -- enrollment that never happened — a permanent false event downstream readers
+  -- treat as a real crew change. On a genuine no-op, return the worker's most recent
+  -- WORKER_ENROLLED event (or null if they were never enrolled via this RPC).
+  if v_changed then
+    insert into worker_stream_event (idempotency_key, stream_key, kind, payload,
+                                     occurred_at, device_id, device_seq)
+    values (p_idempotency_key, 'worker:' || p_worker_id, 'WORKER_ENROLLED',
+            jsonb_build_object('worker_id', p_worker_id, 'crew_id', p_crew_id),
+            p_occurred_at, p_device_id, p_device_seq)
+    on conflict (kind, idempotency_key) do nothing
+    returning event_uid into new_uid;
+    if new_uid is null then
+      select event_uid into new_uid from worker_stream_event
+       where idempotency_key = p_idempotency_key and kind = 'WORKER_ENROLLED';
+    end if;
+    perform _resync_worker_crew(p_worker_id);
+  else
+    select event_uid into new_uid from worker_stream_event
+     where stream_key = 'worker:' || p_worker_id and kind = 'WORKER_ENROLLED'
+     order by recorded_at desc limit 1;
   end if;
-
-  perform _resync_worker_crew(p_worker_id);
   return new_uid;
 end $$;
 
@@ -611,14 +738,17 @@ create or replace function sign_por_obra_contract(
 as $$
 declare new_id bigint;
 begin
-  -- Exactly-once is anchored on the WORKER-STREAM signing event's idempotency_key
-  -- (a dedicated guard — signature_ref is a free-text reference, not the dedupe key).
-  -- A replay returns the contract_id recorded in the prior signing event; it appends
-  -- no second contract.
-  if exists (select 1 from worker_stream_event where idempotency_key = p_idempotency_key) then
+  -- Exactly-once is anchored on the WORKER-STREAM signing event's idempotency_key,
+  -- scoped to THIS command kind (POR_OBRA_SIGNED) so a key reused under another
+  -- command type can never short-circuit on a foreign event (signature_ref is a
+  -- free-text reference, not the dedupe key). A replay returns the contract_id
+  -- recorded in the prior signing event; it appends no second contract.
+  if exists (select 1 from worker_stream_event
+              where idempotency_key = p_idempotency_key and kind = 'POR_OBRA_SIGNED') then
     -- already signed under this key: return the contract id recorded in the event.
     select (payload->>'contract_id')::bigint into new_id
-      from worker_stream_event where idempotency_key = p_idempotency_key;
+      from worker_stream_event
+     where idempotency_key = p_idempotency_key and kind = 'POR_OBRA_SIGNED';
     return new_id;
   end if;
 
@@ -646,7 +776,7 @@ begin
                              'contract_id', new_id, 'rate_usd', p_rate_usd),
           coalesce(p_effective_from::timestamptz, now()), 'server',
           nextval('worker_server_seq'))
-  on conflict (idempotency_key) do nothing;
+  on conflict (kind, idempotency_key) do nothing;
 
   return new_id;
 end $$;
@@ -668,9 +798,13 @@ create or replace function record_certification(
 as $$
 declare new_id bigint;
 begin
-  if exists (select 1 from worker_stream_event where idempotency_key = p_idempotency_key) then
+  -- replay guard scoped to THIS command kind (WORKER_CERTIFIED) — see the
+  -- worker_stream_event (kind, idempotency_key) namespace note.
+  if exists (select 1 from worker_stream_event
+              where idempotency_key = p_idempotency_key and kind = 'WORKER_CERTIFIED') then
     select (payload->>'cert_id')::bigint into new_id
-      from worker_stream_event where idempotency_key = p_idempotency_key;
+      from worker_stream_event
+     where idempotency_key = p_idempotency_key and kind = 'WORKER_CERTIFIED';
     return new_id;
   end if;
   if not exists (select 1 from workers where id = p_worker_id) then
@@ -687,7 +821,7 @@ begin
           jsonb_build_object('worker_id', p_worker_id, 'cert_kind', p_cert_kind, 'cert_id', new_id),
           coalesce(p_issued_at::timestamptz, now()), 'server',
           nextval('worker_server_seq'))
-  on conflict (idempotency_key) do nothing;
+  on conflict (kind, idempotency_key) do nothing;
 
   return new_id;
 end $$;
@@ -711,7 +845,12 @@ create or replace function rehire_worker(
 as $$
 declare existing uuid; new_uid uuid; eligible boolean; valid_certs int;
 begin
-  select event_uid into existing from worker_stream_event where idempotency_key = p_idempotency_key;
+  -- replay guard scoped to THIS command kind (WORKER_REHIRED) — see the
+  -- worker_stream_event (kind, idempotency_key) namespace note. Scoping here is what
+  -- stops a rehire reusing an enroll/sign/certify key from short-circuiting on that
+  -- foreign event and falsely reporting success while skipping the eligibility gate.
+  select event_uid into existing from worker_stream_event
+   where idempotency_key = p_idempotency_key and kind = 'WORKER_REHIRED';
   if existing is not null then
     return existing;                                  -- exactly-once replay
   end if;
@@ -746,10 +885,11 @@ begin
           jsonb_build_object('worker_id', p_worker_id, 'crew_id', p_crew_id,
                              'season', p_season, 'valid_certs', valid_certs),
           p_occurred_at, p_device_id, p_device_seq)
-  on conflict (idempotency_key) do nothing
+  on conflict (kind, idempotency_key) do nothing
   returning event_uid into new_uid;
   if new_uid is null then
-    select event_uid into new_uid from worker_stream_event where idempotency_key = p_idempotency_key;
+    select event_uid into new_uid from worker_stream_event
+     where idempotency_key = p_idempotency_key and kind = 'WORKER_REHIRED';
   end if;
 
   perform _resync_worker_crew(p_worker_id);
@@ -813,6 +953,13 @@ revoke execute on function attendance_event_set_hash()           from public;
 revoke execute on function worker_ledger_block_mutation()        from public;
 revoke execute on function por_obra_block_mutation()             from public;
 revoke execute on function worker_certifications_block_mutation() from public;
+-- _resync_* are owner/RPC-internal projection helpers, invoked only via `perform`
+-- from the SECURITY DEFINER command RPCs (which run as the function owner, so they
+-- still call these fine). Postgres grants PUBLIC EXECUTE by default; the AD-8
+-- invariant ("internal helpers get NO grant") was silently missing these two, so
+-- they were reachable by anon/authenticated REST. Grant them to NO REST role.
+revoke execute on function _resync_worker_crew(text)             from public;
+revoke execute on function _resync_worker_attendance(text)       from public;
 
 grant execute on function record_attendance(text, text, text, timestamptz, text, bigint, text)            to authenticated;
 grant execute on function enroll_crew_member(text, text, timestamptz, text, bigint, text)                 to authenticated;
@@ -821,5 +968,10 @@ grant execute on function record_certification(text, text, date, date, text, tex
 grant execute on function rehire_worker(text, text, text, timestamptz, text, bigint, text)                to authenticated;
 grant execute on function v_active_por_obra(text, text, date)                                             to authenticated;
 grant execute on function next_server_seq()                                                              to authenticated;
+-- verify_chain(text) was redefined above (section 7a) to be stream-aware. CREATE OR
+-- REPLACE preserves the original grant posture, but restate it to keep the AD-8
+-- posture explicit and audit-legible.
+revoke execute on function verify_chain(text) from public;
+grant  execute on function verify_chain(text) to authenticated;
 
 commit;

@@ -96,7 +96,12 @@ export type TaskCategory =
   | "Weeding"
   | "Planting"
   | "Irrigation"
-  | "Soil";
+  | "Soil"
+  // System-fired harvest-pass tasks (P2-S8 schedule_pasada / replan_pasada).
+  // Mirrors the DB `task_category` enum's additive 'Harvest' value so the
+  // /tasks board can represent the fired task. Not a user-pickable form
+  // category — it is created only by the pasada scheduler RPCs.
+  | "Harvest";
 export type TaskStatus = "todo" | "in-progress" | "done" | "blocked";
 export type Priority = "low" | "medium" | "high";
 

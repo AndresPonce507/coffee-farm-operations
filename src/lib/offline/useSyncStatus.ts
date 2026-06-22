@@ -51,12 +51,27 @@ export function useSyncStatus(): SyncStatusApi {
     };
   }, [engine, outbox]);
 
+  // A manual recovery action (the drawer's Retry, the "sync now" flush) must
+  // DRIVE A SEND, not merely recompute the badge: `engine.refresh()` only
+  // re-counts pending/dead, so wiring retry/flush to it left a revived
+  // dead-letter flipped dead→queued but never re-sent — silently stuck until an
+  // unrelated `online` event happened to drain. `drain()` (the real send path)
+  // is internal to the engine, but the runtime's outbox is in hand here, so we
+  // flush it directly. When offline we skip the send and just refresh — the
+  // revived entry stays `queued` and drains on the next reconnect (mirroring the
+  // engine's own offline guard), so the offline-tap path is unaffected.
+  const drain = async () => {
+    if (engine.getState().online) await outbox.flush();
+    await engine.refresh();
+  };
+
   return {
     state,
     deadLetters: entries.filter((e) => e.status === "dead"),
     pending: entries.filter((e) => e.status === "queued"),
-    retry: (uuid) => outbox.retry(uuid).then(() => engine.refresh()),
+    retry: (uuid) => outbox.retry(uuid).then(drain),
+    // dismiss deletes an entry — there is nothing to send, just recompute.
     dismiss: (uuid) => outbox.dismiss(uuid).then(() => engine.refresh()),
-    flush: () => engine.refresh(),
+    flush: drain,
   };
 }

@@ -7,10 +7,18 @@
  * command replay must always reach the server).
  *
  * The routing DECISION mirrors `src/lib/offline/sw-strategy.ts` (a SW can't
- * import a bundled module). That module is unit-tested in node; keep the two in
- * sync. The cache version is bumped per release so a new deploy purges the old
- * shell on `activate` — the cache-bust that defeats the "stale chunk → white
- * screen" footgun.
+ * import a bundled module). That module is unit-tested in node, and
+ * `sw-lifecycle.test.ts` evaluates THIS file to pin the two copies in agreement
+ * plus drive the install/activate/message handlers — keep the two in sync.
+ *
+ * The "stale chunk → white screen" footgun is defeated by the STRATEGY, not the
+ * cache version: `_next/static` assets are content-hashed and cache-first, so a
+ * new build's new filenames simply miss-and-fetch; navigations are
+ * stale-while-revalidate, so the shell self-heals on the next online load.
+ * `CACHE_VERSION` is a manual marker that only needs bumping on a BREAKING
+ * SW-cache-schema change (a different cache layout the old `activate` purge must
+ * evict) — it is NOT auto-injected per deploy, so do not rely on it for routine
+ * cache-busting.
  */
 
 const CACHE_VERSION = "janson-v1";
@@ -55,7 +63,8 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  // Purge every cache that isn't this version — the deploy-time cache-bust.
+  // Purge every cache that isn't this version — janitorial cleanup that reclaims
+  // a superseded CACHE_VERSION's caches on a breaking SW-cache-schema bump.
   event.waitUntil(
     caches
       .keys()
@@ -94,18 +103,14 @@ async function staleWhileRevalidate(request) {
 }
 
 async function networkFirst(request) {
-  const cache = await caches.open(RUNTIME_CACHE);
-  try {
-    const response = await fetch(request);
-    if (response.ok && request.method === "GET") {
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch (err) {
-    const cached = await cache.match(request);
-    if (cached) return cached;
-    throw err;
-  }
+  // `network-first` is only ever chosen for Supabase REST/auth round-trips
+  // (`isApiOrAuth`). Those carry a per-user bearer token in the Authorization
+  // HEADER, not the URL — so the request URL alone is NOT a safe cache key:
+  // persisting one signed-in user's authenticated body into the shared,
+  // sign-out-surviving RUNTIME_CACHE would leak it to the next user of a shared
+  // field device. Treat live data as network-only: never write it to a
+  // persistent cache, and never serve a stale authenticated body as a fallback.
+  return fetch(request);
 }
 
 self.addEventListener("fetch", (event) => {
@@ -134,7 +139,16 @@ self.addEventListener("fetch", (event) => {
   }
 });
 
-// Let the page tell a waiting SW to take over immediately (used on update).
 self.addEventListener("message", (event) => {
+  // Let the page tell a waiting SW to take over immediately (used on update).
   if (event.data === "SKIP_WAITING") self.skipWaiting();
+
+  // Purge the shared runtime cache on demand — the page posts this on sign-out
+  // so the next user of a shared field device can't read the previous user's
+  // cached navigation documents (rendered farm/payroll/cost data) out of Cache
+  // Storage. Cache keys are URL-only, so without this the cached signed-in shell
+  // survives sign-out and is readable offline or via `caches.match()`.
+  if (event.data === "CLEAR_DATA_CACHE") {
+    event.waitUntil(caches.delete(RUNTIME_CACHE));
+  }
 });

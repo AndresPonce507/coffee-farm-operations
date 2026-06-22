@@ -94,13 +94,40 @@ describe("recordMoisture", () => {
     if (!r.ok) expect(r.message).toMatch(/doesn't exist/i);
   });
 
-  it("translates a duplicate-key replay into a clean reason", async () => {
+  it("translates a duplicate-key replay (idempotency_key) into a clean reason", async () => {
     const { store } = fakeStore({
       data: null,
-      error: { message: "duplicate key value", code: "23505" },
+      error: {
+        message:
+          'duplicate key value violates unique constraint "moisture_readings_idempotency_key_key"',
+        code: "23505",
+      },
     });
     const r = await recordMoisture(store, validRaw());
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.message).toMatch(/already recorded/i);
+  });
+
+  it("surfaces a device-seq clash as a real error, NOT a benign 'already recorded' replay", async () => {
+    // moisture_readings carries BOTH unique(idempotency_key) AND
+    // unique(device_id, device_seq). A genuine replay short-circuits inside the
+    // RPC on idempotency_key, so the ONLY path to a 23505 reaching the caller is a
+    // NON-replay (device_id, device_seq) collision — a distinct reading that was
+    // REJECTED and LOST. It must surface as a real error, never the success-shaped
+    // "already recorded" message that would tell the family everything is fine.
+    const { store } = fakeStore({
+      data: null,
+      error: {
+        message:
+          'duplicate key value violates unique constraint "moisture_readings_device_id_device_seq_key"',
+        code: "23505",
+      },
+    });
+    const r = await recordMoisture(store, validRaw());
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.message).not.toMatch(/already recorded/i);
+      expect(r.message).toMatch(/sequence number was reused|re-sync/i);
+    }
   });
 });

@@ -1,13 +1,17 @@
 -- P2-S4 — Drying management + THE REPOSO GATE + capacity-tracked stations.
 --
--- The load-bearing Phase-2 invariant: a lot physically CANNOT advance
--- `drying → milled` until moisture-stability (last N readings within 10.5–11.5%,
--- trending flat) AND a minimum rest-days threshold are BOTH met. The gate is a
+-- The load-bearing Phase-2 invariant: a lot physically CANNOT reach the mill
+-- (`milled`/`green`) until moisture-stability (last N readings within 10.5–11.5%,
+-- trending flat) AND a minimum post-drying rest-days threshold are BOTH met. The
+-- gate fires on CROSSING the milling boundary (from any pre-mill stage into milled
+-- or beyond) — not a single enum-adjacent pair — so no route dodges it: the direct
+-- drying→milled hop, the canonical drying→parchment→milled two-step, the drying→green
+-- skip, and a NULL/legacy-stage lot all hit it (the last FAILS CLOSED). The gate is a
 -- DATA-LAYER invariant — the disabled UI button is courtesy; the database enforces
 -- it in TWO layers so it can't be bypassed:
 --   (1) a precondition check ADDED INSIDE advance_processing_stage (the single
 --       stage-machine RPC; create-or-replace, preserving ALL its current behavior),
---   (2) a BEFORE-UPDATE trigger backstop on `lots` that blocks the drying→milled
+--   (2) a BEFORE-UPDATE trigger backstop on `lots` that blocks any boundary-crossing
 --       transition even when a future code path mutates lots.stage directly.
 -- This mirrors the Phase-1 EUDR `issue_dds` "gate in the database" precedent and
 -- the `prevent_oversell` fail-closed-trigger family.
@@ -136,9 +140,11 @@ create view station_occupancy with (security_invoker = on) as
   from drying_stations s;
 
 -- ══════════════════════════════════════════════════════════════════════════
--- 4. moisture_readings — append-only, hash-chained moisture ledger. Reuses the
---    lot_event substrate semantics (immutable; corrections are new readings, never
---    UPDATE). Stream key is the lot code. The drying curve is EVIDENCE.
+-- 4. moisture_readings — append-only, immutable moisture ledger (block trigger +
+--    force-RLS + no write grant; corrections are new readings, never UPDATE). Each
+--    reading ALSO appends a `moisture_reading` lot_event, so the drying curve — the
+--    gate's own EVIDENCE — lands on the hash-chained lot_event spine (see
+--    record_moisture_reading). Stream key is the lot code.
 -- ══════════════════════════════════════════════════════════════════════════
 create table moisture_readings (
   id              bigint generated always as identity primary key,
@@ -196,6 +202,7 @@ declare
   latest       numeric;
   cnt          integer;
   in_band_cnt  integer;
+  recent_max   numeric;
   started      timestamptz;
   rest_days    numeric;
   m_stable     boolean;
@@ -204,37 +211,46 @@ begin
   select reposo_moisture_min_pct, reposo_moisture_max_pct, min_reposo_days, reposo_stable_window
     into cfg from farm_season_config where id = 1;
 
-  -- latest reading + total readings for the lot.
+  -- latest reading + total readings for the lot. "Latest" is the physically-newest
+  -- by INGEST order (recorded_at, server-stamped), not the client field occurred_at —
+  -- a back-dated re-wet reading must not be hidden behind a stale field clock (#92/#97).
   select count(*)::int,
          (select mr.moisture_pct from moisture_readings mr
            where mr.lot_code = p_lot_code
-           order by mr.occurred_at desc, mr.id desc limit 1)
+           order by mr.recorded_at desc, mr.id desc limit 1)
     into cnt, latest
     from moisture_readings where moisture_readings.lot_code = p_lot_code;
 
   -- moisture stable = at least `window` readings AND the most-recent `window`
-  -- readings are ALL inside [min,max] (trending flat within the band).
-  select count(*)::int into in_band_cnt from (
+  -- readings (by INGEST order) are ALL inside [min,max]. The window is taken by
+  -- recorded_at (monotonic server clock, not spoofable by back-dating occurred_at),
+  -- and we additionally hard-guard that NO reading in that window exceeds the band,
+  -- so a panic re-wet reading recorded last always blocks the gate (#92/#97).
+  select count(*) filter (where recent.moisture_pct
+                                 between cfg.reposo_moisture_min_pct and cfg.reposo_moisture_max_pct)::int,
+         coalesce(max(recent.moisture_pct), 0)
+    into in_band_cnt, recent_max
+  from (
     select mr.moisture_pct
       from moisture_readings mr
      where mr.lot_code = p_lot_code
-     order by mr.occurred_at desc, mr.id desc
+     order by mr.recorded_at desc, mr.id desc
      limit cfg.reposo_stable_window
-  ) recent
-  where recent.moisture_pct between cfg.reposo_moisture_min_pct and cfg.reposo_moisture_max_pct;
+  ) recent;
 
-  m_stable := (cnt >= cfg.reposo_stable_window and in_band_cnt >= cfg.reposo_stable_window);
+  m_stable := (cnt >= cfg.reposo_stable_window
+               and in_band_cnt >= cfg.reposo_stable_window
+               and recent_max <= cfg.reposo_moisture_max_pct);
 
-  -- rest clock: prefer the open drying-station assignment's assigned_at (when drying
-  -- physically began); fall back to the lot's first 'drying' stage_advance event.
-  select min(a.assigned_at) into started
-    from drying_assignments a where a.lot_code = p_lot_code;
-  if started is null then
-    select min(e.occurred_at) into started
-      from lot_event e
-     where e.stream_key = p_lot_code and e.kind = 'stage_advance'
-       and (e.payload->>'to_stage') = 'drying';
-  end if;
+  -- rest clock: anchored at drying COMPLETE — the drying→parchment stage_advance —
+  -- NOT drying START, and on the SERVER accept clock (recorded_at), NOT the client
+  -- field occurred_at. Reposo is the post-drying rest AS parchment; measuring from
+  -- drying start (or a back-datable assigned_at) would clear the gate before any real
+  -- rest has happened (#105) or let a back-dated assignment forge rest-met (#170/#172).
+  select min(e.recorded_at) into started
+    from lot_event e
+   where e.stream_key = p_lot_code and e.kind = 'stage_advance'
+     and (e.payload->>'to_stage') = 'parchment';
 
   if started is not null then
     rest_days := extract(epoch from (now() - started)) / 86400.0;
@@ -254,7 +270,7 @@ begin
     (m_stable and r_met),
     case
       when m_stable and r_met then 'rest-stable — clear to mill'
-      when not r_met and started is null then 'no drying record yet'
+      when not r_met and started is null then 'not finished drying yet'
       when not r_met then format('resting %s/%s days', floor(coalesce(rest_days,0))::int, cfg.min_reposo_days)
       when not m_stable and latest is not null then format('moisture %s%% not yet stable in %s–%s%% band',
         round(latest,1), cfg.reposo_moisture_min_pct, cfg.reposo_moisture_max_pct)
@@ -317,6 +333,19 @@ declare
   existing_id bigint;
   new_id      bigint;
 begin
+  -- exactly-once anchor must be present: a NULL key defeats the replay short-circuit
+  -- (the `where idempotency_key = NULL` predicate is NULL-false and `unique` permits
+  -- many NULLs), so a direct PostgREST caller could double-record. Fail closed (#132).
+  if p_idempotency_key is null then
+    raise exception 'idempotency_key required' using errcode = 'not_null_violation';
+  end if;
+  -- field clock must not be in the FUTURE: an unbounded client occurred_at can be
+  -- future-dated so two in-band readings outrank the truly-current wet reading in the
+  -- occurred_at-desc window and forge moisture_stable=true (#120). 1h skew tolerance.
+  if p_occurred_at > now() + interval '1 hour' then
+    raise exception 'moisture reading time % is in the future (server now %)', p_occurred_at, now()
+      using errcode = 'check_violation';
+  end if;
   select id into existing_id from moisture_readings where idempotency_key = p_idempotency_key;
   if existing_id is not null then
     return existing_id;                       -- exactly-once replay
@@ -330,10 +359,19 @@ begin
   returning id into new_id;
   if new_id is null then
     select id into new_id from moisture_readings where idempotency_key = p_idempotency_key;
+    return new_id;                            -- a concurrent insert won the race; no re-append
   end if;
   -- mirror the latest reading onto processing_batches.moisture_pct where a batch
   -- exists for this lot (Phase-1 reads the flat column); derived, best-effort.
   update processing_batches set moisture_pct = p_moisture_pct where lot_code = p_lot_code;
+  -- append the reading onto the hash-chained lot_event ledger (the gate's own
+  -- EVIDENCE belongs on the tamper-evident chain, exactly as record_ferment_reading
+  -- does), namespacing the idempotency key so device_seq counters stay independent (#130).
+  perform record_lot_event(
+    p_lot_code, 'moisture_reading',
+    jsonb_build_object('moisture_pct', p_moisture_pct),
+    p_occurred_at, p_device_id, p_device_seq, 'moisture-reading:' || p_idempotency_key
+  );
   return new_id;
 end $$;
 
@@ -360,6 +398,14 @@ begin
    limit 1;
   if new_id is not null then
     return new_id;
+  end if;
+
+  -- existence check BEFORE the mass lookup, mirroring record_moisture_reading: an
+  -- unknown/typo'd lot must surface as foreign_key_violation ('pick one from the
+  -- list'), not be mis-mapped to the 'no declared mass' message (#133). A truly
+  -- unknown lot has no open assignment, so the idempotent short-circuit never masks it.
+  if not exists (select 1 from lots where code = p_lot_code) then
+    raise exception 'unknown lot %', p_lot_code using errcode = 'foreign_key_violation';
   end if;
 
   select coalesce(current_kg, origin_kg) into lot_kg from lots where code = p_lot_code;
@@ -437,9 +483,26 @@ begin
   end if;
 
   -- ── THE REPOSO GATE (the ONLY addition) ──────────────────────────────────
-  -- crossing the drying→milling boundary requires moisture-stability AND the
-  -- minimum rest-days. Fires only on that exact transition (FROM drying TO milled).
-  if coalesce(nullif(cur_stage, ''), 'cherry') = 'drying' and p_to_stage = 'milled' then
+  -- Gate the MILLING BOUNDARY, not a single enum-adjacent pair: any move that
+  -- CROSSES into 'milled' or beyond ('green') from a pre-mill stage, FOR A LOT THAT
+  -- HAS DRYING EVIDENCE, requires moisture-stability AND the minimum rest-days.
+  -- "Has drying evidence" = current stage is drying/parchment, OR the lot has a
+  -- drying assignment, a moisture reading, or a processing_batch at drying/parchment.
+  -- This closes every route into the mill FROM the resting pipeline — the direct
+  -- drying→milled hop, the canonical drying→parchment→milled two-step (2nd hop has
+  -- cur_stage='parchment'), the drying→green skip — and a NULL/legacy-stage lot that
+  -- is physically drying (seed shape) now FAILS CLOSED instead of silently disabling
+  -- the gate (#164). A synthetic lot that reaches milled with NO drying evidence
+  -- (e.g. a green-lot materialization fixture) never dried, so reposo is N/A and it
+  -- is correctly not gated. Sub-mill moves and post-mill (milled→green) stay ungated.
+  if coalesce(nullif(cur_stage, ''), 'cherry')::batch_stage < 'milled'::batch_stage
+       and p_to_stage::batch_stage >= 'milled'::batch_stage
+       and (coalesce(nullif(cur_stage, ''), 'cherry')::batch_stage
+              in ('drying'::batch_stage, 'parchment'::batch_stage)
+            or exists (select 1 from drying_assignments where lot_code = p_lot_code)
+            or exists (select 1 from moisture_readings where lot_code = p_lot_code)
+            or exists (select 1 from processing_batches
+                        where lot_code = p_lot_code and stage in ('drying','parchment'))) then
     select * into st from reposo_status(p_lot_code);
     if not coalesce(st.ready, false) then
       raise exception 'reposo gate: lot % not rest-stable (%)', p_lot_code, st.reason
@@ -463,8 +526,9 @@ end $$;
 
 -- ══════════════════════════════════════════════════════════════════════════
 -- 9. THE REPOSO GATE, LAYER 2 — BEFORE-UPDATE trigger backstop on `lots`. Even a
---    direct `update lots set stage='milled'` that bypasses the RPC must be blocked
---    when the lot is not rest-stable. Fires ONLY on the drying→milled stage change.
+--    direct `update lots set stage='milled'` (or 'green', or the parchment two-step)
+--    that bypasses the RPC must be blocked when the lot is not rest-stable. Fires on
+--    any UPDATE that CROSSES the milling boundary (FROM < milled TO >= milled).
 -- ══════════════════════════════════════════════════════════════════════════
 create or replace function lots_enforce_reposo_gate() returns trigger
   language plpgsql
@@ -473,8 +537,19 @@ as $$
 declare
   st record;
 begin
-  -- only the drying→milled transition is gated.
-  if coalesce(nullif(old.stage, ''), 'cherry') = 'drying' and new.stage = 'milled' then
+  -- gate every UPDATE that crosses into milled-or-beyond from a pre-mill stage FOR A
+  -- LOT WITH DRYING EVIDENCE (mirrors the RPC boundary predicate): closes the
+  -- parchment→milled second hop, the drying→green skip, and a NULL/legacy stage with
+  -- a physical drying batch advancing straight to milled (#164), while a never-dried
+  -- synthetic lot stays ungated (reposo is N/A).
+  if coalesce(nullif(old.stage, ''), 'cherry')::batch_stage < 'milled'::batch_stage
+       and new.stage::batch_stage >= 'milled'::batch_stage
+       and (coalesce(nullif(old.stage, ''), 'cherry')::batch_stage
+              in ('drying'::batch_stage, 'parchment'::batch_stage)
+            or exists (select 1 from drying_assignments where lot_code = new.code)
+            or exists (select 1 from moisture_readings where lot_code = new.code)
+            or exists (select 1 from processing_batches
+                        where lot_code = new.code and stage in ('drying','parchment'))) then
     select * into st from reposo_status(new.code);
     if not coalesce(st.ready, false) then
       raise exception 'reposo gate: lot % not rest-stable (%)', new.code, st.reason
@@ -489,6 +564,20 @@ create trigger lots_enforce_reposo_gate
   for each row
   when (old.stage is distinct from new.stage)
   execute function lots_enforce_reposo_gate();
+
+-- Backfill lots.stage from the physical processing_batches projection so the spine's
+-- stage reflects reality for any lot that exists at migration time (#164). The gate
+-- already fails CLOSED for NULL-stage lots via the boundary predicate above; this
+-- keeps the gate's `reason` text and forward-only math honest. Best-effort: a lot can
+-- own several batches at different stages, so we take the most-recently STARTED one.
+-- (No row crosses the milling boundary here — the trigger above does not fire.)
+update lots l
+   set stage = pb.stage
+  from (select distinct on (lot_code) lot_code, stage
+          from processing_batches
+         order by lot_code, started_date desc) pb
+ where pb.lot_code = l.code
+   and l.stage is null;
 
 -- ══════════════════════════════════════════════════════════════════════════
 -- 10. RLS — authenticated-only read on the new tables (mirrors the spine posture).

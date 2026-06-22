@@ -509,3 +509,444 @@ describe("P2-S3 fermentation — AD-8 grant posture", () => {
     ).rejects.toThrow(/permission denied/i);
   });
 });
+
+// ──────────────────────────────────────────────────────────────────────────
+// PHASE-2 REVIEW FIXES — regression tests that FAIL on the pre-fix migration.
+// ──────────────────────────────────────────────────────────────────────────
+
+describe("P2-S3 review fix — start_ferment_batch binds exactly-once on the DOMAIN row (no phantom batch)", () => {
+  let h: Harness;
+  beforeAll(async () => {
+    h = await freshDb();
+    await h.query(SEED_LOT);
+    await h.query(SEED_RECIPE);
+  });
+  afterAll(async () => h.close());
+
+  // FINDING idx 0/35: the kind-scoped event short-circuit + globally-unique
+  // lot_event.idempotency_key let a key already used by ANOTHER event kind create a
+  // ferment_batches row whose ferment_started event was silently dropped by ON CONFLICT
+  // DO NOTHING — a ledger-less phantom batch. The fix fails closed on cross-kind reuse.
+  it("FAILS CLOSED when the idempotency_key was already burned by a different event kind (no phantom batch)", async () => {
+    // pre-seed a lot_event under a DIFFERENT kind carrying the shared key.
+    await h.query(
+      `select record_lot_event('JC-800','some_other_kind','{}'::jsonb,
+         '2026-06-20T05:00:00Z'::timestamptz,'dev-x',900100,'shared-key-3');`,
+    );
+    const before = (
+      await h.query<{ n: number }>(`select count(*)::int as n from ferment_batches;`)
+    )[0].n;
+
+    await expect(
+      asAuthenticated(h, (hh) =>
+        hh.query(
+          `select start_ferment_batch('JC-800','rec-test-anaerobic-v1','Anaerobic',
+             '2026-06-20T06:00:00Z'::timestamptz,'dev-1',900200,'shared-key-3');`,
+        ),
+      ),
+    ).rejects.toThrow(/already|different event kind|unique|duplicate/i);
+
+    // no phantom batch was minted, and there is NO ferment_started event for this key.
+    const after = (
+      await h.query<{ n: number }>(`select count(*)::int as n from ferment_batches;`)
+    )[0].n;
+    expect(after).toBe(before);
+    const ev = await h.query<{ n: number }>(
+      `select count(*)::int as n from lot_event
+         where idempotency_key='shared-key-3' and kind='ferment_started';`,
+    );
+    expect(ev[0].n).toBe(0);
+  });
+
+  it("INVARIANT — every ferment_batches row has a backing ferment_started lot_event", async () => {
+    // a clean start with a fresh key produces a backed batch.
+    await asAuthenticated(h, (hh) =>
+      hh.query(
+        `select start_ferment_batch('JC-800','rec-test-anaerobic-v1','Anaerobic',
+           '2026-06-20T07:00:00Z'::timestamptz,'dev-1',900300,'fresh-start-key');`,
+      ),
+    );
+    const orphans = await h.query<{ n: number }>(
+      `select count(*)::int as n
+         from ferment_batches b
+        where not exists (
+          select 1 from lot_event e
+           where e.idempotency_key = b.idempotency_key and e.kind = 'ferment_started'
+        );`,
+    );
+    expect(orphans[0].n).toBe(0);
+  });
+
+  it("a genuine replay (same key, ferment_started) returns the same batch and appends nothing", async () => {
+    const first = await asAuthenticated(h, (hh) =>
+      hh.query<{ id: string }>(
+        `select start_ferment_batch('JC-800','rec-test-anaerobic-v1','Anaerobic',
+           '2026-06-20T08:00:00Z'::timestamptz,'dev-1',900400,'replay-key') as id;`,
+      ),
+    );
+    const before = (
+      await h.query<{ n: number }>(`select count(*)::int as n from ferment_batches;`)
+    )[0].n;
+    const second = await asAuthenticated(h, (hh) =>
+      hh.query<{ id: string }>(
+        `select start_ferment_batch('JC-800','rec-test-anaerobic-v1','Anaerobic',
+           '2026-06-20T08:00:00Z'::timestamptz,'dev-1',900401,'replay-key') as id;`,
+      ),
+    );
+    expect(second[0].id).toBe(first[0].id);
+    const after = (
+      await h.query<{ n: number }>(`select count(*)::int as n from ferment_batches;`)
+    )[0].n;
+    expect(after).toBe(before);
+  });
+});
+
+describe("P2-S3 review fix — apply_ferment_recipe is collision-free + rebind-traceable", () => {
+  let h: Harness;
+  let bA: string;
+  let bB: string;
+  beforeAll(async () => {
+    h = await freshDb();
+    await h.query(SEED_LOT);
+    await h.query(SEED_LOT_2);
+    await h.query(SEED_RECIPE);
+    // a second recipe to rebind to.
+    await h.query(
+      `insert into ferment_recipes
+         (id, name, method, altitude_band, target_ph, target_temp_c, target_brix_drop, target_hours, version)
+         values ('rec-test-washed-v1','Test Washed','Washed','1500-1700',4.5,21,3,24,1);`,
+    );
+    bA = (
+      await asAuthenticated(h, (hh) =>
+        hh.query<{ id: string }>(
+          `select start_ferment_batch('JC-800',null,'Anaerobic',
+             '2026-06-20T06:00:00Z'::timestamptz,'dev-1',910001,'ba') as id;`,
+        ),
+      )
+    )[0].id;
+    bB = (
+      await asAuthenticated(h, (hh) =>
+        hh.query<{ id: string }>(
+          `select start_ferment_batch('JC-801',null,'Washed',
+             '2026-06-20T06:00:00Z'::timestamptz,'dev-1',910002,'bb') as id;`,
+        ),
+      )
+    )[0].id;
+  });
+  afterAll(async () => h.close());
+
+  // FINDING idx 33/28/12/3/126: two distinct binds in the SAME wall-clock second both
+  // drew device_seq = whole-second epoch under the constant 'server-ferment' device,
+  // colliding on lot_event UNIQUE(device_id, device_seq) → second bind threw 23505 and
+  // its whole txn aborted. The fix draws device_seq from the monotonic server sequence.
+  it("two distinct recipe binds in the same statement batch BOTH land (no device_seq collision)", async () => {
+    await asAuthenticated(h, async (hh) => {
+      await hh.query(`select apply_ferment_recipe('${bA}','rec-test-anaerobic-v1');`);
+      await hh.query(`select apply_ferment_recipe('${bB}','rec-test-washed-v1');`);
+    });
+    const events = await h.query<{ n: number }>(
+      `select count(*)::int as n from lot_event where kind='ferment_recipe_applied';`,
+    );
+    expect(events[0].n).toBe(2);
+    const a = await h.query<{ recipe_id: string }>(
+      `select recipe_id from ferment_batches where id='${bA}';`,
+    );
+    const b = await h.query<{ recipe_id: string }>(
+      `select recipe_id from ferment_batches where id='${bB}';`,
+    );
+    expect(a[0].recipe_id).toBe("rec-test-anaerobic-v1");
+    expect(b[0].recipe_id).toBe("rec-test-washed-v1");
+  });
+
+  // FINDING idx 38: rebind A->B->A flipped recipe_id back to A with NO new ledger event
+  // (the per-(batch,recipe) key was reused → ON CONFLICT DO NOTHING dropped it), so the
+  // domain row diverged from the ledger's last recipe-applied event. The fix folds the
+  // unique seq into the event key so a genuine rebind always appends a fresh event.
+  it("rebind A->B->A appends THREE events and the last event matches the current recipe_id", async () => {
+    // bA is currently bound to anaerobic (from the prior test). Rebind to washed, then back.
+    await asAuthenticated(h, async (hh) => {
+      await hh.query(`select apply_ferment_recipe('${bA}','rec-test-washed-v1');`); // A->B
+      await hh.query(`select apply_ferment_recipe('${bA}','rec-test-anaerobic-v1');`); // B->A
+    });
+    const lot = "JC-800";
+    const events = await h.query<{ recipe_id: string }>(
+      `select payload->>'recipe_id' as recipe_id from lot_event
+         where stream_key='${lot}' and kind='ferment_recipe_applied'
+         order by device_seq;`,
+    );
+    // anaerobic (first test), washed, anaerobic again => 3 events
+    expect(events.length).toBe(3);
+    const current = (
+      await h.query<{ recipe_id: string }>(
+        `select recipe_id from ferment_batches where id='${bA}';`,
+      )
+    )[0].recipe_id;
+    expect(current).toBe("rec-test-anaerobic-v1");
+    // the ledger's LAST recipe-applied event agrees with the domain row.
+    expect(events[events.length - 1].recipe_id).toBe(current);
+  });
+
+  it("re-applying the SAME recipe is an idempotent no-op (no extra event)", async () => {
+    const before = (
+      await h.query<{ n: number }>(
+        `select count(*)::int as n from lot_event where kind='ferment_recipe_applied';`,
+      )
+    )[0].n;
+    await asAuthenticated(h, (hh) =>
+      hh.query(`select apply_ferment_recipe('${bA}','rec-test-anaerobic-v1');`),
+    );
+    const after = (
+      await h.query<{ n: number }>(
+        `select count(*)::int as n from lot_event where kind='ferment_recipe_applied';`,
+      )
+    )[0].n;
+    expect(after).toBe(before);
+  });
+});
+
+describe("P2-S3 review fix — ferment_readings.value range CHECK (data-layer enforcement)", () => {
+  let h: Harness;
+  let batchId: string;
+  beforeAll(async () => {
+    h = await freshDb();
+    await h.query(SEED_LOT);
+    await h.query(SEED_RECIPE);
+    await asAuthenticated(h, (hh) =>
+      hh.query(
+        `select start_ferment_batch('JC-800','rec-test-anaerobic-v1','Anaerobic',
+           '2026-06-20T06:00:00Z'::timestamptz,'dev-1',1,'b-range');`,
+      ),
+    );
+    batchId = (
+      await h.query<{ id: string }>(
+        `select id from ferment_batches where lot_code='JC-800' limit 1;`,
+      )
+    )[0].id;
+  });
+  afterAll(async () => h.close());
+
+  // FINDING idx 4/29/37: the pH 0-14 bound lived ONLY in the TS validator; the RPC +
+  // table imposed no CHECK, so a direct call could persist pH=-1 / 99 into the
+  // append-only series and falsely flip cut_reached. The fix is a kind-scoped table CHECK.
+  it("REJECTS a negative pH at the data layer (CHECK, not just the TS validator)", async () => {
+    await expect(
+      asAuthenticated(h, (hh) =>
+        hh.query(
+          `select record_ferment_reading('${batchId}','ph', -1,
+             '2026-06-20T08:00:00Z'::timestamptz,'dev-1',5001,'ph-neg');`,
+        ),
+      ),
+    ).rejects.toThrow(/check|constraint|range|violat/i);
+  });
+
+  it("REJECTS an above-range pH (99)", async () => {
+    await expect(
+      asAuthenticated(h, (hh) =>
+        hh.query(
+          `select record_ferment_reading('${batchId}','ph', 99,
+             '2026-06-20T09:00:00Z'::timestamptz,'dev-1',5002,'ph-hi');`,
+        ),
+      ),
+    ).rejects.toThrow(/check|constraint|range|violat/i);
+  });
+
+  it("REJECTS a negative Brix", async () => {
+    await expect(
+      asAuthenticated(h, (hh) =>
+        hh.query(
+          `select record_ferment_reading('${batchId}','brix', -4,
+             '2026-06-20T10:00:00Z'::timestamptz,'dev-1',5003,'brix-neg');`,
+        ),
+      ),
+    ).rejects.toThrow(/check|constraint|range|violat/i);
+  });
+
+  it("ACCEPTS a legitimate in-range reading (pH 4.6, temp 21, brix 12)", async () => {
+    await asAuthenticated(h, async (hh) => {
+      await hh.query(
+        `select record_ferment_reading('${batchId}','ph', 4.6, '2026-06-20T11:00:00Z'::timestamptz,'dev-1',5004,'ph-ok');`,
+      );
+      await hh.query(
+        `select record_ferment_reading('${batchId}','temp', 21, '2026-06-20T11:30:00Z'::timestamptz,'dev-1',5005,'temp-ok');`,
+      );
+      await hh.query(
+        `select record_ferment_reading('${batchId}','brix', 12, '2026-06-20T12:00:00Z'::timestamptz,'dev-1',5006,'brix-ok');`,
+      );
+    });
+    const r = await h.query<{ n: number }>(
+      `select count(*)::int as n from ferment_readings where batch_id='${batchId}';`,
+    );
+    expect(r[0].n).toBe(3);
+  });
+});
+
+describe("P2-S3 review fix — shared idempotency namespace fails closed (no orphaned ledger)", () => {
+  let h: Harness;
+  let batchId: string;
+  beforeAll(async () => {
+    h = await freshDb();
+    await h.query(SEED_LOT);
+    await h.query(SEED_RECIPE);
+    await asAuthenticated(h, (hh) =>
+      hh.query(
+        `select start_ferment_batch('JC-800','rec-test-anaerobic-v1','Anaerobic',
+           '2026-06-20T06:00:00Z'::timestamptz,'dev-1',1,'b-ns');`,
+      ),
+    );
+    batchId = (
+      await h.query<{ id: string }>(
+        `select id from ferment_batches where lot_code='JC-800' limit 1;`,
+      )
+    )[0].id;
+  });
+  afterAll(async () => h.close());
+
+  // FINDING idx 1: the reading deduped on the RAW key but appended the lot_event under a
+  // DERIVED key ('ferment-reading:'+key) — independent namespaces. A raw-key/derived-key
+  // collision let the reading insert while its lot_event was silently dropped, leaving a
+  // reading with no provenance event. The fix shares one namespace + fails closed.
+  it("record_ferment_reading RAISES (and inserts NO reading) when the key already anchors another event", async () => {
+    await h.query(
+      `select record_lot_event('JC-800','some_other_kind','{}'::jsonb,
+         '2026-06-20T05:00:00Z'::timestamptz,'dev-y',920100,'READKEY');`,
+    );
+    const before = (
+      await h.query<{ n: number }>(
+        `select count(*)::int as n from ferment_readings where batch_id='${batchId}';`,
+      )
+    )[0].n;
+    await expect(
+      asAuthenticated(h, (hh) =>
+        hh.query(
+          `select record_ferment_reading('${batchId}','ph', 4.5,
+             '2026-06-20T08:00:00Z'::timestamptz,'dev-1',920200,'READKEY');`,
+        ),
+      ),
+    ).rejects.toThrow(/already|anchors|unique|duplicate/i);
+    const after = (
+      await h.query<{ n: number }>(
+        `select count(*)::int as n from ferment_readings where batch_id='${batchId}';`,
+      )
+    )[0].n;
+    expect(after).toBe(before);
+  });
+
+  it("log_mill_water RAISES (and inserts NO water row) when the key already anchors another event", async () => {
+    await h.query(
+      `select record_lot_event('JC-800','some_other_kind','{}'::jsonb,
+         '2026-06-20T05:00:00Z'::timestamptz,'dev-z',920300,'WATERKEY');`,
+    );
+    const before = (
+      await h.query<{ n: number }>(
+        `select count(*)::int as n from mill_water_log where batch_id='${batchId}';`,
+      )
+    )[0].n;
+    await expect(
+      asAuthenticated(h, (hh) =>
+        hh.query(
+          `select log_mill_water('${batchId}', 50,
+             '2026-06-20T08:00:00Z'::timestamptz,'dev-1',920400,'WATERKEY');`,
+        ),
+      ),
+    ).rejects.toThrow(/already|anchors|unique|duplicate/i);
+    const after = (
+      await h.query<{ n: number }>(
+        `select count(*)::int as n from mill_water_log where batch_id='${batchId}';`,
+      )
+    )[0].n;
+    expect(after).toBe(before);
+  });
+});
+
+describe("P2-S3 review fix — cut-point fires a CLOSED-LOOP task onto the /tasks board", () => {
+  let h: Harness;
+  let batchId: string;
+  beforeAll(async () => {
+    h = await freshDb();
+    await h.query(SEED_LOT); // JC-800
+    await h.query(SEED_RECIPE); // target_ph = 4.2
+    // a worker + a harvest on this lot so _resolve_ferment_cut_worker resolves an assignee.
+    await h.query(
+      `insert into workers (id, name, role, daily_rate_usd, attendance, started_year, phone, crew)
+         values ('w-mill','Mill Op','Mill Operator',20,'present',2020,'507-0000','wet-mill');`,
+    );
+    await h.query(
+      `insert into plots
+         (id, ord, name, block, variety, area_ha, altitude_masl, trees, shade_pct,
+          established_year, status, last_inspected, expected_yield_kg, harvested_kg)
+         values ('plot-cp', 1, 'Cuesta Piedra', 'A', 'Geisha', 1.2, 1600, 800, 40,
+                 2015, 'healthy', '2026-06-18', 1000, 0);`,
+    );
+    await h.query(
+      `insert into harvests (id, date, plot_id, worker_id, cherries_kg, ripeness_pct, brix_avg, lot_code)
+         values ('hv-1','2026-06-19','plot-cp','w-mill',120,90,20,'JC-800');`,
+    );
+    await asAuthenticated(h, (hh) =>
+      hh.query(
+        `select start_ferment_batch('JC-800','rec-test-anaerobic-v1','Anaerobic',
+           '2026-06-20T06:00:00Z'::timestamptz,'dev-1',1,'b-cut');`,
+      ),
+    );
+    batchId = (
+      await h.query<{ id: string }>(
+        `select id from ferment_batches where lot_code='JC-800' limit 1;`,
+      )
+    )[0].id;
+  });
+  afterAll(async () => h.close());
+
+  // FINDING idx 44: the cut signal existed ONLY as v_ferment_cutpoint.cut_reached and a
+  // glass chip on /ferment/[batch] — the spec's load-bearing "closed-loop, not a
+  // dashboard" task onto the /tasks board was never built. The fix fires a 'Ferment Cut'
+  // board task on the FIRST crossing (single-fire), mirroring the S8 schedule_pasada path.
+  it("does NOT fire a task while the latest pH is above the recipe target", async () => {
+    await asAuthenticated(h, (hh) =>
+      hh.query(
+        `select record_ferment_reading('${batchId}','ph', 5.0, '2026-06-20T08:00:00Z'::timestamptz,'dev-1',6001,'cut-above');`,
+      ),
+    );
+    const t = await h.query<{ n: number }>(
+      `select count(*)::int as n from tasks where category='Ferment Cut';`,
+    );
+    expect(t[0].n).toBe(0);
+  });
+
+  it("fires EXACTLY ONE 'Ferment Cut' board task when pH first crosses the target", async () => {
+    await asAuthenticated(h, (hh) =>
+      hh.query(
+        `select record_ferment_reading('${batchId}','ph', 4.1, '2026-06-20T10:00:00Z'::timestamptz,'dev-1',6002,'cut-cross');`,
+      ),
+    );
+    const t = await h.query<{
+      n: number;
+      worker_id: string;
+      title: string;
+      priority: string;
+      status: string;
+    }>(
+      `select count(*)::int as n, max(worker_id) as worker_id, max(title) as title,
+              max(priority::text) as priority, max(status::text) as status
+         from tasks where category='Ferment Cut';`,
+    );
+    expect(t[0].n).toBe(1);
+    expect(t[0].worker_id).toBeTruthy(); // NOT NULL assignee resolved
+    expect(t[0].title.toLowerCase()).toMatch(/cut/);
+    // the batch records the fired task (single-fire anchor).
+    const b = await h.query<{ fired: string | null }>(
+      `select fired_cut_task_id as fired from ferment_batches where id='${batchId}';`,
+    );
+    expect(b[0].fired).toBeTruthy();
+  });
+
+  it("does NOT fire a SECOND task on a subsequent below-target reading (single-fire)", async () => {
+    await asAuthenticated(h, (hh) =>
+      hh.query(
+        `select record_ferment_reading('${batchId}','ph', 4.0, '2026-06-20T12:00:00Z'::timestamptz,'dev-1',6003,'cut-again');`,
+      ),
+    );
+    const t = await h.query<{ n: number }>(
+      `select count(*)::int as n from tasks where category='Ferment Cut';`,
+    );
+    expect(t[0].n).toBe(1);
+  });
+});

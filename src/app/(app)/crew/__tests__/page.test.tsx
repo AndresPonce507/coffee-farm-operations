@@ -1,6 +1,8 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import * as people from "@/lib/db/people";
+
 /**
  * /crew page smoke test. The page is an async Server Component that fetches from the
  * `people` read ports and composes three presentational sections. We stub the ports
@@ -121,5 +123,47 @@ describe("/crew page (smoke)", () => {
     expect(screen.getByTestId("crew-rehire-stub")).toHaveTextContent(
       "eligible:2",
     );
+  });
+
+  it("EXCLUDES a non-rehire-eligible non-picker from the 'Returning partners' strip", async () => {
+    // REGRESSION (review LOW idx 26): rehire_eligible defaults true and the seed never
+    // narrowed it, so the dignity strip showed a Rehire CTA on the owning family
+    // (supervisor/agronomist) — "rehire everyone" instead of "welcome back the
+    // returning pickers". The seed now flags year-round staff false; the page filters
+    // on rehireEligible, so a non-eligible supervisor is excluded from the strip while
+    // staying on the full roster.
+    vi.mocked(people.getCrewRoster).mockResolvedValueOnce([
+      {
+        workerId: "w-03",
+        name: "Eduardo Pérez",
+        role: "Picker",
+        crewName: "Crew Norte",
+        crewId: "crew-norte",
+        attendance: "present",
+        preferredName: null,
+        comarcaOrigin: null,
+        languages: ["es"],
+        rehireEligible: true,
+      },
+      {
+        workerId: "w-01",
+        name: "Miguel Janson",
+        role: "Supervisor",
+        crewName: "Field Ops",
+        crewId: "field-ops",
+        attendance: "present",
+        preferredName: null,
+        comarcaOrigin: null,
+        languages: ["es"],
+        rehireEligible: false, // year-round staff, not seasonally rehired
+      },
+    ]);
+
+    const ui = await CrewPage();
+    render(ui);
+
+    // the full roster still has both; only the eligible picker reaches the strip.
+    expect(screen.getByTestId("crew-roster-stub")).toHaveTextContent("members:2");
+    expect(screen.getByTestId("crew-rehire-stub")).toHaveTextContent("eligible:1");
   });
 });

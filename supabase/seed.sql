@@ -56,6 +56,15 @@ insert into workers (id, name, role, daily_rate_usd, attendance, started_year, p
 -- crew's languages/comarca, a still-valid pesticide cert, and a signed por-obra
 -- piece-rate — written through the command RPCs so they exercise the live write door.
 select _backfill_people();
+-- The "Returning partners" strip is the SEASON-START dignity moment for the returning
+-- Ngäbe-Buglé PICKING crew — not "rehire everyone". rehire_eligible defaults true (the
+-- right default for a newly-enrolled seasonal worker), so narrow the YEAR-ROUND /
+-- non-seasonal staff to false here: the supervisor (w-01), agronomist (w-02), two mill
+-- operators (w-10/w-11), and the driver (w-12) are not seasonally rehired, so the strip
+-- and its one-tap Rehire CTA no longer surface on the owning family. That leaves the 9
+-- returning pickers (w-03..w-09, w-13, w-14) as the strip's subjects.
+update worker_identity set rehire_eligible = false
+ where worker_id in ('w-01','w-02','w-10','w-11','w-12');
 update worker_identity set comarca_origin = 'Ngäbe-Buglé', preferred_name = 'Lucía',
        languages = array['es','ngäbere'], id_doc_kind = 'cedula', rehire_eligible = true
  where worker_id = 'w-06';
@@ -299,5 +308,27 @@ values ('2026-06-01', 9.75, 1.25, 8.33, 'PLACEHOLDER demo rates — confirm with
 
 -- Calculate (freeze the snapshot for) the demo week via the live command RPC.
 select compute_pay_period('pp-2026-06-w3', '2026-06-15', '2026-06-21', '2026-2027', 'daily');
+
+-- ── P2-S8: harvest-planning dogfood — real phenology + a pasada on the calendar ──
+-- v_harvest_readiness LEFT-JOINs plot_phenology and coalesces a missing row to GDD 0,
+-- so on a fresh seed with NO phenology every plot rendered ~0% / "No bloom logged" and
+-- the pasada calendar was empty forever — the planner showed a wall of meaningless 0%
+-- cards and the empty-states instructed the user to use controls that (until now) did
+-- not exist. Log real maturation signals (a bloom + accumulated GDD, staggered down the
+-- altitude gradient: the lower, warmer plots near their 2200 GDD requirement = ready;
+-- the high Geisha early) through the LIVE record_maturation_signal RPC so the readiness
+-- model derives genuine staggered scores, then schedule one pasada so the calendar is
+-- non-empty and fires a real task onto the Tasks board. (Written via the command RPCs,
+-- exercising the live write door — the seed never raw-inserts derived rows.)
+select record_maturation_signal('p-cuesta-piedra','2026-01-10', 2120, 0.74, '2026-06-20T12:00:00Z'::timestamptz, 'server', next_server_seq(), 'seed-mat-cuesta');
+select record_maturation_signal('p-palmira',      '2026-01-12', 2040, 0.71, '2026-06-20T12:00:00Z'::timestamptz, 'server', next_server_seq(), 'seed-mat-palmira');
+select record_maturation_signal('p-talamanca',    '2026-01-20', 1760, 0.66, '2026-06-20T12:00:00Z'::timestamptz, 'server', next_server_seq(), 'seed-mat-talamanca');
+select record_maturation_signal('p-nueva-suiza',  '2026-01-22', 1580, 0.62, '2026-06-20T12:00:00Z'::timestamptz, 'server', next_server_seq(), 'seed-mat-nuevasuiza');
+select record_maturation_signal('p-bambito',      '2026-02-01', 1320, 0.58, '2026-06-20T12:00:00Z'::timestamptz, 'server', next_server_seq(), 'seed-mat-bambito');
+select record_maturation_signal('p-tizingal-alto','2026-02-10',  980, 0.52, '2026-06-20T12:00:00Z'::timestamptz, 'server', next_server_seq(), 'seed-mat-tizingal');
+select record_maturation_signal('p-las-lagunas',  '2026-02-12',  860, 0.49, '2026-06-20T12:00:00Z'::timestamptz, 'server', next_server_seq(), 'seed-mat-laslagunas');
+
+-- Schedule the first pasada on the readiest plot (fires a Harvest task onto /tasks).
+select schedule_pasada('p-cuesta-piedra', '2026', 1, '2026-06-28', 'high', '2026-06-20T12:00:00Z'::timestamptz, 'server', next_server_seq(), 'seed-pasada-cuesta');
 
 commit;

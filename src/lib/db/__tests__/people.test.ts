@@ -16,8 +16,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  *   - getCrewRoster / getAttendanceToday / getWorkerAttendanceTimeline /
  *     getWorkerPorObraHistory / getWorkerCertsValid / getWorkerStream: query the
  *     right relation, filter/order per the contract, and map rows.
- *   - verifyAttendanceChain: calls verify_chain with the 'attendance:<id>' stream
- *     key and returns its boolean.
+ *   - verifyAttendanceChain: calls the stream-aware verify_chain with the
+ *     'attendance:<id>' stream key — the 'attendance:' prefix is the load-bearing
+ *     token that routes the verifier to attendance_event (the badge's ledger),
+ *     not lot_event — and returns its boolean.
  *
  * Unit tests over the port's public surface — no real DB. The SQL of the views,
  * tables, and verify_chain is pinned by the db-suite; this file pins the
@@ -649,6 +651,41 @@ describe("verifyAttendanceChain", () => {
     await expect(verifyAttendanceChain("W-001")).rejects.toThrow(
       "verifyAttendanceChain: rpc-boom",
     );
+  });
+
+  // REGRESSION (review HIGH idx 153, test-efficacy): the chain-verified badge's
+  // trust depends entirely on the RPC routing to the ATTENDANCE ledger. The
+  // original Phase-1 verify_chain iterated only lot_event, so verify_chain(
+  // 'attendance:<id>') found zero rows and returned a vacuous `true` — the badge
+  // was permanently green and verified nothing. The DB suite now proves the SQL
+  // is stream-aware (p2s1_people.db.test.ts); THIS seam test must pin the TS side
+  // so a future refactor cannot silently re-point the badge at the wrong stream
+  // (the exact failure mode) and still pass. We lock the load-bearing routing
+  // token explicitly: the single arg is `stream_key`, it carries the
+  // `attendance:` prefix that selects attendance_event (NOT the bare id, NOT the
+  // `worker:`/lot stream), and it embeds the worker id verbatim.
+  it("routes to the stream-aware verify_chain via the load-bearing 'attendance:' stream key", async () => {
+    const { client, calls } = makeClient<boolean>({ data: true, error: null });
+    getSupabaseMock.mockReturnValue(client);
+
+    const { verifyAttendanceChain } = await import("@/lib/db/people");
+    await verifyAttendanceChain("W-042");
+
+    // Names the stream-aware verifier — not a bespoke per-worker RPC.
+    expect(calls.rpcName).toBe("verify_chain");
+
+    // Exactly one arg, keyed `stream_key` — the prefix is what drives the SQL's
+    // table branch, so the key must be present and unique.
+    expect(Object.keys(calls.rpcArgs ?? {})).toEqual(["stream_key"]);
+
+    const streamKey = (calls.rpcArgs as { stream_key: string }).stream_key;
+    // The 'attendance:' prefix routes verify_chain to attendance_event. Dropping
+    // it (bare id) or using 'worker:'/a lot stream would verify the WRONG ledger
+    // and re-introduce the vacuous-green badge — assert it can never regress to that.
+    expect(streamKey.startsWith("attendance:")).toBe(true);
+    expect(streamKey.startsWith("worker:")).toBe(false);
+    // Carries the worker id verbatim so each worker's own ledger is verified.
+    expect(streamKey).toBe("attendance:W-042");
   });
 });
 

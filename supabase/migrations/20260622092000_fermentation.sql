@@ -25,6 +25,16 @@
 -- hole that let anon mint lots in S3) THEN `grant execute ... to authenticated`. The
 -- domain tables get NO write grant (RPC-only). Nothing is ever granted to anon.
 
+-- CLOSED-LOOP CUT ALERT (P2-S3 spec): the cut-point alert must fire a TASK onto the
+-- existing phase-1 `tasks` board — "closed-loop, not a dashboard" — so the crew is
+-- pushed the "cut now" signal where they work, not only when staring at the batch page.
+-- Extend the existing `task_category` enum with a 'Ferment Cut' value (purely additive,
+-- IF NOT EXISTS, mirroring the S8 'Harvest' add). `ALTER TYPE ... ADD VALUE` must run
+-- OUTSIDE a transaction block and be committed before the value is used, so it goes
+-- here BEFORE `begin;` (exactly as the S8 harvest_planning migration does); the value is
+-- then referenced only as a string literal at RPC CALL time (post-commit), never at DDL.
+alter type task_category add value if not exists 'Ferment Cut';
+
 begin;
 
 -- ──────────────────────────────────────────────────────────────────────────
@@ -102,7 +112,16 @@ create table ferment_batches (
   method      process_method not null,
   started_at  timestamptz    not null,
   ended_at    timestamptz,                               -- null while the ferment is live
-  created_at  timestamptz    not null default now()
+  created_at  timestamptz    not null default now(),
+  -- exactly-once anchor on the DOMAIN row (not just a kind-scoped event lookup): the
+  -- start's idempotency_key is bound here so a replay (or a cross-kind key collision
+  -- against the GLOBALLY-unique lot_event.idempotency_key) can never mint a phantom
+  -- batch whose ferment_started lot_event was silently dropped by ON CONFLICT.
+  idempotency_key text       unique,
+  -- the board task fired when this batch first crosses its recipe's cut-point pH
+  -- (closed-loop: the cut alert is pushed onto the /tasks board, not just a chip).
+  -- Single-fire anchor: set once, guards against double-firing on replay/below-target.
+  fired_cut_task_id text     references tasks(id)
 );
 create index ferment_batches_lot_idx    on ferment_batches(lot_code);
 create index ferment_batches_recipe_idx on ferment_batches(recipe_id);
@@ -124,7 +143,20 @@ create table ferment_readings (
   device_id       text        not null,
   device_seq      bigint      not null,
   idempotency_key text        unique,                    -- exactly-once anchor (D4)
-  unique (device_id, device_seq)                         -- D4 replay safety
+  unique (device_id, device_seq),                        -- D4 replay safety
+  -- VALUE DOMAIN at the DATA LAYER (ADR-002: the SQL CHECK is the REAL enforcement; the
+  -- TS validator is only the friendly-error seam). The cut-point fires on
+  -- `latest_ph <= target_ph`, so an out-of-range pH would falsely signal "cut now" on an
+  -- append-only series that can never be corrected in place — this CHECK fails closed.
+  -- Kind-scoped (NOT a blanket value>=0): °C can legitimately sit near/below zero.
+  -- `'NaN'::numeric` fails every comparison so NaN is rejected for every kind.
+  constraint ferment_readings_value_range check (
+    case reading_kind
+      when 'ph'   then value >= 0   and value <= 14
+      when 'temp' then value >= -5  and value <= 60
+      when 'brix' then value >= 0   and value <= 40
+    end
+  )
 );
 create index ferment_readings_batch_idx on ferment_readings(batch_id, occurred_at);
 create index ferment_readings_kind_idx  on ferment_readings(reading_kind);
@@ -194,6 +226,7 @@ create or replace function apply_ferment_recipe(
 as $$
 declare
   v_lot text;
+  v_seq bigint;
 begin
   select lot_code into v_lot from ferment_batches where id = p_batch_id;
   if v_lot is null then
@@ -203,18 +236,32 @@ begin
     raise exception 'unknown recipe %', p_recipe_id using errcode = 'foreign_key_violation';
   end if;
 
-  -- no-op if already bound to this exact recipe (idempotent rebind)
+  -- no-op if already bound to this exact recipe (idempotent rebind: no event)
   if exists (select 1 from ferment_batches where id = p_batch_id and recipe_id = p_recipe_id) then
     return p_batch_id;
   end if;
 
   update ferment_batches set recipe_id = p_recipe_id where id = p_batch_id;
 
+  -- Draw device_seq from the shared monotonic server sequence (the SSOT the weigh /
+  -- attendance / clock-in paths use) instead of a WHOLE-SECOND epoch. A second-
+  -- granularity epoch under the constant 'server-ferment' device collides on
+  -- lot_event's UNIQUE(device_id, device_seq) whenever two distinct binds land in the
+  -- same wall-clock second, aborting the bind with a raw 23505. nextval is strictly
+  -- increasing and never repeats, so (device_id, device_seq) is collision-free forever.
+  v_seq := nextval('worker_server_seq');
+
+  -- Fold the seq into the event's idempotency_key so a genuine rebind back to a
+  -- previously-used recipe (A->B->A) always appends a fresh ferment_recipe_applied
+  -- event (the line-above no-op check already makes a true same-recipe re-apply a
+  -- no-op). Without the seq the key 'apply-recipe:batch:A' would be reused on the
+  -- rebind-to-A and ON CONFLICT DO NOTHING would silently drop the event, leaving the
+  -- batch's recipe_id diverged from the ledger's last recipe-applied event.
   perform record_lot_event(
     v_lot, 'ferment_recipe_applied',
     jsonb_build_object('batch_id', p_batch_id, 'recipe_id', p_recipe_id),
-    now(), 'server-ferment', extract(epoch from clock_timestamp())::bigint,
-    'apply-recipe:' || p_batch_id::text || ':' || p_recipe_id
+    now(), 'server-ferment', v_seq,
+    'apply-recipe:' || p_batch_id::text || ':' || p_recipe_id || ':' || v_seq::text
   );
   return p_batch_id;
 end $$;
@@ -236,17 +283,8 @@ create or replace function start_ferment_batch(
   set search_path = public, extensions
 as $$
 declare
-  existing uuid;
-  new_id   uuid;
+  new_id uuid;
 begin
-  -- exactly-once: if this start was already recorded, return its batch id.
-  select (payload->>'batch_id')::uuid into existing
-    from lot_event
-   where idempotency_key = p_idempotency_key and kind = 'ferment_started';
-  if existing is not null then
-    return existing;
-  end if;
-
   if not exists (select 1 from lots where code = p_lot_code) then
     raise exception 'unknown lot %', p_lot_code using errcode = 'foreign_key_violation';
   end if;
@@ -254,9 +292,36 @@ begin
     raise exception 'unknown recipe %', p_recipe_id using errcode = 'foreign_key_violation';
   end if;
 
-  insert into ferment_batches (lot_code, recipe_id, method, started_at)
-  values (p_lot_code, p_recipe_id, p_method, p_occurred_at)
+  -- FAIL CLOSED on a CROSS-KIND key collision. lot_event.idempotency_key is GLOBALLY
+  -- unique across ALL kinds. If this key was already burned by a DIFFERENT event kind,
+  -- the batch INSERT below would still succeed (the key is free on ferment_batches),
+  -- but record_lot_event's ON CONFLICT (idempotency_key) DO NOTHING would silently drop
+  -- the ferment_started append — leaving a phantom batch with no ledger backing. Reject
+  -- it instead (23505 maps to the client's "already started" message). A genuine same-
+  -- key replay of THIS start is handled by the domain ON CONFLICT below and never
+  -- reaches here, because its event kind IS 'ferment_started'.
+  if exists (
+    select 1 from lot_event
+     where idempotency_key = p_idempotency_key and kind <> 'ferment_started'
+  ) then
+    raise exception 'idempotency_key % already used by a different event kind', p_idempotency_key
+      using errcode = 'unique_violation';
+  end if;
+
+  -- exactly-once is bound on the DOMAIN row, not a kind-scoped event lookup. Binding the
+  -- key on ferment_batches makes the batch row and its ferment_started event atomically
+  -- consistent: a genuine replay returns the same batch and re-appends nothing.
+  insert into ferment_batches (lot_code, recipe_id, method, started_at, idempotency_key)
+  values (p_lot_code, p_recipe_id, p_method, p_occurred_at, p_idempotency_key)
+  on conflict (idempotency_key) do nothing
   returning id into new_id;
+
+  if new_id is null then
+    -- replay: return the already-minted batch, append nothing. The ferment_started
+    -- event was already recorded on the original insert.
+    select id into new_id from ferment_batches where idempotency_key = p_idempotency_key;
+    return new_id;
+  end if;
 
   perform record_lot_event(
     p_lot_code, 'ferment_started',
@@ -267,9 +332,39 @@ begin
   return new_id;
 end $$;
 
+-- _resolve_ferment_cut_worker — pick the assignee for a fired cut-point board task.
+-- tasks.worker_id is NOT NULL, so this resolver returns the lot's most-recent picker →
+-- else any Supervisor → else any worker. Returns NULL only when the farm has NO workers
+-- at all (the caller then skips the task insert rather than violating the NOT NULL).
+-- Internal helper (owner-only; NOT granted to any REST role).
+create or replace function _resolve_ferment_cut_worker(p_lot_code text)
+  returns text
+  language sql
+  stable
+  set search_path = public
+as $$
+  select w_id from (
+    -- 1. the lot's most-recent picker (highest priority)
+    select h.worker_id as w_id, 1 as rank, h.date as ord
+      from harvests h
+     where h.lot_code = p_lot_code
+    union all
+    -- 2. any Supervisor
+    select w.id, 2, '1900-01-01'::date from workers w where w.role = 'Supervisor'
+    union all
+    -- 3. any worker at all (last resort)
+    select w.id, 3, '1900-01-01'::date from workers w
+  ) cand
+  order by rank, ord desc
+  limit 1;
+$$;
+
 -- record_ferment_reading — append one pH/temp/Brix reading to the live series and a
 -- 'ferment_reading' lot_event, in one txn. The batch MUST exist (fail-closed FK).
 -- Exactly-once on idempotency_key: a replay (e.g. from the offline outbox) is one row.
+-- CLOSED-LOOP CUT ALERT: when a pH reading FIRST crosses the batch's recipe target, fire
+-- ONE 'Ferment Cut' task onto the /tasks board (single-fire via ferment_batches
+-- .fired_cut_task_id) so the crew is pushed the "cut now" signal where they work.
 create or replace function record_ferment_reading(
   p_batch_id        uuid,
   p_kind            text,
@@ -284,14 +379,30 @@ create or replace function record_ferment_reading(
   set search_path = public, extensions
 as $$
 declare
-  v_lot      text;
-  existing   bigint;
-  new_id     bigint;
+  v_lot       text;
+  existing    bigint;
+  new_id      bigint;
+  v_target_ph numeric;
+  v_recipe    text;
+  v_already   text;
+  v_worker    text;
+  v_plot      text;
+  v_task_id   text;
 begin
   -- exactly-once replay short-circuit
   select id into existing from ferment_readings where idempotency_key = p_idempotency_key;
   if existing is not null then
     return existing;
+  end if;
+
+  -- fail closed on a CROSS-KIND key collision: the lot_event append below uses the SAME
+  -- raw idempotency_key (one shared namespace). If that key already anchors a DIFFERENT
+  -- ledger event, record_lot_event's ON CONFLICT DO NOTHING would silently drop the
+  -- ferment_reading append, leaving a reading row in the immutable series with no
+  -- backing provenance event. Reject it so the whole txn aborts (no orphaned reading).
+  if exists (select 1 from lot_event where idempotency_key = p_idempotency_key) then
+    raise exception 'idempotency_key % already anchors a different ledger event', p_idempotency_key
+      using errcode = 'unique_violation';
   end if;
 
   select lot_code into v_lot from ferment_batches where id = p_batch_id;
@@ -311,11 +422,51 @@ begin
     return new_id;
   end if;
 
+  -- one shared idempotency namespace with the reading (no 'ferment-reading:' prefix): the
+  -- event is anchored to the same key the reading deduped on, so it can never be orphaned.
   perform record_lot_event(
     v_lot, 'ferment_reading',
     jsonb_build_object('batch_id', p_batch_id, 'kind', p_kind, 'value', p_value),
-    p_occurred_at, p_device_id, p_device_seq, 'ferment-reading:' || p_idempotency_key
+    p_occurred_at, p_device_id, p_device_seq, p_idempotency_key
   );
+
+  -- CLOSED-LOOP CUT ALERT: a pH reading at/below the recipe target = the window is
+  -- closing. Fire ONE board task on the FIRST crossing only (single-fire anchor), so a
+  -- replay or a subsequent below-target reading never double-fires. Skip silently if no
+  -- recipe is bound, the reading isn't pH, the value is above target, or the task was
+  -- already fired. (The v_ferment_cutpoint view still surfaces cut_reached regardless.)
+  if p_kind = 'ph' then
+    select b.recipe_id, b.fired_cut_task_id, rec.target_ph
+      into v_recipe, v_already, v_target_ph
+      from ferment_batches b
+      left join ferment_recipes rec on rec.id = b.recipe_id
+     where b.id = p_batch_id;
+
+    if v_recipe is not null and v_already is null
+       and v_target_ph is not null and p_value <= v_target_ph then
+      -- resolve an assignee; skip the task insert only if the farm has NO workers at all
+      -- (tasks.worker_id is NOT NULL — never insert a null assignee).
+      v_worker := _resolve_ferment_cut_worker(v_lot);
+      if v_worker is not null then
+        select plot_id into v_plot from harvests where lot_code = v_lot
+          order by date desc limit 1;
+        v_task_id := gen_random_uuid()::text;
+        insert into tasks (id, title, category, plot_id, worker_id, due, status, priority)
+        values (
+          v_task_id,
+          'Cut ferment — ' || v_lot,
+          'Ferment Cut',
+          v_plot,
+          v_worker,
+          (p_occurred_at at time zone 'UTC')::date,
+          'todo',
+          'high'
+        );
+        update ferment_batches set fired_cut_task_id = v_task_id where id = p_batch_id;
+      end if;
+    end if;
+  end if;
+
   return new_id;
 end $$;
 
@@ -343,6 +494,15 @@ begin
     return existing;
   end if;
 
+  -- fail closed on a CROSS-KIND key collision (one shared idempotency namespace with the
+  -- lot_event append below). If the raw key already anchors a different ledger event,
+  -- record_lot_event's ON CONFLICT DO NOTHING would silently drop the mill_water append,
+  -- leaving a water-draw row with no backing provenance event. Reject so the txn aborts.
+  if exists (select 1 from lot_event where idempotency_key = p_idempotency_key) then
+    raise exception 'idempotency_key % already anchors a different ledger event', p_idempotency_key
+      using errcode = 'unique_violation';
+  end if;
+
   select lot_code into v_lot from ferment_batches where id = p_batch_id;
   if v_lot is null then
     raise exception 'unknown ferment batch %', p_batch_id using errcode = 'foreign_key_violation';
@@ -359,10 +519,11 @@ begin
     return new_id;
   end if;
 
+  -- one shared idempotency namespace with the water row (no 'mill-water:' prefix).
   perform record_lot_event(
     v_lot, 'mill_water',
     jsonb_build_object('batch_id', p_batch_id, 'liters', p_liters),
-    p_occurred_at, p_device_id, p_device_seq, 'mill-water:' || p_idempotency_key
+    p_occurred_at, p_device_id, p_device_seq, p_idempotency_key
   );
   return new_id;
 end $$;
@@ -467,6 +628,8 @@ revoke execute on function log_mill_water(uuid, numeric, timestamptz, text, bigi
 revoke execute on function ferment_recipes_block_curve_edit()                                            from public;
 revoke execute on function ferment_readings_block_mutation()                                             from public;
 revoke execute on function mill_water_log_block_mutation()                                               from public;
+-- internal cut-task assignee resolver — owner-only, NOT granted to any REST role.
+revoke execute on function _resolve_ferment_cut_worker(text)                                             from public;
 
 grant execute on function apply_ferment_recipe(uuid, text)                                              to authenticated;
 grant execute on function start_ferment_batch(text, text, process_method, timestamptz, text, bigint, text) to authenticated;

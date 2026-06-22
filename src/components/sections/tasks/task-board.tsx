@@ -1,4 +1,14 @@
-import { Scissors, Sprout, Bug, Wind, Trees, Droplets, Mountain } from "lucide-react";
+import {
+  Scissors,
+  Sprout,
+  Bug,
+  Wind,
+  Trees,
+  Droplets,
+  Mountain,
+  Cherry,
+  HelpCircle,
+} from "lucide-react";
 
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +34,7 @@ const CATEGORY_TONE: Record<TaskCategory, BadgeTone> = {
   Planting: "ok",
   Irrigation: "sky",
   Soil: "coffee",
+  Harvest: "cherry",
 };
 
 /* ---- Category → icon (typed lucide components) ---- */
@@ -36,6 +47,7 @@ const CATEGORY_ICON: Record<TaskCategory, IconType> = {
   Planting: Trees,
   Irrigation: Droplets,
   Soil: Mountain,
+  Harvest: Cherry,
 };
 
 /* ---- Priority → dot color (explicit literal map) ---- */
@@ -58,7 +70,9 @@ function isOverdue(task: FarmTask): boolean {
 
 /* ---- A single task tile ---- */
 function TaskTile({ task }: { task: FarmTask }) {
-  const Icon = CATEGORY_ICON[task.category];
+  // Total lookup: a future DB enum value the TS contract hasn't caught up to
+  // must never render `undefined` (which throws and 500s the whole route).
+  const Icon = CATEGORY_ICON[task.category] ?? HelpCircle;
   const overdue = isOverdue(task);
 
   return (

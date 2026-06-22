@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { CheckCircle2, FlaskConical } from "lucide-react";
 
 import {
@@ -16,7 +16,9 @@ import { Button } from "@/components/ui/button";
  * value input, driven by the `recordFermentReadingAction` Server Action through
  * `useActionState`. Manual taps now; a BLE pH/temp probe is a drop-in later behind the
  * same write door. Glove-friendly tap targets, inline friendly errors (the SQL CHECK is
- * the real guard), a stable idempotency key so a double-submit dedupes to one reading.
+ * the real guard), and a per-reading idempotency key: stable across one write so a
+ * same-render double-submit dedupes, re-minted after each success so the next distinct
+ * reading is its own exactly-once event (the curve never loses a reading).
  */
 
 const FIELD =
@@ -29,9 +31,22 @@ export function LogReadingForm({ batchId }: { batchId: string }) {
     FormData
   >(recordFermentReadingAction, FERMENT_IDLE);
 
-  // Stable exactly-once anchor minted once per mount; carried as a hidden field so a
-  // double-submit re-uses the SAME key (the RPC short-circuits on idempotency_key).
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
+  // Exactly-once anchor carried as a hidden field. It must be STABLE across the
+  // re-renders of a SINGLE write (a same-render double-submit re-uses it so the RPC
+  // short-circuits on idempotency_key), yet FRESH for each new reading — the form
+  // stays mounted while a picker logs reading after reading on the live curve.
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
+  const prevStatus = useRef(state.status);
+  useEffect(() => {
+    // After a successful write, mint a fresh key so the NEXT distinct reading is its
+    // own exactly-once event; a true double-submit (same render) keeps this key and
+    // still dedupes in record_ferment_reading. Keyed on the success TRANSITION via
+    // prevStatus (not on `state` identity) to avoid a regenerate loop.
+    if (state.status === "success" && prevStatus.current !== "success") {
+      setIdempotencyKey(crypto.randomUUID());
+    }
+    prevStatus.current = state.status;
+  }, [state]);
 
   const fieldError = (key: string) =>
     state.status === "error" ? state.errors?.[key] : undefined;

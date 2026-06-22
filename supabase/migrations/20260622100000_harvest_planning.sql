@@ -121,7 +121,12 @@ create table pasada_schedule (
                          check (status in ('planned','dispatched','picked','superseded')),
   reason               text,                              -- why this (re)plan exists, e.g. 'rain front'
   superseded_by        bigint      references pasada_schedule(id),
-  fired_task_id        text,                              -- the tasks row this plan fired (if any)
+  -- the tasks row this plan fired (if any). FK to the phase-1 `tasks` board with
+  -- ON DELETE SET NULL: the board is a freely-mutable phase-1 surface (authenticated
+  -- DELETE is granted by convention), so we must NOT block a task delete with a hard
+  -- FK — instead a deleted task makes the broken plan->task link surface as NULL
+  -- rather than a dangling phantom id (the append-only plan row itself is preserved).
+  fired_task_id        text        references tasks(id) on delete set null,
   occurred_at          timestamptz not null,
   recorded_at          timestamptz not null default now(),
   device_id            text        not null,
@@ -131,6 +136,7 @@ create table pasada_schedule (
 );
 create index pasada_schedule_plot_idx   on pasada_schedule (plot_id, pasada_number);
 create index pasada_schedule_active_idx on pasada_schedule (status) where status <> 'superseded';
+create index pasada_schedule_fired_task_idx on pasada_schedule (fired_task_id) where fired_task_id is not null;
 
 -- pasada_schedule is append-only too: the ONLY legal UPDATE is the supersede stamp
 -- (status -> 'superseded' + superseded_by set), performed by replan_pasada as the
@@ -141,16 +147,58 @@ create or replace function pasada_schedule_guard() returns trigger
   language plpgsql
   set search_path = public
 as $$
+declare
+  is_supersede_stamp boolean;
+  is_fk_clear        boolean;
 begin
   if tg_op = 'DELETE' then
     raise exception 'pasada_schedule is append-only: DELETE is not permitted'
       using errcode = 'restrict_violation';
   end if;
-  -- the only sanctioned UPDATE is the supersede stamp: a planned row becoming
-  -- superseded. Everything else (re-dating, un-superseding) is rejected.
-  if not (old.status <> 'superseded' and new.status = 'superseded'
+
+  -- Sanctioned UPDATE #1 — the supersede STAMP: a planned row becoming superseded,
+  -- where ONLY status + superseded_by change. Every other column is pinned, so
+  -- history (incl. the idempotency_key the exactly-once contract depends on, the
+  -- fired_task_id linkage, the device/occurred_at envelope) is never rewritten.
+  is_supersede_stamp :=
+         (old.status <> 'superseded' and new.status = 'superseded'
+          and new.id            =  old.id
+          and new.plot_id       =  old.plot_id
+          and new.season        =  old.season
+          and new.pasada_number =  old.pasada_number
           and new.predicted_ready_date is not distinct from old.predicted_ready_date
-          and new.plot_id = old.plot_id and new.pasada_number = old.pasada_number) then
+          and new.predicted_ripe_pct   =  old.predicted_ripe_pct
+          and new.reason          is not distinct from old.reason
+          and new.fired_task_id   is not distinct from old.fired_task_id
+          and new.occurred_at     =  old.occurred_at
+          and new.recorded_at     =  old.recorded_at
+          and new.device_id       =  old.device_id
+          and new.device_seq      =  old.device_seq
+          and new.idempotency_key is not distinct from old.idempotency_key);
+
+  -- Sanctioned UPDATE #2 — the FK-driven fired_task_id CLEAR: when a fired task is
+  -- deleted from the phase-1 board, the fired_task_id FK (on delete set null) nulls
+  -- ONLY that column. That is not history rewriting — the link to a now-gone task
+  -- honestly becomes NULL. Permit fired_task_id going from a value to NULL with
+  -- every other column (status included) unchanged; reject any other re-pointing.
+  is_fk_clear :=
+         (old.fired_task_id is not null and new.fired_task_id is null
+          and new.id            =  old.id
+          and new.plot_id       =  old.plot_id
+          and new.season        =  old.season
+          and new.pasada_number =  old.pasada_number
+          and new.status        =  old.status
+          and new.superseded_by is not distinct from old.superseded_by
+          and new.predicted_ready_date is not distinct from old.predicted_ready_date
+          and new.predicted_ripe_pct   =  old.predicted_ripe_pct
+          and new.reason          is not distinct from old.reason
+          and new.occurred_at     =  old.occurred_at
+          and new.recorded_at     =  old.recorded_at
+          and new.device_id       =  old.device_id
+          and new.device_seq      =  old.device_seq
+          and new.idempotency_key is not distinct from old.idempotency_key);
+
+  if not (is_supersede_stamp or is_fk_clear) then
     raise exception 'pasada_schedule is append-only: re-plan with a NEW row, only the supersede stamp may UPDATE'
       using errcode = 'restrict_violation';
   end if;
@@ -307,6 +355,16 @@ create or replace function record_maturation_signal(
   set search_path = public, extensions
 as $$
 begin
+  -- exactly-once must not silently depend on the caller sending a non-null key:
+  -- `idempotency_key = NULL` is UNKNOWN (never short-circuits) and a UNIQUE column
+  -- permits unlimited NULLs, so a NULL key would disable the replay guard entirely.
+  -- Reject it up front (app callers always mint a uuid, so this only fires for a
+  -- direct/bypassing caller).
+  if p_idempotency_key is null or btrim(p_idempotency_key) = '' then
+    raise exception 'idempotency_key is required'
+      using errcode = 'invalid_parameter_value';
+  end if;
+
   -- exactly-once: a replay with the same key is a no-op (no second ledger row,
   -- no double-applied phenology).
   if exists (select 1 from maturation_signal where idempotency_key = p_idempotency_key) then
@@ -360,6 +418,12 @@ declare
   plot_name   text;
   prio        priority;
 begin
+  -- exactly-once must not depend on a non-null key (see record_maturation_signal).
+  if p_idempotency_key is null or btrim(p_idempotency_key) = '' then
+    raise exception 'idempotency_key is required'
+      using errcode = 'invalid_parameter_value';
+  end if;
+
   -- exactly-once
   select id into existing_id from pasada_schedule where idempotency_key = p_idempotency_key;
   if existing_id is not null then
@@ -369,6 +433,28 @@ begin
   select name into plot_name from plots where id = p_plot_id;
   if plot_name is null then
     raise exception 'unknown plot %', p_plot_id using errcode = 'foreign_key_violation';
+  end if;
+
+  -- SERIALIZE per (plot, pasada) — same defense green_inventory.prevent_oversell
+  -- takes per green lot. PostgREST runs each request in its own READ COMMITTED txn,
+  -- so without a lock two concurrent (re)plans for the same pass both read the same
+  -- pre-write active set and both append an active row. A txn-scoped advisory lock
+  -- keyed on (plot, pasada), taken BEFORE the duplicate-active check, makes them
+  -- queue (each sees the prior's committed state); it auto-releases at commit and is
+  -- keyed per-pass so unrelated passes never block.
+  perform pg_advisory_xact_lock(hashtext('pasada:' || p_plot_id || ':' || p_pasada_number));
+
+  -- single-active invariant: at most ONE non-superseded plan per (plot, season,
+  -- pasada). schedule_pasada is the front door for a FIRST plan; a re-schedule of an
+  -- already-scheduled pass must go through replan_pasada (which supersedes the prior
+  -- plan), not duplicate it. Reject the duplicate with a friendly, mappable error.
+  if exists (
+    select 1 from pasada_schedule
+     where plot_id = p_plot_id and season = p_season
+       and pasada_number = p_pasada_number and status <> 'superseded'
+  ) then
+    raise exception 'pasada % for plot % (season %) is already scheduled — re-plan it instead',
+      p_pasada_number, p_plot_id, p_season using errcode = 'unique_violation';
   end if;
 
   worker := _resolve_pasada_worker(p_plot_id);
@@ -432,6 +518,12 @@ declare
   plan_id     bigint;
   plot_name   text;
 begin
+  -- exactly-once must not depend on a non-null key (see record_maturation_signal).
+  if p_idempotency_key is null or btrim(p_idempotency_key) = '' then
+    raise exception 'idempotency_key is required'
+      using errcode = 'invalid_parameter_value';
+  end if;
+
   -- exactly-once
   select id into existing_id from pasada_schedule where idempotency_key = p_idempotency_key;
   if existing_id is not null then
@@ -442,6 +534,12 @@ begin
   if plot_name is null then
     raise exception 'unknown plot %', p_plot_id using errcode = 'foreign_key_violation';
   end if;
+
+  -- SERIALIZE per (plot, pasada) BEFORE the active-plan read below, so concurrent
+  -- (re)plans for the same pass queue and each supersedes the prior's committed
+  -- active row instead of both reading the same current_id and splitting the active
+  -- set (mirrors green_inventory.prevent_oversell; auto-releases at commit).
+  perform pg_advisory_xact_lock(hashtext('pasada:' || p_plot_id || ':' || p_pasada_number));
 
   -- the current ACTIVE plan being superseded (may be none on a first replan).
   select id, predicted_ripe_pct into current_id, ripe

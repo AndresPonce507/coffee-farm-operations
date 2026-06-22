@@ -26,7 +26,12 @@ export function validateTask(
   if (!title) errors.title = "Title is required.";
 
   const category = trimmed(raw.category) as TaskCategory;
-  if (!TASK_CATEGORIES.includes(category)) errors.category = "Choose a category.";
+  // `Harvest` is a system-fired category (the pasada scheduler), never a valid
+  // form choice — so the form's accepted set stays TASK_CATEGORIES and a
+  // submitted `Harvest` is correctly rejected here. The widening cast only lets
+  // the wider TaskCategory be checked against the narrower form list.
+  if (!(TASK_CATEGORIES as readonly string[]).includes(category))
+    errors.category = "Choose a category.";
 
   const workerId = trimmed(raw.workerId);
   if (!workerId) errors.workerId = "Choose an assignee.";

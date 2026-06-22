@@ -32,6 +32,7 @@ const CATEGORY_TONE: Record<TaskCategory, BadgeTone> = {
   Planting: "forest",
   Irrigation: "sky",
   Soil: "coffee",
+  Harvest: "cherry",
 };
 
 /** Priority pills — high reads as danger, medium as warn, low as neutral. */

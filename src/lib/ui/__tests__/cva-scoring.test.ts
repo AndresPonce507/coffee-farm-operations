@@ -33,27 +33,67 @@ describe("attributesFor — the per-protocol attribute set", () => {
   });
 });
 
-describe("cupFinalScore — SCA CVA (2023) additive total", () => {
-  it("sums the eight CVA attribute scores", () => {
-    const s = scores([
-      ["fragrance", 8],
-      ["flavor", 8],
-      ["aftertaste", 7],
-      ["acidity", 8],
-      ["sweetness", 7],
-      ["mouthfeel", 8],
-      ["overall", 8],
-      ["uniformity", 8],
-    ]);
-    expect(cupFinalScore("sca-cva", s)).toBeCloseTo(62, 6);
+describe("cupFinalScore — SCA CVA (2023) affective transform", () => {
+  // The real SCA CVA 2023 cup-form final score is an AFFINE transform of the eight
+  // 1–9 hedonic section scores: Score = 0.65625 · Σ + 52.75, minus 2 per non-uniform
+  // and 4 per defective cup — a 58–100 scale where a flawless cup = 100. These are the
+  // published CVA worked examples the spec mandated be green BEFORE any UI.
+  function cva(score: number) {
+    return CVA_ATTRIBUTES.map((a) => ({ attribute: a, score }));
+  }
+
+  it("all-7s totals 89.5 (the spec's dogfood worked example)", () => {
+    // 0.65625 · (8·7) + 52.75 = 36.75 + 52.75 = 89.5
+    expect(cupFinalScore("sca-cva", cva(7))).toBeCloseTo(89.5, 6);
   });
 
-  it("a perfect CVA card (all 10s across 8 attributes) totals 80", () => {
-    const s = CVA_ATTRIBUTES.map((a) => ({ attribute: a, score: 10 }));
-    expect(cupFinalScore("sca-cva", s)).toBeCloseTo(80, 6);
+  it("a flawless CVA cup (all 9s on the 1–9 hedonic scale) totals 100", () => {
+    // 0.65625 · 72 + 52.75 = 47.25 + 52.75 = 100
+    expect(cupFinalScore("sca-cva", cva(9))).toBeCloseTo(100, 6);
   });
 
-  it("an empty card scores 0 (no fabricated baseline)", () => {
+  it("all-6s totals 84.25", () => {
+    // 0.65625 · 48 + 52.75 = 31.5 + 52.75 = 84.25
+    expect(cupFinalScore("sca-cva", cva(6))).toBeCloseTo(84.25, 6);
+  });
+
+  it("the floor of the scale (all 1s) totals 58", () => {
+    // 0.65625 · 8 + 52.75 = 5.25 + 52.75 = 58
+    expect(cupFinalScore("sca-cva", cva(1))).toBeCloseTo(58, 6);
+  });
+
+  it("subtracts 2 for a non-uniform cup", () => {
+    // all-7s (89.5) − 2 = 87.5
+    expect(
+      cupFinalScore("sca-cva", cva(7), { nonUniform: true }),
+    ).toBeCloseTo(87.5, 6);
+  });
+
+  it("subtracts 4 for a defective cup", () => {
+    // all-7s (89.5) − 4 = 85.5
+    expect(
+      cupFinalScore("sca-cva", cva(7), { defective: true }),
+    ).toBeCloseTo(85.5, 6);
+  });
+
+  it("subtracts both deductions together (−2 −4 = −6)", () => {
+    // all-7s (89.5) − 6 = 83.5
+    expect(
+      cupFinalScore("sca-cva", cva(7), { nonUniform: true, defective: true }),
+    ).toBeCloseTo(83.5, 6);
+  });
+
+  it("clamps to the 58–100 range and never exceeds 100", () => {
+    // all-9s already maxes; a (defensive) over-range section can't push past 100.
+    expect(cupFinalScore("sca-cva", cva(9))).toBeLessThanOrEqual(100);
+    // deductions can't drop below the 58 floor on a near-floor card.
+    expect(
+      cupFinalScore("sca-cva", cva(1), { nonUniform: true, defective: true }),
+    ).toBeCloseTo(58, 6);
+  });
+
+  it("an empty card scores 0 — no fabricated 58-point baseline", () => {
+    // A fresh, unscored card is not a 'Below Specialty' cup; it is unscored.
     expect(cupFinalScore("sca-cva", [])).toBe(0);
   });
 });
@@ -82,10 +122,14 @@ describe("cupFinalScore — legacy 100-pt total", () => {
   });
 });
 
-describe("cupFinalScore — only counts scores, ignores unknown attributes defensively", () => {
-  it("totals whatever attribute rows are supplied (matches the SQL additive view)", () => {
-    // the DB view sums whatever was logged; the pure fn must agree for parity.
-    expect(cupFinalScore("sca-cva", scores([["flavor", 9], ["acidity", 8]]))).toBeCloseTo(17, 6);
+describe("cupFinalScore — transforms whatever section rows are supplied", () => {
+  it("applies the CVA affine transform over the supplied section scores", () => {
+    // A partial card transforms the running Σ (here 9+8=17): 0.65625·17 + 52.75 = 63.91.
+    // (The server v_cup_final_score view must apply the SAME transform for parity —
+    // flagged to the migration owner; it still sums raw, so it currently disagrees.)
+    expect(
+      cupFinalScore("sca-cva", scores([["flavor", 9], ["acidity", 8]])),
+    ).toBeCloseTo(63.91, 6);
   });
 });
 

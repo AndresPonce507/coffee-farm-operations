@@ -72,6 +72,14 @@ describe("HarvestPlanner (async Server Component render)", () => {
     expect(screen.getAllByRole("progressbar").length).toBe(2);
     // the timeline renders the scheduled pass
     expect(screen.getByTestId("pasada-1")).toBeInTheDocument();
+    // the write doors (the slice's headline interactive capability) are reachable.
+    expect(screen.getByTestId("plan-actions")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /schedule pasada/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /re-plan around rain/i }),
+    ).toBeInTheDocument();
   });
 
   it("shows a headline count of plots ready to pick", async () => {

@@ -1,6 +1,7 @@
-import { GitBranch, Sparkles } from "lucide-react";
+import { GitBranch, Mountain, Sparkles } from "lucide-react";
 
-import type { LotGenealogy, QcStatus } from "@/lib/types";
+import type { LotGenealogy, MoistureReading, QcStatus } from "@/lib/types";
+import type { FermentCurvePoint } from "@/lib/db/ferment";
 import {
   Card,
   CardContent,
@@ -10,20 +11,29 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { FermentCurve } from "@/components/sections/ferment/ferment-curve";
+import { MoistureCurve } from "@/components/sections/drying/moisture-curve";
 import { kg } from "@/lib/utils";
 
 /**
  * CupToCausePanel — the cup-to-cause context that sits BESIDE the scoresheet
  * (P2-S6). A cup score is only as useful as the cause it can be tied to; this panel
- * shows the lineage that produced the lot — the stages it passed through, its
- * variety, and (when present) its defect tallies — so the cupper sees WHY it tastes
- * how it does, the make-quality loop closed.
+ * closes the make-quality loop: beside the score the cupper sees WHY it tastes how
+ * it does — the lineage that produced the lot, its variety, its green-grading
+ * defects, AND (now that S3/S4 are on main) the exact FERMENT CURVE, the DRYING
+ * MOISTURE CURVE, and the masl PLOT that produced it.
  *
- * Server Component. Ferment curves and drying curves ship in sibling slices (S3/S4)
- * — this panel reads whatever lineage exists today and DEGRADES GRACEFULLY: an
- * absent stage is simply not shown, never a fabricated cause. When there is no
+ * Server Component. Each cause stream is an OPTIONAL prop the page resolves with a
+ * graceful .catch and passes in. The panel DEGRADES HONESTLY: a stream that is
+ * genuinely absent is simply omitted — never a fabricated cause. When there is no
  * lineage at all, an honest empty state appears.
  */
+
+/** The minimal plot identity the cup-to-cause loop surfaces: a name + elevation. */
+export interface CupCausePlot {
+  name: string;
+  altitudeMasl: number;
+}
 
 const STAGE_ORDER = [
   "cherry",
@@ -53,13 +63,27 @@ export function CupToCausePanel({
   lotCode,
   genealogy,
   status,
+  fermentCurve,
+  moistureCurve,
+  plot,
 }: {
   lotCode: string;
   genealogy: LotGenealogy;
   status: QcStatus | null;
+  /** The ferment pH series for the lot's fermentation stage (v_ferment_curve). */
+  fermentCurve?: FermentCurvePoint[] | null;
+  /** The lot's drying moisture series, oldest → newest (moisture_readings). */
+  moistureCurve?: MoistureReading[] | null;
+  /** The originating plot + its elevation (harvests.plot_id → plots.altitude_masl). */
+  plot?: CupCausePlot | null;
 }) {
   const stages = orderedStages(genealogy);
   const variety = stages[0]?.variety;
+
+  // Each cause stream is shown ONLY when it carries real data — never fabricated.
+  const hasFerment = (fermentCurve?.length ?? 0) > 0;
+  const hasMoisture = (moistureCurve?.length ?? 0) > 0;
+  const hasPlot = plot != null;
 
   return (
     <Card className="animate-rise">
@@ -94,6 +118,23 @@ export function CupToCausePanel({
               </div>
             )}
 
+            {/* The masl plot that produced it — the cup-to-cause loop's anchor:
+                "the 1,650 masl plot that produced it." Omitted, never invented,
+                when the originating plot can't be resolved. */}
+            {hasPlot && (
+              <div className="flex items-center gap-2">
+                <Mountain className="h-4 w-4 text-forest-600" aria-hidden />
+                <span className="text-sm text-ink">
+                  Plot{" "}
+                  <span className="font-medium text-forest-700">{plot.name}</span>
+                  {" — "}
+                  <span className="tabular-nums">
+                    {plot.altitudeMasl.toLocaleString("en-US")} masl
+                  </span>
+                </span>
+              </div>
+            )}
+
             {/* The stage chain — the make-quality path the cup walked. */}
             <ol className="relative space-y-3 border-l border-line/70 pl-5">
               {stages.map((s) => (
@@ -114,6 +155,28 @@ export function CupToCausePanel({
                 </li>
               ))}
             </ol>
+
+            {/* The ferment curve that produced it — "the exact ferment curve"
+                (P2-S6). The reused FermentCurve SVG is zero-JS server-rendered. */}
+            {hasFerment && (
+              <div>
+                <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-fg">
+                  Ferment curve (pH)
+                </p>
+                <FermentCurve points={fermentCurve!} targetPh={null} kind="ph" />
+              </div>
+            )}
+
+            {/* The drying curve that produced it — "the exact drying curve"
+                (P2-S6). The reused MoistureCurve converges on the reposo band. */}
+            {hasMoisture && (
+              <div>
+                <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-fg">
+                  Drying moisture curve
+                </p>
+                <MoistureCurve curve={moistureCurve!} height={140} />
+              </div>
+            )}
 
             {/* Defect context — the green-grading signal the cup sits alongside. */}
             {status && (

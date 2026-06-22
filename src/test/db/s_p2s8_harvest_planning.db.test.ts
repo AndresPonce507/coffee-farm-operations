@@ -17,8 +17,13 @@
 //   - AD-8 grant posture: new tables/views SELECT-granted to authenticated; no write
 //     table grants; nothing to anon; RPCs revoke PUBLIC execute then grant authenticated.
 
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { asAnon, freshDb, type Harness } from "./pgliteHarness";
+
+const SEED = readFileSync(join(process.cwd(), "supabase/seed.sql"), "utf8");
 
 // The PGlite harness replays the migrations but NOT seed.sql, so each test seeds
 // the fixtures it needs (the established db-test convention here). We seed real
@@ -42,15 +47,21 @@ async function seedFixtures(h: Harness): Promise<void> {
   await h.query(sql(`
     insert into workers (id, name, role, daily_rate_usd, attendance, started_year, phone, today_kg, crew) values
       ('w-01', 'Miguel Janson', 'Supervisor', 42, 'present', 2009, '+507 6500-1209', 0, 'Field Ops'),
-      ('w-06', 'Ana Pérez',     'Picker',     22, 'present', 2018, '+507 6500-0006', 0, 'Norte')
+      ('w-06', 'Ana Pérez',     'Picker',     22, 'present', 2018, '+507 6500-0006', 0, 'Norte'),
+      ('w-07', 'Luis Mora',     'Picker',     22, 'present', 2019, '+507 6500-0007', 0, 'Sur')
     on conflict (id) do nothing;
   `));
-  // a recent harvest so _resolve_pasada_worker picks the plot's last picker (w-06)
-  // and recent-ripeness has a value (single-statement queries — h.query is prepared).
+  // Two harvests so _resolve_pasada_worker's tier-1 ("the PLOT's most-recent picker")
+  // is actually distinguishable from "any plot's most-recent picker": w-06 is
+  // p-cuesta-piedra's picker, while w-07 has a MORE-RECENT harvest on a DIFFERENT plot
+  // (p-talamanca). A correct tier-1 resolves p-cuesta-piedra → w-06; the wrong-plot
+  // mutant (`where h.plot_id is not null`) would resolve → w-07 (review MED 50).
   await h.query(sql(`insert into lots (code) values ('JC-901') on conflict (code) do nothing;`));
+  await h.query(sql(`insert into lots (code) values ('JC-902') on conflict (code) do nothing;`));
   await h.query(sql(`
     insert into harvests (id, date, plot_id, worker_id, cherries_kg, ripeness_pct, brix_avg, lot_code) values
-      ('hv-p2s8-1', '2026-06-19', 'p-cuesta-piedra', 'w-06', 120, 94, 23.1, 'JC-901')
+      ('hv-p2s8-1', '2026-06-19', 'p-cuesta-piedra', 'w-06', 120, 94, 23.1, 'JC-901'),
+      ('hv-p2s8-2', '2026-06-20', 'p-talamanca',     'w-07', 110, 92, 22.7, 'JC-902')
     on conflict (id) do nothing;
   `));
 }
@@ -99,6 +110,15 @@ describe("P2-S8 — record_maturation_signal (the only phenology writer, idempot
   it("the maturation_signal ledger is append-only (UPDATE blocked)", async () => {
     await expect(
       h.query(sql(`update maturation_signal set gdd_accumulated = 9999 where plot_id = 'p-cuesta-piedra';`)),
+    ).rejects.toThrow(/append-only|immutable|not permitted/i);
+  });
+
+  it("the maturation_signal ledger is append-only (DELETE blocked — the other guard arm)", async () => {
+    // parity with the UPDATE arm above: maturation_signal_no_delete must reject a
+    // raw DELETE, or the ledger's immutability is only half-pinned (a future edit
+    // dropping the no_delete trigger would otherwise leave the suite green).
+    await expect(
+      h.query(sql(`delete from maturation_signal where plot_id = 'p-cuesta-piedra';`)),
     ).rejects.toThrow(/append-only|immutable|not permitted/i);
   });
 
@@ -217,7 +237,11 @@ describe("P2-S8 — schedule_pasada FIRES a task onto the real phase-1 tasks boa
       sql(`select worker_id, plot_id, due, title, category from tasks
            where plot_id = 'p-cuesta-piedra' order by created_at desc limit 1;`),
     );
-    expect(task[0].worker_id).toBeTruthy();
+    // tier-1 resolution: the assignee is THIS PLOT's most-recent picker (w-06), NOT
+    // merely "some worker" and NOT the most-recent picker of a DIFFERENT plot (w-07,
+    // who has a more-recent harvest on p-talamanca). `toBe('w-06')` kills the
+    // wrong-plot mutant `where h.plot_id is not null` that `toBeTruthy()` let survive.
+    expect(task[0].worker_id).toBe("w-06");
     expect(task[0].plot_id).toBe("p-cuesta-piedra");
     expect(task[0].due).toBeTruthy();
     expect(task[0].title.toLowerCase()).toMatch(/pasada|pick|harvest/);
@@ -247,6 +271,56 @@ describe("P2-S8 — schedule_pasada FIRES a task onto the real phase-1 tasks boa
         ),
       ),
     ).rejects.toThrow(/permission denied|denied/i);
+  });
+});
+
+describe("P2-S8 — _resolve_pasada_worker tier fallbacks (the fired-task assignee is NEVER null)", () => {
+  // The fired task's assignee is resolved by tier: (1) the PLOT's most-recent picker,
+  // (2) else any Supervisor, (3) else any worker. tasks.worker_id is NOT NULL, so
+  // tier-3 is the last-resort guarantee. The happy-path schedule_pasada test pins
+  // tier-1 (w-06); these pin tiers 2 and 3 so the documented fallback chain is real
+  // behavior, not an unasserted side-effect (review MED 50).
+  let h: Harness;
+  beforeEach(async () => {
+    h = await freshDb();
+    await seedFixtures(h);
+  });
+  afterEach(async () => h.close());
+
+  it("tier-2: a plot with NO harvest (so no picker) fires a task assigned to the Supervisor (w-01)", async () => {
+    // p-bambito has a phenology signal but NO harvest → no plot picker → tier-2 fires.
+    await h.query(
+      sql(`select record_maturation_signal('p-bambito','2026-01-15',2200,0.7,now(),'d',1,'t2-sig');`),
+    );
+    await h.query(
+      sql(`select schedule_pasada('p-bambito','2026',1,'2026-04-01','high',now(),'d',2,'t2-plan');`),
+    );
+    const task = await h.query<{ worker_id: string }>(
+      sql(`select worker_id from tasks where plot_id = 'p-bambito' order by created_at desc limit 1;`),
+    );
+    expect(task[0].worker_id).toBe("w-01");
+  });
+
+  it("tier-3: NO picker AND NO supervisor still fires a task with a non-null worker_id (the NOT-NULL last resort)", async () => {
+    // Strip the world down to a single non-picker, non-supervisor worker and no
+    // harvests, so only tier-3 (any worker) can satisfy the NOT-NULL assignee.
+    await h.query(sql(`delete from harvests;`));
+    await h.query(sql(`delete from workers;`));
+    await h.query(sql(`
+      insert into workers (id, name, role, daily_rate_usd, attendance, started_year, phone, today_kg, crew)
+      values ('w-99', 'Solo Hand', 'Picker', 20, 'present', 2020, '+507 6500-0099', 0, 'Sur')
+      on conflict (id) do nothing;
+    `));
+    await h.query(
+      sql(`select record_maturation_signal('p-las-lagunas','2026-01-15',2200,0.7,now(),'d',1,'t3-sig');`),
+    );
+    await h.query(
+      sql(`select schedule_pasada('p-las-lagunas','2026',1,'2026-04-01','high',now(),'d',2,'t3-plan');`),
+    );
+    const task = await h.query<{ worker_id: string }>(
+      sql(`select worker_id from tasks where plot_id = 'p-las-lagunas' order by created_at desc limit 1;`),
+    );
+    expect(task[0].worker_id).toBe("w-99");
   });
 });
 
@@ -291,6 +365,199 @@ describe("P2-S8 — replan_pasada is append-only/superseded (re-plan around rain
     );
     expect(cal[0].n).toBe(1);
   });
+
+  // The supersede happy-path above proves the ALLOWED arm of pasada_schedule_guard.
+  // These two pin the REJECTED arms directly — the slice's append-only invariant:
+  // the morning's plan can never be edited away in place, only superseded by a NEW
+  // row. Without these, dropping `pasada_schedule_supersede_only` (so a caller could
+  // silently re-date active history in place) or `pasada_schedule_no_delete` (so a
+  // caller could delete plan history) leaves the whole suite green (review HIGH 49).
+  it("the pasada_schedule ledger is append-only — a direct in-place re-date UPDATE is rejected", async () => {
+    await expect(
+      h.query(sql(`update pasada_schedule set predicted_ready_date = '2026-05-01'
+                   where plot_id='p-bambito' and pasada_number=1 and status <> 'superseded';`)),
+    ).rejects.toThrow(/append-only/i);
+  });
+
+  it("the pasada_schedule ledger is append-only — a direct DELETE is rejected", async () => {
+    await expect(
+      h.query(sql(`delete from pasada_schedule where plot_id='p-bambito' and pasada_number=1;`)),
+    ).rejects.toThrow(/append-only/i);
+  });
+});
+
+describe("P2-S8 — single-active-plan invariant (review HIGH idx 71 / MED idx 72,114,167)", () => {
+  let h: Harness;
+  beforeEach(async () => {
+    h = await freshDb();
+    await seedFixtures(h);
+    await h.query(
+      sql(`select record_maturation_signal('p-cuesta-piedra','2026-01-15',2200,0.7,now(),'d',1,'dup-sig');`),
+    );
+  });
+  afterEach(async () => h.close());
+
+  it("rejects a SECOND schedule_pasada (distinct key) for the same (plot, pasada) — no duplicate active plan, no duplicate fired task", async () => {
+    const tasksBefore = await h.query<{ n: number }>(sql(`select count(*)::int as n from tasks;`));
+
+    await h.query(
+      sql(`select schedule_pasada('p-cuesta-piedra','2026',1,'2026-04-01','high',now(),'d',2,'dup-1');`),
+    );
+
+    // a second schedule for the SAME pass with a DIFFERENT idempotency key must be rejected.
+    await expect(
+      h.query(
+        sql(`select schedule_pasada('p-cuesta-piedra','2026',1,'2026-04-05','high',now(),'d',3,'dup-2');`),
+      ),
+    ).rejects.toThrow(/already scheduled|already planned|re-plan/i);
+
+    // exactly ONE active plan, exactly ONE fired Harvest task (the duplicate never landed).
+    const active = await h.query<{ n: number }>(
+      sql(`select count(*)::int as n from pasada_schedule
+           where plot_id='p-cuesta-piedra' and pasada_number=1 and status <> 'superseded';`),
+    );
+    expect(active[0].n).toBe(1);
+
+    const cal = await h.query<{ n: number }>(
+      sql(`select count(*)::int as n from v_pasada_calendar where plot_id='p-cuesta-piedra' and pasada_number=1;`),
+    );
+    expect(cal[0].n).toBe(1);
+
+    const tasksAfter = await h.query<{ n: number }>(sql(`select count(*)::int as n from tasks;`));
+    expect(tasksAfter[0].n).toBe(tasksBefore[0].n + 1);
+  });
+
+  it("a legitimate replan_pasada STILL succeeds and leaves exactly one active plan (the guard does not break re-planning)", async () => {
+    await h.query(
+      sql(`select schedule_pasada('p-cuesta-piedra','2026',1,'2026-04-01','high',now(),'d',2,'rp-ok-1');`),
+    );
+    await h.query(
+      sql(`select replan_pasada('p-cuesta-piedra','2026',1,'2026-04-08','rain front',now(),'d',3,'rp-ok-2');`),
+    );
+    // history kept (2 rows), exactly one active.
+    const all = await h.query<{ n: number }>(
+      sql(`select count(*)::int as n from pasada_schedule where plot_id='p-cuesta-piedra' and pasada_number=1;`),
+    );
+    expect(all[0].n).toBe(2);
+    const active = await h.query<{ ready: string }>(
+      sql(`select to_char(predicted_ready_date,'YYYY-MM-DD') as ready from pasada_schedule
+           where plot_id='p-cuesta-piedra' and pasada_number=1 and status <> 'superseded';`),
+    );
+    expect(active.length).toBe(1);
+    expect(active[0].ready).toBe("2026-04-08");
+  });
+});
+
+describe("P2-S8 — exactly-once cannot be silently disabled by a NULL idempotency_key (review LOW idx 16,17,116)", () => {
+  let h: Harness;
+  beforeEach(async () => {
+    h = await freshDb();
+    await seedFixtures(h);
+  });
+  afterEach(async () => h.close());
+
+  it("record_maturation_signal rejects a NULL idempotency_key (exactly-once must not depend on a non-null key)", async () => {
+    await expect(
+      h.query(
+        sql(`select record_maturation_signal('p-cuesta-piedra','2026-01-15',1000,null,now(),'d',1,null);`),
+      ),
+    ).rejects.toThrow(/idempotency_key (is )?required/i);
+  });
+
+  it("schedule_pasada rejects a NULL idempotency_key", async () => {
+    await expect(
+      h.query(
+        sql(`select schedule_pasada('p-cuesta-piedra','2026',1,'2026-04-01','high',now(),'d',1,null);`),
+      ),
+    ).rejects.toThrow(/idempotency_key (is )?required/i);
+  });
+
+  it("replan_pasada rejects a NULL idempotency_key", async () => {
+    await expect(
+      h.query(
+        sql(`select replan_pasada('p-cuesta-piedra','2026',1,'2026-04-01','rain',now(),'d',1,null);`),
+      ),
+    ).rejects.toThrow(/idempotency_key (is )?required/i);
+  });
+});
+
+describe("P2-S8 — pasada_schedule supersede guard pins the audit columns (review LOW idx 73)", () => {
+  let h: Harness;
+  beforeEach(async () => {
+    h = await freshDb();
+    await seedFixtures(h);
+    await h.query(
+      sql(`select record_maturation_signal('p-bambito','2026-01-15',2200,null,now(),'d',1,'g-sig');`),
+    );
+    await h.query(
+      sql(`select schedule_pasada('p-bambito','2026',1,'2026-04-01','high',now(),'d',2,'g-v1');`),
+    );
+  });
+  afterEach(async () => h.close());
+
+  it("rejects a supersede UPDATE that ALSO rewrites an audit column (idempotency_key / fired_task_id / season)", async () => {
+    // the only legal UPDATE is the supersede STAMP (status + superseded_by). An
+    // UPDATE that flips status->superseded while also mutating idempotency_key must
+    // be rejected — otherwise the exactly-once anchor can be silently rewritten.
+    await expect(
+      h.query(
+        sql(`update pasada_schedule set status='superseded', idempotency_key='tampered', fired_task_id=null, season='HACKED'
+             where plot_id='p-bambito' and pasada_number=1 and status <> 'superseded';`),
+      ),
+    ).rejects.toThrow(/append-only|only the supersede stamp/i);
+
+    // the row's audit fields are untouched.
+    const row = await h.query<{ idempotency_key: string; season: string }>(
+      sql(`select idempotency_key, season from pasada_schedule where idempotency_key='g-v1';`),
+    );
+    expect(row.length).toBe(1);
+    expect(row[0].season).toBe("2026");
+  });
+
+  it("still permits the legitimate supersede stamp (status + superseded_by only)", async () => {
+    await h.query(
+      sql(`select replan_pasada('p-bambito','2026',1,'2026-04-08','rain front',now(),'d',3,'g-v2');`),
+    );
+    const superseded = await h.query<{ n: number }>(
+      sql(`select count(*)::int as n from pasada_schedule
+           where plot_id='p-bambito' and pasada_number=1 and status='superseded' and superseded_by is not null;`),
+    );
+    expect(superseded[0].n).toBe(1);
+  });
+});
+
+describe("P2-S8 — fired_task_id FKs the tasks board with on-delete-set-null (review LOW idx 168)", () => {
+  let h: Harness;
+  beforeEach(async () => {
+    h = await freshDb();
+    await seedFixtures(h);
+    await h.query(
+      sql(`select record_maturation_signal('p-talamanca','2026-01-15',2200,null,now(),'d',1,'fk-sig');`),
+    );
+    await h.query(
+      sql(`select schedule_pasada('p-talamanca','2026',1,'2026-04-01','high',now(),'d',2,'fk-v1');`),
+    );
+  });
+  afterEach(async () => h.close());
+
+  it("deleting the fired task NULLs pasada_schedule.fired_task_id instead of leaving a dangling pointer", async () => {
+    const before = await h.query<{ fired_task_id: string }>(
+      sql(`select fired_task_id from pasada_schedule where idempotency_key='fk-v1';`),
+    );
+    const taskId = before[0].fired_task_id;
+    expect(taskId).toBeTruthy();
+
+    // the convention-sanctioned free delete of a phase-1 task must still be allowed
+    // (on delete set null, NOT a blocking FK).
+    await h.query(sql(`delete from tasks where id = '${taskId}';`));
+
+    const after = await h.query<{ fired_task_id: string | null }>(
+      sql(`select fired_task_id from pasada_schedule where idempotency_key='fk-v1';`),
+    );
+    // the append-only plan row survives, but its broken link is now NULL, not a phantom id.
+    expect(after.length).toBe(1);
+    expect(after[0].fired_task_id).toBeNull();
+  });
 });
 
 describe("P2-S8 — AD-8 grant posture (the carried cross-slice rail)", () => {
@@ -322,5 +589,61 @@ describe("P2-S8 — AD-8 grant posture (the carried cross-slice rail)", () => {
              and privilege_type in ('INSERT','UPDATE','DELETE');`),
     );
     expect(grants).toEqual([]);
+  });
+
+  it("the 'Harvest' task_category enum add is idempotent (re-applying ADD VALUE IF NOT EXISTS is a no-op)", async () => {
+    // The migration extends a shared phase-1 domain type with `alter type
+    // task_category add value if not exists 'Harvest'`. The IF NOT EXISTS clause is
+    // the ONLY thing making a re-apply safe; a future edit dropping it (plain `add
+    // value 'Harvest'`) would error on the second apply (the replay scenario). Pin it:
+    // a second ADD VALUE must not throw, and 'Harvest' stays a single enum member.
+    await expect(
+      h.query(sql(`alter type task_category add value if not exists 'Harvest';`)),
+    ).resolves.toBeDefined();
+    const members = await h.query<{ n: number }>(
+      sql(`select count(*)::int as n from pg_enum e
+             join pg_type t on t.oid = e.enumtypid
+            where t.typname = 'task_category' and e.enumlabel = 'Harvest';`),
+    );
+    expect(members[0].n).toBe(1);
+  });
+});
+
+describe("P2-S8 — seed.sql lands real planner data (the /plan page is exercisable on a fresh install)", () => {
+  // REGRESSION (review HIGH idx 160): on a fresh seed with NO phenology, every plot
+  // rendered ~0% / "No bloom logged" and the pasada calendar was empty forever — the
+  // planner was a wall of meaningless 0% cards. The seed now logs real maturation
+  // signals (via the live RPC) and schedules a pasada, so the planner shows genuine
+  // staggered readiness and a non-empty calendar.
+  let h: Harness;
+  beforeAll(async () => {
+    h = await freshDb();
+    await h.db.exec(SEED);
+  });
+  afterAll(async () => h.close());
+
+  it("seeds phenology so v_harvest_readiness shows REAL (non-zero) staggered readiness", async () => {
+    // at least one plot is meaningfully ripe (not the all-0% wall).
+    const ranked = await h.query<{ plot_id: string; readiness: string }>(
+      `select plot_id, readiness from v_harvest_readiness order by readiness desc;`,
+    );
+    expect(Number(ranked[0].readiness)).toBeGreaterThan(0.5);
+    // the lower/warmer plot outranks the high Geisha (the altitude stagger is visible).
+    const cuesta = ranked.find((r) => r.plot_id === "p-cuesta-piedra");
+    const lagunas = ranked.find((r) => r.plot_id === "p-las-lagunas");
+    expect(cuesta && lagunas).toBeTruthy();
+    expect(Number(cuesta!.readiness)).toBeGreaterThan(Number(lagunas!.readiness));
+  });
+
+  it("seeds a pasada so v_pasada_calendar is NON-empty and fired a Harvest task", async () => {
+    const cal = await h.query<{ n: number }>(
+      `select count(*)::int as n from v_pasada_calendar;`,
+    );
+    expect(cal[0].n).toBeGreaterThanOrEqual(1);
+    // the scheduled pass fired a real task onto the phase-1 tasks board.
+    const task = await h.query<{ n: number }>(
+      `select count(*)::int as n from tasks where category = 'Harvest';`,
+    );
+    expect(task[0].n).toBeGreaterThanOrEqual(1);
   });
 });

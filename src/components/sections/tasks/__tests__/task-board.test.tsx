@@ -62,4 +62,32 @@ describe("TaskBoard (smoke)", () => {
     // The null-plot blocked task still renders its title.
     expect(screen.getByText("Scout for broca beetle")).toBeInTheDocument();
   });
+
+  // REGRESSION (review HIGH idx 166): the S8 migration extends the DB
+  // `task_category` enum with 'Harvest' and schedule_pasada fires a real
+  // category:'Harvest' task onto the phase-1 board. Before the TaskCategory
+  // contract was extended, CATEGORY_ICON['Harvest'] was undefined and rendering
+  // <Icon/> threw "Element type is invalid", 500-ing the whole /tasks route.
+  it("renders a fired 'Harvest' task without throwing (DB enum / TS contract parity)", async () => {
+    const { getTasks } = await import("@/lib/db/tasks");
+    vi.mocked(getTasks).mockResolvedValueOnce([
+      {
+        id: "h1",
+        title: "Pasada 2 — pick Geisha Alto",
+        category: "Harvest",
+        plotId: "p1",
+        plotName: "Geisha Alto",
+        assignee: "Ana Pérez",
+        due: "2026-04-01",
+        status: "todo",
+        priority: "high",
+      },
+    ]);
+
+    const ui = await TaskBoard();
+    expect(() => render(ui)).not.toThrow();
+    expect(screen.getByText("Pasada 2 — pick Geisha Alto")).toBeInTheDocument();
+    // the category pill renders its label (the icon + tone resolved, no crash).
+    expect(screen.getByText("Harvest")).toBeInTheDocument();
+  });
 });
