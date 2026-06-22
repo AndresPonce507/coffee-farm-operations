@@ -12,7 +12,7 @@
 | Stream | Branch @ commit | State | Next action |
 |---|---|---|---|
 | **DONE** | `main` @ `1f49160` | W1 + W3 + S12 phase-2 fixes — **LIVE on prod** | — |
-| **A · P4-S0** | `claude/p4s0-multitenant` @ `0a9b27c` | multi-tenant RLS retrofit; build + most fixes done | finish 8 RPC clamps in M3 → re-verify → re-review → gate → main → **Andres-gated** prod push |
+| **A · P4-S0** | `claude/p4s0-multitenant` @ `ceb10e1` | multi-tenant RLS retrofit — **comprehensive fix done, 763/763 db green** | relocate 2 phase-2 edits → M3 → prod-faithful verify → 6-lens re-review (2 clean rounds) → gate → main → **Andres-gated** prod push |
 | **B · Phase 5** | `claude/phase5-deliver` @ `e1f892e` | L0 skeleton GREEN; L1 contracts WIP | finish L1 → L2 dossiers → L3 (~100-wide) → L4 → main |
 
 Both branches are off `main` (`1f49160`). Worktrees: `~/coffee-farm-operations-worktrees/{p4s0-multitenant,phase5-deliver}` (re-create with `git worktree add` after a wipe; `npm ci` in each).
@@ -29,20 +29,16 @@ Phase-2 review fix-and-land shipped this session: **W1** (dependent-wave CRIT/HI
 ### What it is
 The foundational multi-tenant slice: add `tenant_id` to all ~50 phase-1+2 tables in one pass so everything is born tenant-scoped. **Decision locked: PER-TENANT lot codes** (composite `(tenant_id, code)` keys). Plan: `docs/design/P4-S0-multi-tenant-plan.md` (68KB, on main). It's the **highest-stakes migration in the roadmap** — a bug = one farm reads/writes another farm's data.
 
-### State now (branch `claude/p4s0-multitenant` @ `0a9b27c`)
-- 3 staged migrations: `supabase/migrations/20260701090000_tenant_add_nullable.sql`, `091000_tenant_backfill.sql`, `092000_tenant_enforce_rls.sql` (**"M3"**).
-- Cross-tenant probe test `src/test/db/p4s0_tenant_isolation.db.test.ts` + SSOT `src/test/db/tenantTables.ts` (48 scoped tables) + `asTenant()` in `pgliteHarness.ts`.
-- The adversarial 6-lens review found **18 leaks (15 CRIT/HIGH)** — full list in `p4s0-leaks.json` (committed to this branch). Fixes applied: RPC tenant-clamps + `revoke select on mv_lot_cost/_by_rule from authenticated` + ledger rebinds — **in M3** (so they reach prod). 6 RPCs are correctly clamped in M3.
-- ⚠️ **phase-2 migrations were reverted to original** (they're already on prod; editing them is inert there and makes tests lie). The schema is now **prod-faithful**.
+### State now (branch `claude/p4s0-multitenant` @ `ceb10e1` — committed + pushed, db suite **763/763 GREEN**)
+- 3 staged migrations: `20260701090000_tenant_add_nullable.sql`, `091000_tenant_backfill.sql`, `092000_tenant_enforce_rls.sql` (**"M3"**, ~2160 lines, 66 `current_tenant_id` refs — most clamps live here, prod-reachable).
+- Probe `src/test/db/p4s0_tenant_isolation.db.test.ts` with a hardened **"P4-S0 sweep isolation"** block (9 assertions, all proven red→green) + SSOT `tenantTables.ts` (48 scoped tables) + `asTenant()` harness. 15-leak list: `p4s0-leaks.json` on the branch.
+- **The comprehensive fix is DONE + green:** all 15 named leaks (matview raw-grant revoked, weigh_event ledger braiding, advance_processing_stage / reposo_status / release_qc_hold / approve_pay_line / verify_chain / …) PLUS a systemic sweep of **~25 definer RPCs** across people/dispatch/weigh/drying/payroll/planning/ipm/eudr/fermentation — each tenant-scoped on every existence-SELECT / UPDATE / idempotency-lookup / derive. `pay_line_enforce_floor` and the `_resolve_*`/`_resync_*` helper/trigger fns (which leak under a definer's context despite not being granted to authenticated) are clamped too.
 
-### 🔴 The OPEN item (do this first)
-The prod-faithful db suite (`npx vitest run --project db`) shows **8 failing isolation assertions** — these 8 SECURITY DEFINER write-RPCs were clamped only in the (now-reverted) phase-2 edits, NOT in M3, so they'd **still leak on prod**:
-`rehire_worker`, `enroll_crew_member`, `mark_dispatch_sent`, `record_weigh_in`, `assign_drying_station`, `record_moisture_reading`, `compute_pay_period`, `eudr_declare_plot`.
-
-**Fix:** for each, read its original def in its phase-2 migration, add a `create or replace function …` of it **in M3** (`20260701092000`) with the standard clamp: `v_tenant uuid := current_tenant_id(); if v_tenant is null then raise … insufficient_privilege; end if;` then tenant-qualify every existence-SELECT / UPDATE-DELETE predicate / idempotency lookup / cross-table resolve with `and tenant_id = v_tenant`. Match how M3 already clamps `advance_processing_stage`/`approve_pay_line`. **Do NOT edit phase-2 migrations.** (A focused agent was mid-doing this when stopped — `mark_dispatch_sent`'s clamp was reasoned out; redo cleanly.)
+### 🔴 The ONE open item (prod-correctness — do this first)
+The fix is test-green, but **2 phase-2 migrations still carry clamp edits that won't reach prod** (already-applied migrations don't re-run): `20260622090000_people_system.sql` (+14, `_resync_*` helpers) and `20260622092000_fermentation.sql` (+53, `_resolve_ferment_cut_worker` + ferment RPCs — `language sql` bodies that broke replay when clamped in-place, so they were left in phase-2). **Relocate both into M3** as `create or replace …` placed AFTER `tenant_id` lands (mirror the existing M3 §K which already does this for `_resolve_pasada_worker` + `v_worker_certs_valid`), then `git checkout main -- supabase/migrations/20260622090000_people_system.sql supabase/migrations/20260622092000_fermentation.sql` to restore them to original, and re-run `npx vitest run --project db` — it must STAY green with phase-2 UNEDITED. That proves every clamp reaches prod. (The other ~7 phase-2 migrations the fix agent's report listed are already correct — their clamps are in M3; only these 2 remain.)
 
 ### Then (the gate to prod)
-1. `npx vitest run --project db` → all 8 GREEN + entire db project green (763 tests) with phase-2 migrations UNEDITED.
+1. `npx vitest run --project db` → entire db project green (763 tests) **with the 2 phase-2 migrations reverted to original** (= every clamp confirmed in the 20260701 band, prod-reachable).
 2. **Re-run the 6-lens adversarial cross-tenant review** (read/write-RPC/matview-ledger/lotcode/parity/regression). Standing rule: **two consecutive clean rounds (0 CRIT/0 HIGH)** before landing — one isn't enough on an RLS rewrite. The hardened probe must catch each leak class (raw matview read, unclamped RPC, ledger braiding) red→green.
 3. Commit, gate (`npm run build` + `npm run test` green), merge to `main`.
 4. **PROD PUSH IS ANDRES-GATED.** When approved: verify what's applied on prod first (expect the `supabase migration repair --status applied <ts>` gotcha — see §4), `supabase db push` (password in Keychain "Janson Coffee Supabase DB"), then **immediately smoke** that the app still loads as the single "Janson Coffee" tenant (the §3 single-tenant fallback in `current_tenant_id()` is what keeps it working).
