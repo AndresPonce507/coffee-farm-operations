@@ -34,12 +34,16 @@ no backend. See `README.md` for the design system and `HANDOFF.md` to resume the
   **and** `npm run test` green — every PR now ships tests (see below), so the suite is never empty —
   **run locally**. That replaces CI. Enforced by discipline, not a git hook (Andres's call, 2026-06-20).
 
-## Git workflow (carried from TradelyHQ, adapted for solo + no-CI)
-- Work on a **feature branch**, open a **PR**, merge to **`main`** (squash or merge — your call).
-  Solo repo, so Andres merges on his cadence. Don't force-push shared branches; use
-  `--force-with-lease` only, never plain `--force`.
-- No `develop` integration branch by default (its job is to gate CI before `main` — pointless
-  without CI). If Andres wants the feature→develop→main muscle memory anyway, add it on request.
+## Git workflow — feature → develop → main (adopted 2026-06-22)
+- **`develop` is the integration branch; `main` is production.** Work on a **feature branch off
+  `develop`**, open a **PR to `develop`** (squash or merge — your call). Solo repo, so Andres merges
+  on his cadence. Don't force-push shared branches; use `--force-with-lease` only, never plain
+  `--force`.
+- **Gate before landing on `develop`:** `npm run build` + `npm run test` green locally (the no-CI
+  replacement). Feature work accumulates on `develop`.
+- **Release** = merge `develop` → `main` on Andres's cadence (that's the only way `main` moves,
+  apart from an explicit hotfix). After any **hotfix** straight to `main`, **back-merge `main` →
+  `develop` immediately** so the two never drift.
 - `git status` before every commit; never commit `node_modules/`, `.next/`, `.env*`, or editor junk
   (already in `.gitignore`). End commit messages with the standard
   `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>` trailer.
