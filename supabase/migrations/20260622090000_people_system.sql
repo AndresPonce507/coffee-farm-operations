@@ -477,14 +477,19 @@ create or replace function _resync_worker_crew(p_worker_id text) returns void
 as $$
 declare nm text;
 begin
+  -- P4-S0: clamp to the caller's tenant. This helper is invoked (via perform) from the
+  -- SECURITY DEFINER command RPCs, so it runs RLS-bypassing as the function owner; a bare
+  -- worker_id read/write would touch another estate's same-id worker. The session GUC is
+  -- preserved across the perform, so current_tenant_id() is the caller's.
   select c.name into nm
     from crew_memberships m
-    join crews c on c.id = m.crew_id
+    join crews c on c.id = m.crew_id and c.tenant_id = m.tenant_id
    where m.worker_id = p_worker_id and m.left_at is null
+     and m.tenant_id = current_tenant_id()
    order by m.joined_at desc
    limit 1;
   if nm is not null then
-    update workers set crew = nm where id = p_worker_id;
+    update workers set crew = nm where id = p_worker_id and tenant_id = current_tenant_id();
   end if;
 end $$;
 
@@ -494,9 +499,10 @@ create or replace function _resync_worker_attendance(p_worker_id text) returns v
 as $$
 declare k text; st attendance_status;
 begin
+  -- P4-S0: clamp to the caller's tenant (runs RLS-bypassing under the calling definer RPC).
   select event_kind into k
     from attendance_event
-   where worker_id = p_worker_id
+   where worker_id = p_worker_id and tenant_id = current_tenant_id()
    order by occurred_at desc, recorded_at desc
    limit 1;
   st := case k
@@ -507,7 +513,7 @@ begin
           else null
         end;
   if st is not null then
-    update workers set attendance = st where id = p_worker_id;
+    update workers set attendance = st where id = p_worker_id and tenant_id = current_tenant_id();
   end if;
 end $$;
 

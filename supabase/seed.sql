@@ -188,7 +188,7 @@ insert into reserve_zones (id, name, kind, geom, area_ha, notes) values
 insert into lots (code, stage, variety, origin_kg, current_kg, is_single_origin, minted_at) values
   ('JC-700', 'milled', 'Geisha',   620, 620, true, '2026-06-15T08:00:00Z'),
   ('JC-710', 'milled', 'Caturra',  900, 900, true, '2026-06-16T08:00:00Z')
-  on conflict (code) do nothing;
+  on conflict (tenant_id, code) do nothing;  -- P4-S0: lots PK is now (tenant_id, code)
 
 select materialize_green_lot('JC-700', 'JC-701', 600, 89.5, 'Volcán Warehouse · Bin A3', '2026-06-18T10:00:00Z');
 select materialize_green_lot('JC-710', 'JC-711', 880, 86.0, 'Volcán Warehouse · Bin B1', '2026-06-19T10:00:00Z');
