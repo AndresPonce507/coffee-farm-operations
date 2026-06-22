@@ -36,6 +36,52 @@ export async function getDeviceId(store: OutboxStore): Promise<string> {
 }
 
 /**
+ * The enqueue-seam accessor: resolve the persistent `device_id` ONCE per tab and
+ * memoize it, so every command stamps the SAME stable per-install identity
+ * instead of a fresh per-mount ephemeral id.
+ *
+ * Why this exists: `getDeviceId` persists the id, but until a caller resolves it
+ * at the write seam the value is orphaned — the capture surface was substituting
+ * a `weigh-<random>` id minted afresh each mount, so across a reload one device
+ * looked like a new device every session and the `(device_id, device_seq)`
+ * causal key the lot_event schema reserves was incoherent. This is the single
+ * call the runtime / capture seam awaits once and stamps onto every
+ * `CommandInput.deviceId`.
+ *
+ * The durable `store` row stays the source of truth: the in-tab cache is a hot
+ * path only, and a fresh tab (a reload) reads the SAME id straight back from the
+ * store. Concurrent first-resolves coalesce on a single in-flight promise so two
+ * simultaneous enqueues never each mint their own id.
+ */
+let cachedId: string | null = null;
+let inflightId: Promise<string> | null = null;
+
+export async function resolveDeviceId(store: OutboxStore): Promise<string> {
+  if (cachedId) return cachedId;
+  if (inflightId) return inflightId;
+  inflightId = (async () => {
+    const id = await getDeviceId(store);
+    cachedId = id;
+    return id;
+  })();
+  try {
+    return await inflightId;
+  } finally {
+    inflightId = null;
+  }
+}
+
+/**
+ * Test-only: drop the in-tab device-id memo to simulate a fresh tab / reload.
+ * Production never calls this — the cache lives for the life of the tab. (No
+ * effect on the durable store, so the reloaded tab resolves the same id back.)
+ */
+export function __resetDeviceIdCache(): void {
+  cachedId = null;
+  inflightId = null;
+}
+
+/**
  * The next monotonic device sequence — reads the persisted counter, increments,
  * writes it back, and returns the new value. Durable across reloads. Callers
  * must `await` so two concurrent enqueues serialize on the store.

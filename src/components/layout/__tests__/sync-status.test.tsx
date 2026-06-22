@@ -67,4 +67,41 @@ describe("SyncStatusPill", () => {
     render(<SyncStatusPill state={state({ status: "pending", pending: 1 })} />);
     expect(screen.getByTestId("sync-pill").tagName).toBe("BUTTON");
   });
+
+  /**
+   * WCAG-AA regression (P2-S0 finding #81): the syncing/failed count badge put
+   * text-sky #3b6ea5 on solid sky-100 (4.11:1) and text-cherry #b5482e on solid
+   * cherry-100 (4.12:1) at 11px font-semibold — below the 4.5:1 floor for normal
+   * text. The count is the load-bearing datum, so it must clear AA. Fixed by
+   * darkening the text to AA-clearing tones (#2a527d sky → 6.26:1 on the badge,
+   * #9e3a22 cherry → 5.26:1). jsdom can't measure rendered contrast, so we assert
+   * the AA-clearing tone is on the badge AND the old failing tone is gone.
+   */
+  it("'syncing' badge uses an AA-clearing dark text tone, not the failing text-sky", () => {
+    render(<SyncStatusPill state={state({ status: "syncing", syncing: true, pending: 3 })} />);
+    const badge = within(screen.getByTestId("sync-pill")).getByText("3");
+    expect(badge.className).toContain("text-[#2a527d]");
+    expect(badge.className).not.toMatch(/(^|\s)text-sky(\s|$)/);
+  });
+
+  it("'failed' badge uses an AA-clearing dark text tone, not the failing text-cherry", () => {
+    render(<SyncStatusPill state={state({ status: "failed", dead: 2 })} />);
+    const badge = within(screen.getByTestId("sync-pill")).getByText("2");
+    expect(badge.className).toContain("text-[#9e3a22]");
+    expect(badge.className).not.toMatch(/(^|\s)text-cherry(\s|$)/);
+  });
+
+  it("'syncing' pill body also carries the AA-clearing dark sky text tone", () => {
+    render(<SyncStatusPill state={state({ status: "syncing", syncing: true, pending: 1 })} />);
+    const pill = screen.getByTestId("sync-pill");
+    expect(pill.className).toContain("text-[#2a527d]");
+    expect(pill.className).not.toMatch(/(^|\s)text-sky(\s|$)/);
+  });
+
+  it("'failed' pill body also carries the AA-clearing dark cherry text tone", () => {
+    render(<SyncStatusPill state={state({ status: "failed", dead: 1 })} />);
+    const pill = screen.getByTestId("sync-pill");
+    expect(pill.className).toContain("text-[#9e3a22]");
+    expect(pill.className).not.toMatch(/(^|\s)text-cherry(\s|$)/);
+  });
 });

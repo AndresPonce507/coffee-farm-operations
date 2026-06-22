@@ -69,6 +69,15 @@ describe("ReadinessList (render/smoke)", () => {
     expect(within(row).getByText(/no bloom logged.*date unknown/i)).toBeInTheDocument();
   });
 
+  it("formats the predicted ready date for humans, never the raw ISO string", () => {
+    render(<ReadinessList rows={[ready]} />);
+    const row = screen.getByTestId("readiness-p-cuesta-piedra");
+    // human-readable, matching the app-wide longDate() convention (en-US)
+    expect(within(row).getByText(/Apr 1, 2026/)).toBeInTheDocument();
+    // the machine ISO string must never reach the card
+    expect(within(row).queryByText(/2026-04-01/)).toBeNull();
+  });
+
   it("renders an empty state when there are no plots", () => {
     render(<ReadinessList rows={[]} />);
     expect(screen.getByTestId("readiness-empty")).toBeInTheDocument();

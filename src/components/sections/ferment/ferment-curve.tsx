@@ -182,6 +182,22 @@ export function FermentCurve({
           />
         </svg>
 
+        {/* reading dots — HTML so they stay circular under preserveAspectRatio="none"
+            and so a SINGLE reading (a bare-moveto path SVG won't stroke) stays visible */}
+        {coords.map((c, i) => (
+          <span
+            key={i}
+            data-testid="ferment-curve-point"
+            className="pointer-events-none absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white/80"
+            style={{
+              left: `${((c.x / VB_W) * 100).toFixed(2)}%`,
+              top: `${((c.y / VB_H) * 100).toFixed(2)}%`,
+              backgroundColor: color,
+            }}
+            aria-hidden
+          />
+        ))}
+
         {/* target readout overlay (HTML so it stays crisp under the stretch) */}
         {showBand && (
           <span

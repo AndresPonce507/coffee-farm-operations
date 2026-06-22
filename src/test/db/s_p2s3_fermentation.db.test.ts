@@ -348,6 +348,108 @@ describe("P2-S3 fermentation — cut-point projection (v_ferment_cutpoint)", () 
   });
 });
 
+// FINDING idx 15 (TEST EFFICACY): the cut-point's "latest pH" is `order by occurred_at
+// desc, id desc`, but every shipped cut-point test inserts readings in strictly
+// increasing occurred_at AND id order — so a regression of the view's ORDER BY to
+// `id desc` (or `recorded_at desc`) would return identical rows and the suite would
+// still pass. The whole point of the dual clocks + device_seq (the migration header's
+// "every reading is offline-replayable, P2-S0") is that an offline reading can ARRIVE
+// late (high recorded_at / high insert id) while carrying an EARLIER occurred_at — and
+// must NOT be treated as "latest", or it would resurrect a stale high pH and un-fire the
+// cut. These tests PIN occurred_at (not id/insert order) as the "latest" axis: they pass
+// on the current (correct) view and FAIL if it ever regresses to id/recorded_at ordering.
+describe("P2-S3 review fix — cut-point ranks 'latest pH' by occurred_at, not insert order (offline-replay pin)", () => {
+  let h: Harness;
+  let batchId: string;
+  beforeAll(async () => {
+    h = await freshDb();
+    await h.query(SEED_LOT);
+    await h.query(SEED_RECIPE); // target_ph = 4.2
+    await asAuthenticated(h, (hh) =>
+      hh.query(
+        `select start_ferment_batch('JC-800','rec-test-anaerobic-v1','Anaerobic',
+           '2026-06-20T06:00:00Z'::timestamptz,'dev-1',1,'b-reorder');`,
+      ),
+    );
+    batchId = (
+      await h.query<{ id: string }>(
+        `select id from ferment_batches where lot_code='JC-800' limit 1;`,
+      )
+    )[0].id;
+  });
+  afterAll(async () => h.close());
+
+  it("a LATE-arriving offline reading (earlier occurred_at, higher id) does NOT un-fire the cut", async () => {
+    // 1) the cut-crossing pH 4.1 is logged at a LATER occurred_at (12:00) first.
+    await asAuthenticated(h, (hh) =>
+      hh.query(
+        `select record_ferment_reading('${batchId}','ph', 4.1,
+           '2026-06-20T12:00:00Z'::timestamptz,'dev-1',30,'reorder-cross');`,
+      ),
+    );
+    // 2) a STALE offline reading (pH 5.6) carrying an EARLIER occurred_at (09:00) syncs
+    //    AFTERWARD — so it inserts with a higher id (and a higher recorded_at). A distinct
+    //    device/seq + a fresh key, exactly like a late device replay.
+    await asAuthenticated(h, (hh) =>
+      hh.query(
+        `select record_ferment_reading('${batchId}','ph', 5.6,
+           '2026-06-20T09:00:00Z'::timestamptz,'dev-2',5,'reorder-stale');`,
+      ),
+    );
+    // occurred_at — NOT id/recorded_at — wins: the 12:00 pH 4.1 is still "latest", the
+    // cut stays fired, and the stale 5.6 does not resurrect a high pH.
+    const r = await h.query<{ cut_reached: boolean; latest_ph: number }>(
+      `select cut_reached, latest_ph::numeric as latest_ph
+         from v_ferment_cutpoint where batch_id='${batchId}';`,
+    );
+    expect(Number(r[0].latest_ph)).toBeCloseTo(4.1, 6);
+    expect(r[0].cut_reached).toBe(true);
+  });
+});
+
+// FINDING idx 15 (TEST EFFICACY, cont.): the recipe-less branch of the cut signal is
+// `rec.target_ph is not null and ...` — a batch started WITHOUT a recipe has a NULL
+// target, so cut_reached must stay false even at an extreme pH. That guard was correct
+// but untested; this pins it.
+describe("P2-S3 review fix — cut-point never fires on a recipe-less batch (target_ph NULL guard)", () => {
+  let h: Harness;
+  let batchId: string;
+  beforeAll(async () => {
+    h = await freshDb();
+    await h.query(SEED_LOT);
+    await h.query(SEED_RECIPE);
+    // start a batch bound to NO recipe (start_ferment_batch allows p_recipe_id NULL).
+    await asAuthenticated(h, (hh) =>
+      hh.query(
+        `select start_ferment_batch('JC-800',null,'Anaerobic',
+           '2026-06-20T06:00:00Z'::timestamptz,'dev-1',1,'b-norecipe');`,
+      ),
+    );
+    batchId = (
+      await h.query<{ id: string }>(
+        `select id from ferment_batches where lot_code='JC-800' limit 1;`,
+      )
+    )[0].id;
+  });
+  afterAll(async () => h.close());
+
+  it("does NOT signal cut even at an extreme pH when no recipe target is bound (target_ph IS NULL)", async () => {
+    await asAuthenticated(h, (hh) =>
+      hh.query(
+        `select record_ferment_reading('${batchId}','ph', 2.0,
+           '2026-06-20T08:00:00Z'::timestamptz,'dev-1',40,'norecipe-ph');`,
+      ),
+    );
+    const r = await h.query<{ cut_reached: boolean; target_ph: number | null; latest_ph: number }>(
+      `select cut_reached, target_ph::numeric as target_ph, latest_ph::numeric as latest_ph
+         from v_ferment_cutpoint where batch_id='${batchId}';`,
+    );
+    expect(r[0].target_ph).toBeNull();
+    expect(Number(r[0].latest_ph)).toBeCloseTo(2.0, 6);
+    expect(r[0].cut_reached).toBe(false);
+  });
+});
+
 describe("P2-S3 fermentation — eco-mill water log + v_water_per_kg", () => {
   let h: Harness;
   let batchId: string;

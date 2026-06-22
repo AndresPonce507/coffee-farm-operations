@@ -62,4 +62,15 @@ describe("PasadaTimeline (render/smoke)", () => {
     render(<PasadaTimeline plans={[]} />);
     expect(screen.getByTestId("pasada-empty")).toBeInTheDocument();
   });
+
+  it("shows an 'on the board' affordance for a pass that fired a task", () => {
+    render(<PasadaTimeline plans={[plans[0]]} />);
+    expect(screen.getByTestId("pasada-1")).toHaveTextContent(/on the board/i);
+  });
+
+  it("omits the fired-task affordance for a pass with no task yet", () => {
+    const notFired: PasadaPlan = { ...plans[0], firedTaskId: null };
+    render(<PasadaTimeline plans={[notFired]} />);
+    expect(screen.getByTestId("pasada-1")).not.toHaveTextContent(/on the board/i);
+  });
 });

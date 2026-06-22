@@ -36,7 +36,20 @@ function driftTone(drift: number): string {
   return drift > 0 ? "text-honey-700" : "text-forest-700";
 }
 
-export function CupperDriftCard({ drift }: { drift: CupperDrift[] }) {
+export function CupperDriftCard({
+  drift,
+  nameById,
+}: {
+  drift: CupperDrift[];
+  /** Optional cupperId → human name map (workers.id → workers.name). When a name
+   *  resolves, it is the PRIMARY identity and the raw code drops to a muted
+   *  secondary; unmapped ids fall back to the code so nothing is silently lost.
+   *  For a ~90% Ngäbe-Buglé crew a readable name, not 'w-03', is the bar. */
+  nameById?: Map<string, string> | Record<string, string>;
+}) {
+  const resolveName = (id: string): string | undefined =>
+    nameById instanceof Map ? nameById.get(id) : nameById?.[id];
+
   return (
     <Card className="animate-rise">
       <CardHeader>
@@ -59,16 +72,30 @@ export function CupperDriftCard({ drift }: { drift: CupperDrift[] }) {
           />
         ) : (
           <ul className="divide-y divide-line/60">
-            {drift.map((d) => (
+            {drift.map((d) => {
+              const name = resolveName(d.cupperId);
+              return (
               <li
                 key={`${d.cupperId}:${d.attribute}`}
                 className="flex items-center justify-between gap-4 py-2.5"
               >
                 <div className="min-w-0">
-                  <p className="font-mono text-sm font-medium text-ink">
-                    {d.cupperId}
+                  <p
+                    className={
+                      name
+                        ? "truncate text-sm font-medium text-ink"
+                        : "font-mono text-sm font-medium text-ink"
+                    }
+                  >
+                    {name ?? d.cupperId}
                   </p>
                   <p className="mt-0.5 text-xs capitalize text-muted-fg">
+                    {name ? (
+                      <span className="font-mono lowercase text-muted-fg/80">
+                        {d.cupperId}
+                      </span>
+                    ) : null}
+                    {name ? " · " : null}
                     {d.attribute} · panel {num(d.panelMean, 1)} · n={d.sampleN}
                   </p>
                 </div>
@@ -81,7 +108,8 @@ export function CupperDriftCard({ drift }: { drift: CupperDrift[] }) {
                   {signedDrift(d.drift)}
                 </span>
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
       </CardContent>

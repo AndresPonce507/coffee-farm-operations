@@ -228,6 +228,63 @@ describe("advanceProcessingStage", () => {
     }
   });
 
+  it("maps the reposo (rest-stability) gate to a FRIENDLY message that echoes the reason (never the raw `reposo gate:` prefix)", async () => {
+    // The drying->milled reposo gate raises a labelled check_violation whose
+    // trailing parens carry the human reason from reposo_status (e.g.
+    // "resting 2/5 days"). friendlyRpcError must surface that reason cleanly —
+    // not the `reposo gate:` engine prefix nor the `advance_processing_stage:`
+    // command label.
+    const { store } = fakeStore({
+      data: null,
+      error: {
+        message: "reposo gate: lot JC-561 not rest-stable (resting 2/5 days)",
+        code: "23514",
+      },
+    });
+
+    const result = await advanceProcessingStage(store, {
+      ...validRaw(),
+      toStage: "milled",
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      // Family-readable: names the lot, echoes the reason tail, and tells them
+      // it must finish resting/reposo first.
+      expect(result.message).toContain("JC-561");
+      expect(result.message).toContain("resting 2/5 days");
+      expect(result.message).toMatch(/rest|reposo/i);
+      // The raw labelled engine string must NOT leak through.
+      expect(result.message).not.toMatch(/reposo gate:/i);
+      expect(result.message).not.toMatch(/advance_processing_stage:/i);
+      expect(result.message).not.toMatch(/not rest-stable \(/i);
+    }
+  });
+
+  it("maps the reposo gate (moisture reason) to a FRIENDLY message even when the band text has no inner parens", async () => {
+    const { store } = fakeStore({
+      data: null,
+      error: {
+        message:
+          "reposo gate: lot JC-561 not rest-stable (moisture 8.5% not yet stable in 10–12% band)",
+        code: "23514",
+      },
+    });
+
+    const result = await advanceProcessingStage(store, {
+      ...validRaw(),
+      toStage: "milled",
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toContain("JC-561");
+      expect(result.message).toContain("moisture 8.5% not yet stable");
+      expect(result.message).not.toMatch(/reposo gate:/i);
+      expect(result.message).not.toMatch(/advance_processing_stage:/i);
+    }
+  });
+
   it("surfaces a labelled error for any OTHER (unmapped) RPC failure", async () => {
     const { store } = fakeStore({
       data: null,

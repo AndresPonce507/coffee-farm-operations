@@ -37,6 +37,22 @@ describe("CutpointAlert (smoke)", () => {
     expect(alert.textContent ?? "").toMatch(/cut/i);
   });
 
+  it("renders the CUT NOW text at WCAG-AA dark-cherry contrast, not the low-contrast cherry accent", () => {
+    render(<CutpointAlert cutpoint={{ ...base, latestPh: 4.1, cutReached: true }} />);
+    const alert = screen.getByRole("alert");
+
+    // The container must NOT color its text with the 4.21:1 `text-cherry` accent —
+    // that fails AA on bg-cherry-100/90. It must use the AA dark-cherry token.
+    expect(alert.className).not.toMatch(/\btext-cherry\b/);
+    expect(alert.className).toMatch(/text-\[#7a121e\]/);
+
+    // The supporting time line must not be the 3.12:1 `text-cherry/80`; it must use
+    // the AA dark-cherry token instead.
+    const subtext = screen.getByText(/ferment window is closing/i);
+    expect(subtext.className).not.toMatch(/text-cherry\/80/);
+    expect(subtext.className).toMatch(/text-\[#7a121e\]/);
+  });
+
   it("shows a no-recipe state when no recipe target is bound", () => {
     render(
       <CutpointAlert

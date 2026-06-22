@@ -18,13 +18,18 @@ import {
   type CupScoreResult,
   type CupScoreStore,
 } from "@/lib/db/commands/recordCupScore";
+import {
+  recordDefect,
+  type DefectResult,
+  type DefectStore,
+} from "@/lib/db/commands/recordDefect";
 import { getSupabase } from "@/lib/supabase/server";
 import { formToRecord } from "@/lib/validation/shared";
 
 /**
  * Server Actions for the QC & cupping surface (P2-S6; ADR-002 — Server Actions are
  * the driving port, only ever invoked by an authenticated human submitting a form).
- * Four intents, each delegating to a pure command whose single write door is a
+ * Five intents, each delegating to a pure command whose single write door is a
  * SECURITY DEFINER RPC:
  *
  *  - `placeQcHoldAction` / `releaseQcHoldAction` — the cup-protection TEETH. A held
@@ -32,18 +37,22 @@ import { formToRecord } from "@/lib/validation/shared";
  *    closed); these actions open/close the hold.
  *  - `recordCuppingSessionAction` — open a cupping session (SCA CVA / legacy 100-pt).
  *  - `recordCupScoreAction` — append one immutable attribute score to a session.
+ *  - `recordDefectAction` — append one green-grading defect tally to a green lot.
+ *    This is the write half of the defect ledger: the read port (getGreenDefects)
+ *    and the v_qc_status primary/secondary tallies already exist, but with no write
+ *    path the tallies were permanently 0/0. This action makes them real.
  *
  * Each builds the offline-ready `occurredAt` server-side (D5) and surfaces a clean
  * form state — never a raw Postgres exception — to the family.
  *
- * The two INSERT-backed paths (`placeQcHoldAction`, `recordCuppingSessionAction`)
- * also mint a synthetic server envelope server-side — a `device_id:"server"` + a
- * UNIQUE monotonic `device_seq` drawn from `next_server_seq()` + a minted
- * `idempotency_key`. Every QC table carries `unique (device_id, device_seq)`, so a
- * constant seq would collide on the SECOND online write of the season (the C1 fix
- * already shipped in crew/weigh): the hold would never land, leaving the defective
- * lot reservable/shippable. `release_qc_hold` UPDATEs (never INSERTs), so it needs
- * no draw and is intentionally left unchanged.
+ * The INSERT-backed paths (`placeQcHoldAction`, `recordCuppingSessionAction`,
+ * `recordCupScoreAction`, `recordDefectAction`) also mint a synthetic server envelope
+ * server-side — a `device_id:"server"` + a UNIQUE monotonic `device_seq` drawn from
+ * `next_server_seq()` + a minted `idempotency_key`. Every QC table carries
+ * `unique (device_id, device_seq)`, so a constant seq would collide on the SECOND
+ * online write of the season (the C1 fix already shipped in crew/weigh): the row
+ * would never land — for defects, the tally would silently stay 0. `release_qc_hold`
+ * UPDATEs (never INSERTs), so it needs no draw and is intentionally left unchanged.
  */
 
 /** Read the form value if a non-blank string, else `undefined` (for fallbacks). */
@@ -179,6 +188,27 @@ export async function recordCupScoreAction(
   if (result.ok) {
     refresh();
     return { status: "success", message: "Score recorded." };
+  }
+  return { status: "error", errors: result.errors, message: result.message };
+}
+
+export async function recordDefectAction(
+  _prev: QcActionState,
+  formData: FormData,
+): Promise<QcActionState> {
+  const raw = formToRecord(formData);
+  const sb = await getSupabase();
+  const result: DefectResult = await recordDefect(sb as unknown as DefectStore, {
+    ...raw,
+    deviceId: "server",
+    deviceSeq: await nextServerSeq(
+      sb as unknown as Parameters<typeof nextServerSeq>[0],
+    ),
+    idempotencyKey: idempotencyKeyOrNew(raw),
+  });
+  if (result.ok) {
+    refresh();
+    return { status: "success", message: "Defect recorded." };
   }
   return { status: "error", errors: result.errors, message: result.message };
 }

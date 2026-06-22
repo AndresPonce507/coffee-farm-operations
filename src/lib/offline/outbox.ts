@@ -104,6 +104,19 @@ export function createOutbox(deps: {
   const { store, transport } = deps;
   const subscribers = new Set<() => void>();
 
+  /**
+   * In-flight guard for flush() — CLOSURE-scoped (not module-global) so two
+   * independent outboxes never cross-serialize, but a single outbox's concurrent
+   * drains coalesce. The outbox is a singleton drained both by the engine's
+   * initial start() drain AND by every `online` window event; a connectivity
+   * flap during a slow send would otherwise overlap two flushes that each read
+   * the same not-yet-`done` entry as `queued` and both call transport.send().
+   * A re-entrant flush JOINS the running drain (returns its summary) instead of
+   * starting a second one — so the client holds exactly-once replay itself
+   * rather than leaning entirely on the server's idempotency-key dedupe.
+   */
+  let inflight: Promise<FlushSummary> | null = null;
+
   function notify(): void {
     for (const fn of subscribers) fn();
   }
@@ -138,7 +151,32 @@ export function createOutbox(deps: {
     return entry;
   }
 
-  async function flush(): Promise<FlushSummary> {
+  /**
+   * Persist a post-send status transition ONLY if the row is still the queued
+   * entry we sent. `transport.send()` is awaited between the snapshot and this
+   * write, so a concurrent dismiss() (deletes the key) or retry()/another writer
+   * (rewrites it) can land inside that window. Writing the stale snapshot back
+   * unconditionally would clobber that action last-writer-wins — resurrecting a
+   * dismissed command or re-queueing one that should be gone. We re-read and
+   * skip the write if the row is absent or no longer the `queued` entry we held
+   * (uuid + status check). In the single-threaded event loop there is no await
+   * between this get and the put, so nothing can interleave inside the check —
+   * the concurrent operator action wins. Returns whether the write happened (the
+   * caller gates the summary increment on it).
+   */
+  async function persistIfStillSending(
+    uuid: string,
+    next: OutboxEntry,
+  ): Promise<boolean> {
+    const current = await store.get<OutboxEntry>(ENTRY_PREFIX + uuid);
+    if (!current || current.uuid !== uuid || current.status !== "queued") {
+      return false; // dismissed or mutated mid-send — do not clobber it.
+    }
+    await store.put(ENTRY_PREFIX + uuid, next);
+    return true;
+  }
+
+  async function drainQueued(): Promise<FlushSummary> {
     const summary: FlushSummary = { sent: 0, failed: 0, deadLettered: 0 };
     const entries = await allEntries();
     for (const entry of entries) {
@@ -150,23 +188,36 @@ export function createOutbox(deps: {
       if (result.kind === "ok") {
         attempted.status = "done";
         attempted.lastError = undefined;
-        await store.put(ENTRY_PREFIX + entry.uuid, attempted);
-        summary.sent += 1;
+        if (await persistIfStillSending(entry.uuid, attempted)) {
+          summary.sent += 1;
+        }
       } else if (result.kind === "network-error") {
         // STAYS queued — the canonical "try again when there's signal" path.
         attempted.lastError = result.message ?? "network unavailable";
-        await store.put(ENTRY_PREFIX + entry.uuid, attempted);
-        summary.failed += 1;
+        if (await persistIfStillSending(entry.uuid, attempted)) {
+          summary.failed += 1;
+        }
       } else {
         // BUSINESS rejection — dead-letter, surfaced, never blindly retried.
         attempted.status = "dead";
         attempted.lastError = result.message ?? "rejected by the server";
-        await store.put(ENTRY_PREFIX + entry.uuid, attempted);
-        summary.deadLettered += 1;
+        if (await persistIfStillSending(entry.uuid, attempted)) {
+          summary.deadLettered += 1;
+        }
       }
     }
     notify();
     return summary;
+  }
+
+  async function flush(): Promise<FlushSummary> {
+    if (inflight) return inflight; // a drain is already running — join it.
+    inflight = drainQueued();
+    try {
+      return await inflight;
+    } finally {
+      inflight = null;
+    }
   }
 
   async function list(): Promise<OutboxEntry[]> {

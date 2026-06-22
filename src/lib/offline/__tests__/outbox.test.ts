@@ -232,4 +232,145 @@ describe("outbox", () => {
     await outbox.enqueue(baseCmd);
     expect(onChange).not.toHaveBeenCalled();
   });
+
+  /**
+   * Concurrency invariants (P2 review fixes #150 / #69 / #151). The outbox is a
+   * singleton over a single store, drained both by the initial `start()` drain
+   * and by every `online` window event. A connectivity flap during a slow send
+   * overlaps two flushes; an operator action (dismiss/retry) can land inside a
+   * send's await window. The slice promises exactly-once replay AND "never
+   * silently lost / never blindly retried" — both must hold across overlap, not
+   * only for strictly-sequential flushes.
+   *
+   * A "gated" transport parks each send on a promise the test resolves by hand,
+   * so we can deterministically interleave a second flush / a dismiss / a retry
+   * inside the suspension point between `transport.send()` and the status write.
+   */
+  function gatedTransport(): CommandTransport & {
+    calls: { rpc: string; idempotencyKey: string }[];
+    /** Resolve the i-th (0-based) parked send with the given result. */
+    release(i: number, result?: TransportResult): void;
+    /**
+     * Resolve every send — current AND any issued later (e.g. a buggy second
+     * send) — with `result`, so a test asserts cleanly instead of timing out on
+     * an unreleased extra send the bug produced.
+     */
+    releaseAll(result?: TransportResult): void;
+    /** Promise that resolves once the i-th send has been entered. */
+    entered(i: number): Promise<void>;
+  } {
+    const calls: { rpc: string; idempotencyKey: string }[] = [];
+    const gates: ((r: TransportResult) => void)[] = [];
+    const enteredResolvers: (() => void)[] = [];
+    const enteredPromises: Promise<void>[] = [];
+    let autoRelease: TransportResult | null = null;
+    const ensureEntered = (i: number) => {
+      while (enteredPromises.length <= i) {
+        let resolve!: () => void;
+        enteredPromises.push(
+          new Promise<void>((r) => {
+            resolve = r;
+          }),
+        );
+        enteredResolvers.push(resolve);
+      }
+    };
+    return {
+      calls,
+      release(i, result = { kind: "ok" }) {
+        gates[i]?.(result);
+      },
+      releaseAll(result = { kind: "ok" }) {
+        autoRelease = result;
+        for (const g of gates) g(result);
+      },
+      entered(i) {
+        ensureEntered(i);
+        return enteredPromises[i];
+      },
+      async send(cmd) {
+        const i = calls.length;
+        calls.push({ rpc: cmd.rpc, idempotencyKey: cmd.idempotencyKey });
+        ensureEntered(i);
+        enteredResolvers[i]();
+        return new Promise<TransportResult>((resolve) => {
+          if (autoRelease) resolve(autoRelease);
+          else gates[i] = resolve;
+        });
+      },
+    };
+  }
+
+  it("coalesces overlapping flushes — a single queued entry is sent exactly once (#150/#69)", async () => {
+    // The double-send race: flush() snapshots `queued`, awaits send, only flips
+    // status AFTER the await. A second flush during that window re-reads the
+    // same `queued` entry and sends it AGAIN. The client must hold once-ness
+    // itself, not lean on the server's idempotency-key dedupe.
+    const transport = gatedTransport();
+    const outbox = createOutbox({ store, transport });
+    await outbox.enqueue(baseCmd);
+
+    const firstFlush = outbox.flush();
+    await transport.entered(0); // the first send is parked mid-flight.
+
+    const secondFlush = outbox.flush(); // overlapping drain (online flap).
+    // Let any microtasks in the second flush run before we release the first —
+    // on the unguarded code this is where the second flush re-reads the still
+    // `queued` entry and enters a SECOND transport.send().
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // Release the first send AND any (buggy) second send that was issued, so the
+    // test asserts cleanly instead of timing out on the parked second send.
+    transport.releaseAll({ kind: "ok" });
+    await Promise.all([firstFlush, secondFlush]);
+
+    // exactly ONE transport send for the single queued entry.
+    expect(transport.calls).toHaveLength(1);
+    expect(await outbox.pendingCount()).toBe(0);
+    const entries = await outbox.list();
+    expect(entries[0].status).toBe("done");
+  });
+
+  it("does NOT resurrect an entry dismissed mid-send — the dismiss wins (#151)", async () => {
+    // A still-queued entry is mid-send on slow signal; the operator dismisses it
+    // (the row is deleted). When the send resolves ok, flush() must NOT write
+    // the stale snapshot back — that would resurrect the dismissed command.
+    const transport = gatedTransport();
+    const outbox = createOutbox({ store, transport });
+    const entry = await outbox.enqueue(baseCmd);
+
+    const flushing = outbox.flush();
+    await transport.entered(0); // send is parked; status not yet flipped.
+
+    await outbox.dismiss(entry.uuid); // operator gives up — row deleted.
+
+    transport.release(0, { kind: "ok" }); // slow send finally lands.
+    await flushing;
+
+    // the dismissed entry stays gone — not re-`put` as done.
+    expect(await outbox.list()).toHaveLength(0);
+    expect(await outbox.deadLetters()).toHaveLength(0);
+  });
+
+  it("does NOT re-queue an entry dismissed mid-send on a network error (#151)", async () => {
+    // Symmetric clobber via the network-error branch: dismiss lands mid-send,
+    // the send then fails on the network; the stale snapshot must NOT be written
+    // back as `queued` — otherwise the dismissed command re-sends forever.
+    const transport = gatedTransport();
+    const outbox = createOutbox({ store, transport });
+    const entry = await outbox.enqueue(baseCmd);
+
+    const flushing = outbox.flush();
+    await transport.entered(0);
+
+    await outbox.dismiss(entry.uuid);
+
+    transport.release(0, { kind: "network-error", message: "offline" });
+    await flushing;
+
+    expect(await outbox.list()).toHaveLength(0);
+    expect(await outbox.pendingCount()).toBe(0);
+  });
 });

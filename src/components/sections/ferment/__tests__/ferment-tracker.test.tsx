@@ -28,6 +28,10 @@ const batch: FermentBatch = {
 const curve: FermentCurvePoint[] = [
   { batchId: "b1", lotCode: "JC-800", readingKind: "ph", value: 5.6, occurredAt: "2026-06-20T06:00:00Z", hoursElapsed: 0 },
   { batchId: "b1", lotCode: "JC-800", readingKind: "ph", value: 4.4, occurredAt: "2026-06-20T10:00:00Z", hoursElapsed: 4 },
+  { batchId: "b1", lotCode: "JC-800", readingKind: "temp", value: 22.0, occurredAt: "2026-06-20T06:00:00Z", hoursElapsed: 0 },
+  { batchId: "b1", lotCode: "JC-800", readingKind: "temp", value: 24.6, occurredAt: "2026-06-20T10:00:00Z", hoursElapsed: 4 },
+  { batchId: "b1", lotCode: "JC-800", readingKind: "brix", value: 21.3, occurredAt: "2026-06-20T06:00:00Z", hoursElapsed: 0 },
+  { batchId: "b1", lotCode: "JC-800", readingKind: "brix", value: 18.2, occurredAt: "2026-06-20T10:00:00Z", hoursElapsed: 4 },
 ];
 
 const cutpoint: FermentCutpoint = {
@@ -96,6 +100,43 @@ describe("FermentTracker (smoke)", () => {
       "input[name='batchId']",
     ) as HTMLInputElement;
     expect(batchInput.value).toBe("b1");
+  });
+
+  it("echoes the latest reading value beside each curve title (temp + Brix, not just pH)", () => {
+    render(
+      <FermentTracker
+        batch={batch}
+        curve={curve}
+        cutpoint={cutpoint}
+        water={water}
+      />,
+    );
+    // Each secondary glance chart gets a numeric readout so a sighted user can
+    // tell the scale at a glance, not just a bare colored squiggle.
+    expect(screen.getByTestId("ferment-latest-temp")).toHaveTextContent(
+      /24\.6\s*°C/,
+    );
+    expect(screen.getByTestId("ferment-latest-brix")).toHaveTextContent(
+      /18\.2\s*°Bx/,
+    );
+    // pH (headline) gets one too, time-sorted to the last reading.
+    expect(screen.getByTestId("ferment-latest-ph")).toHaveTextContent(
+      /pH\s*4\.4/,
+    );
+  });
+
+  it("omits the latest-value readout for a kind with no readings", () => {
+    render(
+      <FermentTracker
+        batch={batch}
+        curve={curve.filter((p) => p.readingKind === "ph")}
+        cutpoint={cutpoint}
+        water={water}
+      />,
+    );
+    expect(screen.getByTestId("ferment-latest-ph")).toBeInTheDocument();
+    expect(screen.queryByTestId("ferment-latest-temp")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("ferment-latest-brix")).not.toBeInTheDocument();
   });
 
   it("fires a prominent CUT NOW alert when the cut is reached", () => {

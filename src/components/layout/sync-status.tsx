@@ -59,8 +59,12 @@ const VISUALS: Record<SyncState["status"], Visual> = {
     Icon: RefreshCw,
     label: "Syncing",
     aria: (s) => `Syncing ${s.pending} change${s.pending === 1 ? "" : "s"} to the server`,
-    tone: "border-sky-100 bg-sky-100/60 text-sky",
-    badge: "bg-sky-100 text-sky",
+    // text-[#2a527d] is a darker sky for TEXT on the light sky-100 fill (WCAG AA):
+    // 6.26:1 on the solid count badge, 6.77:1 on the sky-100/60 pill body. The
+    // plain text-sky #3b6ea5 only reaches 4.11:1 on the badge — below the 4.5:1
+    // floor for the 11px font-semibold count, the load-bearing datum.
+    tone: "border-sky-100 bg-sky-100/60 text-[#2a527d]",
+    badge: "bg-sky-100 text-[#2a527d]",
     count: (s) => s.pending,
     spin: true,
   },
@@ -78,8 +82,12 @@ const VISUALS: Record<SyncState["status"], Visual> = {
     label: "Needs attention",
     aria: (s) =>
       `${s.dead} change${s.dead === 1 ? "" : "s"} failed and need attention`,
-    tone: "border-cherry-100 bg-cherry-100/70 text-cherry",
-    badge: "bg-cherry-100 text-cherry",
+    // text-[#9e3a22] is a darker cherry for TEXT on the light cherry-100 fill
+    // (WCAG AA): 5.26:1 on the solid count badge, 5.59:1 on the cherry-100/70
+    // pill body. The plain text-cherry #b5482e only reaches 4.12:1 on the badge,
+    // below the 4.5:1 floor for the 11px font-semibold count.
+    tone: "border-cherry-100 bg-cherry-100/70 text-[#9e3a22]",
+    badge: "bg-cherry-100 text-[#9e3a22]",
     count: (s) => s.dead,
   },
 };

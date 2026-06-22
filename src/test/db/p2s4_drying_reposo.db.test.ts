@@ -301,6 +301,156 @@ describe("P2-S4 — advance_processing_stage preserves all phase-1 guards", () =
 });
 
 // ══════════════════════════════════════════════════════════════════════════
+// THE STABILITY CONTRACT — the predicate halves the gate is BUILT from must each
+// be pinned in isolation, or a "simplification" could silently gut the gate while
+// the suite stays green. Two predicates define moisture_stable (migration sql:241):
+//   (a) cnt           >= reposo_stable_window  — need ≥ N readings AT ALL
+//   (b) in_band_cnt   >= reposo_stable_window  — and ≥ N of the recent ones in-band
+// plus the band itself is the inclusive `between` at sql:230. The existing
+// success/blocking tests all use 3 in-band readings vs out-of-band/too-fresh, so
+// NONE of them distinguish these clauses. These tests do. (Findings #94/#98/#93.)
+// ══════════════════════════════════════════════════════════════════════════
+describe("P2-S4 reposo gate — the moisture-stability contract, clause by clause", () => {
+  let h: Harness;
+  beforeAll(async () => {
+    h = await freshDb();
+    await h.db.exec(PLOT);
+    await h.db.exec(WORKER);
+  });
+  afterAll(async () => h.close());
+
+  // ── #94/#98 — the count floor (one perfect reading is NOT enough rest evidence) ──
+  it("ONE in-band reading is NOT enough rest evidence (reposo_stable_window count floor)", async () => {
+    const lot = await seedDryingLot(h, "single"); // already rest-met (12d ≥ 5)
+    // Exactly ONE perfectly in-band reading.
+    await h.query(
+      `select record_moisture_reading('${lot}', 11.0, now() - interval '1 day','dev',${seq()},'single-m1');`,
+    );
+    // Rested, but NOT moisture-stable (default window=2 unmet by a single reading)
+    // → fail-closed: not ready. Asserting rest_met isolates the count floor as the
+    // sole reason it's blocked (rest is NOT the cause).
+    const st = await h.query<{
+      ready: boolean;
+      moisture_stable: boolean;
+      reading_count: number;
+      rest_met: boolean;
+    }>(
+      `select ready, moisture_stable, reading_count, rest_met from v_reposo_status where lot_code = '${lot}';`,
+    );
+    expect(st[0].rest_met).toBe(true);
+    expect(st[0].moisture_stable).toBe(false);
+    expect(st[0].reading_count).toBe(1);
+    expect(st[0].ready).toBe(false);
+    // The gate blocks parchment→milled on a single lucky in-band reading.
+    await expect(
+      h.query(`select advance_processing_stage('${lot}','milled',55, now(),'dev',${seq()},'single-adv');`),
+    ).rejects.toThrow(/reposo gate/i);
+    // Add a SECOND in-band reading → window satisfied → ready, advance succeeds.
+    // This pins the >=N boundary from BOTH sides (1 blocks, 2 clears).
+    await h.query(
+      `select record_moisture_reading('${lot}', 11.0, now() - interval '12 hours','dev',${seq()},'single-m2');`,
+    );
+    const ok = await h.query<{ code: string }>(
+      `select advance_processing_stage('${lot}','milled',55, now(),'dev',${seq()},'single-adv2') as code;`,
+    );
+    expect(ok[0].code).toBe(lot);
+  });
+
+  // ── #93 — the inclusive band boundaries (10.5 / 11.5), the off-by-one surface ──
+  it("upper-band boundary 11.5 is IN band (inclusive `between`) — ready", async () => {
+    const lot = await seedDryingLot(h, "edge-hi-ok"); // rested 12d
+    // Two readings EXACTLY at the 11.5 ceiling — window=2 satisfied, both in-band.
+    await h.query(
+      `select record_moisture_reading('${lot}', 11.5, now() - interval '3 days','dev',${seq()},'edge-hi-ok-m1');`,
+    );
+    await h.query(
+      `select record_moisture_reading('${lot}', 11.5, now() - interval '1 day','dev',${seq()},'edge-hi-ok-m2');`,
+    );
+    const st = await h.query<{ ready: boolean }>(
+      `select ready from v_reposo_status where lot_code = '${lot}';`,
+    );
+    expect(st[0].ready).toBe(true);
+  });
+
+  it("just over the ceiling (11.51) is OUT of band — blocked", async () => {
+    const lot = await seedDryingLot(h, "edge-hi-bad");
+    await h.query(
+      `select record_moisture_reading('${lot}', 11.51, now() - interval '3 days','dev',${seq()},'edge-hi-bad-m1');`,
+    );
+    await h.query(
+      `select record_moisture_reading('${lot}', 11.51, now() - interval '1 day','dev',${seq()},'edge-hi-bad-m2');`,
+    );
+    await expect(
+      h.query(`select advance_processing_stage('${lot}','milled',55, now(),'dev',${seq()},'edge-hi-bad-adv');`),
+    ).rejects.toThrow(/reposo gate/i);
+  });
+
+  it("lower-band boundary 10.5 is IN band (inclusive `between`) — ready", async () => {
+    const lot = await seedDryingLot(h, "edge-lo-ok");
+    await h.query(
+      `select record_moisture_reading('${lot}', 10.5, now() - interval '3 days','dev',${seq()},'edge-lo-ok-m1');`,
+    );
+    await h.query(
+      `select record_moisture_reading('${lot}', 10.5, now() - interval '1 day','dev',${seq()},'edge-lo-ok-m2');`,
+    );
+    const st = await h.query<{ ready: boolean }>(
+      `select ready from v_reposo_status where lot_code = '${lot}';`,
+    );
+    expect(st[0].ready).toBe(true);
+  });
+
+  it("just under the floor (10.49) is OUT of band — blocked", async () => {
+    const lot = await seedDryingLot(h, "edge-lo-bad");
+    await h.query(
+      `select record_moisture_reading('${lot}', 10.49, now() - interval '3 days','dev',${seq()},'edge-lo-bad-m1');`,
+    );
+    await h.query(
+      `select record_moisture_reading('${lot}', 10.49, now() - interval '1 day','dev',${seq()},'edge-lo-bad-m2');`,
+    );
+    await expect(
+      h.query(`select advance_processing_stage('${lot}','milled',55, now(),'dev',${seq()},'edge-lo-bad-adv');`),
+    ).rejects.toThrow(/reposo gate/i);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// DEFENSE-IN-DEPTH, PROVEN — the gate's "two independent layers" claim (header
+// lines 6-13) is only real if EACH layer blocks ALONE. The direct-UPDATE test
+// above (line ~166) already isolates layer 2 (the trigger) by bypassing the RPC.
+// This pins layer 1 (the in-RPC precondition) by DISABLING the trigger and proving
+// the RPC still fail-closes — so dropping either layer turns the suite red. (#91.)
+// ══════════════════════════════════════════════════════════════════════════
+describe("P2-S4 reposo gate — layer 1 (in-RPC precondition) blocks in isolation", () => {
+  let h: Harness;
+  beforeAll(async () => {
+    h = await freshDb();
+    await h.db.exec(PLOT);
+    await h.db.exec(WORKER);
+  });
+  afterAll(async () => h.close());
+
+  it("with the BEFORE-UPDATE trigger DISABLED, the RPC still blocks an unrested advance", async () => {
+    const lot = await seedDryingLot(h, "l1");
+    // One out-of-band reading — clearly not rest-stable.
+    await h.query(
+      `select record_moisture_reading('${lot}', 13.8, now() - interval '2 days','dev',${seq()},'l1-m1');`,
+    );
+    // Remove layer 2 so ONLY layer 1 (the precondition inside advance_processing_stage)
+    // can stop the advance. Re-enable in finally so later tests are unaffected.
+    await h.query(`alter table lots disable trigger lots_enforce_reposo_gate;`);
+    try {
+      await expect(
+        h.query(`select advance_processing_stage('${lot}','milled',55, now(),'dev',${seq()},'l1-adv');`),
+      ).rejects.toThrow(/reposo gate/i);
+      const s = await h.query<{ stage: string }>(`select stage from lots where code = '${lot}';`);
+      expect(s[0].stage).toBe("parchment");
+    } finally {
+      await h.query(`alter table lots enable trigger lots_enforce_reposo_gate;`);
+    }
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════
 // DRYING STATIONS — capacity never oversubscribed (fail-closed)
 // ══════════════════════════════════════════════════════════════════════════
 describe("P2-S4 — drying stations + capacity guard", () => {
@@ -341,6 +491,93 @@ describe("P2-S4 — drying stations + capacity guard", () => {
     await expect(
       h.query(`select assign_drying_station('${big}','st-small', now());`),
     ).rejects.toThrow(/capacity|overcapac/i);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// CAPACITY GUARD — the UPDATE branch (re-open / correct-kg) is latent today (no
+// RPC drives it) but the trigger fires `before insert OR UPDATE` and carries an
+// UPDATE-specific self-exclusion clause `not (tg_op='UPDATE' and id=new.id)`
+// (migration sql:112) — a classic off-by-self surface. The committed capacity test
+// only exercises INSERT. These pin the UPDATE branch for the future move-back
+// feature: a fresh DB per case so the shared-station state never leaks. (#99.)
+// ══════════════════════════════════════════════════════════════════════════
+describe("P2-S4 — capacity guard, the UPDATE branch (self-exclusion + re-open)", () => {
+  // st-small capacity = 80 kg. These drive drying_assignments directly because no
+  // RPC currently mutates committed_kg on an open row or re-opens a released one.
+
+  it("self-exclusion: raising an OPEN row's own committed_kg within capacity SUCCEEDS (70→75 on a cap-80 station)", async () => {
+    // If a degrade dropped `not (tg_op='UPDATE' and id=new.id)`, the row's own prior
+    // 70 would be double-counted (70+75 > 80) and this would FALSELY raise.
+    const h = await freshDb();
+    try {
+      await h.db.exec(PLOT);
+      await h.db.exec(WORKER);
+      await h.db.exec(
+        `insert into lots (code, stage, origin_kg, current_kg) values ('JC-801','drying',75,75);`,
+      );
+      const ins = await h.query<{ id: number }>(
+        `insert into drying_assignments (lot_code, station_id, committed_kg, assigned_at)
+           values ('JC-801','st-small',70, now()) returning id;`,
+      );
+      const id = ins[0].id;
+      // 70 → 75 still fits cap-80 ONLY because the row's own 70 is excluded from the sum.
+      await h.query(`update drying_assignments set committed_kg = 75 where id = ${id};`);
+      const row = await h.query<{ committed_kg: number }>(
+        `select committed_kg::float8 as committed_kg from drying_assignments where id = ${id};`,
+      );
+      expect(row[0].committed_kg).toBe(75);
+    } finally {
+      await h.close();
+    }
+  });
+
+  it("over-cap UPDATE: raising an OPEN row's committed_kg past capacity RAISES (70→85 on a cap-80 station)", async () => {
+    const h = await freshDb();
+    try {
+      await h.db.exec(PLOT);
+      await h.db.exec(WORKER);
+      await h.db.exec(
+        `insert into lots (code, stage, origin_kg, current_kg) values ('JC-802','drying',85,85);`,
+      );
+      const ins = await h.query<{ id: number }>(
+        `insert into drying_assignments (lot_code, station_id, committed_kg, assigned_at)
+           values ('JC-802','st-small',70, now()) returning id;`,
+      );
+      await expect(
+        h.query(`update drying_assignments set committed_kg = 85 where id = ${ins[0].id};`),
+      ).rejects.toThrow(/capacity|overcapac/i);
+    } finally {
+      await h.close();
+    }
+  });
+
+  it("re-open: flipping a RELEASED row back to open beyond capacity RAISES (two 70kg rows on a cap-80 station)", async () => {
+    const h = await freshDb();
+    try {
+      await h.db.exec(PLOT);
+      await h.db.exec(WORKER);
+      await h.db.exec(
+        `insert into lots (code, stage, origin_kg, current_kg) values ('JC-803','drying',70,70),('JC-804','drying',70,70);`,
+      );
+      // One OPEN 70kg row consumes 70/80.
+      await h.query(
+        `insert into drying_assignments (lot_code, station_id, committed_kg, assigned_at)
+           values ('JC-803','st-small',70, now());`,
+      );
+      // A second 70kg row inserted RELEASED — released rows don't consume capacity, so
+      // it inserts fine (proves the early-return at sql:99 for released_at not null).
+      const rel = await h.query<{ id: number }>(
+        `insert into drying_assignments (lot_code, station_id, committed_kg, assigned_at, released_at)
+           values ('JC-804','st-small',70, now(), now()) returning id;`,
+      );
+      // Re-opening it (released_at → null) would make 70+70=140 > 80 → MUST raise via the UPDATE branch.
+      await expect(
+        h.query(`update drying_assignments set released_at = null where id = ${rel[0].id};`),
+      ).rejects.toThrow(/capacity|overcapac/i);
+    } finally {
+      await h.close();
+    }
   });
 });
 
@@ -629,5 +866,105 @@ describe("P2-S4 — moisture RPC ledger + validation hygiene", () => {
     await expect(
       h.query(`select record_moisture_reading('${lot}', 11.0, now(),'dev',${seq()}, null);`),
     ).rejects.toThrow(/idempotency/i);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════
+// PHASE-1 MIRROR — record_moisture_reading has a SECOND, cross-table side effect:
+// it mirrors the new reading onto the flat Phase-1 column processing_batches.
+// moisture_pct (migration sql:366) so legacy reads see the latest value. This is
+// the one non-append-only write the RPC makes, and it crosses into a Phase-1 table,
+// so it must be fenced. These pin: (a) the mirror fires onto the matching lot's
+// batch, (b) it targets ONLY that lot (the WHERE lot_code clause), (c) a pure
+// idempotency-key replay does NOT re-fire it (early return precedes the mirror),
+// and (d) the CHOSEN last-write-wins-by-recording-order semantics — an out-of-order
+// (back-dated occurred_at) reading recorded LATER updates the flat column to its
+// value, while the safety-critical reposo gate stays order-correct (it reads
+// moisture_readings ordered by recorded_at, NOT the flat column). Pinning the
+// semantics makes the behavior intentional and fenced. (#96/#100.)
+// ══════════════════════════════════════════════════════════════════════════
+describe("P2-S4 — record_moisture_reading mirrors moisture_pct onto processing_batches", () => {
+  let h: Harness;
+  beforeAll(async () => {
+    h = await freshDb();
+    await h.db.exec(PLOT);
+    await h.db.exec(WORKER);
+    // Two Phase-1 batch rows on two distinct lots — the second is the control that
+    // must stay untouched, fencing the WHERE lot_code targeting.
+    await h.db.exec(`insert into lots (code, stage, origin_kg, current_kg) values ('JC-811','drying',60,60),('JC-812','drying',60,60);`);
+    await h.db.exec(
+      `insert into processing_batches (id, lot_code, variety, method, stage, started_date, cherries_kg, current_kg, moisture_pct, patio, progress_pct)
+       values ('pb-mir1','JC-811','Geisha'::coffee_variety,'Washed'::process_method,'drying'::batch_stage,'2026-06-11',120,60,18.5,'Patio Norte',60),
+              ('pb-mir2','JC-812','Geisha'::coffee_variety,'Washed'::process_method,'drying'::batch_stage,'2026-06-11',120,60,18.5,'Patio Norte',60);`,
+    );
+  });
+  afterAll(async () => h.close());
+
+  it("mirrors the reading onto the matching lot's batch, and ONLY that lot's batch", async () => {
+    await h.query(`select record_moisture_reading('JC-811', 11.0, now() - interval '2 hours','dev',${seq()},'mir1-m1');`);
+    const target = await h.query<{ moisture_pct: number }>(
+      `select moisture_pct::float8 as moisture_pct from processing_batches where id = 'pb-mir1';`,
+    );
+    expect(target[0].moisture_pct).toBe(11.0); // mirror fired onto JC-811
+    const other = await h.query<{ moisture_pct: number }>(
+      `select moisture_pct::float8 as moisture_pct from processing_batches where id = 'pb-mir2';`,
+    );
+    expect(other[0].moisture_pct).toBe(18.5); // JC-812 untouched (WHERE lot_code fenced)
+  });
+
+  it("a pure idempotency-key replay does NOT re-fire the mirror (early return precedes it)", async () => {
+    // First in-order reading sets the flat mirror to 11.2.
+    await h.query(`select record_moisture_reading('JC-812', 11.2, now() - interval '2 hours','dev',${seq()},'mir2-key');`);
+    const after1 = await h.query<{ moisture_pct: number }>(
+      `select moisture_pct::float8 as moisture_pct from processing_batches where id = 'pb-mir2';`,
+    );
+    expect(after1[0].moisture_pct).toBe(11.2);
+    // Replay the SAME idempotency key with a different value — the RPC short-circuits
+    // at the early return BEFORE the mirror UPDATE, so the flat column does NOT change.
+    await h.query(`select record_moisture_reading('JC-812', 9.9, now() - interval '1 hour','dev',999500,'mir2-key');`);
+    const after2 = await h.query<{ moisture_pct: number }>(
+      `select moisture_pct::float8 as moisture_pct from processing_batches where id = 'pb-mir2';`,
+    );
+    expect(after2[0].moisture_pct).toBe(11.2); // unchanged — replay skipped the mirror
+  });
+
+  it("CHOSEN SEMANTICS: the flat mirror is last-write-by-recording-order; the gate reads by ingest clock and isn't fooled by a back-dated occurred_at", async () => {
+    // Fresh lot + batch so prior tests don't interfere. Seed it fully rested so the
+    // gate would clear IF the readings were stable — isolating the moisture verdict.
+    await h.db.exec(`insert into lots (code, stage, origin_kg, current_kg) values ('JC-813','parchment',60,60);`);
+    await h.db.exec(
+      `insert into processing_batches (id, lot_code, variety, method, stage, started_date, cherries_kg, current_kg, moisture_pct, patio, progress_pct)
+       values ('pb-mir3','JC-813','Geisha'::coffee_variety,'Washed'::process_method,'drying'::batch_stage,'2026-06-11',120,60,18.5,'Patio Norte',60);`,
+    );
+    // Anchor the rest clock 12 days back so rest IS met (isolate moisture as the variable).
+    await h.db.exec(
+      `insert into lot_event (idempotency_key, stream_key, kind, payload, occurred_at, recorded_at, device_id, device_seq)
+       values ('mir3-parch','JC-813','stage_advance',
+               jsonb_build_object('lot_code','JC-813','to_stage','parchment','current_kg',55),
+               now() - interval '12 days', now() - interval '12 days', 'dev', ${seq()});`,
+    );
+    // First, the honest in-band reading 11.0 (recorded first, mirror → 11.0).
+    await h.query(`select record_moisture_reading('JC-813', 11.0, now() - interval '1 hour','dev',${seq()},'mir3-good');`);
+    const flat1 = await h.query<{ moisture_pct: number }>(
+      `select moisture_pct::float8 as moisture_pct from processing_batches where id = 'pb-mir3';`,
+    );
+    expect(flat1[0].moisture_pct).toBe(11.0);
+    // Then a DISTINCT panic re-wet 13.0 reading whose FIELD occurred_at is back-dated 5h
+    // (the offline-replay / wrong-clock case) but which is recorded LAST. The flat mirror
+    // is last-write-wins-by-recording-order, so it takes 13.0 — the documented, intentional
+    // Phase-1-display behavior (pinned here so a future refactor can't change it unnoticed).
+    await h.query(`select record_moisture_reading('JC-813', 13.0, now() - interval '5 hours','dev',${seq()},'mir3-rewet');`);
+    const flat2 = await h.query<{ moisture_pct: number }>(
+      `select moisture_pct::float8 as moisture_pct from processing_batches where id = 'pb-mir3';`,
+    );
+    expect(flat2[0].moisture_pct).toBe(13.0); // last write wins on the flat mirror (chosen semantics)
+    // The SAFETY-CRITICAL gate reads moisture_readings by recorded_at (server ingest clock),
+    // NOT the field occurred_at, so the back-dated 13.0 — last-ingested and out of band —
+    // is correctly seen as the current value and the lot is NOT ready (gate not fooled).
+    const st = await h.query<{ latest_moisture: number; ready: boolean }>(
+      `select latest_moisture::float8 as latest_moisture, ready from v_reposo_status where lot_code = 'JC-813';`,
+    );
+    expect(st[0].latest_moisture).toBe(13.0); // by recorded_at the 13.0 is genuinely last-ingested
+    expect(st[0].ready).toBe(false); // wet → blocked despite the back-dated occurred_at
   });
 });

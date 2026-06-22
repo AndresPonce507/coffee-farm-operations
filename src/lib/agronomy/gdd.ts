@@ -71,21 +71,42 @@ export function staggerOffsetDays(altitudeMasl: number): number {
 
 /**
  * Project the predicted ready date (ISO yyyy-mm-dd) from the bloom date, the GDD
- * still required, the daily GDD accrual rate, and the altitude stagger. Returns
- * `null` for a missing bloom date or a non-positive accrual rate — an honest
- * unknown, never a fabricated date.
+ * accrual rate, the altitude stagger, and how far the plot already is toward its
+ * bloom→cherry requirement. Returns `null` for a missing bloom date or a
+ * non-positive accrual rate — an honest unknown, never a fabricated date.
+ *
+ * SAME-NUMBERS CONTRACT: this MUST compute the identical quantity as the
+ * `v_harvest_readiness` SQL view (migration 20260622100000), which the /plan UI
+ * and S5 dispatch actually read:
+ *
+ *     bloom_date
+ *       + (greatest(0, gdd_to_cherry - gdd_accumulated) / 50.0)::int   -- REMAINING gdd, not full
+ *       + ceil(stagger_days)::int                                      -- whole-day stagger ceiling
+ *
+ * So the numerator is the GDD *still required* (full requirement minus what's
+ * already accumulated, floored at 0) over `gddPerDay` (the SQL's nominal 50), and
+ * the stagger is added as a whole-day ceiling — Postgres `(numeric)::int` rounds
+ * to the nearest day, so the GDD-days term uses `Math.round` to match. A drift
+ * test in the PGlite harness pins the two formulas to the same fixture; if you
+ * change one, change both (the module header's reason-for-existing).
  */
 export function predictReadyDate(
   bloomDate: string | null,
   gddPerDay: number,
   altitudeMasl: number,
   gddToCherry: number = GEISHA_BLOOM_TO_CHERRY_GDD,
+  gddAccumulated: number = 0,
 ): string | null {
   if (!bloomDate || gddPerDay <= 0) return null;
   const bloomMs = new Date(bloomDate).getTime();
   if (Number.isNaN(bloomMs)) return null;
-  const daysToGdd = gddToCherry / gddPerDay;
-  const totalDays = daysToGdd + staggerOffsetDays(altitudeMasl);
+  const gddRemaining = Math.max(0, gddToCherry - gddAccumulated);
+  // Whole-day terms mirroring the SQL view: `(remaining/rate)::int` rounds to the
+  // nearest day, `ceil(stagger)::int` ceils — so the predicted date matches to the
+  // day, not merely "close".
+  const daysToGdd = Math.round(gddRemaining / gddPerDay);
+  const staggerDays = Math.ceil(staggerOffsetDays(altitudeMasl));
+  const totalDays = daysToGdd + staggerDays;
   const readyMs = bloomMs + totalDays * MS_PER_DAY;
   return new Date(readyMs).toISOString().slice(0, 10);
 }

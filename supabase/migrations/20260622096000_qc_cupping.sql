@@ -201,6 +201,16 @@ create or replace function _prevent_held_lot_commit() returns trigger
   set search_path = public
 as $$
 begin
+  -- Close the hold-vs-reserve TOCTOU (review #110): the bare `exists` below is a
+  -- classic check-then-commit, and place_qc_hold inserts the hold outside any
+  -- mutual exclusion with this read. Take the SAME per-lot advisory lock key the
+  -- Phase-1 prevent_oversell gate uses (`green_lot:'||code`) BEFORE reading
+  -- qc_holds, and have place_qc_hold take it before inserting, so a concurrent
+  -- hold-placement and a concurrent reservation/shipment serialize on one mutex:
+  -- a reservation blocks until an in-flight hold commits (then sees it & rejects),
+  -- and a hold blocks until an in-flight reservation commits. Auto-released at
+  -- commit, keyed per-lot so unrelated lots never contend.
+  perform pg_advisory_xact_lock(hashtext('green_lot:' || new.green_lot_code));
   if exists (
     select 1 from qc_holds
      where green_lot_code = new.green_lot_code
@@ -214,12 +224,17 @@ begin
   return new;
 end $$;
 
+-- BEFORE INSERT OR UPDATE (review #111/#140) — identical surface to the
+-- prevent_oversell family this gate extends. The body keys only on
+-- new.green_lot_code, so it re-validates unchanged on an UPDATE that raises a
+-- claim's kg or repoints its green_lot_code onto a held lot — closing the
+-- asymmetry where an UPDATE bypassed the QC-HOLD quarantine.
 create trigger lot_reservations_prevent_held_commit
-  before insert on lot_reservations
+  before insert or update on lot_reservations
   for each row execute function _prevent_held_lot_commit();
 
 create trigger lot_shipments_prevent_held_commit
-  before insert on lot_shipments
+  before insert or update on lot_shipments
   for each row execute function _prevent_held_lot_commit();
 
 -- ──────────────────────────────────────────────────────────────────────────
@@ -231,17 +246,30 @@ create trigger lot_shipments_prevent_held_commit
 -- attribute rows, so the final is the sum of the session's scores (the per-protocol
 -- attribute set / rounding nuance lives in the pure cva-scoring.ts the UI uses; the
 -- DB view is the authoritative additive total over whatever attributes were logged).
+-- SUPERSEDE-AWARE (review #141): cupping_scores is append-only (no UPDATE path),
+-- so the ONLY way to correct a fat-fingered attribute is a superseding row. A bare
+-- `sum(c.score)` over ALL rows would double-count a re-scored attribute and inflate
+-- the headline cup score that drives the specialty band. Collapse to ONE row per
+-- (session, attribute) — highest id (latest recorded) wins — then sum. This matches
+-- the migration's own "corrected only by superseding rows" contract AND the pure
+-- cva-scoring.ts client preview (which de-dups via a Record keyed by attribute).
 create view v_cup_final_score with (security_invoker = on) as
+  with latest as (
+    select distinct on (c.session_id, c.attribute)
+           c.session_id, c.attribute, c.score
+      from cupping_scores c
+     order by c.session_id, c.attribute, c.id desc
+  )
   select
     s.id              as session_id,
     s.green_lot_code,
     s.cupper_id,
     s.protocol,
     s.is_calibration,
-    coalesce(sum(c.score), 0)::numeric as final_score,
-    count(c.id)::int                   as attribute_count
+    coalesce(sum(l.score), 0)::numeric as final_score,
+    count(l.attribute)::int            as attribute_count
   from cupping_sessions s
-  left join cupping_scores c on c.session_id = s.id
+  left join latest l on l.session_id = s.id
   group by s.id, s.green_lot_code, s.cupper_id, s.protocol, s.is_calibration;
 
 -- v_cupper_drift — each cupper's systematic bias on SHARED calibration samples:
@@ -249,10 +277,18 @@ create view v_cup_final_score with (security_invoker = on) as
 -- is_calibration sessions only. A consistent +N surfaces as evidence (never a hard
 -- block — you correct for known drift, you don't reject a cupper's score).
 create view v_cupper_drift with (security_invoker = on) as
-  with cal as (
-    select s.cupper_id, c.attribute, c.score
+  with latest as (
+    -- supersede-aware per (session, attribute) — same #141 collapse so a re-scored
+    -- calibration attribute doesn't double-weight a cupper's mean.
+    select distinct on (c.session_id, c.attribute)
+           c.session_id, c.attribute, c.score
+      from cupping_scores c
+     order by c.session_id, c.attribute, c.id desc
+  ),
+  cal as (
+    select s.cupper_id, l.attribute, l.score
       from cupping_sessions s
-      join cupping_scores  c on c.session_id = s.id
+      join latest l on l.session_id = s.id
      where s.is_calibration = true
   ),
   panel as (
@@ -286,10 +322,18 @@ create view v_qc_status with (security_invoker = on) as
        order by h.placed_at desc limit 1
     )                                                   as hold_reason,
     (
+      -- The real most-recent SCORED total. `attribute_count > 0` (review #58) skips
+      -- an opened-but-empty session whose v_cup_final_score is a placeholder 0 — so
+      -- starting a re-cup no longer flips the roll-up to a fabricated 0; a lot with
+      -- only empty sessions yields SQL NULL (mapped to null → rendered "—"). The
+      -- `s2.id desc` tiebreaker (review #142, matching v_reposo_status) makes the
+      -- pick deterministic when two same-day sessions share occurred_at — id is the
+      -- monotonic insert key, so id desc == latest recorded.
       select f.final_score from v_cup_final_score f
        join cupping_sessions s2 on s2.id = f.session_id
        where f.green_lot_code = g.lot_code
-       order by s2.occurred_at desc limit 1
+         and f.attribute_count > 0
+       order by s2.occurred_at desc, s2.id desc limit 1
     )                                                   as latest_cup_score,
     coalesce((
       select sum(d.count) from green_defects d
@@ -429,6 +473,11 @@ begin
   if existing is not null then
     return existing;
   end if;
+  -- Take the SAME per-lot advisory lock the _prevent_held_lot_commit gate and the
+  -- Phase-1 prevent_oversell family use (review #110), so hold-placement fully
+  -- serializes per lot against a concurrent reservation/shipment — closing the
+  -- hold-vs-reserve TOCTOU window. Keyed per-lot, auto-released at commit.
+  perform pg_advisory_xact_lock(hashtext('green_lot:' || p_green_lot_code));
   if not exists (select 1 from green_lots where lot_code = p_green_lot_code) then
     raise exception 'unknown green lot %', p_green_lot_code using errcode = 'foreign_key_violation';
   end if;

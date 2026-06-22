@@ -4,9 +4,19 @@ import type { MoistureReading } from "@/lib/types";
 export interface MoistureCurveProps {
   /** The lot's readings, oldest → newest. */
   curve: MoistureReading[];
-  /** Lower edge of the reposo target band (default 10.5%). */
+  /**
+   * Lower edge of the reposo target band. SSOT: this MUST come from
+   * `farm_season_config.reposo_moisture_min_pct` (threaded through the board) so the
+   * drawn band tracks the same tunable window the reposo gate enforces. The literal
+   * default is a render-test convenience ONLY — production callers always supply it.
+   */
   bandMin?: number;
-  /** Upper edge of the reposo target band (default 11.5%). */
+  /**
+   * Upper edge of the reposo target band. SSOT: this MUST come from
+   * `farm_season_config.reposo_moisture_max_pct` (threaded through the board) so the
+   * drawn band tracks the same tunable window the reposo gate enforces. The literal
+   * default is a render-test convenience ONLY — production callers always supply it.
+   */
   bandMax?: number;
   /** Rendered pixel height. */
   height?: number;
@@ -20,11 +30,15 @@ const PAD_Y = 10;
 
 /**
  * MoistureCurve — a server-rendered SVG of a lot's drying curve converging on the
- * reposo target band (10.5–11.5%). The honey band is drawn as a glass overlay so
- * the family SEES the lot settle into the window the reposo gate requires. Pure
- * presentation, zero JS (the Phase-1 zero-JS chart idiom): the polyline + band are
- * SVG; the x-axis labels are an HTML row below (text never lives in the stretched
- * SVG). The y-domain is fixed around the band so the band is always legible.
+ * reposo target band. The band edges are NOT hardcoded here: they are the tunable
+ * SSOT (`farm_season_config.reposo_moisture_min/max_pct`) supplied via `bandMin`/
+ * `bandMax`, so the drawn band — and the in-band/out-of-band endpoint verdict —
+ * always track the exact window the reposo gate enforces in the database (never a
+ * stale literal that could contradict the gate once the family tunes the window).
+ * The honey band is drawn as a glass overlay so the family SEES the lot settle into
+ * that window. Pure presentation, zero JS (the Phase-1 zero-JS chart idiom): the
+ * polyline + band are SVG; the x-axis labels are an HTML row below (text never lives
+ * in the stretched SVG). The y-domain is fixed around the band so it's always legible.
  */
 export function MoistureCurve({
   curve,

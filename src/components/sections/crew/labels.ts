@@ -30,7 +30,7 @@ export const ATTENDANCE_LABELS: Record<string, BilingualLabel> = {
 /** Attendance-event kinds for the append-only timeline. */
 export const EVENT_KIND_LABELS: Record<string, BilingualLabel> = {
   "clock-in": { es: "entrada", ng: "kite sribire" },
-  "clock-out": { es: "salida", ng: " neme sribire" },
+  "clock-out": { es: "salida", ng: "neme sribire" },
   "rest-day": { es: "día de descanso", ng: "köbö jadüäre" },
   absent: { es: "ausencia", ng: "ñaka nüke" },
 };

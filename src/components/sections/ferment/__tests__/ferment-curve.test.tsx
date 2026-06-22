@@ -46,4 +46,43 @@ describe("FermentCurve (smoke)", () => {
     const d = line?.getAttribute("d") ?? "";
     expect((d.match(/[ML]/g) ?? []).length).toBe(3);
   });
+
+  it("renders a visible point marker for a single-reading series (first-use)", () => {
+    // With exactly ONE reading, the curve <path> is a bare moveto ("M x y")
+    // that SVG does not stroke, so the only thing that can make the reading
+    // visible is an explicit point marker. The first reading of every batch
+    // hits this state — it must not render an invisible chart.
+    const oneReading: FermentCurvePoint[] = [
+      {
+        batchId: "b1",
+        lotCode: "JC-800",
+        readingKind: "ph",
+        value: 5.6,
+        occurredAt: "2026-06-20T06:00:00Z",
+        hoursElapsed: 0,
+      },
+    ];
+    const { container } = render(
+      <FermentCurve points={oneReading} targetPh={4.2} kind="ph" />,
+    );
+    // not the empty state
+    expect(
+      container.querySelector("[data-testid='ferment-curve-empty']"),
+    ).toBeNull();
+    // a visible dot marker exists for the reading
+    const dots = container.querySelectorAll(
+      "[data-testid='ferment-curve-point']",
+    );
+    expect(dots.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("renders a point marker for every reading on a multi-point curve", () => {
+    const { container } = render(
+      <FermentCurve points={phSeries} targetPh={4.2} kind="ph" />,
+    );
+    const dots = container.querySelectorAll(
+      "[data-testid='ferment-curve-point']",
+    );
+    expect(dots.length).toBe(phSeries.length);
+  });
 });

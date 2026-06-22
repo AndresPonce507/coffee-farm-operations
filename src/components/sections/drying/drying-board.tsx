@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Coffee, MapPin } from "lucide-react";
 
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,11 +13,18 @@ import type { DryingLot } from "@/lib/types";
  * DryingBoard — the per-lot resting view. Each lot in/through drying gets a glass
  * card carrying its moisture curve (converging on the 10.5–11.5% reposo band), its
  * station, and THE REPOSO GATE CHIP — red "resting · N days · 11.8%" until the lot
- * is rest-stable, then green "clear to mill". The advance-to-mill affordance is
- * shown DISABLED with the gate's exact reason until the gate opens — but that
- * disabled button is only courtesy: the gate is enforced in the database (the
+ * is rest-stable, then green "clear to mill". Until the gate opens the
+ * advance-to-mill affordance is shown as a DISABLED button carrying the gate's
+ * exact reason — courtesy only: the gate is enforced in the database (the
  * precondition inside advance_processing_stage + the trigger backstop on `lots`),
  * so a milled advance is physically impossible until the lot is rest-stable.
+ *
+ * Once rest-stable, the affordance becomes an HONEST navigable control — a Link
+ * to /processing, where the wired AdvanceStageControl island performs the real
+ * drying→milled advance (the shared Dialog confirm + stable idempotency key). We
+ * deliberately do NOT render an enabled primary button here: this is a Server
+ * Component with no handler, so a clickable button would be an inert, misleading
+ * CTA. The working advance path already lives one route over, so we link to it.
  *
  * Server component (no client JS): pure presentation over the composed read.
  */
@@ -79,28 +87,40 @@ export function DryingBoard({ lots }: { lots: DryingLot[] }) {
 
                 <MoistureCurve curve={lot.curve} height={140} />
 
-                {/* The advance-to-mill affordance: disabled with the gate's reason
-                    until rest-stable. The DB is the real gate; this is courtesy. */}
+                {/* The advance-to-mill affordance. Blocked: a disabled button
+                    carrying the gate's reason (DB is the real gate; this is
+                    courtesy). Rest-stable: an HONEST Link to /processing, where
+                    the wired AdvanceStageControl performs the real advance — never
+                    an enabled primary button with no handler in this server view. */}
                 <div className="mt-3 flex items-center justify-between gap-3">
                   <p className="text-[11px] text-muted-fg">{lot.reposo.reason}</p>
-                  <button
-                    type="button"
-                    disabled={!lot.reposo.ready}
-                    aria-disabled={!lot.reposo.ready}
-                    title={
-                      lot.reposo.ready
-                        ? "Advance this lot to milling"
-                        : `Blocked by the reposo gate: ${lot.reposo.reason}`
-                    }
-                    className={cn(
-                      "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
-                      lot.reposo.ready
-                        ? "bg-forest text-paper hover:bg-forest-600"
-                        : "cursor-not-allowed bg-muted text-muted-fg",
-                    )}
-                  >
-                    {lot.reposo.ready ? "Advance to mill" : "Mill — locked"}
-                  </button>
+                  {lot.reposo.ready ? (
+                    <Link
+                      href="/processing"
+                      title="Advance this lot to milling on the Processing surface"
+                      aria-label={`Advance lot ${lot.lotCode} to milling`}
+                      className={cn(
+                        "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                        "bg-forest text-paper hover:bg-forest-600",
+                        "outline-none focus-visible:ring-2 focus-visible:ring-forest/40",
+                      )}
+                    >
+                      Advance to mill →
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      aria-disabled
+                      title={`Blocked by the reposo gate: ${lot.reposo.reason}`}
+                      className={cn(
+                        "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                        "cursor-not-allowed bg-muted text-muted-fg",
+                      )}
+                    >
+                      Mill — locked
+                    </button>
+                  )}
                 </div>
               </li>
             ))}

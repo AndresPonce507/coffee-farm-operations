@@ -152,6 +152,108 @@ describe("createSyncEngine (connectivity wiring)", () => {
     engine.stop();
   });
 
+  it("single-flights overlapping drains: a reconnect flap during an in-flight send never double-sends a queued entry", async () => {
+    // Hold the first transport.send() pending; fire 'online' inside that window
+    // (a flapping radio at the mill gate) → the engine's onOnline triggers a
+    // second drain while the first is still awaiting. With no single-flight gate
+    // on drain(), both drains read entry A as still 'queued' and BOTH call
+    // transport.send(A) — a double replay. The gate coalesces them to one send.
+    let releaseFirst!: () => void;
+    const firstSent = new Promise<void>((r) => {
+      releaseFirst = r;
+    });
+    const sends: string[] = [];
+    let i = 0;
+    const transport: CommandTransport = {
+      async send(entry) {
+        sends.push(entry.uuid);
+        if (i++ === 0) await firstSent; // hold the FIRST send open.
+        return { kind: "ok" };
+      },
+    };
+    const outbox = createOutbox({ store: createMemoryStore(), transport });
+    const engine = createSyncEngine({
+      outbox,
+      win: fakeWindow(),
+      nav: fakeNavigator(),
+    });
+    const a = await outbox.enqueue({
+      rpc: "record_weigh_in",
+      args: {},
+      occurredAt: "2026-06-21T17:00:00.000Z",
+      deviceId: "d1",
+    });
+
+    const started = engine.start(); // begins draining A; first send hangs.
+    await vi.waitFor(() => expect(sends.length).toBe(1)); // A is in-flight.
+    emit("online"); // radio flaps → second drain attempt during the window.
+    await Promise.resolve();
+    releaseFirst(); // let the first send resolve.
+    await started;
+    await vi.waitFor(() => expect(engine.getState().pending).toBe(0));
+
+    // A must have been sent EXACTLY once across both drain triggers.
+    expect(sends.filter((u) => u === a.uuid)).toHaveLength(1);
+    engine.stop();
+  });
+
+  it("re-drains once for an entry enqueued during an in-flight flush (reconnect mid-flush picks it up, not dropped)", async () => {
+    // The single-flight gate must not just DROP an overlapping drain — it must
+    // remember it and re-run once, or an entry enqueued mid-flush (a new field
+    // write) plus a reconnect during that flush is left 'queued' forever (the
+    // in-flight flush already snapshotted without it, and a bare drop-guard
+    // never re-drains). The `rerun` flag closes this gap.
+    let releaseFirst!: () => void;
+    const firstSent = new Promise<void>((r) => {
+      releaseFirst = r;
+    });
+    const sends: string[] = [];
+    let i = 0;
+    const transport: CommandTransport = {
+      async send(entry) {
+        sends.push(entry.uuid);
+        if (i++ === 0) await firstSent; // hold the FIRST send open.
+        return { kind: "ok" };
+      },
+    };
+    const outbox = createOutbox({ store: createMemoryStore(), transport });
+    const engine = createSyncEngine({
+      outbox,
+      win: fakeWindow(),
+      nav: fakeNavigator(),
+    });
+    const a = await outbox.enqueue({
+      rpc: "record_weigh_in",
+      args: { lot: "A" },
+      occurredAt: "2026-06-21T17:00:00.000Z",
+      deviceId: "d1",
+    });
+
+    const started = engine.start(); // begins draining A; first send hangs.
+    await vi.waitFor(() => expect(sends.length).toBe(1)); // A is in-flight.
+
+    // A NEW field write lands mid-flush, and the radio flaps (reconnect).
+    const b = await outbox.enqueue({
+      rpc: "record_weigh_in",
+      args: { lot: "B" },
+      occurredAt: "2026-06-21T17:00:05.000Z",
+      deviceId: "d1",
+    });
+    emit("online"); // second drain attempt while the first flush is in flight.
+    await Promise.resolve();
+    releaseFirst(); // let A's send resolve.
+    await started;
+
+    // Both A and B must end up sent — B is NOT stranded in the queue.
+    await vi.waitFor(() => {
+      expect(engine.getState().pending).toBe(0);
+      expect(engine.getState().status).toBe("synced");
+    });
+    expect(sends).toContain(a.uuid);
+    expect(sends).toContain(b.uuid);
+    engine.stop();
+  });
+
   it("notifies subscribers on every state change", async () => {
     const outbox = createOutbox({
       store: createMemoryStore(),

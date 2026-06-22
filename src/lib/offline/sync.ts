@@ -123,22 +123,45 @@ export function createSyncEngine(deps: {
     emit();
   }
 
+  // Single-flight gate for drain(). The engine is the SOLE drainer, but it is
+  // triggered from two places that trivially overlap: start()'s initial drain
+  // and every `online` window event. A reconnect flap during an in-flight flush
+  // would otherwise run a second drain concurrently — and even though the outbox
+  // coalesces overlapping flush() calls, that second flush JOINS the first one's
+  // already-taken snapshot, so an entry enqueued (or a reconnect that arrived)
+  // mid-flush would be silently skipped. `draining` coalesces the overlap;
+  // `rerun` remembers that a drain was requested while one was in flight and
+  // loops ONCE more to pick up anything new — so nothing is dropped.
+  let draining = false;
+  let rerun = false;
   async function drain(): Promise<void> {
-    if (!isOnline()) {
-      await refresh();
+    if (draining) {
+      rerun = true; // a drain is in flight — remember this request, don't race it.
       return;
     }
-    const pending = await outbox.pendingCount();
-    if (pending === 0) {
-      await refresh();
-      return;
-    }
-    setSyncing(true);
+    draining = true;
     try {
-      await outbox.flush();
+      do {
+        rerun = false;
+        if (!isOnline()) {
+          await refresh();
+          continue;
+        }
+        const pending = await outbox.pendingCount();
+        if (pending === 0) {
+          await refresh();
+          continue;
+        }
+        setSyncing(true);
+        try {
+          await outbox.flush();
+        } finally {
+          setSyncing(false);
+          await refresh();
+        }
+      } while (rerun);
     } finally {
-      setSyncing(false);
-      await refresh();
+      draining = false;
     }
   }
 

@@ -67,9 +67,25 @@ export function validateFermentReading(
   const value = toNumber(raw.value);
   if (value === null) {
     errors.value = "Enter a numeric reading.";
-  } else if (isKind(kindRaw) && kindRaw === "ph" && (value < 0 || value > 14)) {
-    // pH lives on the 0–14 scale; a value outside it is a typo, not a reading.
-    errors.value = "pH must be between 0 and 14.";
+  } else if (isKind(kindRaw)) {
+    // Kind-scoped sanity bounds mirroring the DB CHECK `ferment_readings_value_range`
+    // (the REAL enforcement, ADR-002): a sensor-fault temp (probe error 9999) or a
+    // probe-in-air Brix (−5) would otherwise land in the APPEND-ONLY ledger forever,
+    // skewing the curve with no way to correct it. The friendly seam catches these
+    // before the round-trip. Ranges match the DB to the unit so the validator never
+    // rejects a value the ledger accepts (and vice versa).
+    if (kindRaw === "ph" && (value < 0 || value > 14)) {
+      // pH lives on the 0–14 scale; a value outside it is a typo, not a reading.
+      errors.value = "pH must be between 0 and 14.";
+    } else if (kindRaw === "temp" && (value < -5 || value > 60)) {
+      // A wet-ferment tank runs ~−5 °C (cold highland nights) to 60 °C; outside that
+      // is a mis-key or a BLE-probe fault, not a real tank temperature.
+      errors.value = "Temperature must be between −5 and 60 °C.";
+    } else if (kindRaw === "brix" && (value < 0 || value > 40)) {
+      // Coffee-mucilage Brix sits ~0–40 °Bx; a negative or huge value means the
+      // refractometer was dry/in-air, not reading sugar.
+      errors.value = "Brix must be between 0 and 40 °Bx.";
+    }
   }
 
   const occurredAt = trimmed(raw.occurredAt);
@@ -132,6 +148,12 @@ function friendlyRpcError(error: { message: string; code?: string }): string | n
     /duplicate key value|unique constraint/i.test(error.message)
   ) {
     return "That reading was already recorded — refresh the curve before logging again.";
+  }
+  // The DB CHECK `ferment_readings_value_range` fails closed on an out-of-range
+  // pH/temp/Brix even if a value slips past the validator (future caller, UI bug).
+  // Surface a clean prompt, never the raw constraint text.
+  if (error.code === "23514" || /ferment_readings_value_range|check constraint/i.test(error.message)) {
+    return "That reading is out of range — check the probe and re-log.";
   }
   return null;
 }
