@@ -108,6 +108,7 @@ export function WeighCapture({
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
   const [scaleBusy, setScaleBusy] = useState(false);
+  const [gpsBusy, setGpsBusy] = useState(false);
 
   // Optimistic local tally bumps so the scoreboard climbs even fully offline.
   const [localBumps, setLocalBumps] = useState<Record<string, { kg: number; latas: number }>>(
@@ -131,7 +132,11 @@ export function WeighCapture({
   const pickerLatas = pickerId ? (localBumps[pickerId]?.latas ?? 0) : 0;
 
   // GPS: auto-pick the nearest plot to the fix (a confirm chip, never a hard lock).
+  // The fix can take up to 6 s at a signal-poor 1,700 masl site, so the button
+  // reports busy (spinner + disabled) and a failure surfaces a calm inline message
+  // — never a silent up-to-6 s hang, never silent failure (mirrors the scale path).
   const acquireGps = useCallback(async () => {
+    if (gpsBusy) return; // guard concurrent getCurrentPosition on repeated taps.
     const getPos =
       deps.getPosition ??
       (async () => {
@@ -144,18 +149,28 @@ export function WeighCapture({
           );
         });
       });
-    const pos = await getPos();
-    if (!pos) return;
-    setFix(pos);
-    // nearest plot with coordinates wins the auto-select.
-    let best: { id: string; d: number } | null = null;
-    for (const p of plots) {
-      if (p.lat == null || p.lng == null) continue;
-      const d = distM(pos.lat, pos.lng, p.lat, p.lng);
-      if (!best || d < best.d) best = { id: p.id, d };
+    setGpsBusy(true);
+    try {
+      const pos = await getPos();
+      if (!pos) {
+        // Permission denied / timeout: tell the picker so they confirm by hand —
+        // the plot <select> always works, so this is informative, never blocking.
+        setError("No se pudo ubicar con GPS — confirma la parcela a mano.");
+        return;
+      }
+      setFix(pos);
+      // nearest plot with coordinates wins the auto-select.
+      let best: { id: string; d: number } | null = null;
+      for (const p of plots) {
+        if (p.lat == null || p.lng == null) continue;
+        const d = distM(pos.lat, pos.lng, p.lat, p.lng);
+        if (!best || d < best.d) best = { id: p.id, d };
+      }
+      if (best) setPlotId(best.id);
+    } finally {
+      setGpsBusy(false);
     }
-    if (best) setPlotId(best.id);
-  }, [deps, plots]);
+  }, [deps, plots, gpsBusy]);
 
   const tryScale = useCallback(async () => {
     setScaleBusy(true);
@@ -200,7 +215,11 @@ export function WeighCapture({
       capturedLng: fix?.lng ?? "",
       occurredAt: now(),
       deviceId: deviceIdRef.current,
-      deviceSeq: "0", // the outbox re-stamps a monotonic seq; the key dedupes
+      // A PLACEHOLDER only: the client cannot mint the durable per-device counter.
+      // The outbox stamps a monotonic `device_seq` at enqueue, and the transport
+      // injects it into `args.p_device_seq` before the RPC — so this 0 never reaches
+      // the DB (it would otherwise collide on `unique (device_id, device_seq)`).
+      deviceSeq: "0",
       idempotencyKey: mintKey(),
     });
     if (!parsed.ok) {
@@ -286,10 +305,16 @@ export function WeighCapture({
           <button
             type="button"
             onClick={acquireGps}
-            className="inline-flex min-h-[48px] items-center gap-1.5 rounded-xl border border-line bg-white/55 px-3.5 text-sm font-medium text-forest transition hover:bg-white/75"
+            disabled={gpsBusy}
+            aria-busy={gpsBusy}
+            className="inline-flex min-h-[48px] items-center gap-1.5 rounded-xl border border-line bg-white/55 px-3.5 text-sm font-medium text-forest transition hover:bg-white/75 disabled:opacity-60"
           >
-            <MapPin className="h-4 w-4" aria-hidden="true" />
-            {fix ? "GPS set" : "Use GPS"}
+            {gpsBusy ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <MapPin className="h-4 w-4" aria-hidden="true" />
+            )}
+            {gpsBusy ? "Buscando GPS…" : fix ? "GPS set" : "Use GPS"}
           </button>
           {selectedPlot && (
             <span className="text-xs text-muted-fg">{selectedPlot.name}</span>

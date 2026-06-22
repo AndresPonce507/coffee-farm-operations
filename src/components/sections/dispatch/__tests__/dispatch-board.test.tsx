@@ -21,11 +21,27 @@ vi.mock("@/app/(app)/dispatch/actions", () => ({
   DISPATCH_IDLE: { status: "idle" },
 }));
 
+// Capture the props the board hands the generate island so we can assert the board
+// no longer relies on the island's silent default readiness threshold (the D08-1
+// cold-model gap: a hardwired 0.5 cut-off yields an empty card on a cold S8 model).
+const generateButtonProps: Array<Record<string, unknown>> = [];
+vi.mock("@/components/sections/dispatch/generate-dispatch-button", () => ({
+  GenerateDispatchButton: (props: Record<string, unknown>) => {
+    generateButtonProps.push(props);
+    return (
+      <button type="button" data-testid="generate-stub">
+        {String(props.alreadyDrafted) === "true" ? "Re-draft" : "Generate dispatch"}
+      </button>
+    );
+  },
+}));
+
 import { DispatchBoard } from "@/components/sections/dispatch/dispatch-board";
 
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  generateButtonProps.length = 0;
 });
 
 const roster: CrewRosterMember[] = [
@@ -83,6 +99,34 @@ const norteCard: DispatchCard = {
   ],
 };
 
+const tizingalAckCard: DispatchCard = {
+  id: 2,
+  crewId: "crew-tizingal",
+  crewName: "Crew Tizingal",
+  dispatchDate: "2026-06-22",
+  season: "2026",
+  status: "acknowledged",
+  sentChannel: "web-share",
+  readinessThreshold: 0.5,
+  idempotencyKey: "disp-2",
+  plotCount: 1,
+  plots: [
+    {
+      id: 20,
+      dispatchRunId: 2,
+      plotId: "p-tiz-1",
+      plotName: "Tizingal Alto",
+      variety: "Geisha",
+      altitudeMasl: 1700,
+      taskKind: "picking",
+      targetKg: null,
+      ripenessTarget: "high",
+      readiness: 0.9,
+      ord: 1,
+    },
+  ],
+};
+
 describe("DispatchBoard (async Server Component render)", () => {
   it("renders a column per crew and the active dispatch card", async () => {
     getCrewRoster.mockResolvedValue(roster);
@@ -115,5 +159,46 @@ describe("DispatchBoard (async Server Component render)", () => {
     render(await DispatchBoard());
     // the summary surfaces the crew count.
     expect(screen.getByTestId("dispatch-summary")).toBeInTheDocument();
+  });
+
+  // D08-2 (board portion): the 'acknowledged' run state is a first-class DB state
+  // that getDispatchToday already maps, yet the board previously hid it inside the
+  // "Shared" tally. Surface it as its own headline tile so the manager can see a
+  // crew lead confirmed (the acknowledged badge is otherwise perpetually invisible).
+  it("surfaces acknowledged runs in their own headline tile", async () => {
+    getCrewRoster.mockResolvedValue(roster);
+    getDispatchToday.mockResolvedValue([tizingalAckCard]);
+
+    render(await DispatchBoard());
+
+    const summary = screen.getByTestId("dispatch-summary");
+    // a dedicated Acknowledged tile exists and counts the acknowledged run.
+    const ackTile = summary.querySelector('[data-testid="dispatch-tile-acknowledged"]');
+    expect(ackTile).not.toBeNull();
+    expect(ackTile?.textContent).toMatch(/Acknowledged/i);
+    // the acknowledged run is tallied in ITS OWN tile (the bold value paragraph = 1),
+    // no longer invisible / folded only into "Shared".
+    const ackValue = ackTile?.querySelector("p.font-display");
+    expect(ackValue?.textContent).toBe("1");
+  });
+
+  // D08-1 (board portion / interim mitigation): the board must NOT lean on the
+  // generate island's silent default readiness threshold (0.5) — on a cold S8 model
+  // every plot scores readiness 0, so a 0.5 cut-off drafts an EMPTY card with no way
+  // to recover. The board now passes an explicit, cold-start-aware threshold below
+  // 0.5 so marginally-ready plots are surfaced for the manager to review.
+  it("passes an explicit cold-start readiness threshold (< 0.5) to the generate island", async () => {
+    getCrewRoster.mockResolvedValue(roster);
+    getDispatchToday.mockResolvedValue([]); // no dispatches yet
+
+    render(await DispatchBoard());
+
+    expect(generateButtonProps.length).toBeGreaterThan(0);
+    for (const props of generateButtonProps) {
+      expect(typeof props.readinessThreshold).toBe("number");
+      const thr = props.readinessThreshold as number;
+      expect(thr).toBeGreaterThan(0);
+      expect(thr).toBeLessThan(0.5);
+    }
   });
 });

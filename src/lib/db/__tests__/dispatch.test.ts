@@ -171,6 +171,7 @@ vi.mock("@/lib/supabase/server", () => ({
 function stubByTable(byTable: Record<string, unknown[]>, error: { message: string } | null = null) {
   const from = vi.fn();
   const order = vi.fn();
+  const eq = vi.fn();
   from.mockImplementation((table: string) => {
     const result: QueryResult<unknown[]> = {
       data: byTable[table] ?? [],
@@ -182,6 +183,10 @@ function stubByTable(byTable: Record<string, unknown[]>, error: { message: strin
         order(table, ...args);
         return builder;
       }),
+      eq: vi.fn((...args: unknown[]) => {
+        eq(table, ...args);
+        return builder;
+      }),
       then: (
         onFulfilled: (value: QueryResult<unknown[]>) => unknown,
         onRejected?: (reason: unknown) => unknown,
@@ -190,7 +195,7 @@ function stubByTable(byTable: Record<string, unknown[]>, error: { message: strin
     return builder;
   });
   getSupabaseMock.mockReturnValue({ from });
-  return { from, order };
+  return { from, order, eq };
 }
 
 afterEach(() => {
@@ -318,5 +323,32 @@ describe("getDispatchToday — reads the active cards + groups their plot lines"
     const { getDispatchToday } = await import("@/lib/db/dispatch");
     stubByTable({}, { message: "boom" });
     await expect(getDispatchToday()).rejects.toThrow(/getDispatchToday/);
+  });
+
+  // ── REGRESSION (S5 "today" cockpit): the board is the 5:30am TODAY board, but
+  //    v_dispatch_card returns every non-superseded run across ALL dates. Without a
+  //    date filter on the read, a never-shared draft from a prior day reappears on
+  //    today's board (stale card) and a re-draft yields two active runs the board
+  //    collapses last-wins. The read port MUST scope to a single dispatch_date.
+  it("scopes the card read to the passed dispatch_date (no stale prior-day cards)", async () => {
+    const { getDispatchToday } = await import("@/lib/db/dispatch");
+    const { eq } = stubByTable({
+      v_dispatch_card: cardRows,
+      v_dispatch_card_plots: plotRows,
+    });
+    await getDispatchToday("2026-06-22");
+    // the card query is narrowed to exactly one morning — not every date.
+    expect(eq).toHaveBeenCalledWith("v_dispatch_card", "dispatch_date", "2026-06-22");
+  });
+
+  it("defaults the date scope to the manager's local today when none is passed", async () => {
+    const { getDispatchToday } = await import("@/lib/db/dispatch");
+    const { eq } = stubByTable({
+      v_dispatch_card: cardRows,
+      v_dispatch_card_plots: plotRows,
+    });
+    const expectedToday = new Date().toISOString().slice(0, 10);
+    await getDispatchToday();
+    expect(eq).toHaveBeenCalledWith("v_dispatch_card", "dispatch_date", expectedToday);
   });
 });

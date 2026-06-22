@@ -22,9 +22,10 @@ import {
  * approved gate, exactly-once on the idempotency key) is the *real* enforcement; the
  * validation here exists purely to surface friendly errors before the round-trip.
  *
- * The RPC is exactly-once on `idempotencyKey` (carried as the disbursement ref) — a
- * retry returns the original disbursement. It returns the disbursement id (bigint →
- * number).
+ * The RPC is exactly-once on `idempotencyKey` (its own column, backed by a UNIQUE index
+ * — NOT overloaded onto `ref`, which carries the real transfer receipt) — a retry
+ * returns the original disbursement, and the recorded amount is reconciled against the
+ * approved line's net. It returns the disbursement id (bigint → number).
  */
 
 /** The recognised disbursement rails — mirrors the SQL `method` CHECK. */
@@ -163,8 +164,9 @@ export function recordDisbursementRpcArgs(
  * Validate then record: calls `record_disbursement` exactly once with the snake_case
  * envelope. Bad input never reaches the RPC (friendly errors); RPC failures surface
  * labelled. RECORD-ONLY — no money moves here (DESIGN §4.3, dormant); this only logs a
- * payment a human already made. The RPC is exactly-once on `idempotencyKey` — a retry
- * returns the original disbursement id, writing no second record.
+ * payment a human already made. The RPC is exactly-once on `idempotencyKey` (DB UNIQUE) —
+ * a retry returns the original disbursement id, writing no second record; a different-key
+ * second pay for the same worker+period is rejected (reverse first to re-pay).
  */
 export async function recordDisbursement(
   store: RecordDisbursementStore,

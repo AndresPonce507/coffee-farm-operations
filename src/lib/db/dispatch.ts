@@ -109,36 +109,55 @@ export function mapDispatchCard(
   };
 }
 
+/** The manager's local "today" as an ISO date (YYYY-MM-DD) — the morning the
+ *  /dispatch board defaults to (its 5:30am cockpit use-case). */
+function localTodayISO(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 /**
- * Every ACTIVE crew's morning dispatch card, ordered by crew name. Reads
- * v_dispatch_card for the headers and v_dispatch_card_plots ONCE (grouped by run
- * in memory — no N+1), then assembles each card with its plot lines in display
- * order. The /dispatch board renders these; the manager curates and shares.
+ * Every ACTIVE crew's dispatch card FOR ONE MORNING (default: the manager's local
+ * today), ordered by crew name. Reads v_dispatch_card for the headers and
+ * v_dispatch_card_plots ONCE (grouped by run in memory — no N+1), then assembles
+ * each card with its plot lines in display order. The /dispatch board renders these;
+ * the manager curates and shares.
+ *
+ * The read is DATE-SCOPED: v_dispatch_card returns every non-superseded run across
+ * all dates, so without `.eq('dispatch_date', date)` a never-shared draft from a
+ * prior day would reappear on today's board (a stale card) and a re-draft for the
+ * same crew (a new run on a new date that does NOT supersede yesterday's) would
+ * yield two active runs the board can only render last-wins. Pinning the read to a
+ * single dispatch_date guarantees at most one active run per crew is rendered — the
+ * one for the morning being dispatched. The plot lines are joined by run id, so they
+ * scope automatically.
  */
-export const getDispatchToday = cache(async (): Promise<DispatchCard[]> => {
-  const client = await getSupabase();
+export const getDispatchToday = cache(
+  async (date: string = localTodayISO()): Promise<DispatchCard[]> => {
+    const client = await getSupabase();
 
-  const { data: cardData, error: cardError } = await client
-    .from("v_dispatch_card")
-    .select("*")
-    .order("crew_name", { ascending: true });
-  if (cardError) throw new Error(`getDispatchToday: ${cardError.message}`);
+    const { data: cardData, error: cardError } = await client
+      .from("v_dispatch_card")
+      .select("*")
+      .eq("dispatch_date", date)
+      .order("crew_name", { ascending: true });
+    if (cardError) throw new Error(`getDispatchToday: ${cardError.message}`);
 
-  const { data: plotData, error: plotError } = await client
-    .from("v_dispatch_card_plots")
-    .select("*");
-  if (plotError) throw new Error(`getDispatchToday: ${plotError.message}`);
+    const { data: plotData, error: plotError } = await client
+      .from("v_dispatch_card_plots")
+      .select("*");
+    if (plotError) throw new Error(`getDispatchToday: ${plotError.message}`);
 
-  // Group the plot lines by their run id once (avoids a per-card query).
-  const plotsByRun = new Map<number, DispatchCardPlotRow[]>();
-  for (const row of plotData as DispatchCardPlotRow[]) {
-    const runId = Number(row.dispatch_run_id);
-    const bucket = plotsByRun.get(runId);
-    if (bucket) bucket.push(row);
-    else plotsByRun.set(runId, [row]);
-  }
+    // Group the plot lines by their run id once (avoids a per-card query).
+    const plotsByRun = new Map<number, DispatchCardPlotRow[]>();
+    for (const row of plotData as DispatchCardPlotRow[]) {
+      const runId = Number(row.dispatch_run_id);
+      const bucket = plotsByRun.get(runId);
+      if (bucket) bucket.push(row);
+      else plotsByRun.set(runId, [row]);
+    }
 
-  return (cardData as DispatchCardRow[]).map((cardRow) =>
-    mapDispatchCard(cardRow, plotsByRun.get(Number(cardRow.id)) ?? []),
-  );
-});
+    return (cardData as DispatchCardRow[]).map((cardRow) =>
+      mapDispatchCard(cardRow, plotsByRun.get(Number(cardRow.id)) ?? []),
+    );
+  },
+);

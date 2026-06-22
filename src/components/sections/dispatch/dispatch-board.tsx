@@ -1,4 +1,4 @@
-import { Send, Sparkles, Users } from "lucide-react";
+import { CheckCircle2, Send, Sparkles, Users } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Tile } from "@/components/ui/tile";
@@ -47,6 +47,28 @@ function currentSeason(): string {
   return String(new Date().getFullYear());
 }
 
+/**
+ * The readiness cut-off the board hands the generate island [0,1].
+ *
+ * COLD-MODEL SAFETY (D08-1): the island defaults this to 0.5, but generate_dispatch
+ * fills the run from v_harvest_readiness, and on a cold S8 model (no GDD/bloom/NDVI
+ * logged yet — the literal state at the start of every Volcán season and on a fresh
+ * deploy) every plot scores readiness 0. A 0.5 cut-off then drafts an EMPTY card the
+ * manager cannot recover from. The board therefore passes an EXPLICIT, lower,
+ * cold-start-aware threshold so marginally-ready plots are surfaced for the manager
+ * to review and share — unhardwiring the island's silent default rather than
+ * relying on it. The draft is always reviewable + re-draftable before it is shared
+ * (append-only; sharing stays a deliberate owner tap), so a more permissive draft
+ * cut-off is safe.
+ *
+ * NOTE — this is the board's interim mitigation, NOT the full fix. It still cannot
+ * surface a plot the model scored exactly 0; the real correction is a model-
+ * independent manual write path (a build_manual_dispatch command RPC + a manual
+ * plot-picker affordance), which spans the migration / Server Action / a client
+ * island this board does not own. See findingsDeferred.
+ */
+const COLD_START_READINESS_THRESHOLD = 0.4;
+
 interface CrewColumn {
   crewId: string;
   crewName: string;
@@ -91,8 +113,16 @@ export async function DispatchBoard() {
   const season = currentSeason();
 
   const draftedCount = columns.filter((c) => c.card && c.card.status === "draft").length;
+  // "Shared" counts a run that is out to the crew lead (sent OR acknowledged — an
+  // acknowledged run was necessarily shared first). "Acknowledged" is then surfaced
+  // as its OWN tally below so the first-class 'acknowledged' run state the card is
+  // already built to render (and getDispatchToday already maps) is no longer
+  // invisible on the board — the manager can see a crew lead confirmed (D08-2).
   const sentCount = columns.filter(
     (c) => c.card && (c.card.status === "sent" || c.card.status === "acknowledged"),
+  ).length;
+  const acknowledgedCount = columns.filter(
+    (c) => c.card && c.card.status === "acknowledged",
   ).length;
 
   return (
@@ -100,31 +130,47 @@ export async function DispatchBoard() {
       {/* Headline strip */}
       <Card className="animate-rise overflow-hidden" data-testid="dispatch-summary">
         <CardContent className="p-0">
-          <div className="stagger grid grid-cols-1 divide-y divide-white/50 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-            <Tile
-              label="Crews"
-              value={num(columns.length)}
-              sub="to dispatch this morning"
-              accent="forest"
-              icon={Users}
-              className="glass-hover"
-            />
-            <Tile
-              label="Drafted"
-              value={num(draftedCount)}
-              sub="ready to share"
-              accent="honey"
-              icon={Sparkles}
-              className="glass-hover"
-            />
-            <Tile
-              label="Shared"
-              value={num(sentCount)}
-              sub="out to the crew leads"
-              accent="coffee"
-              icon={Send}
-              className="glass-hover"
-            />
+          <div className="stagger grid grid-cols-1 divide-y divide-white/50 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
+            <div data-testid="dispatch-tile-crews">
+              <Tile
+                label="Crews"
+                value={num(columns.length)}
+                sub="to dispatch this morning"
+                accent="forest"
+                icon={Users}
+                className="glass-hover"
+              />
+            </div>
+            <div data-testid="dispatch-tile-drafted">
+              <Tile
+                label="Drafted"
+                value={num(draftedCount)}
+                sub="ready to share"
+                accent="honey"
+                icon={Sparkles}
+                className="glass-hover"
+              />
+            </div>
+            <div data-testid="dispatch-tile-shared">
+              <Tile
+                label="Shared"
+                value={num(sentCount)}
+                sub="out to the crew leads"
+                accent="coffee"
+                icon={Send}
+                className="glass-hover"
+              />
+            </div>
+            <div data-testid="dispatch-tile-acknowledged">
+              <Tile
+                label="Acknowledged"
+                value={num(acknowledgedCount)}
+                sub="crew lead confirmed"
+                accent="forest"
+                icon={CheckCircle2}
+                className="glass-hover"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -153,6 +199,7 @@ export async function DispatchBoard() {
                   crewName={col.crewName}
                   dispatchDate={date}
                   season={season}
+                  readinessThreshold={COLD_START_READINESS_THRESHOLD}
                   action={generateDispatchAction}
                   alreadyDrafted={col.card !== null}
                 />

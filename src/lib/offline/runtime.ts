@@ -130,7 +130,18 @@ function routerTransport(): CommandTransport {
       try {
         const result = await action({
           rpc: entry.rpc,
-          args: entry.args,
+          // The outbox owns the DURABLE identity: stamp the minted, monotonic
+          // `device_seq` (and the install `device_id`) onto the args so every
+          // command RPC — which reads `args.p_device_seq`/`args.p_device_id` —
+          // receives the queue's value, never the placeholder a capture surface
+          // bakes in (it can only mint a client-side `0`). Without this, every
+          // capture on a screen mount carries the same seq and collides on
+          // `unique (device_id, device_seq)`.
+          args: {
+            ...entry.args,
+            p_device_seq: entry.deviceSeq,
+            p_device_id: entry.deviceId,
+          },
           occurredAt: entry.occurredAt,
           deviceId: entry.deviceId,
           deviceSeq: entry.deviceSeq,

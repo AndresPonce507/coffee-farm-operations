@@ -324,6 +324,31 @@ describe("P2-S5 — THE INJECTION INVARIANT (inbound NEVER drives a write)", () 
     );
     expect(n[0].n).toBe(1);
   });
+
+  it("an inbound ack on a SENT run does NOT auto-acknowledge it (the guard-permitted transition the inbound writer must never reach)", async () => {
+    // The block above acks DRAFT runs, so it only proves draft→draft. dispatch_run_guard()
+    // explicitly PERMITS sent→acknowledged, so the genuinely dangerous injection is an ack
+    // that flips a SENT run to 'acknowledged' — exactly what an attacker's "got it" reply
+    // wants. Take a fresh run to 'sent', fire record_dispatch_ack, and pin it STILL 'sent'.
+    // This fails the instant any `update dispatch_run set status='acknowledged' where
+    // ... status='sent'` creeps into the inbound writer, because the guard would let it land.
+    const r = await h.query<{ generate_dispatch: number }>(
+      `select generate_dispatch(${CREW_NORTE},${TODAY},'2026',0.5,${DEV},'srv',43,'disp-sent-ack') as generate_dispatch;`,
+    );
+    const id = r[0].generate_dispatch;
+    await h.query(`select mark_dispatch_sent(${id},'web-share',${DEV},'srv',44,'sent-ia');`);
+    const before = await h.query<{ status: string }>(
+      `select status from dispatch_run where id=${id};`,
+    );
+    expect(before[0].status).toBe("sent"); // precondition: the run really is SENT
+    await h.query(
+      `select record_dispatch_ack(${id},'w-03','whatsapp-inbound',${DEV},'srv',45,'ack-ia');`,
+    );
+    const after = await h.query<{ status: string }>(
+      `select status from dispatch_run where id=${id};`,
+    );
+    expect(after[0].status).toBe("sent"); // ONLY a deliberate owner action may set 'acknowledged'
+  });
 });
 
 describe("P2-S5 — v_dispatch_card renders the per-crew card payload", () => {
@@ -365,6 +390,112 @@ describe("P2-S5 — v_dispatch_card renders the per-crew card payload", () => {
   });
 });
 
+// ───────────────────────────────────────────────────────────────────────────
+// P2-S5 named invariant "ripeness-aware assignment correct" — exercised with
+// THREE plots that land in the high / medium / low ripeness bands, seeded in an
+// order where plot_id sort is the REVERSE of readiness sort. This is the only
+// block that proves (1) generate_dispatch stamps `ord` most-ready-first (the
+// pasada wave down the altitude gradient) and (2) the readiness→ripeness_target
+// CASE buckets all three bands — straight off the SQL, not the TS mapper. The
+// single-saturated-plot fixture above can never reach the medium/low branches
+// nor a >1-row ord ranking, so a backwards `order by hr.readiness desc` or a
+// flipped band threshold would survive it; this block fails the moment either
+// breaks.
+//
+// Readiness math (v_harvest_readiness): with ndvi_latest = 0.6 the NDVI nudge is
+// EXACTLY 0 ((0.6-0.6)/0.4 = 0), so readiness = clamp01(gdd_accumulated / 2200).
+// Bands (generate_dispatch CASE): >=0.8 high, >=0.45 medium, else low.
+//   p-z-high   gdd 2200 -> 1.00 -> 'high'    (ord 1)
+//   p-m-medium gdd 1320 -> 0.60 -> 'medium'  (ord 2)
+//   p-a-low    gdd  880 -> 0.40 -> 'low'     (ord 3, and >= the 0.3 threshold so it IS assigned)
+// plot_id ASC = [p-a-low, p-m-medium, p-z-high] — the REVERSE of readiness DESC —
+// so a sort that fell back to plot_id (or ran backwards) would mis-rank ord.
+const SEED_PLOTS_3BAND = `
+insert into plots (id, ord, name, block, variety, area_ha, altitude_masl, trees, shade_pct, established_year, status, last_inspected, expected_yield_kg, harvested_kg) values
+  ('p-a-low',    1, 'Bajo Tardío',   'Norte', 'Catuaí', 1.0, 1300, 2800, 40, 2012, 'healthy', '2026-06-01', 4000, 0),
+  ('p-m-medium', 2, 'Medio Centro',  'Norte', 'Catuaí', 1.0, 1320, 2900, 40, 2013, 'healthy', '2026-06-01', 4200, 0),
+  ('p-z-high',   3, 'Alto Maduro',   'Norte', 'Geisha', 1.0, 1340, 1900, 50, 2015, 'healthy', '2026-06-01', 2600, 0);`;
+
+async function seedThreeBandWorld(h: Harness): Promise<void> {
+  await h.query(SEED_WORKERS);
+  await h.query(SEED_PLOTS_3BAND);
+  await h.query(`select _backfill_people();`);
+  // map all three plots to Crew Norte so generate_dispatch scopes the card to them.
+  await h.query(`select assign_crew_plot(${CREW_NORTE},'p-a-low','2026',${DEV},'srv',80,'map-a');`);
+  await h.query(`select assign_crew_plot(${CREW_NORTE},'p-m-medium','2026',${DEV},'srv',81,'map-m');`);
+  await h.query(`select assign_crew_plot(${CREW_NORTE},'p-z-high','2026',${DEV},'srv',82,'map-z');`);
+  // ndvi_latest = 0.6 zeroes the NDVI nudge, so readiness = clamp01(gdd/2200) exactly.
+  await h.query(
+    `select record_maturation_signal('p-z-high','2026-02-01',2200,0.6,${DEV},'srv',83,'mat-z');`,
+  );
+  await h.query(
+    `select record_maturation_signal('p-m-medium','2026-02-01',1320,0.6,${DEV},'srv',84,'mat-m');`,
+  );
+  await h.query(
+    `select record_maturation_signal('p-a-low','2026-02-01',880,0.6,${DEV},'srv',85,'mat-a');`,
+  );
+}
+
+describe("P2-S5 — ripeness-aware assignment: ord ranking + high/medium/low bands (SQL, not the mapper)", () => {
+  let h: Harness;
+  beforeAll(async () => {
+    h = await freshDb();
+    await seedThreeBandWorld(h);
+    // threshold 0.3 so all three ready plots (1.00 / 0.60 / 0.40) are assigned.
+    await h.query(
+      `select generate_dispatch(${CREW_NORTE},${TODAY},'2026',0.3,${DEV},'srv',86,'disp-3band');`,
+    );
+  });
+  afterAll(async () => h.close());
+
+  it("the derived readiness lands each plot in a DISTINCT band (high / medium / low)", async () => {
+    const rows = await h.query<{ plot_id: string; readiness: string }>(
+      `select hr.plot_id, hr.readiness
+         from v_harvest_readiness hr
+        where hr.plot_id in ('p-z-high','p-m-medium','p-a-low')
+        order by hr.plot_id;`,
+    );
+    const byId = Object.fromEntries(rows.map((r) => [r.plot_id, Number(r.readiness)]));
+    // sanity-anchor the fixture so a future formula change that collapses the bands
+    // (e.g. all three saturating) fails HERE rather than silently weakening the block.
+    expect(byId["p-z-high"]).toBeGreaterThanOrEqual(0.8); // high band
+    expect(byId["p-m-medium"]).toBeCloseTo(0.6, 2); // medium band (>=0.45, <0.8)
+    expect(byId["p-a-low"]).toBeCloseTo(0.4, 2); // low band (<0.45, but >= 0.3 threshold)
+  });
+
+  it("generate_dispatch stamps `ord` most-ready-FIRST (the pasada wave, not plot_id order)", async () => {
+    // read straight off dispatch_assignment.ord — the field the card display sort and
+    // the bilingual picker card both trust. A backwards `order by hr.readiness desc`
+    // (or a fallback to plot_id) would put p-a-low at ord 1 and fail this.
+    const rows = await h.query<{ plot_id: string; ord: number; readiness: string }>(
+      `select a.plot_id, a.ord, a.readiness
+         from dispatch_assignment a
+         join dispatch_run r on r.id = a.dispatch_run_id
+        where r.idempotency_key='disp-3band'
+        order by a.ord;`,
+    );
+    expect(rows.map((r) => r.plot_id)).toEqual(["p-z-high", "p-m-medium", "p-a-low"]);
+    expect(rows.map((r) => r.ord)).toEqual([1, 2, 3]);
+    // ord is monotonic with readiness desc — the most-ready plot is picked first.
+    const readiness = rows.map((r) => Number(r.readiness));
+    expect(readiness[0]).toBeGreaterThan(readiness[1]);
+    expect(readiness[1]).toBeGreaterThan(readiness[2]);
+  });
+
+  it("generate_dispatch buckets ripeness_target into high / medium / low off the derived readiness", async () => {
+    const rows = await h.query<{ plot_id: string; ripeness_target: string }>(
+      `select a.plot_id, a.ripeness_target
+         from dispatch_assignment a
+         join dispatch_run r on r.id = a.dispatch_run_id
+        where r.idempotency_key='disp-3band';`,
+    );
+    const band = Object.fromEntries(rows.map((r) => [r.plot_id, r.ripeness_target]));
+    expect(band["p-z-high"]).toBe("high");
+    expect(band["p-m-medium"]).toBe("medium");
+    expect(band["p-a-low"]).toBe("low");
+  });
+});
+
 describe("P2-S5 — AD-8 grants (the live REST posture)", () => {
   let h: Harness;
   beforeAll(async () => {
@@ -402,6 +533,21 @@ describe("P2-S5 — AD-8 grants (the live REST posture)", () => {
         hh.query(
           `select generate_dispatch('crew-norte',${TODAY},'2026',0.5,${DEV},'srv',99,'disp-anon');`,
         ),
+      ).rejects.toThrow(/permission denied/i);
+      // record_dispatch_ack is the SINGLE untrusted-inbound write door and the most
+      // security-sensitive RPC in the slice: a dropped/fat-fingered `revoke execute ...
+      // from public` (or a new overload inheriting PUBLIC execute) would let an
+      // UNAUTHENTICATED webhook caller stuff the append-only evidence ledger. The
+      // permission check precedes the body, so the bogus run id 1 never matters — a
+      // missing revoke surfaces as the function EXECUTING instead of raising 42501.
+      await expect(
+        hh.query(
+          `select record_dispatch_ack(1,'w-03','whatsapp-inbound',${DEV},'srv',99,'ack-anon');`,
+        ),
+      ).rejects.toThrow(/permission denied/i);
+      // mark_dispatch_sent is the owner-only outbound transition — anon must never reach it.
+      await expect(
+        hh.query(`select mark_dispatch_sent(1,'web-share',${DEV},'srv',99,'sent-anon');`),
       ).rejects.toThrow(/permission denied/i);
     });
   });

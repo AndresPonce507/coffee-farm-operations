@@ -80,8 +80,12 @@ export function validateWeighIn(
   const plotId = trimmed(raw.plotId);
   if (!plotId) errors.plotId = "Confirm the plot.";
 
+  // kg > 0 invariant (no negative / zero / NaN): the RPC guard + the harvests CHECK
+  // both reject zero, so the friendly validator gates it too (it enforced only `< 0`,
+  // letting zero slip through to a raw downstream constraint). toNumber already maps
+  // NaN/Inf to null.
   const cherriesKg = toNumber(raw.cherriesKg);
-  if (cherriesKg === null || cherriesKg < 0) {
+  if (cherriesKg === null || cherriesKg <= 0) {
     errors.cherriesKg = "Enter the weight in kg.";
   }
 
@@ -144,7 +148,7 @@ export function validateWeighIn(
 /** The PostgREST shape the command returns from `.rpc()` (lot_code text → string). */
 interface RpcResult {
   data: string | null;
-  error: { message: string } | null;
+  error: { message: string; code?: string } | null;
 }
 
 /**
@@ -187,10 +191,53 @@ export function weighInRpcArgs(input: WeighInInput): Record<string, unknown> {
 }
 
 /**
+ * Map a raw Postgres/PostgREST error onto a calm, family-readable message so no raw
+ * constraint text reaches the ~90% Ngäbe-Buglé crew mid-harvest — the friendly-error
+ * seam, mirroring `friendlyRpcError` in recordCherryIntake.ts. The weigh door is the
+ * higher-traffic screen, and its RPC raises several leakable app-level errors verbatim
+ * (the active-crew gate with the worker id interpolated, the kg check, the unknown-plot
+ * raise, plus the `(device_id, device_seq)` 23505 unique). Each maps to a reassuring,
+ * action-oriented message; the raw constraint internals are dropped. Returns null when
+ * the error isn't one we recognise (the caller then surfaces it labelled).
+ */
+function friendlyRpcError(error: {
+  message: string;
+  code?: string;
+}): string | null {
+  const msg = error.message;
+
+  // a (device_id, device_seq) / idempotency replay collision — already-saved, retry-safe.
+  if (
+    error.code === "23505" ||
+    /duplicate key value|violates unique constraint/i.test(msg)
+  ) {
+    return "This weigh-in looks like it was already recorded — refresh the tally before trying again.";
+  }
+  // the active-crew gate (raises with the raw worker id interpolated).
+  if (/not an active crew member/i.test(msg)) {
+    return "This picker isn't on an active crew today.";
+  }
+  // the kg guard — either the RPC's own raise or the deep harvests_cherries_pos CHECK.
+  if (/cherries_kg|harvests_cherries_pos/i.test(msg)) {
+    return "Enter a real weight in kg (more than zero).";
+  }
+  // the unknown-plot raise / any plot FK.
+  if (/unknown plot|foreign key|violates foreign key/i.test(msg)) {
+    return "That plot isn't recognized — confirm the plot.";
+  }
+  // append-only / immutability block on the genesis ledger.
+  if (/append-only|immutable/i.test(msg)) {
+    return "This weigh-in can't be changed once saved — record a correction instead.";
+  }
+  return null;
+}
+
+/**
  * Validate then record: calls `record_weigh_in` exactly once with the snake_case
- * envelope. Bad input never reaches the RPC (friendly errors); RPC failures surface
- * labelled. The RPC is exactly-once on `idempotencyKey` — a replay returns the
- * originally bound lot code, writing no second weigh_event.
+ * envelope. Bad input never reaches the RPC (friendly errors); RPC failures are mapped
+ * through `friendlyRpcError` so no raw constraint text reaches the family, any
+ * unmapped failure surfaces labelled. The RPC is exactly-once on `idempotencyKey` — a
+ * replay returns the originally bound lot code, writing no second weigh_event.
  */
 export async function recordWeighIn(
   store: WeighStore,
@@ -205,6 +252,8 @@ export async function recordWeighIn(
   );
 
   if (error) {
+    const friendly = friendlyRpcError(error);
+    if (friendly) return { ok: false, message: friendly };
     return { ok: false, message: `record_weigh_in: ${error.message}` };
   }
   if (!data) {

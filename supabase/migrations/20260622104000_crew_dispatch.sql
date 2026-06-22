@@ -63,7 +63,10 @@ create table dispatch_run (
                         check (status in ('draft','sent','acknowledged','superseded')),
   sent_channel        text,                                   -- 'web-share' | 'copy-link' | 'whatsapp-cloud' | 'sms'
   sent_at             timestamptz,
-  superseded_by       bigint      references dispatch_run(id),
+  -- DEFERRABLE so generate_dispatch can supersede the prior active run (stamping
+  -- superseded_by) BEFORE the replacement run physically exists — the supersede-first
+  -- ordering the single-active partial-unique index (below) requires.
+  superseded_by       bigint      references dispatch_run(id) deferrable initially deferred,
   occurred_at         timestamptz not null,
   recorded_at         timestamptz not null default now(),
   device_id           text        not null,
@@ -73,6 +76,16 @@ create table dispatch_run (
 );
 create index dispatch_run_crew_idx   on dispatch_run (crew_id, dispatch_date);
 create index dispatch_run_active_idx on dispatch_run (status) where status <> 'superseded';
+-- 🚨 THE SINGLE-ACTIVE-PLAN INVARIANT, enforced at the DATA LAYER (not just procedurally
+-- in generate_dispatch). The whole read+UI layer (v_dispatch_today / v_dispatch_card /
+-- getDispatchToday) assumes AT MOST ONE active (non-superseded) run per crew+date. This
+-- partial-unique index makes a second active run structurally impossible, so the loser of
+-- a concurrent (or offline-replayed) double-generate fails on commit instead of leaving the
+-- crew two contradictory morning cards. generate_dispatch supersedes the prior active run
+-- FIRST (see its advisory lock + supersede-before-insert), so a legitimate re-plan never
+-- trips this index.
+create unique index dispatch_run_one_active_idx
+  on dispatch_run (crew_id, dispatch_date) where status <> 'superseded';
 
 -- ──────────────────────────────────────────────────────────────────────────
 -- 2. dispatch_assignment — the per-plot rows of a run: "this crew, this plot, this
@@ -138,6 +151,31 @@ create table dispatch_outbound (
   idempotency_key text        unique
 );
 create index dispatch_outbound_run_idx on dispatch_outbound (dispatch_run_id, status);
+
+-- ──────────────────────────────────────────────────────────────────────────
+-- 4b. crew_plot — the per-crew ROUTING map: which plots a crew picks. APPEND-ONLY
+--     EVIDENCE (like crew_memberships): an assignment is a row with `active`; ending
+--     one writes a NEW row with active=false (never an in-place edit), so the routing
+--     history is auditable. generate_dispatch scopes a crew's card to its mapped plots
+--     — "Crew Norte → its plots, ripe today" — so two crews get DISTINCT cards.
+--     A crew with NO active map falls back to ALL ready plots (the curate-later
+--     default; the manager assigns plots on the board to narrow it).
+-- ──────────────────────────────────────────────────────────────────────────
+create table crew_plot (
+  id              bigint generated always as identity primary key,
+  crew_id         text        not null references crews(id),
+  plot_id         text        not null references plots(id),
+  season          text,                                   -- nullable: the season this routing is for
+  active          boolean     not null default true,      -- false = this routing was retired (a new row)
+  occurred_at     timestamptz not null,
+  recorded_at     timestamptz not null default now(),
+  device_id       text        not null,
+  device_seq      bigint      not null,
+  idempotency_key text        unique,
+  unique (device_id, device_seq)
+);
+create index crew_plot_crew_idx on crew_plot (crew_id) where active;
+create index crew_plot_plot_idx on crew_plot (plot_id);
 
 -- ──────────────────────────────────────────────────────────────────────────
 -- 5. Append-only guards. dispatch_run allows the ONE sanctioned UPDATE family —
@@ -212,11 +250,14 @@ begin
     return new;
   end if;
   -- a true no-op (status unchanged) is allowed ONLY when nothing else moved either —
-  -- but on a 'sent' run a re-send may (idempotently) keep sent_channel populated.
+  -- but on a 'sent' run a re-send may (idempotently) move sent_channel NULL->value. The
+  -- send-time AUDIT (sent_at) is FROZEN and an existing sent_channel can NEVER be
+  -- overwritten — the "when/how we told the crew" record is append-only history.
   if old.status = new.status then
     if old.status = 'sent'
-       and new.dispatch_date = old.dispatch_date then  -- (frozen cols already checked above)
-      return new;  -- a sent-run re-send touching only sent_channel is idempotent
+       and new.sent_at is not distinct from old.sent_at
+       and (new.sent_channel is not distinct from old.sent_channel or old.sent_channel is null) then
+      return new;  -- a sent-run re-send may only populate a still-null channel; sent_at frozen
     end if;
     if new.sent_channel is not distinct from old.sent_channel
        and new.sent_at is not distinct from old.sent_at then
@@ -300,6 +341,21 @@ create trigger dispatch_outbound_no_delete before delete on dispatch_outbound
 create trigger dispatch_outbound_status_only before update on dispatch_outbound
   for each row execute function dispatch_outbound_guard();
 
+-- crew_plot: fully immutable EVIDENCE (retire a routing by appending a new row,
+-- never by editing — mirrors crew_memberships' append-only posture).
+create or replace function crew_plot_immutable() returns trigger
+  language plpgsql
+  set search_path = public
+as $$
+begin
+  raise exception 'crew_plot is append-only: % is not permitted — retire a routing by appending a new row', tg_op
+    using errcode = 'restrict_violation';
+end $$;
+create trigger crew_plot_no_update before update on crew_plot
+  for each row execute function crew_plot_immutable();
+create trigger crew_plot_no_delete before delete on crew_plot
+  for each row execute function crew_plot_immutable();
+
 -- ──────────────────────────────────────────────────────────────────────────
 -- 6. v_dispatch_today — the ACTIVE (non-superseded) run per crew for today, joined
 --    to the crew name. The /dispatch board reads this. security_invoker so base-
@@ -367,10 +423,15 @@ create view v_dispatch_card_plots with (security_invoker = on) as
 --    prior ACTIVE run exists for this crew+date, it is SUPERSEDED (append-only). One
 --    idempotent SECURITY DEFINER txn. NEVER auto-sends — the run starts 'draft'.
 --
---    Plot scoping: there is no plot↔crew assignment table in the live spine yet, so
---    a crew dispatches over ALL ready plots (the manager curates on the board). When
---    a crew↔plot map lands (a later slice), this filters to the crew's plots — the
---    contract (ready plots, in order) is unchanged.
+--    Plot scoping (PER-CREW ROUTING): when the crew has an active crew_plot map, the
+--    card is scoped to that crew's plots — so two crews get DISTINCT cards, not the
+--    same global all-ready-plots list. A crew with NO map falls back to ALL ready
+--    plots (the curate-later default the manager narrows on the board).
+--
+--    Concurrency: a per-(crew,date) advisory lock + the single-active partial-unique
+--    index (dispatch_run_one_active_idx) guarantee AT MOST ONE active run per crew+date
+--    even under a concurrent / offline-replayed double-generate — the prior active
+--    run(s) are superseded FIRST (so the new draft never collides on the index).
 -- ──────────────────────────────────────────────────────────────────────────
 create or replace function generate_dispatch(
   p_crew_id             text,
@@ -388,11 +449,11 @@ create or replace function generate_dispatch(
 as $$
 declare
   existing_id bigint;
-  current_id  bigint;
   run_id      bigint;
   thr         numeric;
   rec         record;
   pos         integer := 0;
+  has_map     boolean;
 begin
   -- exactly-once
   select id into existing_id from dispatch_run where idempotency_key = p_idempotency_key;
@@ -404,25 +465,42 @@ begin
     raise exception 'unknown crew %', p_crew_id using errcode = 'foreign_key_violation';
   end if;
 
+  -- SERIALIZE per crew+date: concurrent (or offline-replayed) generations queue here
+  -- instead of racing the read→supersede→insert sequence. The loser then cleanly
+  -- supersedes the winner's run rather than leaving two active runs (or hitting a raw
+  -- unique violation on the single-active index).
+  perform pg_advisory_xact_lock(hashtextextended(p_crew_id || '|' || p_dispatch_date::text, 0));
+
   thr := coalesce(p_readiness_threshold, 0.5);
 
-  -- the current ACTIVE run being superseded (may be none on the first dispatch).
-  select id into current_id
-    from dispatch_run
-   where crew_id = p_crew_id and dispatch_date = p_dispatch_date and status <> 'superseded'
-   order by recorded_at desc
-   limit 1;
+  -- Reserve the new run's id up front so we can supersede the prior active run(s)
+  -- BEFORE the replacement physically exists. The single-active partial-unique index
+  -- forbids two non-superseded runs for a crew+date, so the supersede MUST land before
+  -- the insert; superseded_by is DEFERRABLE so it may point at this not-yet-inserted id.
+  run_id := nextval(pg_get_serial_sequence('dispatch_run', 'id'));
 
-  insert into dispatch_run (crew_id, dispatch_date, season, readiness_threshold,
+  -- supersede EVERY prior active run for this crew+date (not just the most recent) so a
+  -- pre-existing duplicate can never survive a regenerate. Each points at the new run.
+  update dispatch_run
+     set status = 'superseded', superseded_by = run_id
+   where crew_id = p_crew_id and dispatch_date = p_dispatch_date and status <> 'superseded';
+
+  insert into dispatch_run (id, crew_id, dispatch_date, season, readiness_threshold,
                             status, occurred_at, device_id, device_seq, idempotency_key)
-  values (p_crew_id, p_dispatch_date, p_season, thr,
-          'draft', p_occurred_at, p_device_id, p_device_seq, p_idempotency_key)
-  returning id into run_id;
+  overriding system value
+  values (run_id, p_crew_id, p_dispatch_date, p_season, thr,
+          'draft', p_occurred_at, p_device_id, p_device_seq, p_idempotency_key);
 
-  -- one assignment per plot at/above the readiness threshold, in readiness order
-  -- (most-ready first — the pasada wave down the altitude gradient). The ripeness
-  -- band is bucketed from the derived readiness; the active pasada (if any) is
-  -- traced for the card's "pasada N" line.
+  -- PER-CREW ROUTING: scope the card to the crew's assigned plots when a crew_plot map
+  -- exists for it; otherwise (no active map yet) fall back to ALL ready plots — the
+  -- curate-later default the manager narrows by assigning plots on the board. This makes
+  -- two crews get DISTINCT cards instead of the same global all-ready-plots list.
+  has_map := exists (select 1 from crew_plot cp where cp.crew_id = p_crew_id and cp.active);
+
+  -- one assignment per plot at/above the readiness threshold (and within the crew's map
+  -- when one exists), in readiness order (most-ready first — the pasada wave down the
+  -- altitude gradient). The ripeness band is bucketed from the derived readiness; the
+  -- active pasada (if any) is traced for the card's "pasada N" line.
   for rec in
     select
       hr.plot_id,
@@ -439,6 +517,9 @@ begin
         limit 1) as pasada_id
     from v_harvest_readiness hr
     where hr.readiness >= thr
+      and (not has_map
+           or exists (select 1 from crew_plot cp
+                       where cp.crew_id = p_crew_id and cp.active and cp.plot_id = hr.plot_id))
     order by hr.readiness desc, hr.plot_id
   loop
     pos := pos + 1;
@@ -447,13 +528,6 @@ begin
     values (run_id, rec.plot_id, rec.pasada_id, 'picking',
             rec.ripeness_target, rec.readiness, pos);
   end loop;
-
-  -- supersede the prior active run AFTER the new one + its assignments exist.
-  if current_id is not null then
-    update dispatch_run
-       set status = 'superseded', superseded_by = run_id
-     where id = current_id;
-  end if;
 
   return run_id;
 end $$;
@@ -486,6 +560,15 @@ begin
   select status into cur from dispatch_run where id = p_run_id;
   if cur is null then
     raise exception 'unknown dispatch run %', p_run_id using errcode = 'foreign_key_violation';
+  end if;
+
+  -- LIFECYCLE GATE — only an ACTIVE run (draft, or sent for the idempotent re-send) may
+  -- be sent. A superseded (re-planned-away) or acknowledged run is NOT sendable: gate it
+  -- BEFORE the enqueue so a stale plan never queues a delivery and never returns a false
+  -- success. ('lifecycle'/'superseded' map to a friendly "re-plan with a new version".)
+  if cur not in ('draft', 'sent') then
+    raise exception 'dispatch run % is % — only an active draft/sent run may be sent (lifecycle: a superseded run was re-planned away)', p_run_id, cur
+      using errcode = 'restrict_violation';
   end if;
 
   -- enqueue the outbound delivery (the $0 web-share adapter resolves it at the app
@@ -558,6 +641,54 @@ begin
 end $$;
 
 -- ──────────────────────────────────────────────────────────────────────────
+-- 9b. assign_crew_plot — the command door for the per-crew ROUTING map. Appends ONE
+--     crew_plot row (crew→plot, active). Retiring a routing is a NEW row with
+--     active=false (append-only — crew_plot is immutable). generate_dispatch then scopes
+--     a crew's card to its active plots. Idempotent on idempotency_key.
+-- ──────────────────────────────────────────────────────────────────────────
+create or replace function assign_crew_plot(
+  p_crew_id         text,
+  p_plot_id         text,
+  p_season          text,
+  p_occurred_at     timestamptz,
+  p_device_id       text,
+  p_device_seq      bigint,
+  p_idempotency_key text,
+  p_active          boolean default true
+) returns bigint
+  language plpgsql
+  security definer
+  set search_path = public, extensions
+as $$
+declare new_id bigint;
+begin
+  -- exactly-once
+  select id into new_id from crew_plot where idempotency_key = p_idempotency_key;
+  if new_id is not null then
+    return new_id;
+  end if;
+
+  if not exists (select 1 from crews where id = p_crew_id) then
+    raise exception 'unknown crew %', p_crew_id using errcode = 'foreign_key_violation';
+  end if;
+  if not exists (select 1 from plots where id = p_plot_id) then
+    raise exception 'unknown plot %', p_plot_id using errcode = 'foreign_key_violation';
+  end if;
+
+  insert into crew_plot (crew_id, plot_id, season, active, occurred_at,
+                         device_id, device_seq, idempotency_key)
+  values (p_crew_id, p_plot_id, p_season, coalesce(p_active, true), p_occurred_at,
+          p_device_id, p_device_seq, p_idempotency_key)
+  on conflict (idempotency_key) do nothing
+  returning id into new_id;
+  if new_id is null then
+    select id into new_id from crew_plot where idempotency_key = p_idempotency_key;
+  end if;
+
+  return new_id;
+end $$;
+
+-- ──────────────────────────────────────────────────────────────────────────
 -- 10. RLS — authenticated-only read on the new tables (mirrors auth_required_rls).
 --     No write policy: writes go only through the SECURITY DEFINER RPCs above. The
 --     append-only EVIDENCE ledgers `force` RLS so even the owner reads via policy.
@@ -566,7 +697,7 @@ do $$
 declare t text;
 begin
   foreach t in array array[
-    'dispatch_run','dispatch_assignment','dispatch_acknowledgement','dispatch_outbound'
+    'dispatch_run','dispatch_assignment','dispatch_acknowledgement','dispatch_outbound','crew_plot'
   ]
   loop
     execute format('alter table %I enable row level security;', t);
@@ -585,6 +716,7 @@ grant select on dispatch_run             to authenticated;
 grant select on dispatch_assignment      to authenticated;
 grant select on dispatch_acknowledgement to authenticated;
 grant select on dispatch_outbound        to authenticated;
+grant select on crew_plot                to authenticated;
 grant select on v_dispatch_today         to authenticated;
 grant select on v_dispatch_card          to authenticated;
 grant select on v_dispatch_card_plots    to authenticated;
@@ -593,12 +725,15 @@ revoke execute on function dispatch_run_guard()            from public;
 revoke execute on function dispatch_assignment_immutable() from public;
 revoke execute on function dispatch_ack_immutable()        from public;
 revoke execute on function dispatch_outbound_guard()       from public;
+revoke execute on function crew_plot_immutable()           from public;
 revoke execute on function generate_dispatch(text, date, text, numeric, timestamptz, text, bigint, text)   from public;
 revoke execute on function mark_dispatch_sent(bigint, text, timestamptz, text, bigint, text)               from public;
 revoke execute on function record_dispatch_ack(bigint, text, text, timestamptz, text, bigint, text)        from public;
+revoke execute on function assign_crew_plot(text, text, text, timestamptz, text, bigint, text, boolean)    from public;
 
 grant execute on function generate_dispatch(text, date, text, numeric, timestamptz, text, bigint, text)   to authenticated;
 grant execute on function mark_dispatch_sent(bigint, text, timestamptz, text, bigint, text)               to authenticated;
 grant execute on function record_dispatch_ack(bigint, text, text, timestamptz, text, bigint, text)        to authenticated;
+grant execute on function assign_crew_plot(text, text, text, timestamptz, text, bigint, text, boolean)    to authenticated;
 
 commit;

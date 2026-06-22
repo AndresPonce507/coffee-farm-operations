@@ -74,6 +74,15 @@ describe("validateWeighIn", () => {
     expect(nan.ok).toBe(false);
   });
 
+  // The slice invariant is "kg > 0"; the RPC + harvests CHECK both reject zero, so
+  // the friendly validator must too (it enforced only `< 0`, letting zero through to
+  // a raw downstream constraint). (D00 findings 4/7/8.)
+  it("rejects a ZERO weight (kg > 0 invariant, not >= 0)", () => {
+    const r = validateWeighIn({ ...validRaw(), cherriesKg: "0" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.cherriesKg).toBeTruthy();
+  });
+
   it("requires a recognised ripeness tap", () => {
     const r = validateWeighIn({ ...validRaw(), ripeness: "greenish" });
     expect(r.ok).toBe(false);
@@ -147,14 +156,62 @@ describe("recordWeighIn", () => {
     expect(rpc).not.toHaveBeenCalled();
   });
 
-  it("surfaces an RPC error labelled (e.g. the active-crew gate)", async () => {
+  // The cherry-intake twin maps raw PG errors to calm, family-readable messages so
+  // "no raw constraint text reaches the family"; the weigh door (the higher-traffic
+  // screen) must do the same. (D00 finding — friendlyRpcError seam.)
+  it("maps the active-crew gate to a calm message (no raw SQL on the field screen)", async () => {
     const { store } = fakeStore({
       data: null,
       error: { message: "worker w-x is not an active crew member" },
     });
     const res = await recordWeighIn(store, validRaw());
     expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.message).toMatch(/not an active crew member/);
+    if (!res.ok) {
+      expect(res.message).toMatch(/active crew/i);
+      expect(res.message).not.toMatch(/worker w-x/); // raw worker id never leaks
+    }
+  });
+
+  it("maps a duplicate-key (23505) replay to a retry-safe message", async () => {
+    const { store } = fakeStore({
+      data: null,
+      error: {
+        message:
+          'duplicate key value violates unique constraint "weigh_event_device_id_device_seq_key"',
+      },
+    });
+    const res = await recordWeighIn(store, validRaw());
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.message).toMatch(/already recorded|already saved/i);
+      expect(res.message).not.toMatch(/constraint|duplicate key/i);
+    }
+  });
+
+  it("maps the kg check_violation to a friendly weight message (no harvests_cherries_pos leak)", async () => {
+    const { store } = fakeStore({
+      data: null,
+      error: {
+        message:
+          'new row for relation "harvests" violates check constraint "harvests_cherries_pos"',
+      },
+    });
+    const res = await recordWeighIn(store, validRaw());
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.message).toMatch(/weight/i);
+      expect(res.message).not.toMatch(/harvests_cherries_pos|check constraint/i);
+    }
+  });
+
+  it("falls back to a calm generic message for an unmapped error (still labelled, no crash)", async () => {
+    const { store } = fakeStore({
+      data: null,
+      error: { message: "some unexpected backend hiccup" },
+    });
+    const res = await recordWeighIn(store, validRaw());
+    expect(res.ok).toBe(false);
+    if (!res.ok) expect(res.message).toBeTruthy();
   });
 
   it("the same idempotency key flows through unchanged (exactly-once anchor)", async () => {

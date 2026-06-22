@@ -106,4 +106,41 @@ describe("WeighCapture", () => {
     const select = screen.getByLabelText("Plot") as HTMLSelectElement;
     expect(select.value).toBe("p-baru-vista");
   });
+
+  it("shows a busy state and disables the GPS button while a fix is in flight", async () => {
+    const { deps } = depsWith();
+    // A controllable fix so we can observe the in-flight window before it resolves.
+    let resolveFix!: (v: { lat: number; lng: number } | null) => void;
+    deps.getPosition = () =>
+      new Promise<{ lat: number; lng: number } | null>((r) => {
+        resolveFix = r;
+      });
+    render(<WeighCapture pickers={PICKERS} plots={PLOTS} farmKgToday={100} deps={deps} />);
+
+    const gps = screen.getByRole("button", { name: /GPS/i });
+    fireEvent.click(gps);
+    // In-flight: the affordance reports work and refuses concurrent taps.
+    await waitFor(() => expect(gps).toBeDisabled());
+    expect(gps).toHaveTextContent(/Buscando GPS|Locating|Buscando/i);
+
+    resolveFix({ lat: 8.777835, lng: -82.633982 });
+    // Settles back to an enabled, non-busy control.
+    await waitFor(() => expect(gps).toBeEnabled());
+  });
+
+  it("surfaces a calm inline error when the GPS fix fails (and re-enables the button)", async () => {
+    const { deps } = depsWith();
+    deps.getPosition = async () => null; // permission denied / timeout
+    render(<WeighCapture pickers={PICKERS} plots={PLOTS} farmKgToday={100} deps={deps} />);
+
+    const gps = screen.getByRole("button", { name: /GPS/i });
+    fireEvent.click(gps);
+
+    // The picker is told why the plot didn't auto-change — no silent failure.
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent(/GPS|parcela|plot/i),
+    );
+    // …and the button is usable again (not stuck busy).
+    expect(gps).toBeEnabled();
+  });
 });

@@ -214,6 +214,160 @@ describe("P2-S2 — kg conserves into the lot (mill-intake reconciliation)", () 
   });
 });
 
+describe("P2-S2 — the kg gate rejects zero / NaN cleanly at the RPC door (kg > 0 invariant)", () => {
+  let h: Harness;
+  beforeAll(async () => {
+    h = await freshDb();
+    await seedFarm(h);
+  });
+  afterAll(async () => h.close());
+
+  // The slice invariant is "weight kg > 0 (no negative / zero / NaN / absurd)".
+  // The RPC is the SSOT write door (granted to authenticated), so it must reject
+  // zero ITSELF with a friendly cherries_kg message — NOT leak the deep
+  // harvests_cherries_pos constraint name to the field. (D00 findings 4/7/8.)
+  it("rejects a ZERO kg weigh-in with the RPC's own friendly message (no raw harvests_cherries_pos leak)", async () => {
+    await expect(weigh(h, { kg: 0, key: "k-zero", seq: 8101 })).rejects.toThrow(
+      /cherries_kg must be > 0/,
+    );
+    // and nothing leaked the raw downstream constraint name to the surface.
+    let msg = "";
+    try {
+      await weigh(h, { kg: 0, key: "k-zero2", seq: 8102 });
+    } catch (e) {
+      msg = (e as Error).message;
+    }
+    expect(msg).not.toMatch(/harvests_cherries_pos/);
+  });
+
+  // NaN is the genuinely corrupting vector: 'NaN'::numeric passes the old `< 0`
+  // guard AND the `kg >= 0` CHECK (NaN >= 0 is TRUE in Postgres numeric), lands a
+  // NaN-mass weigh_event, and poisons every Σ-kg aggregate irreversibly. The RPC
+  // must reject it; the ledger's Σ kg must stay finite. (D00 finding 5.)
+  it("rejects a NaN kg weigh-in and keeps the ledger's Σ kg finite (no poison)", async () => {
+    await expect(
+      h.query(
+        `select record_weigh_in('w-pick','p-weigh','NaN'::numeric,'ripe'::ripeness,null,'manual',
+           ${NEAR_LAT},${NEAR_LNG},'2026-06-21T15:00:00Z'::timestamptz,'dev-field',8103,'k-nan') as lot;`,
+      ),
+    ).rejects.toThrow();
+
+    const r = await h.query<{ finite: boolean }>(
+      `select coalesce(sum(kg),0) = 'NaN'::numeric as poisoned,
+              (coalesce(sum(kg),0) <> 'NaN'::numeric) as finite
+         from weigh_event;`,
+    );
+    expect(r[0].finite).toBe(true); // Σ kg never became NaN
+  });
+});
+
+describe("P2-S2 — a late weigh of an already-advanced plot+day mints a fresh cherry lot", () => {
+  let h: Harness;
+  beforeAll(async () => {
+    h = await freshDb();
+    await seedFarm(h);
+  });
+  afterAll(async () => h.close());
+
+  // The find-or-mint must reuse a plot+day lot ONLY while it is still 'cherry'. If a
+  // coordinator advances the morning lot to fermentation mid-day, an afternoon weigh of
+  // the same plot must NOT grow (inflate) the now-processing lot or append a harvest to
+  // a non-cherry lot — it must mint a fresh cherry lot for the late intake. (D00 MED —
+  // subsequent weigh-in into an already-advanced lot.)
+  it("does not inflate a fermenting lot; the late weigh becomes its own cherry lot", async () => {
+    const morning = await weigh(h, { kg: 30, key: "k-am", seq: 8301 });
+
+    // a coordinator advances the morning lot to fermentation with a reduced current_kg.
+    await h.query(
+      `select advance_processing_stage('${morning}','fermentation',28,
+         '2026-06-21T12:00:00Z'::timestamptz,'server',8302,'adv-${morning}');`,
+    );
+    const before = await h.query<{ stage: string; current: string; harv: number }>(
+      `select l.stage, l.current_kg::text as current,
+              (select count(*)::int from harvests where lot_code = l.code) as harv
+         from lots l where l.code = '${morning}';`,
+    );
+    expect(before[0].stage).toBe("fermentation");
+
+    // an afternoon weigh of the SAME plot, same day.
+    const afternoon = await weigh(h, {
+      kg: 9,
+      key: "k-pm",
+      seq: 8303,
+      occurredAt: "2026-06-21T16:00:00Z",
+    });
+
+    // it must be a NEW cherry lot, not the fermenting morning lot.
+    expect(afternoon).not.toBe(morning);
+    const newLot = await h.query<{ stage: string }>(
+      `select stage from lots where code = '${afternoon}';`,
+    );
+    expect(newLot[0].stage).toBe("cherry");
+
+    // the morning (fermenting) lot is untouched — mass NOT grown, no late harvest added.
+    const after = await h.query<{ current: string; harv: number }>(
+      `select l.current_kg::text as current,
+              (select count(*)::int from harvests where lot_code = l.code) as harv
+         from lots l where l.code = '${morning}';`,
+    );
+    expect(Number(after[0].current)).toBeCloseTo(28, 3); // unchanged from the advance
+    expect(after[0].harv).toBe(before[0].harv); // no harvest appended to the processed lot
+  });
+});
+
+describe("P2-S2 — idempotency gates ALL side-effects, not just the weigh_event row", () => {
+  let h: Harness;
+  beforeAll(async () => {
+    h = await freshDb();
+    await seedFarm(h);
+  });
+  afterAll(async () => h.close());
+
+  // The exactly-once guard must protect the mass/today_kg side-effects too: a
+  // same-key replay on the subsequent-weigh path must NOT re-increment
+  // lots.origin_kg / current_kg or workers.today_kg. (D00 CRIT findings 1/3 —
+  // the side-effects are now gated on the weigh_event INSERT actually landing.)
+  it("a same-key replay does not double-count lot mass or worker today_kg", async () => {
+    // first weigh (mints the lot)
+    const lot = await weigh(h, { kg: 10, key: "k-g1", seq: 8201 });
+    // a SECOND, distinct weigh on the same plot+day grows the lot (subsequent path)
+    await weigh(h, {
+      kg: 6,
+      key: "k-g2",
+      seq: 8202,
+      occurredAt: "2026-06-21T16:00:00Z",
+    });
+    // now REPLAY the second weigh with the SAME idempotency_key + seq (outbox replay)
+    await weigh(h, {
+      kg: 6,
+      key: "k-g2",
+      seq: 8202,
+      occurredAt: "2026-06-21T16:00:00Z",
+    });
+
+    const lotRow = await h.query<{ origin: string; current: string }>(
+      `select origin_kg::text as origin, current_kg::text as current
+         from lots where code = '${lot}';`,
+    );
+    // 10 + 6 = 16, NOT 22 (the replay must not add another 6).
+    expect(Number(lotRow[0].origin)).toBeCloseTo(16.0, 3);
+    expect(Number(lotRow[0].current)).toBeCloseTo(16.0, 3);
+
+    const w = await h.query<{ today: string }>(
+      `select today_kg::text as today from workers where id = 'w-pick';`,
+    );
+    expect(Number(w[0].today)).toBeCloseTo(16.0, 3);
+
+    // exactly two weigh_events landed (the replay no-op'd), and Σ kg reconciles.
+    const rec = await h.query<{ weigh_kg: string; reconciles: boolean }>(
+      `select weigh_kg::text as weigh_kg, reconciles
+         from v_lot_weigh_reconciliation where lot_code = '${lot}';`,
+    );
+    expect(Number(rec[0].weigh_kg)).toBeCloseTo(16.0, 3);
+    expect(rec[0].reconciles).toBe(true);
+  });
+});
+
 describe("P2-S2 — geofence is a SIGNAL, never a gate", () => {
   let h: Harness;
   beforeAll(async () => {
