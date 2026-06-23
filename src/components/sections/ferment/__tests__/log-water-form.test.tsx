@@ -35,14 +35,14 @@ describe("LogWaterForm (smoke)", () => {
     expect(batchInput).not.toBeNull();
     expect(batchInput.value).toBe("b1");
 
-    // a liters input + a submit affordance (es-PA)
+    // a liters input + a submit affordance
     const liters = document.querySelector(
       "input[name='liters']",
     ) as HTMLInputElement;
     expect(liters).not.toBeNull();
     expect(liters.type).toBe("number");
     expect(
-      screen.getByRole("button", { name: /registrar agua de molino/i }),
+      screen.getByRole("button", { name: /record mill water/i }),
     ).toBeInTheDocument();
   });
 
@@ -73,11 +73,11 @@ describe("LogWaterForm (smoke)", () => {
     expect(fd.get("batchId")).toBe("b1");
   });
 
-  it("labels the liters input in es-PA and guards against negatives", () => {
+  it("labels the liters input and guards against negatives", () => {
     nextState = { status: "idle" };
     render(<LogWaterForm batchId="b1" />);
-    // es-PA copy: the field names "litros de agua" so a Spanish-first worker reads it.
-    expect(screen.getByLabelText(/litros de agua/i)).toBeInTheDocument();
+    // the field names "Liters of water" so the worker reads it.
+    expect(screen.getByLabelText(/liters of water/i)).toBeInTheDocument();
     const liters = document.querySelector(
       "input[name='liters']",
     ) as HTMLInputElement;

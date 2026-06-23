@@ -96,6 +96,6 @@ describe("LotCostEntriesSection", () => {
     // Section still renders (the anchor must exist regardless of content).
     expect(screen.getByTestId("section-cost-entries")).toBeInTheDocument();
     // Empty affordance is shown.
-    expect(screen.getByText(/sin asientos/i)).toBeInTheDocument();
+    expect(screen.getByText(/no cost entries/i)).toBeInTheDocument();
   });
 });

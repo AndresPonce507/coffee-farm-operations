@@ -64,7 +64,7 @@ describe("WorkerProductivitySection", () => {
   it("renders the empty state when there is no summary and no events", () => {
     render(<WorkerProductivitySection summary={null} events={[]} />);
     expect(
-      screen.getByText("Sin pesajes registrados todavía"),
+      screen.getByText("No weigh-ins recorded yet"),
     ).toBeInTheDocument();
   });
 });

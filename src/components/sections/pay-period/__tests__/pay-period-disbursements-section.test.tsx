@@ -49,10 +49,10 @@ describe("PayPeriodDisbursementsSection", () => {
     expect(within(section).getByText(/yappy/i)).toBeInTheDocument();
   });
 
-  it("renders the es-PA empty state when no payments have been recorded", () => {
+  it("renders the empty state when no payments have been recorded", () => {
     render(<PayPeriodDisbursementsSection disbursements={[]} workerNames={{}} />);
     const section = screen.getByTestId("section-disbursements");
-    expect(within(section).getByText(/Sin/i)).toBeInTheDocument();
+    expect(within(section).getByText(/No payments recorded/i)).toBeInTheDocument();
   });
 
   it("falls back to the worker id when the name is unknown (still links to the dossier)", () => {

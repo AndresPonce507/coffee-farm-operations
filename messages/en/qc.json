@@ -1,14 +1,14 @@
 {
   "page": {
-    "title": "Control de calidad",
-    "subtitle": "Puntajes de catación, clasificación de defectos y el QC-HOLD que impide vender un lote con fallas"
+    "title": "Quality control",
+    "subtitle": "Cupping scores, defect grading, and the QC-HOLD that blocks selling a flawed lot"
   },
   "cupPage": {
-    "title": "Catación {lot}",
-    "eyebrow": "Catación",
-    "subtitle": "Califica la taza — y ve exactamente qué la produjo",
-    "backLabel": "Todo el control de calidad",
-    "sectionTitle": "Taza y causa"
+    "title": "Cupping {lot}",
+    "eyebrow": "Cupping",
+    "subtitle": "Score the cup — and see exactly what produced it",
+    "backLabel": "All quality control",
+    "sectionTitle": "Cup and cause"
   },
   "statusTable": {
     "title": "Quality control",
@@ -29,12 +29,12 @@
     "cup": "Cup"
   },
   "cupperDrift": {
-    "title": "Calibración de deriva de catadores",
-    "description": "El sesgo de cada catador/a frente a la media del panel en muestras de calibración compartidas — evidencia para corregir, nunca un puntaje rechazado",
-    "emptyTitle": "Aún no hay sesiones de calibración",
-    "emptyDescription": "Cata una muestra de calibración compartida con dos o más catadores para que el sesgo sistemático aparezca aquí.",
+    "title": "Cupper drift calibration",
+    "description": "Each cupper's bias against the panel mean on shared calibration samples — evidence to correct, never a rejected score",
+    "emptyTitle": "No calibration sessions yet",
+    "emptyDescription": "Cup a shared calibration sample with two or more cuppers so systematic bias shows up here.",
     "panelLabel": "panel {mean} · n={n}",
-    "driftAria": "deriva {drift} en {attribute}"
+    "driftAria": "drift {drift} on {attribute}"
   },
   "holdBanner": {
     "onHold": "is on QC-HOLD — un-sellable",

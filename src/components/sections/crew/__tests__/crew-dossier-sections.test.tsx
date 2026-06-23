@@ -110,10 +110,10 @@ describe("CrewRosterSection", () => {
     ).toHaveAttribute("href", "/workers/w-07");
   });
 
-  it("renders the es-PA empty state when the crew has no members", () => {
+  it("renders the empty state when the crew has no members", () => {
     render(<CrewRosterSection members={[]} />);
     expect(
-      screen.getByText(/sin integrantes en esta cuadrilla/i),
+      screen.getByText(/no members in this crew yet/i),
     ).toBeInTheDocument();
   });
 });
@@ -127,31 +127,31 @@ describe("CrewPlotsSection", () => {
     expect(within(link).getByText("Norte Bajo")).toBeInTheDocument();
   });
 
-  it("uses 'parcela' (not 'lote') in the empty-state copy to avoid collision with the coffee-lot entity", () => {
+  it("uses 'plot' (not 'lot') in the empty-state copy to avoid collision with the coffee-lot entity", () => {
     render(<CrewPlotsSection plots={[]} />);
     expect(
-      screen.getByText(/ninguna parcela/i),
+      screen.getByText(/hasn’t been dispatched to any plot/i),
     ).toBeInTheDocument();
-    // Must NOT say "ningún lote" — that word is reserved for the coffee-lot entity.
+    // Must NOT say "lot" — that word is reserved for the coffee-lot entity.
     expect(
-      screen.queryByText(/ningún lote/i),
+      screen.queryByText(/any lot\b/i),
     ).not.toBeInTheDocument();
   });
 
-  it("section title uses 'Parcelas' not 'Lotes' to avoid entity-name collision", () => {
+  it("section title uses 'plots' not 'lots' to avoid entity-name collision", () => {
     render(<CrewPlotsSection plots={plots} />);
-    expect(screen.getByText(/Parcelas asignadas/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Lotes asignados/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Assigned plots/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Assigned lots/i)).not.toBeInTheDocument();
   });
 });
 
 describe("CrewDispatchSection", () => {
   it("links each run to its /dispatch/[id] dossier and each plot line to /plots/[id]", () => {
     render(<CrewDispatchSection history={history} />);
-    // Dispatch link: no `name` prop — the visible "Despacho del <date>" text IS the
+    // Dispatch link: no `name` prop — the visible "Dispatch on <date>" text IS the
     // accessible name (WCAG 2.5.3), so we match it rather than the raw run id.
     expect(
-      screen.getByRole("link", { name: /Despacho del 2026-06-20/i }),
+      screen.getByRole("link", { name: /Dispatch on 2026-06-20/i }),
     ).toHaveAttribute("href", "/dispatch/42");
     // Plot link: aria-label uses the human-readable plotName, not the raw plotId.
     expect(
@@ -162,7 +162,7 @@ describe("CrewDispatchSection", () => {
   it("renders the empty state for a crew with no dispatch history", () => {
     render(<CrewDispatchSection history={[]} />);
     expect(
-      screen.getByText(/sin despachos registrados/i),
+      screen.getByText(/no dispatches recorded/i),
     ).toBeInTheDocument();
   });
 
@@ -175,11 +175,11 @@ describe("CrewDispatchSection", () => {
     expect(plotLink.className).toMatch(/min-h-11/);
   });
 
-  it("renders plotCount as 'parcela/parcelas' not 'lote/lotes' to avoid coffee-lot entity collision", () => {
+  it("renders plotCount as 'plot/plots' not 'lot/lots' to avoid coffee-lot entity collision", () => {
     render(<CrewDispatchSection history={history} />);
     // history fixture has plotCount: 1 → singular
-    expect(screen.getByText(/1 parcela/i)).toBeInTheDocument();
-    expect(screen.queryByText(/1 lote/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/1 plot\b/i)).toBeInTheDocument();
+    expect(screen.queryByText(/1 lot\b/i)).not.toBeInTheDocument();
   });
 });
 
@@ -205,7 +205,7 @@ describe("CrewProductivitySection", () => {
       />,
     );
     expect(
-      screen.getByText(/aún no ha pesado café hoy/i),
+      screen.getByText(/hasn’t weighed any coffee today/i),
     ).toBeInTheDocument();
   });
 });

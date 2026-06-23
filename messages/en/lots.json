@@ -9,14 +9,14 @@
     "soldLot": "(sold lot)"
   },
   "costEntries": {
-    "title": "Asientos de costo (libro diario)",
-    "empty": "Sin asientos de costo directamente asignados a este lote",
-    "note": "Entradas del libro diario etiquetadas directamente en este lote. Los costos generales y de agronomía se distribuyen vía el cálculo de costo por kg verde que aparece arriba.",
-    "reversal": "(reversión #{id})",
-    "ruleDirectLabor": "Mano de obra",
-    "ruleProcessing": "Procesamiento",
-    "ruleAgronomy": "Agronomía",
-    "ruleOverhead": "Generales"
+    "title": "Cost entries (journal)",
+    "empty": "No cost entries assigned directly to this lot",
+    "note": "Journal entries tagged directly to this lot. Overhead and agronomy costs are distributed via the cost-per-green-kg calculation shown above.",
+    "reversal": "(reversal #{id})",
+    "ruleDirectLabor": "Labor",
+    "ruleProcessing": "Processing",
+    "ruleAgronomy": "Agronomy",
+    "ruleOverhead": "Overhead"
   },
   "graphInteractive": {
     "panZoomGroup": "{label} (pan and zoom)",
@@ -27,10 +27,10 @@
   },
   "page": {
     "title": "Lot {code}",
-    "eyebrow": "Lote",
-    "subtitle": "Trazabilidad de la finca a la bolsa — flujo de masa desde la cereza hasta el lote verde vendido",
-    "backLabel": "Todos los lotes",
-    "lineageSection": "Linaje (de la finca a la bolsa)",
-    "eudrSection": "Diligencia debida EUDR"
+    "eyebrow": "Lot",
+    "subtitle": "Farm-to-bag traceability — mass flow from cherry to sold green lot",
+    "backLabel": "All lots",
+    "lineageSection": "Lineage (farm to bag)",
+    "eudrSection": "EUDR due diligence"
   }
 }

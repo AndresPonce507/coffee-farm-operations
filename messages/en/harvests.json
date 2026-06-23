@@ -1,7 +1,7 @@
 {
   "page": {
-    "title": "Cosechas",
-    "subtitle": "Ingreso diario de cerezas y rendimiento de cosecheros"
+    "title": "Harvests",
+    "subtitle": "Daily cherry intake and picker performance"
   },
   "summary": {
     "today": "Today",
@@ -19,21 +19,21 @@
     "empty": "No harvest recorded yet."
   },
   "topPickersCard": {
-    "title": "Mejores cosecheros hoy",
-    "description": "Cerezas cosechadas desde la mañana",
-    "noActivity": "Sin actividad hoy"
+    "title": "Top pickers today",
+    "description": "Cherries picked since this morning",
+    "noActivity": "No activity today"
   },
   "logTable": {
-    "title": "Registro de cosecha",
-    "description": "Los {count} registros de cosecha más recientes, del más nuevo al más antiguo",
-    "date": "Fecha",
-    "lot": "Lote",
-    "plot": "Parcela",
-    "picker": "Cosechero/a",
-    "cherries": "Cerezas",
-    "ripeness": "Madurez",
+    "title": "Harvest log",
+    "description": "The {count} most recent harvest records, newest to oldest",
+    "date": "Date",
+    "lot": "Lot",
+    "plot": "Plot",
+    "picker": "Picker",
+    "cherries": "Cherries",
+    "ripeness": "Ripeness",
     "brix": "Brix",
-    "actions": "Acciones"
+    "actions": "Actions"
   },
   "actions": {
     "logHarvest": "Log harvest",

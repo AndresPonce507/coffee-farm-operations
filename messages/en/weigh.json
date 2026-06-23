@@ -1,10 +1,10 @@
 {
   "page": {
-    "title": "Pesaje",
-    "subtitle": "El evento de campo de origen — registrar, pesar, madurez · funciona sin conexión"
+    "title": "Weigh-in",
+    "subtitle": "The origin field event — badge, weigh, ripeness · works offline"
   },
   "capture": {
-    "gpsFailed": "No se pudo ubicar con GPS — confirma la parcela a mano.",
+    "gpsFailed": "Couldn’t locate with GPS — confirm the plot by hand.",
     "scaleFailed": "Scale didn’t connect — enter the weight by hand.",
     "checkEntry": "Check the entry.",
     "saveFailed": "Could not save this weigh-in.",
@@ -13,7 +13,7 @@
     "stepWeigh": "3 · Weigh the lata",
     "stepRipeness": "4 · Ripeness",
     "plotLabel": "Plot",
-    "gpsLocating": "Buscando GPS…",
+    "gpsLocating": "Locating GPS…",
     "gpsSet": "GPS set",
     "gpsUse": "Use GPS",
     "captured": "Weight captured — safe on this device",
@@ -44,11 +44,11 @@
     "ariaLabel": "Ripeness"
   },
   "rippleProof": {
-    "headline": "Tu peso se reflejó en…",
-    "subhead": "Sin volver a escribir nada — toca para ver el dato ya actualizado.",
-    "dashboard": "Tablero · hoy",
-    "lot": "Lote {code}",
-    "lotPending": "Tu lote · se confirma al sincronizar",
+    "headline": "Your weight showed up in…",
+    "subhead": "Without retyping a thing — tap to see the data already updated.",
+    "dashboard": "Dashboard · today",
+    "lot": "Lot {code}",
+    "lotPending": "Your lot · confirmed on sync",
     "consumerLabel": "{label} {delta}"
   }
 }

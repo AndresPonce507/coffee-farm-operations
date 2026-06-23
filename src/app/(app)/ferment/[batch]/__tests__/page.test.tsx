@@ -55,9 +55,9 @@ describe("/ferment/[batch] page (smoke)", () => {
     // The dossier shell (data-dossier="batch") wraps the tracker with a
     // localized eyebrow + back link — chrome shared across all 7 dossiers.
     expect(screen.getByTestId("dossier-batch")).toBeInTheDocument();
-    expect(screen.getByText("Lote en fermentación")).toBeInTheDocument();
+    expect(screen.getByText("Lot in fermentation")).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /todas las fermentaciones/i }),
+      screen.getByRole("link", { name: /all fermentations/i }),
     ).toHaveAttribute("href", "/ferment");
 
     // The data is unchanged: the section reads still fire for the resolved batch

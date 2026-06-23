@@ -1,14 +1,14 @@
 {
   "page": {
-    "title": "Despacho Matutino",
-    "subtitle": "Planes por cuadrilla según la madurez, compartidos como tarjeta bilingüe — iniciado por el dueño"
+    "title": "Morning Dispatch",
+    "subtitle": "Per-crew plans based on ripeness, shared as a bilingual card — owner-initiated"
   },
   "dossier": {
-    "eyebrow": "Despacho",
-    "backLabel": "Todos los despachos",
-    "subtitle": "{date} · {plots} · temporada {season}",
-    "plotOne": "parcela",
-    "plotOther": "parcelas"
+    "eyebrow": "Dispatch",
+    "backLabel": "All dispatches",
+    "subtitle": "{date} · {plots} · {season} season",
+    "plotOne": "plot",
+    "plotOther": "plots"
   },
   "board": {
     "tiles": {
@@ -26,58 +26,58 @@
     "noDispatch": "No dispatch yet — generate the ripeness-aware plan for {crewName}."
   },
   "run": {
-    "title": "El despacho",
-    "season": "Temporada",
-    "plots": "Parcelas",
-    "ripenessThreshold": "Umbral madurez"
+    "title": "The dispatch",
+    "season": "Season",
+    "plots": "Plots",
+    "ripenessThreshold": "Ripeness threshold"
   },
   "assignments": {
-    "title": "Asignaciones",
-    "noPlots": "Sin parcelas en este despacho",
-    "target": "meta {target} kg",
-    "assignedCrew": "Cuadrilla asignada",
-    "noWorkers": "Sin trabajadores en el padrón de la cuadrilla",
+    "title": "Assignments",
+    "noPlots": "No plots in this dispatch",
+    "target": "target {target} kg",
+    "assignedCrew": "Assigned crew",
+    "noWorkers": "No workers on the crew roster",
     "ripeness": {
-      "high": "muy maduro",
-      "medium": "maduro",
-      "low": "casi maduro"
+      "high": "very ripe",
+      "medium": "ripe",
+      "low": "nearly ripe"
     }
   },
   "lifecycle": {
-    "title": "Ciclo de vida",
+    "title": "Lifecycle",
     "stages": {
-      "draftLabel": "Borrador",
-      "draftHint": "Generado al amanecer",
-      "sentLabel": "Enviado",
-      "sentHint": "Compartido con la cuadrilla",
-      "acknowledgedLabel": "Confirmado",
-      "acknowledgedHint": "Recibido por el líder"
+      "draftLabel": "Draft",
+      "draftHint": "Generated at dawn",
+      "sentLabel": "Sent",
+      "sentHint": "Shared with the crew",
+      "acknowledgedLabel": "Acknowledged",
+      "acknowledgedHint": "Received by the lead"
     },
-    "via": "vía {channel}",
-    "supersededNote": "Este despacho fue reemplazado por uno más reciente (historial).",
-    "idempotencyKey": "Clave única:"
+    "via": "via {channel}",
+    "supersededNote": "This dispatch was replaced by a newer one (history).",
+    "idempotencyKey": "Unique key:"
   },
   "ack": {
-    "title": "Confirmación de la cuadrilla",
-    "confirmedTitle": "Confirmado por el líder de cuadrilla",
-    "sentTitle": "Enviado — esperando confirmación",
-    "draftTitle": "Aún sin enviar",
-    "confirmedBody": "El líder marcó la tarjeta como recibida en el grupo.",
-    "sentBody": "La tarjeta se compartió; la confirmación llega cuando el líder responde.",
-    "draftBody": "Esta tarjeta todavía es un borrador; compártela para iniciar el día.",
-    "injectionNote": "La confirmación es solo evidencia de recepción. El texto entrante de la cuadrilla nunca ejecuta una acción — el despacho es saliente e iniciado por el dueño."
+    "title": "Crew acknowledgment",
+    "confirmedTitle": "Confirmed by the crew lead",
+    "sentTitle": "Sent — awaiting confirmation",
+    "draftTitle": "Not sent yet",
+    "confirmedBody": "The lead marked the card as received in the group.",
+    "sentBody": "The card was shared; confirmation arrives when the lead replies.",
+    "draftBody": "This card is still a draft; share it to start the day.",
+    "injectionNote": "The acknowledgment is only proof of receipt. Inbound text from the crew never triggers an action — dispatch is outbound and owner-initiated."
   },
   "preview": {
     "cardLabel": "Dispatch card for {crewName}"
   },
   "share": {
-    "shared": "Compartido",
-    "sharing": "Compartiendo…",
-    "share": "Compartir",
-    "shareLabel": "Compartir despacho de {crewName}",
-    "shareTitle": "Compartir · share",
-    "sharedAnnouncement": "Despacho compartido con la cuadrilla.",
-    "markSentError": "No se pudo marcar como enviado. Vuelve a intentarlo."
+    "shared": "Shared",
+    "sharing": "Sharing…",
+    "share": "Share",
+    "shareLabel": "Share dispatch for {crewName}",
+    "shareTitle": "Share · share",
+    "sharedAnnouncement": "Dispatch shared with the crew.",
+    "markSentError": "Couldn’t mark as sent. Try again."
   },
   "generate": {
     "drafting": "Drafting…",

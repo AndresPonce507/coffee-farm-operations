@@ -1,7 +1,7 @@
 {
   "page": {
-    "title": "Parcelas",
-    "subtitle": "Lotes de cultivo en las fincas de Janson en Volcán, Chiriquí"
+    "title": "Plots",
+    "subtitle": "Growing blocks across the Janson farms in Volcán, Chiriquí"
   },
   "status": {
     "healthy": "Healthy",
@@ -77,76 +77,76 @@
     "editAria": "Edit {name}",
     "deleteAria": "Delete {name}",
     "deleteConfirm": "Delete \"{name}\"?",
-    "deleteFailed": "No se pudo eliminar la parcela."
+    "deleteFailed": "Couldn't delete the plot."
   },
   "identity": {
-    "title": "Identidad y geometría",
+    "title": "Identity and geometry",
     "status": {
-      "healthy": "Saludable",
-      "watch": "En observación",
-      "atRisk": "En riesgo"
+      "healthy": "Healthy",
+      "watch": "Watch",
+      "atRisk": "At risk"
     },
-    "variety": "Variedad",
-    "area": "Área",
-    "altitude": "Altitud",
-    "trees": "Árboles",
-    "shade": "Sombra",
-    "established": "Establecido"
+    "variety": "Variety",
+    "area": "Area",
+    "altitude": "Altitude",
+    "trees": "Trees",
+    "shade": "Shade",
+    "established": "Established"
   },
   "yield": {
-    "title": "Rendimiento de temporada",
-    "ofTarget": "de {kg} kg objetivo",
-    "progressAria": "Avance de cosecha"
+    "title": "Season yield",
+    "ofTarget": "of {kg} kg target",
+    "progressAria": "Harvest progress"
   },
   "cost": {
-    "title": "Costo por kg",
-    "perKgGreen": "/ kg verde",
-    "drillHint": "Ver los asientos de costo que producen esta cifra."
+    "title": "Cost per kg",
+    "perKgGreen": "/ kg green",
+    "drillHint": "See the cost entries that produce this figure."
   },
   "harvests": {
-    "title": "Cosechas de esta parcela",
-    "empty": "Sin cosechas registradas todavía"
+    "title": "Harvests from this plot",
+    "empty": "No harvests recorded yet"
   },
   "scouting": {
-    "title": "Monitoreo de plagas",
-    "empty": "Sin monitoreo registrado todavía",
-    "incidence": "incidencia {pct}",
-    "threshold": "(umbral {pct})",
-    "recommendControl": "Recomienda control",
-    "hold": "Mantener"
+    "title": "Pest scouting",
+    "empty": "No scouting recorded yet",
+    "incidence": "{pct} incidence",
+    "threshold": "(threshold {pct})",
+    "recommendControl": "Recommends control",
+    "hold": "Hold"
   },
   "sprays": {
-    "title": "Aplicaciones y estado PHI",
-    "empty": "Sin aplicaciones registradas",
-    "activeInterval": "Intervalo activo — no cosechar",
-    "untilDate": " hasta el {date}",
-    "activeCountOne": "1 aplicación con intervalo de pre-cosecha vigente — ver detalle abajo.",
-    "activeCountMany": "{n} aplicaciones con intervalo de pre-cosecha vigente — ver detalle abajo.",
-    "freeToHarvest": "Sin intervalos activos — la parcela está libre para cosechar",
+    "title": "Applications and PHI status",
+    "empty": "No applications recorded",
+    "activeInterval": "Active interval — do not harvest",
+    "untilDate": " until {date}",
+    "activeCountOne": "1 application with an active pre-harvest interval — see details below.",
+    "activeCountMany": "{n} applications with an active pre-harvest interval — see details below.",
+    "freeToHarvest": "No active intervals — the plot is clear to harvest",
     "phiBadge": "PHI {days} d"
   },
   "eudr": {
-    "title": "Origen EUDR",
-    "empty": "No alimenta ningún lote verde — sin debida diligencia todavía",
-    "geolocated": "Geolocalizado",
-    "notGeolocated": "Sin geolocalización",
-    "deforestationFree": "Libre de deforestación",
-    "noDeclaration": "Sin declaración",
-    "established": "Establecido",
-    "centroid": "Centroide",
-    "cutoff": "Corte EUDR",
-    "feedsLots": "Lotes verdes que alimenta"
+    "title": "EUDR origin",
+    "empty": "Doesn't feed any green lot — no due diligence yet",
+    "geolocated": "Geolocated",
+    "notGeolocated": "Not geolocated",
+    "deforestationFree": "Deforestation-free",
+    "noDeclaration": "No declaration",
+    "established": "Established",
+    "centroid": "Centroid",
+    "cutoff": "EUDR cutoff",
+    "feedsLots": "Green lots it feeds"
   },
   "satellite": {
-    "title": "Vegetación (NDVI)",
-    "empty": "Sin lectura confiable ahora mismo (nube / sin señal)",
-    "indexFallback": "índice",
+    "title": "Vegetation (NDVI)",
+    "empty": "No reliable reading right now (cloud / no signal)",
+    "indexFallback": "index",
     "confidence": {
-      "high": "Confianza alta",
-      "medium": "Confianza media",
-      "low": "Confianza baja"
+      "high": "High confidence",
+      "medium": "Medium confidence",
+      "low": "Low confidence"
     },
-    "optical": "Óptico",
-    "cloud": "{pct}% nube"
+    "optical": "Optical",
+    "cloud": "{pct}% cloud"
   }
 }

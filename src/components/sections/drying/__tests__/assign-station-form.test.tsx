@@ -50,15 +50,15 @@ describe("AssignStationForm", () => {
   it("renders the lot + station fields with the passed options", () => {
     renderForm();
 
-    expect(screen.getByLabelText(/lote/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/estación/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/lot/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/station/i)).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "JC-571" })).toBeInTheDocument();
     // station options carry the station name (and may annotate headroom)
     expect(
       screen.getByRole("option", { name: /African Bed 1/ }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /asignar/i }),
+      screen.getByRole("button", { name: /assign/i }),
     ).toBeInTheDocument();
   });
 

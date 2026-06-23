@@ -69,7 +69,7 @@ describe("/processing page (smoke + per-lot drying deep-link)", () => {
     render(ui);
 
     expect(
-      screen.getByRole("heading", { level: 1, name: /Beneficio/i }),
+      screen.getByRole("heading", { level: 1, name: /Processing/i }),
     ).toBeInTheDocument();
     // The /drying stations board link still works.
     expect(

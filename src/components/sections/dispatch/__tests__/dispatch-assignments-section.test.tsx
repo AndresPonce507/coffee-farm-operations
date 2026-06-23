@@ -85,6 +85,6 @@ describe("DispatchAssignmentsSection", () => {
   it("shows the empty roster copy when no crew members are assigned", () => {
     render(<DispatchAssignmentsSection run={run} crewMembers={[]} />);
 
-    expect(screen.getByText(/sin cuadrilla|sin trabajadores/i)).toBeInTheDocument();
+    expect(screen.getByText(/no workers on the crew roster/i)).toBeInTheDocument();
   });
 });

@@ -108,13 +108,13 @@ describe("DispatchShareButton ($0 web-share, owner-initiated outbound)", () => {
     // a retryable error is surfaced…
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent(
-        /no se pudo marcar como enviado/i,
+        /couldn’t mark as sent/i,
       ),
     );
-    // …and the button is STILL the live, tappable share affordance — never "Compartido".
+    // …and the button is STILL the live, tappable share affordance — never "Shared".
     const button = screen.getByRole("button", { name: /share|compartir/i });
     expect(button).not.toBeDisabled();
-    expect(screen.queryByText(/compartido/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^shared$/i)).not.toBeInTheDocument();
   });
 
   it("stays un-sent when the mark-sent action RETURNS an error state (no throw)", async () => {
@@ -134,10 +134,10 @@ describe("DispatchShareButton ($0 web-share, owner-initiated outbound)", () => {
     await waitFor(() => expect(markSent).toHaveBeenCalledTimes(1));
     await waitFor(() =>
       expect(screen.getByRole("alert")).toHaveTextContent(
-        /no se pudo marcar como enviado/i,
+        /couldn’t mark as sent/i,
       ),
     );
-    expect(screen.queryByText(/compartido/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^shared$/i)).not.toBeInTheDocument();
   });
 
   it("announces success through an always-mounted aria-live region", async () => {
@@ -161,11 +161,11 @@ describe("DispatchShareButton ($0 web-share, owner-initiated outbound)", () => {
 
     // the SAME node (never re-mounted) carries the success message.
     await waitFor(() =>
-      expect(liveRegion).toHaveTextContent(/despacho compartido/i),
+      expect(liveRegion).toHaveTextContent(/dispatch shared/i),
     );
-    // the visual state flips to the disabled "Compartido" confirmation button.
+    // the visual state flips to the disabled "Shared" confirmation button.
     expect(
-      screen.getByRole("button", { name: /compartido/i }),
+      screen.getByRole("button", { name: /shared/i }),
     ).toBeDisabled();
   });
 });

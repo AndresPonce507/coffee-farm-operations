@@ -102,7 +102,7 @@ describe("StagePipeline (smoke)", () => {
     }
   });
 
-  it("BatchTile 'Ver lote' links use ferment_batches UUID, not processing_batches id", async () => {
+  it("BatchTile 'View lot' links use ferment_batches UUID, not processing_batches id", async () => {
     const ui = await StagePipeline();
     render(ui);
 
@@ -118,7 +118,7 @@ describe("StagePipeline (smoke)", () => {
     expect(document.querySelector('a[href="/ferment/b5"]')).toBeNull();
   });
 
-  it("BatchTile omits 'Ver lote' link when no ferment run exists for that lot", async () => {
+  it("BatchTile omits 'View lot' link when no ferment run exists for that lot", async () => {
     const ui = await StagePipeline();
     render(ui);
 

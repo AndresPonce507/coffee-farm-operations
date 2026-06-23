@@ -1,7 +1,7 @@
 {
   "page": {
-    "title": "Mapa de la finca",
-    "subtitle": "Lotes de cultivo coloreados según su salud, con la reserva protegida del quetzal."
+    "title": "Farm map",
+    "subtitle": "Growing plots colored by their health, with the protected quetzal reserve."
   },
   "legend": {
     "healthy": "Healthy",
@@ -11,8 +11,8 @@
   },
   "placeholderNote": "Boundaries are placeholders pending the family’s traced plot outlines.",
   "farmMap": {
-    "regionLabel": "Mapa de parcelas de la finca",
-    "plotListLabel": "Lista de parcelas"
+    "regionLabel": "Farm plots map",
+    "plotListLabel": "Plot list"
   },
   "skeleton": {
     "loadingLabel": "Loading map",

@@ -16,7 +16,7 @@ describe("/plan page (smoke)", () => {
   it("renders the header above the planner section", () => {
     render(<PlanPage />);
     expect(
-      screen.getByRole("heading", { level: 1, name: /plan de cosecha/i }),
+      screen.getByRole("heading", { level: 1, name: /harvest plan/i }),
     ).toBeInTheDocument();
     expect(screen.getByTestId("harvest-planner-stub")).toBeInTheDocument();
   });

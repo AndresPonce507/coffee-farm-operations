@@ -8,8 +8,8 @@
     "green": "Green"
   },
   "page": {
-    "title": "Beneficio",
-    "subtitle": "Beneficio húmedo, camas de secado y café verde",
+    "title": "Processing",
+    "subtitle": "Wet milling, drying beds, and green coffee",
     "dryingLink": "Drying & reposo",
     "restingRegionLabel": "Resting lots — open a lot's drying detail",
     "restingLots": "Resting lots",
@@ -36,7 +36,7 @@
     "weight": "Weight",
     "moisture": "Moisture",
     "pipelineProgress": "Pipeline",
-    "viewLot": "Ver lote →",
+    "viewLot": "View lot →",
     "stageSub": {
       "cherry": "Intake & sorting",
       "fermentation": "Tanks & beds",

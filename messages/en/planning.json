@@ -1,7 +1,7 @@
 {
   "page": {
-    "title": "Plan de Cosecha",
-    "subtitle": "Parcelas ordenadas por madurez y un calendario de pasadas escalonado según el gradiente de altitud"
+    "title": "Harvest Plan",
+    "subtitle": "Plots ordered by ripeness and a pasada calendar staggered down the altitude gradient"
   },
   "harvestPlanner": {
     "readyToPick": "Ready to pick",

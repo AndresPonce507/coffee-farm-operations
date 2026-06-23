@@ -1,7 +1,7 @@
 {
   "page": {
-    "title": "Satélite",
-    "subtitle": "Salud de la vegetación NDVI / SAR con una insignia de confianza honesta para la nube de Volcán"
+    "title": "Satellite",
+    "subtitle": "NDVI / SAR vegetation health with an honest confidence badge for Volcán's cloud"
   },
   "board": {
     "mapAria": "Farm map — vegetation health",

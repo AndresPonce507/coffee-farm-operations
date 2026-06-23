@@ -81,6 +81,6 @@ describe("PayPeriodLinesSection", () => {
   it("shows the count badge and renders an empty state with no lines", () => {
     render(<PayPeriodLinesSection lines={[]} />);
     const section = screen.getByTestId("section-lines");
-    expect(within(section).getByText(/Sin/i)).toBeInTheDocument();
+    expect(within(section).getByText(/No lines calculated/i)).toBeInTheDocument();
   });
 });

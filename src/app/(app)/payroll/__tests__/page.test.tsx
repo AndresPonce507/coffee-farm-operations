@@ -139,7 +139,7 @@ describe("/payroll page", () => {
     render(ui);
 
     expect(
-      screen.getByRole("heading", { name: /Nómina/i }),
+      screen.getByRole("heading", { name: /Payroll/i }),
     ).toBeInTheDocument();
     expect(screen.getByTestId("payroll-summary")).toBeInTheDocument();
     expect(screen.getByTestId("period-board")).toBeInTheDocument();

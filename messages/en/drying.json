@@ -1,7 +1,7 @@
 {
   "page": {
-    "title": "Secado y reposo",
-    "subtitle": "El reposo que define la taza — humedad, estaciones y la compuerta de reposo"
+    "title": "Drying and rest",
+    "subtitle": "The rest that defines the cup — moisture, stations, and the reposo gate"
   },
   "writeActions": {
     "assignStation": "Assign station",
@@ -67,15 +67,15 @@
     "submitting": "Recording…"
   },
   "assignForm": {
-    "hint": "Asigna el lote a una cama — una cama llena se rechaza, así que el peso comprometido nunca puede exceder la capacidad de una estación.",
-    "successTitle": "Lote asignado",
-    "done": "Listo",
-    "lotLabel": "Lote",
-    "stationLabel": "Estación",
-    "choose": "Elegir…",
-    "stationOption": "{name} · {available} libres",
-    "cancel": "Cancelar",
-    "submit": "Asignar a estación",
-    "submitting": "Asignando…"
+    "hint": "Assign the lot to a bed — a full bed is rejected, so the committed weight can never exceed a station's capacity.",
+    "successTitle": "Lot assigned",
+    "done": "Done",
+    "lotLabel": "Lot",
+    "stationLabel": "Station",
+    "choose": "Choose…",
+    "stationOption": "{name} · {available} free",
+    "cancel": "Cancel",
+    "submit": "Assign to station",
+    "submitting": "Assigning…"
   }
 }

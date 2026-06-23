@@ -1,7 +1,7 @@
 {
   "page": {
-    "title": "Monitoreo",
-    "subtitle": "Monitoreo MIP por umbral económico + un registro de aplicaciones certificado y seguro según PHI/REI"
+    "title": "Scouting",
+    "subtitle": "Economic-threshold IPM scouting + a cert-gated, PHI/REI-safe spray log"
   },
   "board": {
     "safetyWindowsLabel": "PHI / REI safety windows",

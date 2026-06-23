@@ -1,16 +1,16 @@
 {
   "page": {
-    "title": "Cuadrillas",
-    "subtitle": "El sistema de registro de las personas — compañeros con nombre que regresan"
+    "title": "Crews",
+    "subtitle": "The system of record for people — named partners who return"
   },
   "dossier": {
-    "eyebrow": "Cuadrilla",
-    "backLabel": "Todas las cuadrillas",
-    "subtitle": "{members} · {present} hoy",
-    "memberOne": "integrante",
-    "memberOther": "integrantes",
-    "presentOne": "presente",
-    "presentOther": "presentes"
+    "eyebrow": "Crew",
+    "backLabel": "All crews",
+    "subtitle": "{members} · {present} today",
+    "memberOne": "member",
+    "memberOther": "members",
+    "presentOne": "present",
+    "presentOther": "present"
   },
   "summary": {
     "crews": "Crews",
@@ -46,7 +46,7 @@
     "rehireFor": "Rehire for {season}",
     "rehiring": "Rehiring…",
     "rehire": "Rehire",
-    "error": "No se pudo recontratar. Intentá de nuevo."
+    "error": "Couldn’t rehire. Try again."
   },
   "workerProfileSheet": {
     "chainVerified": "Chain verified",
@@ -64,37 +64,37 @@
     "certTo": "· to {date}"
   },
   "rosterSection": {
-    "title": "Cuadrilla",
-    "empty": "Sin integrantes en esta cuadrilla todavía",
-    "presentOfTotal": "{present} de {total} presentes hoy",
-    "present": "Presente",
-    "restDay": "Descanso",
-    "absent": "Ausente",
-    "rehireEligible": "Elegible para recontratar"
+    "title": "Crew",
+    "empty": "No members in this crew yet",
+    "presentOfTotal": "{present} of {total} present today",
+    "present": "Present",
+    "restDay": "Rest day",
+    "absent": "Absent",
+    "rehireEligible": "Eligible for rehire"
   },
   "dispatchSection": {
-    "title": "Historial de despachos",
-    "empty": "Sin despachos registrados para esta cuadrilla",
-    "statusAcknowledged": "Confirmado",
-    "statusSent": "Enviado",
-    "statusDraft": "Borrador",
-    "statusSuperseded": "Reemplazado",
-    "dispatchOn": "Despacho del {date}",
-    "plotCountOne": "{count} parcela",
-    "plotCountOther": "{count} parcelas"
+    "title": "Dispatch history",
+    "empty": "No dispatches recorded for this crew",
+    "statusAcknowledged": "Acknowledged",
+    "statusSent": "Sent",
+    "statusDraft": "Draft",
+    "statusSuperseded": "Superseded",
+    "dispatchOn": "Dispatch on {date}",
+    "plotCountOne": "{count} plot",
+    "plotCountOther": "{count} plots"
   },
   "plotsSection": {
-    "title": "Parcelas asignadas",
-    "empty": "Esta cuadrilla aún no ha sido despachada a ninguna parcela",
-    "masl": "{altitude} msnm",
-    "lastDispatch": "Último despacho: {date}",
-    "runCountOne": "{count} despacho",
-    "runCountOther": "{count} despachos"
+    "title": "Assigned plots",
+    "empty": "This crew hasn’t been dispatched to any plot yet",
+    "masl": "{altitude} masl",
+    "lastDispatch": "Last dispatch: {date}",
+    "runCountOne": "{count} dispatch",
+    "runCountOther": "{count} dispatches"
   },
   "productivitySection": {
-    "title": "Productividad de hoy",
-    "empty": "Esta cuadrilla aún no ha pesado café hoy",
-    "totalToday": "Total hoy",
+    "title": "Today’s productivity",
+    "empty": "This crew hasn’t weighed any coffee today",
+    "totalToday": "Total today",
     "latas": "Latas",
     "pickerLataOne": "{kg} · {count} lata",
     "pickerLataOther": "{kg} · {count} latas"

@@ -1,7 +1,7 @@
 {
   "common": {
     "done": "Done",
-    "cancel": "Cancelar"
+    "cancel": "Cancel"
   },
   "summary": {
     "payPeriods": "Pay periods",
@@ -27,19 +27,19 @@
     "madeWholeChip": "{n} made whole"
   },
   "breakdown": {
-    "makeWholeLabel": "ajustado al mínimo legal",
-    "emptyTitle": "Sin líneas de pago para este periodo",
-    "emptyDescription": "Calcula el periodo para consolidar los ingresos combinados por obra + por hora de cada trabajador/a, con el ajuste mínimo legal aplicado.",
-    "colWorker": "Trabajador/a",
-    "colPieceRate": "Por obra",
-    "colHourly": "Por hora",
-    "colMakeWhole": "Ajuste mínimo",
-    "colGross": "Bruto",
+    "makeWholeLabel": "adjusted to the legal minimum",
+    "emptyTitle": "No pay lines for this period",
+    "emptyDescription": "Calculate the period to roll up each worker's blended piece-rate + hourly earnings, with the legal-minimum top-up applied.",
+    "colWorker": "Worker",
+    "colPieceRate": "Piece-rate",
+    "colHourly": "Hourly",
+    "colMakeWhole": "Top-up",
+    "colGross": "Gross",
     "colCss": "CSS",
     "colSeguroEducativo": "Seguro Educativo",
     "colDecimo": "Décimo",
-    "colNet": "Neto",
-    "totals": "Totales"
+    "colNet": "Net",
+    "totals": "Totals"
   },
   "payslip": {
     "qrAriaLabel": "Payslip QR code"
@@ -47,18 +47,18 @@
   "methods": {
     "yappy": "Yappy",
     "nequi": "Nequi",
-    "ach": "ACH (transferencia bancaria)",
-    "cashSigned": "Efectivo firmado · cash-signed"
+    "ach": "ACH (bank transfer)",
+    "cashSigned": "Signed cash · cash-signed"
   },
   "compute": {
-    "periodIdLabel": "Identificador del período",
-    "periodIdPlaceholder": "p. ej. pp-2026-06-w3",
-    "from": "Desde",
-    "to": "Hasta",
-    "seasonLabel": "Temporada",
-    "optional": "(opcional)",
+    "periodIdLabel": "Period identifier",
+    "periodIdPlaceholder": "e.g. pp-2026-06-w3",
+    "from": "From",
+    "to": "To",
+    "seasonLabel": "Season",
+    "optional": "(optional)",
     "seasonPlaceholder": "2026-2027",
-    "calculating": "Calculando…",
+    "calculating": "Calculating…",
     "calculateButton": "Calculate period"
   },
   "approve": {
@@ -68,40 +68,40 @@
     "approve": "Approve"
   },
   "signature": {
-    "label": "Firma del trabajador · signature",
-    "clear": "Borrar",
-    "canvasAriaLabel": "Firma del trabajador para el pago en efectivo",
-    "helpText": "El trabajador firma aquí para confirmar que recibió el pago en efectivo."
+    "label": "Worker signature · signature",
+    "clear": "Clear",
+    "canvasAriaLabel": "Worker signature for the cash payment",
+    "helpText": "The worker signs here to confirm they received the cash payment."
   },
   "disbursement": {
-    "net": "neto",
-    "methodLabel": "Método de pago",
-    "amountLabel": "Monto (USD)",
-    "refLabel": "Referencia / recibo",
-    "refPlaceholder": "p. ej. yappy-tx-1024",
-    "captureSignature": "Capture la firma del trabajador para registrar el pago en efectivo.",
-    "disclaimer": "Acción deliberada e irreversible — registra un pago ya realizado. No mueve dinero por sí sola.",
-    "recording": "Registrando…",
+    "net": "net",
+    "methodLabel": "Payment method",
+    "amountLabel": "Amount (USD)",
+    "refLabel": "Reference / receipt",
+    "refPlaceholder": "e.g. yappy-tx-1024",
+    "captureSignature": "Capture the worker's signature to record the cash payment.",
+    "disclaimer": "Deliberate and irreversible action — records a payment already made. It does not move any money on its own.",
+    "recording": "Recording…",
     "recordButton": "Record disbursement"
   },
   "ledger": {
-    "title": "Pagos registrados",
-    "description": "Libro de pagos del período — el más reciente primero",
-    "signed": "firmado"
+    "title": "Recorded payments",
+    "description": "Payment ledger for the period — most recent first",
+    "signed": "signed"
   },
   "page": {
-    "title": "Nómina",
-    "subtitle": "Pago mixto por obra + por hora, con el ajuste al mínimo legal garantizado en la capa de datos",
-    "calculateTitle": "Calcular un período",
-    "calculateDescription": "Congela el cálculo: una línea por trabajador, con el ajuste al mínimo legal aplicado.",
-    "payslipsTitle": "Comprobantes de pago",
-    "payslipsDescription": "Toque a un trabajador para ver su comprobante bilingüe (es · ngäbere) con código QR.",
-    "viewPayslipFor": "Ver el comprobante de pago de {name}",
-    "approvePayTitle": "Aprobar y pagar",
-    "approvePayDescription": "Apruebe cada línea calculada, luego registre el pago (Yappy / Nequi / ACH / efectivo firmado).",
-    "paidSuffix": " · pagado",
-    "statusApproved": "aprobado",
-    "statusPaid": "pagado",
-    "statusCalculated": "calculado"
+    "title": "Payroll",
+    "subtitle": "Blended piece-rate + hourly pay, with the legal-minimum top-up guaranteed in the data layer",
+    "calculateTitle": "Calculate a period",
+    "calculateDescription": "Freezes the calculation: one line per worker, with the legal-minimum top-up applied.",
+    "payslipsTitle": "Payslips",
+    "payslipsDescription": "Tap a worker to view their bilingual payslip (es · ngäbere) with a QR code.",
+    "viewPayslipFor": "View the payslip for {name}",
+    "approvePayTitle": "Approve and pay",
+    "approvePayDescription": "Approve each calculated line, then record the payment (Yappy / Nequi / ACH / signed cash).",
+    "paidSuffix": " · paid",
+    "statusApproved": "approved",
+    "statusPaid": "paid",
+    "statusCalculated": "calculated"
   }
 }

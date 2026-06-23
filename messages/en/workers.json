@@ -1,11 +1,11 @@
 {
   "page": {
-    "title": "Trabajadores",
-    "subtitle": "Cuadrillas, asistencia y nómina diaria"
+    "title": "Workers",
+    "subtitle": "Crews, attendance, and daily payroll"
   },
   "dossier": {
-    "eyebrow": "Trabajador",
-    "backLabel": "Todos los trabajadores",
+    "eyebrow": "Worker",
+    "backLabel": "All workers",
     "subtitle": "{role} · {crew}"
   },
   "summary": {
@@ -37,21 +37,21 @@
     "off": " · {n} off"
   },
   "roster": {
-    "title": "Nómina",
-    "description": "{n} integrantes de cuadrilla en la finca",
-    "colWorker": "Trabajador/a",
-    "colRole": "Rol",
-    "colCrew": "Cuadrilla",
-    "colSince": "Desde",
-    "colDailyRate": "Tarifa diaria",
-    "colToday": "Hoy",
-    "colAttendance": "Asistencia",
-    "colActions": "Acciones",
-    "empty": "Aún no hay trabajadores.",
-    "noCherriesToday": "No se recogieron cerezas hoy",
-    "attendancePresent": "Presente",
-    "attendanceRestDay": "Día de descanso",
-    "attendanceAbsent": "Ausente"
+    "title": "Payroll",
+    "description": "{n} crew members on the farm",
+    "colWorker": "Worker",
+    "colRole": "Role",
+    "colCrew": "Crew",
+    "colSince": "Since",
+    "colDailyRate": "Daily rate",
+    "colToday": "Today",
+    "colAttendance": "Attendance",
+    "colActions": "Actions",
+    "empty": "No workers yet.",
+    "noCherriesToday": "No cherries picked today",
+    "attendancePresent": "Present",
+    "attendanceRestDay": "Rest day",
+    "attendanceAbsent": "Absent"
   },
   "actions": {
     "newWorker": "New worker",
@@ -61,7 +61,7 @@
     "edit": "Edit {name}",
     "delete": "Delete {name}",
     "confirmDelete": "Delete \"{name}\"?",
-    "deleteFailed": "No se pudo eliminar el trabajador."
+    "deleteFailed": "Couldn’t delete the worker."
   },
   "form": {
     "name": "Name",
@@ -77,49 +77,49 @@
     "saving": "Saving…"
   },
   "identity": {
-    "sectionTitle": "Identidad y certificaciones",
-    "crewLabel": "Cuadrilla",
-    "rehireable": "Recontratable",
-    "factRole": "Rol",
-    "factComarca": "Comarca de origen",
-    "factLanguages": "Idiomas",
-    "factSince": "Desde",
-    "factDayRate": "Jornal",
-    "currentCerts": "Certificaciones vigentes",
-    "noCerts": "Sin certificaciones vigentes",
-    "certNoExpiry": "Sin vencimiento",
-    "certExpiresIn": "Vence en {n} d",
-    "certValid": "Vigente"
+    "sectionTitle": "Identity & certifications",
+    "crewLabel": "Crew",
+    "rehireable": "Rehireable",
+    "factRole": "Role",
+    "factComarca": "Home comarca",
+    "factLanguages": "Languages",
+    "factSince": "Since",
+    "factDayRate": "Day rate",
+    "currentCerts": "Current certifications",
+    "noCerts": "No current certifications",
+    "certNoExpiry": "No expiry",
+    "certExpiresIn": "Expires in {n} d",
+    "certValid": "Valid"
   },
   "attendanceSection": {
-    "sectionTitle": "Asistencia",
-    "emptyLabel": "Sin eventos de asistencia todavía",
-    "chainVerified": "Cadena verificada ✓",
-    "chainNotVerified": "Cadena no verificada",
-    "kindClockIn": "Entrada",
-    "kindClockOut": "Salida",
-    "kindRestDay": "Día de descanso",
-    "kindAbsent": "Ausente"
+    "sectionTitle": "Attendance",
+    "emptyLabel": "No attendance events yet",
+    "chainVerified": "Chain verified ✓",
+    "chainNotVerified": "Chain not verified",
+    "kindClockIn": "Clock in",
+    "kindClockOut": "Clock out",
+    "kindRestDay": "Rest day",
+    "kindAbsent": "Absent"
   },
   "productivity": {
-    "sectionTitle": "Pesajes y productividad",
-    "emptyLabel": "Sin pesajes registrados todavía",
-    "today": "Hoy",
+    "sectionTitle": "Weigh-ins & productivity",
+    "emptyLabel": "No weigh-ins recorded yet",
+    "today": "Today",
     "latas": "Latas",
-    "ripenessRipe": "Maduro",
-    "ripenessUnderripe": "Verde",
-    "ripenessOverripe": "Sobremaduro"
+    "ripenessRipe": "Ripe",
+    "ripenessUnderripe": "Underripe",
+    "ripenessOverripe": "Overripe"
   },
   "contracts": {
-    "sectionTitle": "Contratos por obra",
-    "emptyLabel": "Sin contratos por obra todavía",
-    "active": "Vigente",
-    "superseded": "Reemplazado"
+    "sectionTitle": "Piece-rate contracts",
+    "emptyLabel": "No piece-rate contracts yet",
+    "active": "Active",
+    "superseded": "Superseded"
   },
   "pay": {
-    "sectionTitle": "Historial de pagos",
-    "emptyLabel": "Sin pagos calculados todavía",
-    "madeWhole": "Ajuste a salario mínimo",
-    "gross": "Bruto ${amount}"
+    "sectionTitle": "Payment history",
+    "emptyLabel": "No payments calculated yet",
+    "madeWhole": "Minimum-wage adjustment",
+    "gross": "Gross ${amount}"
   }
 }

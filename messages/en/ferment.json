@@ -1,14 +1,14 @@
 {
   "page": {
-    "title": "Fermentación",
-    "subtitle": "Fermentación en beneficio húmedo — curvas en vivo, alertas de punto de corte, agua del eco-beneficio"
+    "title": "Fermentation",
+    "subtitle": "Wet-mill fermentation — live curves, cut-point alerts, eco-mill water tracking"
   },
   "dossier": {
-    "title": "Lote {lotCode}",
-    "eyebrow": "Lote en fermentación",
-    "subtitle": "Cabina de calidad por lote — curvas de pH/temp/Brix, punto de corte y agua por kg",
-    "backLabel": "Todas las fermentaciones",
-    "trackerTitle": "Seguimiento de fermentación"
+    "title": "Lot {lotCode}",
+    "eyebrow": "Lot in fermentation",
+    "subtitle": "Per-lot quality cockpit — pH/temp/Brix curves, cut point, and water per kg",
+    "backLabel": "All fermentations",
+    "trackerTitle": "Fermentation tracker"
   },
   "board": {
     "emptyTitle": "Nothing fermenting yet",
@@ -20,13 +20,13 @@
     "started": "Started {date}"
   },
   "cutpoint": {
-    "noRecipe": "Sin receta aplicada — aplica una receta para proyectar el punto de corte.",
-    "noReadings": "Sin lecturas — registra una lectura de pH para rastrear el corte.",
-    "hoursElapsed": "{hours}h transcurridas",
-    "cutNowTitle": "Corta ahora — el pH {latest} alcanzó el objetivo de {target}.",
-    "cutNowSub": "{hours} · la ventana de fermentación se está cerrando.",
-    "trackingTitle": "Rastreando — pH {latest}, objetivo {target}.",
-    "trackingSub": "{hours} · la alerta de corte se activa cuando el pH alcanza la banda objetivo."
+    "noRecipe": "No recipe applied — apply a recipe to project the cut point.",
+    "noReadings": "No readings — log a pH reading to track the cut.",
+    "hoursElapsed": "{hours}h elapsed",
+    "cutNowTitle": "Cut now — pH {latest} hit the target of {target}.",
+    "cutNowSub": "{hours} · the fermentation window is closing.",
+    "trackingTitle": "Tracking — pH {latest}, target {target}.",
+    "trackingSub": "{hours} · the cut alert fires when pH reaches the target band."
   },
   "curve": {
     "empty": "No {label} readings yet",
@@ -45,8 +45,8 @@
     "brixTitle": "Brix",
     "logReadingTitle": "Log a reading",
     "logReadingDescription": "Manual tap now — a BLE pH/temp probe drops in later behind the same door",
-    "millWaterTitle": "Agua de molino",
-    "millWaterDescription": "Registra cada toma de agua del beneficio — alimenta el consumo por kilo"
+    "millWaterTitle": "Mill water",
+    "millWaterDescription": "Log every draw of mill water — feeds the per-kilo consumption"
   },
   "readout": {
     "ph": "pH {value}",
@@ -64,10 +64,10 @@
     "logReading": "Log reading"
   },
   "logWaterForm": {
-    "litersLabel": "Litros de agua",
-    "litersPlaceholder": "p. ej. 45",
-    "recording": "Registrando…",
-    "recordWater": "Registrar agua de molino"
+    "litersLabel": "Liters of water",
+    "litersPlaceholder": "e.g. 45",
+    "recording": "Recording…",
+    "recordWater": "Record mill water"
   },
   "startButton": {
     "startFerment": "Start ferment",

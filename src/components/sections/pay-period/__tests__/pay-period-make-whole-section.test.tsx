@@ -60,7 +60,7 @@ describe("PayPeriodMakeWholeSection", () => {
     const section = screen.getByTestId("section-make-whole");
     // the empty-state copy reassures the floor never had to activate.
     expect(
-      within(section).getByText(/el piso no tuvo que activarse/i),
+      within(section).getByText(/the floor never had to kick in/i),
     ).toBeInTheDocument();
   });
 });
