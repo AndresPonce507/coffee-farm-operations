@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { BatchStage, ProcessingBatch } from "@/lib/types";
+import type { FermentBatch } from "@/lib/db/ferment";
 
 // BatchTable is an async Server Component that reads from the DB layer; mock the
 // getters so the smoke test renders against a known shape with no network.
@@ -15,6 +16,24 @@ const getLotStagesMock = vi.fn();
 vi.mock("@/lib/db/processing-lots", () => ({
   getLotStages: () => getLotStagesMock(),
 }));
+
+// getFermentBatches — provides the uuid PKs for /ferment/[id] links.
+const getFermentBatchesMock = vi.fn();
+vi.mock("@/lib/db/ferment", () => ({
+  getFermentBatches: () => getFermentBatchesMock(),
+}));
+
+function fermentBatch(over: Partial<FermentBatch>): FermentBatch {
+  return {
+    id: "fb-uuid-placeholder",
+    lotCode: "JC-561",
+    recipeId: null,
+    method: "Natural",
+    startedAt: "2026-06-14T08:00:00Z",
+    endedAt: null,
+    ...over,
+  };
+}
 
 // BatchRowActions imports the Server Actions; stub them so the table renders
 // without pulling in next/cache or the Supabase client.
@@ -48,6 +67,11 @@ describe("BatchTable (smoke)", () => {
     getLotStagesMock.mockResolvedValue(
       stageMap({ "JC-564": "fermentation", "JC-561": "drying", "JC-552": "green" }),
     );
+    getFermentBatchesMock.mockResolvedValue([
+      fermentBatch({ id: "fb-uuid-564", lotCode: "JC-564" }),
+      fermentBatch({ id: "fb-uuid-561", lotCode: "JC-561" }),
+      fermentBatch({ id: "fb-uuid-552", lotCode: "JC-552" }),
+    ]);
 
     const ui = await BatchTable({ lots: ["JC-552", "JC-561", "JC-564"] });
     render(ui);
@@ -70,6 +94,9 @@ describe("BatchTable (smoke)", () => {
       batch({ id: "b2", lotCode: "JC-561", stage: "fermentation" }),
     ]);
     getLotStagesMock.mockResolvedValue(stageMap({ "JC-561": "drying" }));
+    getFermentBatchesMock.mockResolvedValue([
+      fermentBatch({ id: "fb-uuid-561", lotCode: "JC-561" }),
+    ]);
 
     const ui = await BatchTable({ lots: ["JC-561"] });
     render(ui);
@@ -84,6 +111,7 @@ describe("BatchTable (smoke)", () => {
   it("renders a single empty-state row when there are no batches", async () => {
     getBatchesMock.mockResolvedValue([]);
     getLotStagesMock.mockResolvedValue(stageMap({}));
+    getFermentBatchesMock.mockResolvedValue([]);
 
     const ui = await BatchTable({ lots: [] });
     render(ui);
@@ -104,6 +132,9 @@ describe("BatchTable (smoke)", () => {
       batch({ id: "b1", lotCode: "JC-561", stage: "fermentation" }),
     ]);
     getLotStagesMock.mockResolvedValue(stageMap({ "JC-561": "green" }));
+    getFermentBatchesMock.mockResolvedValue([
+      fermentBatch({ id: "fb-uuid-561", lotCode: "JC-561" }),
+    ]);
 
     const ui = await BatchTable({ lots: ["JC-561"] });
     render(ui);
@@ -113,5 +144,106 @@ describe("BatchTable (smoke)", () => {
     expect(
       screen.queryByRole("button", { name: /advance JC-561 to the next stage/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("wraps each lot-code cell in an EntityLink navigating to /lots/[code]", async () => {
+    getBatchesMock.mockResolvedValue([
+      batch({ id: "b1", lotCode: "JC-564" }),
+      batch({ id: "b2", lotCode: "JC-561" }),
+    ]);
+    getLotStagesMock.mockResolvedValue(
+      stageMap({ "JC-564": "drying", "JC-561": "drying" }),
+    );
+    getFermentBatchesMock.mockResolvedValue([
+      fermentBatch({ id: "fb-uuid-564", lotCode: "JC-564" }),
+      fermentBatch({ id: "fb-uuid-561", lotCode: "JC-561" }),
+    ]);
+
+    const ui = await BatchTable({ lots: ["JC-561", "JC-564"] });
+    render(ui);
+
+    // Every lot-code cell must be an anchor pointing at the /lots/[code] dossier.
+    const lotLink564 = screen.getByRole("link", { name: /JC-564/i });
+    expect(lotLink564).toHaveAttribute("href", "/lots/JC-564");
+
+    const lotLink561 = screen.getByRole("link", { name: /JC-561/i });
+    expect(lotLink561).toHaveAttribute("href", "/lots/JC-561");
+  });
+
+  it("renders an EntityLink per row navigating to the ferment dossier using the ferment_batches uuid (not the processing_batches slug)", async () => {
+    // processing_batches.id values are slugs like 'b-602-geisha-anaerobic';
+    // /ferment/[batch] resolves against ferment_batches.id (uuid PKs). Using
+    // the processing slug as the href would always produce a 404. The component
+    // must look up the ferment_batch by lot_code and use that row's uuid.
+    getBatchesMock.mockResolvedValue([
+      batch({ id: "b-602-geisha-anaerobic", lotCode: "JC-564" }),
+      batch({ id: "b-561-caturra-natural", lotCode: "JC-561" }),
+    ]);
+    getLotStagesMock.mockResolvedValue(
+      stageMap({ "JC-564": "drying", "JC-561": "drying" }),
+    );
+    // ferment_batches rows carry uuid PKs and are linked by lot_code.
+    getFermentBatchesMock.mockResolvedValue([
+      fermentBatch({ id: "fb-real-uuid-564", lotCode: "JC-564" }),
+      fermentBatch({ id: "fb-real-uuid-561", lotCode: "JC-561" }),
+    ]);
+
+    const ui = await BatchTable({ lots: ["JC-561", "JC-564"] });
+    render(ui);
+
+    // Links must use the ferment_batches uuid, NOT the processing_batches slug.
+    expect(document.querySelector('a[href="/ferment/fb-real-uuid-564"]')).not.toBeNull();
+    expect(document.querySelector('a[href="/ferment/fb-real-uuid-561"]')).not.toBeNull();
+
+    // The old (wrong) processing-batch slugs must NOT appear as batch links.
+    expect(document.querySelector('a[href="/ferment/b-602-geisha-anaerobic"]')).toBeNull();
+    expect(document.querySelector('a[href="/ferment/b-561-caturra-natural"]')).toBeNull();
+  });
+
+  it("omits the batch icon link when no ferment_batch exists for that lot", async () => {
+    // If no ferment_batch row exists for a lot_code, no link should render
+    // (rather than a guaranteed-404 link to an id from the wrong table).
+    getBatchesMock.mockResolvedValue([
+      batch({ id: "b-999-no-ferment", lotCode: "JC-999" }),
+    ]);
+    getLotStagesMock.mockResolvedValue(stageMap({ "JC-999": "drying" }));
+    // Deliberately empty — no ferment batch for this lot.
+    getFermentBatchesMock.mockResolvedValue([]);
+
+    const ui = await BatchTable({ lots: ["JC-999"] });
+    render(ui);
+
+    // No batch icon link should be present.
+    expect(document.querySelector('a[href^="/ferment/"]')).toBeNull();
+  });
+
+  it("gives the batch open-icon EntityLink a 44px minimum hit area and a visible focus ring (WCAG 2.5.5 / 2.4.7)", async () => {
+    getBatchesMock.mockResolvedValue([
+      batch({ id: "batch-tap-test", lotCode: "JC-564" }),
+    ]);
+    getLotStagesMock.mockResolvedValue(stageMap({ "JC-564": "drying" }));
+    getFermentBatchesMock.mockResolvedValue([
+      fermentBatch({ id: "fb-uuid-tap-test", lotCode: "JC-564" }),
+    ]);
+
+    const ui = await BatchTable({ lots: ["JC-564"] });
+    render(ui);
+
+    // EntityLink auto-generates aria-label="Abrir batch {id}" using the ferment uuid.
+    const iconLink = screen.getByRole("link", { name: /abrir batch fb-uuid-tap-test/i });
+
+    // Must have min-h-11 and min-w-11 (≥44px) so the touch target is large enough.
+    expect(iconLink.className).toContain("min-h-11");
+    expect(iconLink.className).toContain("min-w-11");
+
+    // Must center the icon inside the expanded hit area.
+    expect(iconLink.className).toContain("inline-flex");
+    expect(iconLink.className).toContain("items-center");
+    expect(iconLink.className).toContain("justify-center");
+
+    // Focus ring must use ring, not a color-only change (WCAG 1.4.1 / 2.4.7).
+    expect(iconLink.className).toContain("focus-visible:ring-2");
+    // Must NOT rely solely on a text-color change for focus indication.
+    expect(iconLink.className).not.toMatch(/focus-visible:text-forest-700\b/);
   });
 });

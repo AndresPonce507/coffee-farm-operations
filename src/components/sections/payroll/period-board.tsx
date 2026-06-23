@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HeartHandshake, Users, Wallet } from "lucide-react";
 
 import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { entityHref } from "@/lib/dossier/entity-href";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { PayPeriodSummary } from "@/lib/db/payroll";
@@ -85,7 +86,7 @@ export function PeriodBoard({
         return (
           <Link
             key={p.id}
-            href={`/payroll?period=${p.id}`}
+            href={entityHref["pay-period"](p.id)}
             data-testid={`period-card-${p.id}`}
             aria-current={active ? "page" : undefined}
             className={cn(

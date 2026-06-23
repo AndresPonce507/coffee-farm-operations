@@ -41,4 +41,52 @@ describe("TopPickersCard (smoke)", () => {
     expect(screen.getByText("Off today")).toBeInTheDocument();
     expect(screen.getByText("Ana Beltrán")).toBeInTheDocument();
   });
+
+  it("active picker rows link to the worker dossier", async () => {
+    const ui = await TopPickersCard();
+    render(ui);
+
+    // EntityLink sets aria-label="Abrir worker <id>" — match on that (the contract).
+    // The link also carries the picker name as visible text.
+    const marisolLink = screen.getByRole("link", { name: /worker w1/i });
+    expect(marisolLink).toHaveAttribute("href", "/workers/w1");
+    expect(marisolLink).toHaveTextContent("Marisol Quintero");
+
+    const diegoLink = screen.getByRole("link", { name: /worker w2/i });
+    expect(diegoLink).toHaveAttribute("href", "/workers/w2");
+    expect(diegoLink).toHaveTextContent("Diego Santamaría");
+  });
+
+  it("idle/off-today picker rows link to the worker dossier", async () => {
+    const ui = await TopPickersCard();
+    render(ui);
+
+    // The idle picker (todayKg === 0) also gets an EntityLink
+    const anaLink = screen.getByRole("link", { name: /worker w3/i });
+    expect(anaLink).toHaveAttribute("href", "/workers/w3");
+    expect(anaLink).toHaveTextContent("Ana Beltrán");
+  });
+
+  it("active picker EntityLink wrapper has flex display classes to establish width context for truncation", async () => {
+    const ui = await TopPickersCard();
+    render(ui);
+
+    // The active-row EntityLink must have `flex` + `flex-col` so the inner
+    // truncate <p> and baseline-aligned flex children can clamp correctly.
+    const marisolLink = screen.getByRole("link", { name: /worker w1/i });
+    expect(marisolLink.className).toMatch(/\bflex\b/);
+    expect(marisolLink.className).toMatch(/\bflex-col\b/);
+    expect(marisolLink.className).toMatch(/\bmin-w-0\b/);
+  });
+
+  it("idle picker EntityLink wrapper has block display class to establish width context for truncation", async () => {
+    const ui = await TopPickersCard();
+    render(ui);
+
+    // The idle-row EntityLink must have `block` so the inner truncate <p>
+    // can clamp correctly within the flex row container.
+    const anaLink = screen.getByRole("link", { name: /worker w3/i });
+    expect(anaLink.className).toMatch(/\bblock\b/);
+    expect(anaLink.className).toMatch(/\bmin-w-0\b/);
+  });
 });

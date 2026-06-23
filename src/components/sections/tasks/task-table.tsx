@@ -18,6 +18,7 @@ import {
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/data-table";
+import { EntityLink } from "@/components/ui/entity-link";
 import { longDate, relativeDay } from "@/lib/utils";
 
 /** Fixed "today" the mock data is anchored to (matches relativeDay default). */
@@ -136,7 +137,15 @@ export async function TaskTable({
                   </TD>
 
                   <TD className="whitespace-nowrap text-muted-fg">
-                    {task.plotName ?? (
+                    {task.plotId != null ? (
+                      <EntityLink
+                        kind="plot"
+                        id={task.plotId}
+                        className="text-muted-fg underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
+                      >
+                        {task.plotName}
+                      </EntityLink>
+                    ) : (
                       <span aria-hidden="true">—</span>
                     )}
                   </TD>
@@ -144,7 +153,17 @@ export async function TaskTable({
                   <TD>
                     <span className="flex items-center gap-2 whitespace-nowrap">
                       <Avatar name={task.assignee} size="sm" />
-                      <span className="text-ink">{task.assignee}</span>
+                      {task.workerId != null ? (
+                        <EntityLink
+                          kind="worker"
+                          id={task.workerId}
+                          className="text-ink underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
+                        >
+                          {task.assignee}
+                        </EntityLink>
+                      ) : (
+                        <span className="text-ink">{task.assignee}</span>
+                      )}
                     </span>
                   </TD>
 

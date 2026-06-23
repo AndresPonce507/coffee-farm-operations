@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { ShieldCheck, ShieldAlert, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { EntityLink } from "@/components/ui/entity-link";
 import { cn } from "@/lib/utils";
 import type { LotEvent } from "@/lib/types";
 
@@ -121,7 +122,9 @@ export function AuditDrawer({
               Audit trail
             </p>
             <h2 className="font-display text-lg font-semibold text-ink">
-              {streamKey}
+              <EntityLink kind="lot" id={streamKey}>
+                {streamKey}
+              </EntityLink>
             </h2>
             <div className="mt-2" data-testid="chain-badge">
               <Badge tone={chainVerified ? "forest" : "honey"} className="gap-1.5">

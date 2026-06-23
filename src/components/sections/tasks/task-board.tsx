@@ -13,6 +13,7 @@ import {
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import type { BadgeTone } from "@/components/ui/badge";
+import { EntityLink } from "@/components/ui/entity-link";
 import { getTasks } from "@/lib/db/tasks";
 import type { FarmTask, Priority, TaskCategory, TaskStatus } from "@/lib/types";
 import { cn, relativeDay } from "@/lib/utils";
@@ -91,13 +92,25 @@ function TaskTile({ task }: { task: FarmTask }) {
 
       <h4 className="text-sm font-medium leading-snug text-ink">{task.title}</h4>
       {task.plotName && (
-        <p className="mt-1 text-xs text-muted-fg">{task.plotName}</p>
+        task.plotId ? (
+          <EntityLink kind="plot" id={task.plotId}>
+            <p className="mt-1 text-xs text-muted-fg">{task.plotName}</p>
+          </EntityLink>
+        ) : (
+          <p className="mt-1 text-xs text-muted-fg">{task.plotName}</p>
+        )
       )}
 
       <div className="mt-3.5 flex items-center justify-between gap-2 border-t border-white/60 pt-3">
         <div className="flex min-w-0 items-center gap-2">
           <Avatar name={task.assignee} size="sm" />
-          <span className="truncate text-xs font-medium text-ink">{task.assignee}</span>
+          {task.workerId ? (
+            <EntityLink kind="worker" id={task.workerId}>
+              <span className="truncate text-xs font-medium text-ink">{task.assignee}</span>
+            </EntityLink>
+          ) : (
+            <span className="truncate text-xs font-medium text-ink">{task.assignee}</span>
+          )}
         </div>
         <span
           className={cn(

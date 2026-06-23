@@ -33,6 +33,15 @@ export async function WorkerRosterTable() {
     .map((c) => c.crewName)
     .filter((n): n is string => Boolean(n));
 
+  // Build a name→id map so the crew column cell can be wired to the crew dossier.
+  const crewNameToId = new Map(
+    crews
+      .filter((c): c is typeof c & { crewName: string; crewId: string } =>
+        Boolean(c.crewName) && Boolean(c.crewId)
+      )
+      .map((c) => [c.crewName, c.crewId])
+  );
+
   return (
     <Card className="animate-rise overflow-hidden">
       <CardHeader>
@@ -81,7 +90,20 @@ export async function WorkerRosterTable() {
                   </EntityLink>
                 </TD>
                 <TD className="text-muted-fg">{worker.role}</TD>
-                <TD className="text-muted-fg">{worker.crew}</TD>
+                <TD className="text-muted-fg">
+                  {(() => {
+                    const crewId = worker.crew
+                      ? crewNameToId.get(worker.crew) ?? null
+                      : null;
+                    return crewId ? (
+                      <EntityLink kind="crew" id={crewId}>
+                        {worker.crew}
+                      </EntityLink>
+                    ) : (
+                      worker.crew
+                    );
+                  })()}
+                </TD>
                 <TD className="text-right tabular-nums text-muted-fg">
                   {worker.startedYear}
                 </TD>

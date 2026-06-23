@@ -53,6 +53,26 @@ const withMakeWhole: WorkerPay[] = [
 ];
 
 describe("PayBreakdownTable", () => {
+  it("links worker names to /workers/[id] in both desktop and mobile views", () => {
+    render(<PayBreakdownTable rows={aboveFloor} />);
+    const table = screen.getByTestId("pay-breakdown-table");
+    // Each worker name should be wrapped in an anchor pointing to the worker dossier.
+    // aboveFloor has workerId "w-1" (Miguel Santos) and "w-2" (Lucía Vega).
+    // EntityLink renders aria-label="Abrir worker <id>" per the contract.
+    // Both desktop and mobile render the name, so getAllByRole returns >=2 per worker.
+    const miguelLinks = within(table).getAllByRole("link", {
+      name: /abrir worker w-1/i,
+    });
+    expect(miguelLinks.length).toBeGreaterThan(0);
+    expect(miguelLinks[0]).toHaveAttribute("href", "/workers/w-1");
+
+    const luciaLinks = within(table).getAllByRole("link", {
+      name: /abrir worker w-2/i,
+    });
+    expect(luciaLinks.length).toBeGreaterThan(0);
+    expect(luciaLinks[0]).toHaveAttribute("href", "/workers/w-2");
+  });
+
   it("renders the per-worker rows and totals without throwing", () => {
     render(<PayBreakdownTable rows={aboveFloor} />);
     const table = screen.getByTestId("pay-breakdown-table");

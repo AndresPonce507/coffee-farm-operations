@@ -82,4 +82,29 @@ describe("ReadinessList (render/smoke)", () => {
     render(<ReadinessList rows={[]} />);
     expect(screen.getByTestId("readiness-empty")).toBeInTheDocument();
   });
+
+  it("wires each plot card to its plot dossier (no dead UI) — card wraps an EntityLink", () => {
+    render(<ReadinessList rows={[ready, early]} />);
+    const links = screen.getAllByRole("link");
+    const hrefs = links.map((a) => a.getAttribute("href"));
+    expect(hrefs).toContain("/plots/p-cuesta-piedra");
+    expect(hrefs).toContain("/plots/p-las-lagunas");
+  });
+
+  it("plot name heading is navigable — rendered inside the EntityLink anchor", () => {
+    render(<ReadinessList rows={[ready]} />);
+    // EntityLink sets aria-label="Abrir plot <id>" — query by that label
+    const link = screen.getByRole("link", { name: /abrir plot p-cuesta-piedra/i });
+    expect(link).toHaveAttribute("href", "/plots/p-cuesta-piedra");
+    // the card is nested inside the link
+    expect(within(link).getByTestId("readiness-p-cuesta-piedra")).toBeInTheDocument();
+  });
+
+  it("links every card — each row has its own plot href", () => {
+    render(<ReadinessList rows={[ready, early]} />);
+    const links = screen.getAllByRole("link");
+    const hrefs = links.map((a) => a.getAttribute("href"));
+    expect(hrefs).toContain("/plots/p-cuesta-piedra");
+    expect(hrefs).toContain("/plots/p-las-lagunas");
+  });
 });

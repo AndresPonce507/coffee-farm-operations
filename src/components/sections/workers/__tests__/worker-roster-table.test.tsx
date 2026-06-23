@@ -86,6 +86,30 @@ describe("WorkerRosterTable (smoke)", () => {
     expect(link2).toHaveAttribute("href", "/workers/w2");
   });
 
+  it("wires each crew cell to its /crew/[id] dossier via name→id lookup", async () => {
+    getWorkersMock.mockResolvedValue(ROSTER);
+    const ui = await WorkerRosterTable();
+    render(ui);
+
+    // "Crew Norte" → crewId "crew-norte" (from the mocked getCrews above)
+    const crewNorteLink = screen
+      .getByText("Crew Norte")
+      .closest("a") as HTMLAnchorElement | null;
+    expect(crewNorteLink).not.toBeNull();
+    expect(crewNorteLink).toHaveAttribute("href", "/crew/crew-norte");
+
+    // "Field Ops" → crewId "field-ops"
+    const fieldOpsLink = screen
+      .getByText("Field Ops")
+      .closest("a") as HTMLAnchorElement | null;
+    expect(fieldOpsLink).not.toBeNull();
+    expect(fieldOpsLink).toHaveAttribute("href", "/crew/field-ops");
+
+    // "Crew Mill" has no matching crew in the mock data → rendered as plain text
+    const crewMillEl = screen.getByText("Crew Mill");
+    expect(crewMillEl.closest("a")).toBeNull();
+  });
+
   it("renders a single empty-state row when the roster is empty", async () => {
     getWorkersMock.mockResolvedValue([]);
     const ui = await WorkerRosterTable();

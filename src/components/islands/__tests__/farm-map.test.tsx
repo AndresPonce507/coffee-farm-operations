@@ -51,6 +51,17 @@ function makeMapStub(): MapStub {
   return stub;
 }
 
+vi.mock("next/navigation", () => ({
+  useRouter: vi.fn(() => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    refresh: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    prefetch: vi.fn(),
+  })),
+}));
+
 vi.mock("maplibre-gl", () => {
   class Map {
     constructor() {
@@ -181,6 +192,71 @@ describe("FarmMap island", () => {
       .map((c) => c[0] as string);
     expect(layerScopedEvents).toContain("mousemove");
     expect(layerScopedEvents).toContain("mouseleave");
+  });
+
+  it("registers a click handler on plots-fill that navigates to /plots/<id>", async () => {
+    const map = await renderFarmMap();
+    const layerScopedEvents = map.on.mock.calls
+      .filter((c) => c[1] === "plots-fill")
+      .map((c) => c[0] as string);
+    expect(layerScopedEvents).toContain("click");
+  });
+
+  it("click handler on plots-fill pushes entityHref.plot(id) via router", async () => {
+    const mockPush = vi.fn();
+    const { useRouter } = await import("next/navigation");
+    vi.mocked(useRouter).mockReturnValue({
+      push: mockPush,
+      replace: vi.fn(),
+      refresh: vi.fn(),
+      back: vi.fn(),
+      forward: vi.fn(),
+      prefetch: vi.fn(),
+    } as ReturnType<typeof useRouter>);
+
+    const map = await renderFarmMap();
+
+    // Find the click handler registered for 'plots-fill'
+    const clickCall = map.on.mock.calls.find(
+      (c) => c[0] === "click" && c[1] === "plots-fill",
+    );
+    expect(clickCall).toBeDefined();
+
+    const clickHandler = clickCall![2] as (e: {
+      features?: Array<{ properties: { id: string } }>;
+    }) => void;
+
+    // Simulate a click with a feature that has id "p1"
+    clickHandler({ features: [{ properties: { id: "p1" } }] });
+
+    expect(mockPush).toHaveBeenCalledWith("/plots/p1");
+  });
+});
+
+describe("FarmMap a11y — keyboard / screen-reader equivalence (WCAG 2.1.1)", () => {
+  it("renders map container with role=application and an es-PA aria-label", async () => {
+    await renderFarmMap();
+    const appEl = document.querySelector('[role="application"]');
+    expect(appEl).not.toBeNull();
+    expect(appEl?.getAttribute("aria-label")).toBeTruthy();
+  });
+
+  it("renders an sr-only nav landmark with a link to every plot dossier", async () => {
+    await renderFarmMap();
+    // The sr-only nav gives keyboard/AT users access to every plot without the canvas.
+    const nav = document.querySelector('nav[aria-label]');
+    expect(nav).not.toBeNull();
+    // Every plot in the fixture must have a navigable anchor href.
+    const links = nav!.querySelectorAll('a[href]');
+    expect(links.length).toBeGreaterThanOrEqual(plots.features.length);
+    const hrefs = Array.from(links).map((a) => a.getAttribute("href"));
+    expect(hrefs).toContain("/plots/p1");
+  });
+
+  it("sr-only plot links are visually hidden (sr-only class present)", async () => {
+    await renderFarmMap();
+    const nav = document.querySelector('nav[aria-label]');
+    expect(nav?.classList.contains("sr-only")).toBe(true);
   });
 });
 

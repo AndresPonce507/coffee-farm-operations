@@ -2,6 +2,7 @@ import type { Plot, Worker } from "@/lib/types";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/data-table";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { EntityLink } from "@/components/ui/entity-link";
 import { getHarvests } from "@/lib/db/harvests";
 import { kg, num, longDate, shortDate } from "@/lib/utils";
 import { HarvestRowActions } from "./harvest-actions";
@@ -73,14 +74,32 @@ export async function HarvestLogTable({
                   <span title={longDate(h.date)}>{shortDate(h.date)}</span>
                 </TD>
                 <TD>
-                  <span className="font-mono text-xs text-coffee">
+                  <EntityLink
+                    kind="lot"
+                    id={h.lotCode}
+                    className="font-mono text-xs text-coffee underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
+                  >
                     {h.lotCode}
-                  </span>
+                  </EntityLink>
                 </TD>
                 <TD className="whitespace-nowrap font-medium text-ink">
-                  {h.plotName}
+                  <EntityLink
+                    kind="plot"
+                    id={h.plotId}
+                    className="font-medium text-ink underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
+                  >
+                    {h.plotName}
+                  </EntityLink>
                 </TD>
-                <TD className="whitespace-nowrap text-muted-fg">{h.picker}</TD>
+                <TD className="whitespace-nowrap text-muted-fg">
+                  <EntityLink
+                    kind="worker"
+                    id={h.workerId}
+                    className="text-muted-fg underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
+                  >
+                    {h.picker}
+                  </EntityLink>
+                </TD>
                 <TD className="whitespace-nowrap text-right font-medium tabular-nums text-ink">
                   {kg(h.cherriesKg)}
                 </TD>

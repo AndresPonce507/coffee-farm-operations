@@ -65,13 +65,14 @@ describe("getHarvestsForPlot", () => {
     plot_id: "p-tizingal-alto",
     plot_name: "Tizingal Alto",
     picker: "Lucía Morales",
+    worker_id: "w-lucia-morales",
     cherries_kg: 88,
     ripeness_pct: 96,
     brix_avg: "23.4",
     lot_code: "JC-564",
   };
 
-  it("reads harvests_view filtered by plot_id, newest first, and maps rows", async () => {
+  it("reads harvests_view filtered by plot_id, newest first, and maps rows including workerId", async () => {
     const { client, calls } = makeClient({ data: [row], error: null });
     getSupabaseMock.mockReturnValue(client);
 
@@ -90,6 +91,7 @@ describe("getHarvestsForPlot", () => {
         plotId: "p-tizingal-alto",
         plotName: "Tizingal Alto",
         picker: "Lucía Morales",
+        workerId: "w-lucia-morales",
         cherriesKg: 88,
         ripenessPct: 96,
         brixAvg: 23.4,

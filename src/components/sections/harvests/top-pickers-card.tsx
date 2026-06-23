@@ -1,6 +1,7 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { EntityLink } from "@/components/ui/entity-link";
 import { getPickers } from "@/lib/db/workers";
 import { kg } from "@/lib/utils";
 
@@ -48,7 +49,7 @@ export async function TopPickersCard() {
 
               <Avatar name={picker.name} size="md" className="ring-white/60" />
 
-              <div className="min-w-0 flex-1">
+              <EntityLink kind="worker" id={picker.id} className="flex min-w-0 flex-1 flex-col">
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="truncate text-sm font-medium text-ink">{picker.name}</p>
                   <p className="shrink-0 text-sm font-semibold tabular-nums text-ink">
@@ -63,7 +64,7 @@ export async function TopPickersCard() {
                   />
                   <span className="shrink-0 text-xs text-muted-fg">{picker.crew}</span>
                 </div>
-              </div>
+              </EntityLink>
             </li>
           ))}
         </ol>
@@ -81,10 +82,10 @@ export async function TopPickersCard() {
                 >
                   <span className="w-4 shrink-0" aria-hidden="true" />
                   <Avatar name={picker.name} size="md" className="ring-white/60" />
-                  <div className="min-w-0 flex-1">
+                  <EntityLink kind="worker" id={picker.id} className="block min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-ink">{picker.name}</p>
                     <p className="text-xs text-muted-fg">{picker.crew}</p>
-                  </div>
+                  </EntityLink>
                   <p className="shrink-0 text-sm font-semibold tabular-nums text-muted-fg">
                     {kg(picker.todayKg)}
                   </p>

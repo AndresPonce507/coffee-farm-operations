@@ -55,7 +55,14 @@ function mockReadFiles(): string[] {
     .split("\n")
     .filter(Boolean)
     // The mock layer itself (`src/lib/data/*`) is allowed to cross-import siblings.
-    .filter((f) => !f.includes("/lib/data/"));
+    .filter((f) => !f.includes("/lib/data/"))
+    // seed-geometry.ts is a SEED-ONLY file: imported ONLY by scripts/gen-seed.ts and
+    // the geometry migration — never by any component, app route, or runtime getter.
+    // It generates placeholder GeoJSON polygons from the mock plot list so the seed
+    // and migration never drift from the canonical plot data. Excluding it here is
+    // correct and principled: the guard's intent is "no PRODUCTION RENDER PATH reads
+    // mock", and this file is not on any production render path.
+    .filter((f) => !f.includes("/lib/geo/seed-geometry.ts"));
 }
 
 // UN-SKIPPED (Phase 5 L3): the CREWS MOCK leak in sections/workers/{crew-board,

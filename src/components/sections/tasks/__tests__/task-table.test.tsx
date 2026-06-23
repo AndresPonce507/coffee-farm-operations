@@ -8,26 +8,34 @@ import type { FarmTask } from "@/lib/types";
  * badges. Overdue styling keys off a fixed TODAY = "2026-06-20". Fixtures span
  * all four statuses, include a null-plot row (renders an em-dash placeholder)
  * and one overdue row (t1, due 2026-06-18) so the overdue branch renders.
+ *
+ * Phase-5 wiring:
+ *  - plotName cell: EntityLink kind=plot when plotId != null; em-dash fallback otherwise.
+ *  - assignee cell: EntityLink kind=worker when workerId != null; plain span otherwise.
  */
 const TASKS: FarmTask[] = [
   {
     id: "t1", title: "Prune Block A shade trees", category: "Pruning",
     plotId: "p1", plotName: "Tizingal Alto", assignee: "Marisol Quintero",
+    workerId: "w1",
     due: "2026-06-18", status: "todo", priority: "high",
   },
   {
     id: "t2", title: "Apply foliar fertilizer", category: "Fertilizing",
     plotId: "p2", plotName: "Paso Ancho", assignee: "Diego Santamaría",
+    workerId: "w2",
     due: "2026-06-22", status: "in-progress", priority: "medium",
   },
   {
     id: "t3", title: "Scout for broca beetle", category: "Pest Control",
     plotId: null, plotName: null, assignee: "Ana Beltrán",
+    workerId: null,
     due: "2026-06-25", status: "blocked", priority: "high",
   },
   {
     id: "t4", title: "Weed nursery rows", category: "Weeding",
     plotId: "p3", plotName: "Bajo Mono", assignee: "Carlos Pineda",
+    workerId: "w3",
     due: "2026-06-19", status: "done", priority: "low",
   },
 ];
@@ -86,5 +94,49 @@ describe("TaskTable (smoke)", () => {
     expect(screen.queryByText("Prune Block A shade trees")).not.toBeInTheDocument();
     // … a tasteful empty-state stands in instead.
     expect(screen.getByText(/^No tasks\.?$/i)).toBeInTheDocument();
+  });
+});
+
+describe("TaskTable — EntityLink wiring (Phase-5)", () => {
+  it("wraps plotName in <a href=/plots/[id]> when plotId is non-null", async () => {
+    getTasksMock.mockResolvedValue(TASKS);
+    const ui = await TaskTable({ plots: [], workers: [] });
+    render(ui);
+
+    // t1 has plotId="p1", plotName="Tizingal Alto" → link to /plots/p1
+    const plotLink = screen.getByRole("link", { name: /Abrir plot p1/i });
+    expect(plotLink).toHaveAttribute("href", "/plots/p1");
+    expect(plotLink).toHaveTextContent("Tizingal Alto");
+  });
+
+  it("shows em-dash fallback (no link) for null-plot rows", async () => {
+    getTasksMock.mockResolvedValue(TASKS);
+    const ui = await TaskTable({ plots: [], workers: [] });
+    render(ui);
+
+    // t3 has plotId=null → em-dash, not a link
+    const emDash = screen.getByText("—");
+    expect(emDash.closest("a")).toBeNull();
+  });
+
+  it("wraps assignee name in <a href=/workers/[id]> when workerId is non-null", async () => {
+    getTasksMock.mockResolvedValue(TASKS);
+    const ui = await TaskTable({ plots: [], workers: [] });
+    render(ui);
+
+    // t1 has workerId="w1", assignee="Marisol Quintero" → link to /workers/w1
+    const workerLink = screen.getByRole("link", { name: /Abrir worker w1/i });
+    expect(workerLink).toHaveAttribute("href", "/workers/w1");
+    expect(workerLink).toHaveTextContent("Marisol Quintero");
+  });
+
+  it("shows plain-text assignee (no link) when workerId is null", async () => {
+    getTasksMock.mockResolvedValue(TASKS);
+    const ui = await TaskTable({ plots: [], workers: [] });
+    render(ui);
+
+    // t3 has workerId=null, assignee="Ana Beltrán" → no anchor wrapping the name
+    const nameEl = screen.getByText("Ana Beltrán");
+    expect(nameEl.closest("a")).toBeNull();
   });
 });

@@ -36,7 +36,8 @@ export interface Harvest {
   date: ISODate;
   plotId: ID;
   plotName: string;
-  picker: string; // worker name
+  picker: string; // worker name (display)
+  workerId: ID; // FK to workers — used by EntityLink kind='worker'
   cherriesKg: number;
   ripenessPct: number; // % cherries ripe (0–100)
   brixAvg: number; // sugar content
@@ -111,7 +112,8 @@ export interface FarmTask {
   category: TaskCategory;
   plotId: ID | null;
   plotName: string | null;
-  assignee: string;
+  assignee: string; // worker name (display)
+  workerId: ID | null; // FK to workers — used by EntityLink kind='worker'
   due: ISODate;
   status: TaskStatus;
   priority: Priority;

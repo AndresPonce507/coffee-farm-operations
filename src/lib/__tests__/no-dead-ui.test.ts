@@ -26,24 +26,33 @@ const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", ".."); // → sr
 
 /** Count `// DEAD:` markers (the audit's tag for an unresolved dead affordance). */
 function deadMarkerCount(): number {
-  const out = execFileSync(
-    "grep",
-    [
-      "-rIl",
-      "--include=*.tsx",
-      "--include=*.ts",
-      "--exclude-dir=__tests__",
-      "DEAD:",
-      SRC,
-    ],
-    { encoding: "utf8" },
-  ).trim();
+  let out = "";
+  try {
+    out = execFileSync(
+      "grep",
+      [
+        "-rIl",
+        "--include=*.tsx",
+        "--include=*.ts",
+        "--exclude-dir=__tests__",
+        "DEAD:",
+        SRC,
+      ],
+      { encoding: "utf8" },
+    ).trim();
+  } catch (e) {
+    // grep exits 1 when there are no matches — that's the GREEN end-state (DEAD = 0).
+    const err = e as { status?: number };
+    if (err.status === 1) return 0;
+    throw e;
+  }
   return out === "" ? 0 : out.split("\n").length;
 }
 
-// SKIP today (the Map polygon DEAD click still exists). L3-map un-skips this in the
-// same PR that wires the polygon to `router.push(entityHref.plot(...))`.
-describe.skip("no-dead-ui static guard", () => {
+// UN-SKIPPED (Phase 5 L3): FarmMap polygon click is now wired to
+// `router.push(entityHref.plot(...))` — the last DEAD affordance is gone.
+// This guard is the machine enforcement of KPI 3 (DEAD = 0).
+describe("no-dead-ui static guard", () => {
   it("has zero DEAD-marked affordances across src (KPI 3 = DEAD 0)", () => {
     expect(deadMarkerCount()).toBe(0);
   });

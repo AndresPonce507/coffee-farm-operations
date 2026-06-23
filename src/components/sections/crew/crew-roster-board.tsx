@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import type { CrewRosterMember, WorkerCert } from "@/lib/db/people";
 import { cn } from "@/lib/utils";
 
@@ -58,17 +59,21 @@ function attendanceMeta(attendance: string): {
 /** Stable, deterministic grouping of members into crew columns (insertion order). */
 function groupByCrew(
   members: CrewRosterMember[],
-): { crewName: string; members: CrewRosterMember[] }[] {
+): { crewName: string; crewId: string | null; members: CrewRosterMember[] }[] {
   const order: string[] = [];
-  const byCrew = new Map<string, CrewRosterMember[]>();
+  const byCrew = new Map<string, { crewId: string | null; members: CrewRosterMember[] }>();
   for (const m of members) {
     if (!byCrew.has(m.crewName)) {
-      byCrew.set(m.crewName, []);
+      byCrew.set(m.crewName, { crewId: m.crewId ?? null, members: [] });
       order.push(m.crewName);
     }
-    byCrew.get(m.crewName)!.push(m);
+    byCrew.get(m.crewName)!.members.push(m);
   }
-  return order.map((crewName) => ({ crewName, members: byCrew.get(crewName)! }));
+  return order.map((crewName) => ({
+    crewName,
+    crewId: byCrew.get(crewName)!.crewId,
+    members: byCrew.get(crewName)!.members,
+  }));
 }
 
 /** One member's glass worker-card — the liftable, board-ready unit. */
@@ -100,17 +105,19 @@ function WorkerCard({
       )}
     >
       <div className="flex items-start gap-3">
-        <Avatar
-          name={member.name}
-          size="md"
-          className={member.attendance === "present" ? "" : "opacity-50"}
-        />
-        <div className="min-w-0 flex-1">
-          <h4 className="truncate font-display text-sm font-semibold text-ink">
-            {member.preferredName?.trim() || member.name}
-          </h4>
-          <p className="mt-0.5 truncate text-xs text-muted-fg">{member.role}</p>
-        </div>
+        <EntityLink kind="worker" id={member.workerId} className="flex min-w-0 flex-1 items-start gap-3">
+          <Avatar
+            name={member.name}
+            size="md"
+            className={member.attendance === "present" ? "" : "opacity-50"}
+          />
+          <div className="min-w-0 flex-1">
+            <h4 className="truncate font-display text-sm font-semibold text-ink">
+              {member.preferredName?.trim() || member.name}
+            </h4>
+            <p className="mt-0.5 truncate text-xs text-muted-fg">{member.role}</p>
+          </div>
+        </EntityLink>
         {/* Attendance dot — colour AND a text label so state survives mono. */}
         <Badge tone={att.tone} dot className="shrink-0 capitalize">
           {attendanceText}
@@ -198,9 +205,17 @@ export function CrewRosterBoard({
                   className="glass-card flex flex-col gap-3 rounded-2xl p-3"
                 >
                   <header className="flex items-center justify-between gap-2 px-1">
-                    <h3 className="font-display text-sm font-semibold text-ink">
-                      {column.crewName}
-                    </h3>
+                    {column.crewId ? (
+                      <EntityLink kind="crew" id={column.crewId}>
+                        <h3 className="font-display text-sm font-semibold text-ink">
+                          {column.crewName}
+                        </h3>
+                      </EntityLink>
+                    ) : (
+                      <h3 className="font-display text-sm font-semibold text-ink">
+                        {column.crewName}
+                      </h3>
+                    )}
                     <Badge tone={present === total ? "ok" : "warn"} dot>
                       {present}/{total} present
                     </Badge>

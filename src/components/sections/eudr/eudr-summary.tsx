@@ -3,6 +3,7 @@ import { ShieldCheck, ShieldAlert, MapPin } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Tile } from "@/components/ui/tile";
+import { EntityLink } from "@/components/ui/entity-link";
 import { getEudrSummary } from "@/lib/db/eudr";
 import { num } from "@/lib/utils";
 
@@ -83,13 +84,31 @@ export async function EudrSummary() {
                   </span>
                   <EudrStatusBadge status={lot.status} />
                 </div>
-                <p className="text-xs text-muted-fg">
-                  {lot.originPlots.length === 0
-                    ? "No plots of origin traced"
-                    : `${num(lot.originPlots.length)} ${
-                        lot.originPlots.length === 1 ? "plot" : "plots"
-                      } of origin`}
-                </p>
+                {lot.originPlots.length === 0 ? (
+                  <p
+                    data-testid={`eudr-no-plots-${lot.code}`}
+                    className="text-xs text-muted-fg"
+                  >
+                    No plots of origin traced
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-1">
+                    {lot.originPlots.map((plot) => (
+                      <span
+                        key={plot.plotId}
+                        data-testid={`eudr-origin-plot-${plot.plotId}`}
+                      >
+                        <EntityLink
+                          kind="plot"
+                          id={plot.plotId}
+                          className="inline-block rounded px-1.5 py-0.5 text-xs font-medium text-forest ring-1 ring-forest/25 transition hover:bg-forest/10"
+                        >
+                          {plot.plotName}
+                        </EntityLink>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </Link>

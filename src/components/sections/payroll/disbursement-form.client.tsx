@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { EntityLink } from "@/components/ui/entity-link";
 import {
   Card,
   CardContent,
@@ -598,7 +599,9 @@ export function DisbursementLedger({
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-ink">
-                    {workerNames[d.workerId] ?? d.workerId}
+                    <EntityLink kind="worker" id={d.workerId}>
+                      {workerNames[d.workerId] ?? d.workerId}
+                    </EntityLink>
                   </p>
                   <p className="flex items-center gap-1.5 text-xs text-muted-fg">
                     <span>{METHOD_LABEL[d.method as keyof typeof METHOD_LABEL] ?? d.method}</span>

@@ -182,6 +182,34 @@ describe("DispatchBoard (async Server Component render)", () => {
     expect(ackValue?.textContent).toBe("1");
   });
 
+  // Crew column header must be an EntityLink navigating to /crew/[id].
+  it("crew column header links to the crew dossier", async () => {
+    getCrewRoster.mockResolvedValue(roster);
+    getDispatchToday.mockResolvedValue([norteCard]);
+
+    render(await DispatchBoard());
+
+    // EntityLink renders an <a> with aria-label "Abrir crew <id>" and href "/crew/<id>".
+    // Find the link by its href to confirm the crew column header is wired.
+    const link = screen.getByRole("link", { name: /abrir crew crew-norte/i });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/crew/crew-norte");
+  });
+
+  // Dispatch card must link to /dispatch/[id] so tapping the card opens the dossier.
+  it("dispatch card preview links to the dispatch dossier", async () => {
+    getCrewRoster.mockResolvedValue(roster);
+    getDispatchToday.mockResolvedValue([norteCard]);
+
+    render(await DispatchBoard());
+
+    // norteCard.id === 1 → href must be /dispatch/1
+    const links = screen
+      .getAllByRole("link")
+      .filter((el) => el.getAttribute("href") === "/dispatch/1");
+    expect(links.length).toBeGreaterThan(0);
+  });
+
   // D08-1 (board portion / interim mitigation): the board must NOT lean on the
   // generate island's silent default readiness threshold (0.5) — on a cold S8 model
   // every plot scores readiness 0, so a 0.5 cut-off drafts an EMPTY card with no way

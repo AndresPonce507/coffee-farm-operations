@@ -58,4 +58,23 @@ describe("EudrSummary (smoke)", () => {
     render(ui);
     expect(screen.getByTestId("eudr-empty")).toBeInTheDocument();
   });
+
+  it("renders per-plot EntityLink anchors (/plots/<id>) for lots with origin plots", async () => {
+    const ui = await EudrSummary();
+    render(ui);
+    // JC-701 has one origin plot (p-baru-vista) — a link to /plots/p-baru-vista must appear.
+    const wrapper = screen.getByTestId("eudr-origin-plot-p-baru-vista");
+    expect(wrapper).toBeInTheDocument();
+    // The EntityLink renders an <a> inside the wrapper span.
+    const link = wrapper.querySelector("a");
+    expect(link).toHaveAttribute("href", "/plots/p-baru-vista");
+    expect(link).toHaveTextContent("Barú Vista");
+  });
+
+  it("renders 'No plots of origin traced' for a lot with no origin plots", async () => {
+    const ui = await EudrSummary();
+    render(ui);
+    // JC-711 has no origin plots.
+    expect(screen.getByTestId("eudr-no-plots-JC-711")).toBeInTheDocument();
+  });
 });

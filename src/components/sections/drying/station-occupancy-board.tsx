@@ -68,6 +68,11 @@ export function StationOccupancyBoard({
                 >
                   <div className="mb-3 flex items-start justify-between gap-2">
                     <div>
+                      {/* TODO(drying-station-dossier): wrap in
+                          <EntityLink kind="drying-station" id={s.stationId}>
+                          once the /drying-station/[id] route exists and
+                          entity-href.ts + DossierKind are extended.
+                          wire-up-audit §10 depth ticket. */}
                       <p className="font-display text-sm font-semibold text-ink">
                         {s.name}
                       </p>

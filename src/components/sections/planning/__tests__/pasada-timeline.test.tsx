@@ -37,6 +37,20 @@ const plans: PasadaPlan[] = [
   },
 ];
 
+describe("PasadaTimeline — EntityLink navigation", () => {
+  it("links the plot name in each pasada row to its /plots/[id] dossier", () => {
+    render(<PasadaTimeline plans={plans} />);
+    // Both plot names must be navigable links to their dossiers.
+    const link1 = screen.getByRole("link", { name: /plot p-cuesta-piedra/i });
+    expect(link1).toHaveAttribute("href", "/plots/p-cuesta-piedra");
+    expect(link1).toHaveTextContent("Cuesta de Piedra");
+
+    const link2 = screen.getByRole("link", { name: /plot p-las-lagunas/i });
+    expect(link2).toHaveAttribute("href", "/plots/p-las-lagunas");
+    expect(link2).toHaveTextContent("Las Lagunas");
+  });
+});
+
 describe("PasadaTimeline (render/smoke)", () => {
   it("renders a row per scheduled pasada with plot + altitude (staggered)", () => {
     render(<PasadaTimeline plans={plans} />);

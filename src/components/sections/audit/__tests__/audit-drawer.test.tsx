@@ -116,6 +116,25 @@ describe("AuditDrawer (smoke)", () => {
     expect(screen.getByText(/no events/i)).toBeInTheDocument();
   });
 
+  it("renders the streamKey as an EntityLink to the lot dossier in the h2", () => {
+    render(
+      <AuditDrawer
+        open
+        onClose={vi.fn()}
+        streamKey="JC-564"
+        events={FIXTURE}
+        chainVerified
+      />,
+    );
+
+    // The h2 must contain an anchor pointing to the lot dossier.
+    const h2 = screen.getByRole("heading", { level: 2 });
+    const link = h2.querySelector("a");
+    expect(link).not.toBeNull();
+    expect(link?.getAttribute("href")).toBe("/lots/JC-564");
+    expect(link).toHaveTextContent("JC-564");
+  });
+
   // Regression: the slide-over must PORTAL to <body> so it escapes page stacking
   // contexts. Rendered inline, a transformed ancestor (the app shell / cards carry
   // a lingering `animate-rise` transform) traps the z-50 layer below sibling cards

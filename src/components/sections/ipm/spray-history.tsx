@@ -2,6 +2,7 @@ import { Clock, Droplets, SprayCan, TimerReset, User } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import { num } from "@/lib/utils";
 import type { SprayLogEntry } from "@/lib/types";
 
@@ -44,10 +45,24 @@ export function SprayHistory({ rows }: { rows: SprayLogEntry[] }) {
               </p>
               <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-fg">
                 <span className="inline-flex items-center gap-1">
-                  <Droplets className="h-3 w-3" aria-hidden /> {r.plotName}
+                  <Droplets className="h-3 w-3" aria-hidden />
+                  <EntityLink
+                    kind="plot"
+                    id={r.plotId}
+                    className="underline underline-offset-2 outline-none transition-colors hover:text-forest focus-visible:text-forest focus-visible:underline"
+                  >
+                    {r.plotName}
+                  </EntityLink>
                 </span>
                 <span className="inline-flex items-center gap-1">
-                  <User className="h-3 w-3" aria-hidden /> {r.workerName}
+                  <User className="h-3 w-3" aria-hidden />
+                  <EntityLink
+                    kind="worker"
+                    id={r.workerId}
+                    className="underline underline-offset-2 outline-none transition-colors hover:text-forest focus-visible:text-forest focus-visible:underline"
+                  >
+                    {r.workerName}
+                  </EntityLink>
                 </span>
                 <span>{r.appliedAt.slice(0, 10)}</span>
               </div>

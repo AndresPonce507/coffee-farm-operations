@@ -115,4 +115,21 @@ describe("QrPayslip", () => {
     expect(within(card).getByText("Lalo")).toBeInTheDocument();
     expect(within(card).getByText("Eduardo Bejarano")).toBeInTheDocument();
   });
+
+  it("wraps the headline in an EntityLink navigating to /workers/[workerId]", () => {
+    render(<QrPayslip payslip={basePayslip({ workerId: "w-7" })} />);
+    // EntityLink renders an <a> with aria-label matching /worker w-7/i
+    const link = screen.getByRole("link", { name: /worker w-7/i });
+    expect(link).toHaveAttribute("href", "/workers/w-7");
+    expect(link).toHaveTextContent("Eduardo Bejarano");
+  });
+
+  it("wraps the preferred-name headline in the worker EntityLink when preferredName is set", () => {
+    render(
+      <QrPayslip payslip={basePayslip({ workerId: "w-7", preferredName: "Lalo" })} />,
+    );
+    const link = screen.getByRole("link", { name: /worker w-7/i });
+    expect(link).toHaveAttribute("href", "/workers/w-7");
+    expect(link).toHaveTextContent("Lalo");
+  });
 });

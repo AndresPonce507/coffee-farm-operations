@@ -143,3 +143,24 @@ export const getEudrSummary = cache(async (): Promise<LotEudrDossier[]> => {
   const lots = await getGreenLotAtp();
   return Promise.all(lots.map((l) => getLotEudrDossier(l.greenLotCode)));
 });
+
+/** A minimal {plotId, plotName} tuple — the only fields the EudrSummary origin-plot
+ *  EntityLink rows need. Derived from `getLotOriginPlots`; no extra DB round-trip. */
+export interface OriginPlotRef {
+  plotId: string;
+  plotName: string;
+}
+
+/**
+ * Returns the list of {plotId, plotName} tuples for the origin plots of ONE green
+ * lot, so the EudrSummary table can wrap each origin-plot row in an EntityLink
+ * kind='plot'. Previously `EudrLot.originPlots` was only a count (number) with no
+ * IDs — this getter exposes the IDs without touching the schema (derived from the
+ * same `lot_origin_plots` view that `getLotOriginPlots` already reads).
+ */
+export const getEudrOriginPlotIds = cache(
+  async (code: string): Promise<OriginPlotRef[]> => {
+    const plots = await getLotOriginPlots(code);
+    return plots.map((p) => ({ plotId: p.plotId, plotName: p.plotName }));
+  },
+);

@@ -2,6 +2,7 @@ import { CalendarClock, Leaf, Mountain, Sprout } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import { cn, longDate, num } from "@/lib/utils";
 import type { PlotReadiness } from "@/lib/types";
 
@@ -47,10 +48,15 @@ export function ReadinessList({ rows }: { rows: PlotReadiness[] }) {
         const styles = TONE_STYLES[tone];
         const pct = Math.round(Math.min(1, Math.max(0, r.readiness)) * 100);
         return (
-          <Card
+          <EntityLink
             key={r.plotId}
+            kind="plot"
+            id={r.plotId}
+            className="group block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60"
+          >
+          <Card
             data-testid={`readiness-${r.plotId}`}
-            className="glass-hover animate-rise overflow-hidden"
+            className="glass-hover animate-rise overflow-hidden transition group-hover:ring-1 group-hover:ring-forest/30"
           >
             <CardContent className="space-y-3">
               <div className="flex items-start justify-between gap-3">
@@ -122,6 +128,7 @@ export function ReadinessList({ rows }: { rows: PlotReadiness[] }) {
               </div>
             </CardContent>
           </Card>
+          </EntityLink>
         );
       })}
     </div>

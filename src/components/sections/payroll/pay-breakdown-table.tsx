@@ -3,6 +3,7 @@ import { HeartHandshake, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { THead, TBody, TR, TH, TD } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import type { WorkerPay } from "@/lib/db/payroll";
 import { cn } from "@/lib/utils";
 
@@ -120,7 +121,9 @@ export function PayBreakdownTable({ rows, className }: PayBreakdownTableProps) {
               >
                 <TD>
                   <div className="flex flex-col">
-                    <span className="font-medium text-ink">{r.workerName}</span>
+                    <EntityLink kind="worker" id={r.workerId}>
+                      <span className="font-medium text-ink">{r.workerName}</span>
+                    </EntityLink>
                     {r.crewName ? (
                       <span className="text-xs text-muted-fg">{r.crewName}</span>
                     ) : null}
@@ -197,7 +200,9 @@ export function PayBreakdownTable({ rows, className }: PayBreakdownTableProps) {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-medium text-ink">{r.workerName}</p>
+                <EntityLink kind="worker" id={r.workerId}>
+                  <p className="font-medium text-ink">{r.workerName}</p>
+                </EntityLink>
                 {r.crewName ? (
                   <p className="truncate text-xs text-muted-fg">{r.crewName}</p>
                 ) : null}
