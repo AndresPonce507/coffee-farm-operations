@@ -41,7 +41,7 @@ describe("/inventory page (smoke)", () => {
     render(ui);
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "Inventory" }),
+      screen.getByRole("heading", { level: 1, name: "Inventario" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Green inventory")).toBeInTheDocument();
     expect(screen.getAllByText("JC-552-G").length).toBeGreaterThan(0);

@@ -46,9 +46,9 @@ export async function HarvestLogTable({
     <Card className="animate-rise overflow-hidden">
       <CardHeader>
         <div>
-          <CardTitle>Harvest log</CardTitle>
+          <CardTitle>Registro de cosecha</CardTitle>
           <CardDescription>
-            Most recent {rows.length} picking records, newest first
+            Los {rows.length} registros de cosecha más recientes, del más nuevo al más antiguo
           </CardDescription>
         </div>
       </CardHeader>
@@ -57,14 +57,14 @@ export async function HarvestLogTable({
         <Table className="border-0 ring-0">
           <THead className="bg-white/70">
             <TR>
-              <TH>Date</TH>
-              <TH>Lot</TH>
-              <TH>Plot</TH>
-              <TH>Picker</TH>
-              <TH className="text-right">Cherries</TH>
-              <TH>Ripeness</TH>
+              <TH>Fecha</TH>
+              <TH>Lote</TH>
+              <TH>Parcela</TH>
+              <TH>Cosechero/a</TH>
+              <TH className="text-right">Cerezas</TH>
+              <TH>Madurez</TH>
               <TH className="text-right">Brix</TH>
-              <TH className="text-right">Actions</TH>
+              <TH className="text-right">Acciones</TH>
             </TR>
           </THead>
           <TBody>

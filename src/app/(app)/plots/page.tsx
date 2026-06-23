@@ -15,8 +15,8 @@ export default async function PlotsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Plots"
-        subtitle="Growing lots across Janson’s farms in Volcán, Chiriquí"
+        title="Parcelas"
+        subtitle="Lotes de cultivo en las fincas de Janson en Volcán, Chiriquí"
       >
         <AddPlotButton />
       </PageHeader>

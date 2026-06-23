@@ -23,8 +23,8 @@ export default async function WorkersPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Workers"
-        subtitle="Crews, attendance and daily payroll"
+        title="Trabajadores"
+        subtitle="Cuadrillas, asistencia y nómina diaria"
       >
         <AddWorkerButton crews={crewNames} />
       </PageHeader>

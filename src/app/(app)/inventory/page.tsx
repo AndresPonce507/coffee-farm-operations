@@ -32,8 +32,8 @@ export default async function InventoryPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Inventory"
-        subtitle="Green coffee, graded and available to promise"
+        title="Inventario"
+        subtitle="Café verde, clasificado y disponible para comprometer"
       >
         <GradeGreenForm sources={gradableSources} />
       </PageHeader>

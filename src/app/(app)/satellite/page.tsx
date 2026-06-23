@@ -18,8 +18,8 @@ export default function SatellitePage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Satellite"
-        subtitle="NDVI / SAR vegetation health with an honest confidence badge for the Volcán cloud"
+        title="Satélite"
+        subtitle="Salud de la vegetación NDVI / SAR con una insignia de confianza honesta para la nube de Volcán"
       />
       <SatelliteBoard />
     </div>

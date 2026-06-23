@@ -79,7 +79,7 @@ describe("PayBreakdownTable", () => {
     expect(within(table).getAllByText("Miguel Santos").length).toBeGreaterThan(0);
     expect(within(table).getAllByText("Lucía Vega").length).toBeGreaterThan(0);
     // footer totals row label
-    expect(within(table).getAllByText("Totals").length).toBeGreaterThan(0);
+    expect(within(table).getAllByText("Totales").length).toBeGreaterThan(0);
     // gross total = 310 + 295.50 = 605.50, USD 2-decimal
     expect(within(table).getAllByText("$605.50").length).toBeGreaterThan(0);
   });
@@ -96,7 +96,7 @@ describe("PayBreakdownTable", () => {
     expect(within(table).getAllByText("$60.00").length).toBeGreaterThan(0);
     // the dignified legal label is present (sr-only + title)
     expect(
-      within(table).getAllByText(/topped up to the legal minimum/i).length,
+      within(table).getAllByText(/ajustado al mínimo legal/i).length,
     ).toBeGreaterThan(0);
 
     // the protected row is flagged for the honey accent
@@ -108,7 +108,7 @@ describe("PayBreakdownTable", () => {
   it("does NOT show the make-whole highlight when every row is above the floor", () => {
     render(<PayBreakdownTable rows={aboveFloor} />);
     expect(
-      screen.queryByText(/topped up to the legal minimum/i),
+      screen.queryByText(/ajustado al mínimo legal/i),
     ).not.toBeInTheDocument();
     const desktop = screen.getByTestId("pay-breakdown-desktop");
     expect(
@@ -128,7 +128,7 @@ describe("PayBreakdownTable", () => {
     render(<PayBreakdownTable rows={[]} />);
     expect(screen.getByTestId("pay-breakdown-table")).toBeInTheDocument();
     expect(
-      screen.getByText(/no pay lines for this period/i),
+      screen.getByText(/sin líneas de pago para este periodo/i),
     ).toBeInTheDocument();
   });
 });

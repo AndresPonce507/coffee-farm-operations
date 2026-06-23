@@ -38,7 +38,7 @@ function usd(n: number): string {
   });
 }
 
-const MADE_WHOLE_LABEL = "topped up to the legal minimum";
+const MADE_WHOLE_LABEL = "ajustado al mínimo legal";
 
 /** The make-whole cell — a dignified honey pill when it fired, else a muted dash. */
 function MakeWholeCell({ row }: { row: WorkerPay }) {
@@ -67,8 +67,8 @@ export function PayBreakdownTable({ rows, className }: PayBreakdownTableProps) {
         <CardContent className="py-4">
           <EmptyState
             icon={Users}
-            title="No pay lines for this period"
-            description="Calculate the period to roll up each worker's blended piece-rate + hourly earnings, with the legal-minimum make-whole guard applied."
+            title="Sin líneas de pago para este periodo"
+            description="Calcula el periodo para consolidar los ingresos combinados por obra + por hora de cada trabajador/a, con el ajuste mínimo legal aplicado."
           />
         </CardContent>
       </Card>
@@ -97,15 +97,15 @@ export function PayBreakdownTable({ rows, className }: PayBreakdownTableProps) {
         <table className="w-full border-separate border-spacing-0 text-sm">
           <THead>
             <TR className="hover:bg-transparent">
-              <TH>Worker</TH>
-              <TH className="text-right">Piece-rate</TH>
-              <TH className="text-right">Hourly</TH>
-              <TH className="text-right">Make-whole</TH>
-              <TH className="text-right">Gross</TH>
+              <TH>Trabajador/a</TH>
+              <TH className="text-right">Por obra</TH>
+              <TH className="text-right">Por hora</TH>
+              <TH className="text-right">Ajuste mínimo</TH>
+              <TH className="text-right">Bruto</TH>
               <TH className="text-right">CSS</TH>
               <TH className="text-right">Seguro Educativo</TH>
               <TH className="text-right">Décimo</TH>
-              <TH className="text-right">Net</TH>
+              <TH className="text-right">Neto</TH>
             </TR>
           </THead>
           <TBody>
@@ -158,7 +158,7 @@ export function PayBreakdownTable({ rows, className }: PayBreakdownTableProps) {
           </TBody>
           <tfoot className="border-t border-white/60 bg-white/40">
             <tr className="font-semibold">
-              <TD className="text-ink">Totals</TD>
+              <TD className="text-ink">Totales</TD>
               <TD className="text-right text-muted-fg/60">—</TD>
               <TD className="text-right text-muted-fg/60">—</TD>
               <TD className="text-right tabular-nums text-honey-700">
@@ -209,7 +209,7 @@ export function PayBreakdownTable({ rows, className }: PayBreakdownTableProps) {
               </div>
               <div className="text-right">
                 <p className="text-[11px] uppercase tracking-wide text-muted-fg">
-                  Net
+                  Neto
                 </p>
                 <p className="font-display text-base font-semibold tabular-nums text-forest-700">
                   {usd(r.netUsd)}
@@ -225,15 +225,15 @@ export function PayBreakdownTable({ rows, className }: PayBreakdownTableProps) {
 
             <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
               <div className="flex justify-between">
-                <dt className="text-muted-fg">Piece-rate</dt>
+                <dt className="text-muted-fg">Por obra</dt>
                 <dd className="tabular-nums text-ink">{usd(r.pieceRateUsd)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-muted-fg">Hourly</dt>
+                <dt className="text-muted-fg">Por hora</dt>
                 <dd className="tabular-nums text-ink">{usd(r.hourlyUsd)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-muted-fg">Gross</dt>
+                <dt className="text-muted-fg">Bruto</dt>
                 <dd className="tabular-nums font-medium text-ink">
                   {usd(r.grossUsd)}
                 </dd>
@@ -260,16 +260,16 @@ export function PayBreakdownTable({ rows, className }: PayBreakdownTableProps) {
 
         {/* Totals footer card — same money columns as the desktop tfoot. */}
         <li className="rounded-2xl border border-white/60 bg-white/70 p-4">
-          <p className="font-display text-sm font-semibold text-ink">Totals</p>
+          <p className="font-display text-sm font-semibold text-ink">Totales</p>
           <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
             <div className="flex justify-between">
-              <dt className="text-muted-fg">Make-whole</dt>
+              <dt className="text-muted-fg">Ajuste mínimo</dt>
               <dd className="tabular-nums font-medium text-honey-700">
                 {usd(totals.makeWhole)}
               </dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-muted-fg">Gross</dt>
+              <dt className="text-muted-fg">Bruto</dt>
               <dd className="tabular-nums font-medium text-ink">
                 {usd(totals.gross)}
               </dd>
@@ -287,7 +287,7 @@ export function PayBreakdownTable({ rows, className }: PayBreakdownTableProps) {
               <dd className="tabular-nums text-ink">{usd(totals.decimo)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-muted-fg">Net</dt>
+              <dt className="text-muted-fg">Neto</dt>
               <dd className="tabular-nums font-semibold text-forest-700">
                 {usd(totals.net)}
               </dd>

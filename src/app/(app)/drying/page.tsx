@@ -53,8 +53,8 @@ export default async function DryingPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Drying & reposo"
-        subtitle="The rest that defines the cup — moisture, stations, and the reposo gate"
+        title="Secado y reposo"
+        subtitle="El reposo que define la taza — humedad, estaciones y la compuerta de reposo"
       >
         <DryingWriteActions lots={lotCodes} stations={stations} />
       </PageHeader>

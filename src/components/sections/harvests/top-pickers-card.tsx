@@ -28,8 +28,8 @@ export async function TopPickersCard() {
     <Card className="animate-rise">
       <CardHeader>
         <div>
-          <CardTitle>Top pickers today</CardTitle>
-          <CardDescription>Cherries picked since this morning</CardDescription>
+          <CardTitle>Mejores cosecheros hoy</CardTitle>
+          <CardDescription>Cerezas cosechadas desde la mañana</CardDescription>
         </div>
       </CardHeader>
 
@@ -72,7 +72,7 @@ export async function TopPickersCard() {
         {idle.length > 0 && (
           <div className="mt-5 border-t border-line pt-4">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-fg">
-              Off today
+              Sin actividad hoy
             </p>
             <ul className="mt-3 space-y-2">
               {idle.map((picker) => (

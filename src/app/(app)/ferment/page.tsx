@@ -25,8 +25,8 @@ export default async function FermentPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Ferment"
-        subtitle="Wet-mill fermentation — live curves, cut-point alerts, eco-mill water"
+        title="Fermentación"
+        subtitle="Fermentación en beneficio húmedo — curvas en vivo, alertas de punto de corte, agua del eco-beneficio"
       />
 
       <FermentBoard batches={batches} lots={lots} recipes={recipes} />

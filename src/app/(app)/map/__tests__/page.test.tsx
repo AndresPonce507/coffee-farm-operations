@@ -39,7 +39,7 @@ describe("/map page", () => {
 
     // Title chrome.
     expect(
-      screen.getByRole("heading", { name: /farm map/i }),
+      screen.getByRole("heading", { name: /mapa de la finca/i }),
     ).toBeInTheDocument();
 
     // Status legend entries (exact labels, so the title's "quetzal reserve"

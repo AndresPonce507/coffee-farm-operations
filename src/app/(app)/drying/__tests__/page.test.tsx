@@ -50,7 +50,7 @@ describe("/drying page (smoke)", () => {
     render(ui);
 
     expect(
-      screen.getByRole("heading", { level: 1, name: /Drying & reposo/i }),
+      screen.getByRole("heading", { level: 1, name: /Secado y reposo/i }),
     ).toBeInTheDocument();
     expect(screen.getByText("Resting lots · the reposo gate")).toBeInTheDocument();
     expect(screen.getByText("Drying stations")).toBeInTheDocument();

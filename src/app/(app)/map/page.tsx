@@ -37,10 +37,10 @@ export default async function MapPage() {
             Janson Coffee · Volcán
           </p>
           <h1 className="mt-0.5 font-display text-lg font-bold text-ink">
-            Farm Map
+            Mapa de la finca
           </h1>
           <p className="mt-1 text-xs text-muted-fg">
-            Growing lots tinted by health, with the protected quetzal reserve.
+            Lotes de cultivo coloreados según su salud, con la reserva protegida del quetzal.
           </p>
         </div>
       </div>

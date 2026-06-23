@@ -73,8 +73,8 @@ export default async function CrewPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Crew"
-        subtitle="The people system of record — named, returning partners"
+        title="Cuadrillas"
+        subtitle="El sistema de registro de las personas — compañeros con nombre que regresan"
       />
 
       <CrewSummary

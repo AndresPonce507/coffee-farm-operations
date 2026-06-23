@@ -17,9 +17,9 @@ const ATTENDANCE_TONE: Record<AttendanceStatus, BadgeTone> = {
 };
 
 const ATTENDANCE_LABEL: Record<AttendanceStatus, string> = {
-  present: "Present",
-  "rest-day": "Rest day",
-  absent: "Absent",
+  present: "Presente",
+  "rest-day": "Día de descanso",
+  absent: "Ausente",
 };
 
 /**
@@ -46,9 +46,9 @@ export async function WorkerRosterTable() {
     <Card className="animate-rise overflow-hidden">
       <CardHeader>
         <div>
-          <CardTitle>Roster</CardTitle>
+          <CardTitle>Nómina</CardTitle>
           <CardDescription>
-            {workers.length} crew members across the farm
+            {workers.length} integrantes de cuadrilla en la finca
           </CardDescription>
         </div>
       </CardHeader>
@@ -57,14 +57,14 @@ export async function WorkerRosterTable() {
         <Table className="border-0">
           <THead>
             <TR className="hover:bg-transparent">
-              <TH className="pl-5">Worker</TH>
-              <TH>Role</TH>
-              <TH>Crew</TH>
-              <TH className="text-right">Since</TH>
-              <TH className="text-right">Day rate</TH>
-              <TH className="text-right">Today</TH>
-              <TH className="text-right">Attendance</TH>
-              <TH className="pr-5 text-right">Actions</TH>
+              <TH className="pl-5">Trabajador/a</TH>
+              <TH>Rol</TH>
+              <TH>Cuadrilla</TH>
+              <TH className="text-right">Desde</TH>
+              <TH className="text-right">Tarifa diaria</TH>
+              <TH className="text-right">Hoy</TH>
+              <TH className="text-right">Asistencia</TH>
+              <TH className="pr-5 text-right">Acciones</TH>
             </TR>
           </THead>
           <TBody>
@@ -72,7 +72,7 @@ export async function WorkerRosterTable() {
               <TR className="hover:bg-transparent">
                 <TD colSpan={8} className="px-5 py-10 text-center">
                   <span className="inline-block rounded-xl border border-dashed border-line bg-white/40 px-4 py-3 text-sm text-muted-fg">
-                    No workers yet.
+                    Aún no hay trabajadores.
                   </span>
                 </TD>
               </TR>
@@ -114,7 +114,7 @@ export async function WorkerRosterTable() {
                   {worker.todayKg > 0 ? (
                     <span className="font-medium text-ink">{worker.todayKg} kg</span>
                   ) : (
-                    <span className="text-muted-fg" aria-label="No cherries picked today">
+                    <span className="text-muted-fg" aria-label="No se recogieron cerezas hoy">
                       —
                     </span>
                   )}

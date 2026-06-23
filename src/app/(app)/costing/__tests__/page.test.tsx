@@ -35,7 +35,7 @@ describe("/costing page (smoke)", () => {
     render(await CostingPage());
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "Costing" }),
+      screen.getByRole("heading", { level: 1, name: "Costos" }),
     ).toBeInTheDocument();
 
     expect(screen.getByTestId("book-cost-button-stub")).toBeInTheDocument();

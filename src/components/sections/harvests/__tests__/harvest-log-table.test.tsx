@@ -37,7 +37,7 @@ describe("HarvestLogTable (smoke)", () => {
     const ui = await HarvestLogTable({ plots: [], pickers: [], lots: [] });
     render(ui);
 
-    expect(screen.getByText("Harvest log")).toBeInTheDocument();
+    expect(screen.getByText("Registro de cosecha")).toBeInTheDocument();
     // Lot codes and plot names from the two rows surface in the table body.
     expect(screen.getByText("JC-564")).toBeInTheDocument();
     expect(screen.getByText("Tizingal Alto")).toBeInTheDocument();

@@ -100,8 +100,8 @@ export default async function PayrollPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Payroll"
-        subtitle="Blended piece-rate + hourly pay, with the legal-minimum make-whole guaranteed at the data layer"
+        title="Nómina"
+        subtitle="Pago mixto por obra + por hora, con el ajuste al mínimo legal garantizado en la capa de datos"
       />
 
       <PayrollSummary periods={periods} />

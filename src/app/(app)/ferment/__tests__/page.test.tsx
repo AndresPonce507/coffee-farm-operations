@@ -23,7 +23,7 @@ describe("/ferment page (smoke)", () => {
     const ui = await FermentPage();
     render(ui);
     expect(
-      screen.getByRole("heading", { level: 1, name: "Ferment" }),
+      screen.getByRole("heading", { level: 1, name: "Fermentación" }),
     ).toBeInTheDocument();
     expect(screen.getByTestId("ferment-board-stub")).toBeInTheDocument();
   });

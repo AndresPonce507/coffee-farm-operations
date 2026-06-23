@@ -18,8 +18,8 @@ export default function ScoutingPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Scouting"
-        subtitle="IPM economic-threshold scouting + a cert-gated, PHI/REI-safe spray log"
+        title="Monitoreo"
+        subtitle="Monitoreo MIP por umbral económico + un registro de aplicaciones certificado y seguro según PHI/REI"
       />
       <IpmBoard />
     </div>

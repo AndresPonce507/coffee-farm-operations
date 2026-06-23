@@ -33,12 +33,12 @@ describe("TopPickersCard (smoke)", () => {
     const ui = await TopPickersCard();
     render(ui);
 
-    expect(screen.getByText("Top pickers today")).toBeInTheDocument();
+    expect(screen.getByText("Mejores cosecheros hoy")).toBeInTheDocument();
     // Active picker name + their today total render in the leaderboard.
     expect(screen.getByText("Marisol Quintero")).toBeInTheDocument();
     expect(screen.getByText("145 kg")).toBeInTheDocument();
-    // The rest-day picker shows under the "Off today" group.
-    expect(screen.getByText("Off today")).toBeInTheDocument();
+    // The rest-day picker shows under the "Sin actividad hoy" group.
+    expect(screen.getByText("Sin actividad hoy")).toBeInTheDocument();
     expect(screen.getByText("Ana Beltrán")).toBeInTheDocument();
   });
 

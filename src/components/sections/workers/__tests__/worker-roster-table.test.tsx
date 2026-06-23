@@ -58,8 +58,8 @@ describe("WorkerRosterTable (smoke)", () => {
     render(ui);
 
     // Stable card title + headcount description.
-    expect(screen.getByText("Roster")).toBeInTheDocument();
-    expect(screen.getByText("3 crew members across the farm")).toBeInTheDocument();
+    expect(screen.getByText("Nómina")).toBeInTheDocument();
+    expect(screen.getByText("3 integrantes de cuadrilla en la finca")).toBeInTheDocument();
 
     // A worker row renders: name, role, and formatted day rate.
     expect(screen.getByText("Eduardo Pérez")).toBeInTheDocument();
@@ -116,9 +116,9 @@ describe("WorkerRosterTable (smoke)", () => {
     render(ui);
 
     // The card still frames the section, but no worker rows render …
-    expect(screen.getByText("Roster")).toBeInTheDocument();
+    expect(screen.getByText("Nómina")).toBeInTheDocument();
     expect(screen.queryByText("Eduardo Pérez")).not.toBeInTheDocument();
     // … a tasteful empty-state stands in instead.
-    expect(screen.getByText(/no workers yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/aún no hay trabajadores/i)).toBeInTheDocument();
   });
 });

@@ -45,8 +45,8 @@ export default async function WeighPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Weigh"
-        subtitle="The genesis field event — badge, weigh, ripeness · works offline"
+        title="Pesaje"
+        subtitle="El evento de campo de origen — registrar, pesar, madurez · funciona sin conexión"
       />
       <WeighCapture pickers={pickers} plots={plots} farmKgToday={farmKgToday} />
     </div>

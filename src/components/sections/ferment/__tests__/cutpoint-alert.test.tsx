@@ -25,7 +25,7 @@ const base: FermentCutpoint = {
 describe("CutpointAlert (smoke)", () => {
   it("shows a calm tracking state while pH is above the recipe target", () => {
     render(<CutpointAlert cutpoint={base} />);
-    expect(screen.getByText(/tracking|resting|approaching/i)).toBeInTheDocument();
+    expect(screen.getByText(/rastreando/i)).toBeInTheDocument();
     // no role=alert while not at cut
     expect(screen.queryByRole("alert")).toBeNull();
   });
@@ -34,7 +34,7 @@ describe("CutpointAlert (smoke)", () => {
     render(<CutpointAlert cutpoint={{ ...base, latestPh: 4.1, cutReached: true }} />);
     const alert = screen.getByRole("alert");
     expect(alert).toBeInTheDocument();
-    expect(alert.textContent ?? "").toMatch(/cut/i);
+    expect(alert.textContent ?? "").toMatch(/corta ahora/i);
   });
 
   it("renders the CUT NOW text at WCAG-AA dark-cherry contrast, not the low-contrast cherry accent", () => {
@@ -48,7 +48,7 @@ describe("CutpointAlert (smoke)", () => {
 
     // The supporting time line must not be the 3.12:1 `text-cherry/80`; it must use
     // the AA dark-cherry token instead.
-    const subtext = screen.getByText(/ferment window is closing/i);
+    const subtext = screen.getByText(/ventana de fermentación se está cerrando/i);
     expect(subtext.className).not.toMatch(/text-cherry\/80/);
     expect(subtext.className).toMatch(/text-\[#7a121e\]/);
   });
@@ -59,7 +59,7 @@ describe("CutpointAlert (smoke)", () => {
         cutpoint={{ ...base, recipeId: null, targetPh: null, cutReached: false }}
       />,
     );
-    expect(screen.getByText(/no recipe|apply a recipe/i)).toBeInTheDocument();
+    expect(screen.getByText(/sin receta|aplica una receta/i)).toBeInTheDocument();
   });
 
   it("renders nothing useful but does not throw when there are no readings", () => {
@@ -68,6 +68,6 @@ describe("CutpointAlert (smoke)", () => {
         cutpoint={{ ...base, latestPh: null, latestAt: null, hoursElapsed: null, cutReached: false }}
       />,
     );
-    expect(screen.getByText(/no readings|waiting/i)).toBeInTheDocument();
+    expect(screen.getByText(/sin lecturas|registra una lectura/i)).toBeInTheDocument();
   });
 });

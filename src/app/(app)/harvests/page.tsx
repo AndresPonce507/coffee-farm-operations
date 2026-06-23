@@ -30,8 +30,8 @@ export default async function HarvestsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Harvests"
-        subtitle="Daily cherry intake and picker performance"
+        title="Cosechas"
+        subtitle="Ingreso diario de cerezas y rendimiento de cosecheros"
       >
         {/* The genesis WRITE — mints a traceable JC-NNN lot the whole spine
             reads (COGS / EUDR / inventory) — sits as the primary action,

@@ -38,8 +38,8 @@ export default async function ProcessingPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Processing"
-        subtitle="Wet mill, drying beds and green coffee"
+        title="Beneficio"
+        subtitle="Beneficio húmedo, camas de secado y café verde"
       >
         <Link
           href="/drying"
