@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { WorkerSummary } from "@/components/sections/workers/worker-summary";
 import { AttendanceCard } from "@/components/sections/workers/attendance-card";
@@ -15,6 +17,7 @@ import { getCrews } from "@/lib/db/people";
  * via getCrews() (no hardcoded CREWS mock) and passed into the client button.
  */
 export default async function WorkersPage() {
+  const t = await getTranslations("workers");
   const crews = await getCrews();
   const crewNames = crews
     .map((c) => c.crewName)
@@ -23,8 +26,8 @@ export default async function WorkersPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Trabajadores"
-        subtitle="Cuadrillas, asistencia y nómina diaria"
+        title={t("page.title")}
+        subtitle={t("page.subtitle")}
       >
         <AddWorkerButton crews={crewNames} />
       </PageHeader>

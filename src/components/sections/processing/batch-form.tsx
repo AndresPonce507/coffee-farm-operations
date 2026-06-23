@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 import type { ProcessingBatch } from "@/lib/types";
 import {
@@ -14,15 +15,6 @@ import { Button } from "@/components/ui/button";
 const FIELD =
   "h-10 w-full rounded-xl border border-line bg-white/70 px-3 text-sm text-ink outline-none transition focus:border-forest-300 focus:ring-2 focus:ring-forest-100";
 const LABEL = "text-xs font-medium text-muted-fg";
-
-const STAGE_LABEL: Record<(typeof BATCH_STAGES)[number], string> = {
-  cherry: "Cherry",
-  fermentation: "Fermentation",
-  drying: "Drying",
-  parchment: "Parchment",
-  milled: "Milled",
-  green: "Green",
-};
 
 type BatchAction = (prev: ActionState, fd: FormData) => Promise<ActionState>;
 
@@ -39,6 +31,7 @@ export function BatchForm({
   submitLabel: string;
   onDone: () => void;
 }) {
+  const t = useTranslations("processing");
   const [state, formAction, pending] = useActionState(action, IDLE);
 
   useEffect(() => {
@@ -55,7 +48,7 @@ export function BatchForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="lotCode">
-            Lot
+            {t("form.lot")}
           </label>
           <select
             id="lotCode"
@@ -64,7 +57,7 @@ export function BatchForm({
             className={FIELD}
           >
             <option value="" disabled>
-              Choose…
+              {t("form.choose")}
             </option>
             {lots.map((code) => (
               <option key={code} value={code}>
@@ -79,7 +72,7 @@ export function BatchForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="variety">
-            Variety
+            {t("form.variety")}
           </label>
           <select
             id="variety"
@@ -88,7 +81,7 @@ export function BatchForm({
             className={FIELD}
           >
             <option value="" disabled>
-              Choose…
+              {t("form.choose")}
             </option>
             {COFFEE_VARIETIES.map((v) => (
               <option key={v} value={v}>
@@ -102,7 +95,7 @@ export function BatchForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="method">
-            Method
+            {t("form.method")}
           </label>
           <select
             id="method"
@@ -111,7 +104,7 @@ export function BatchForm({
             className={FIELD}
           >
             <option value="" disabled>
-              Choose…
+              {t("form.choose")}
             </option>
             {PROCESS_METHODS.map((m) => (
               <option key={m} value={m}>
@@ -123,7 +116,7 @@ export function BatchForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="stage">
-            Stage
+            {t("form.stage")}
           </label>
           <select
             id="stage"
@@ -133,7 +126,7 @@ export function BatchForm({
           >
             {BATCH_STAGES.map((s) => (
               <option key={s} value={s}>
-                {STAGE_LABEL[s]}
+                {t(`stages.${s}`)}
               </option>
             ))}
           </select>
@@ -143,7 +136,7 @@ export function BatchForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="startedDate">
-            Started
+            {t("form.started")}
           </label>
           <input
             id="startedDate"
@@ -159,13 +152,13 @@ export function BatchForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="patio">
-            Patio / bed
+            {t("form.patioBed")}
           </label>
           <input
             id="patio"
             name="patio"
             defaultValue={batch?.patio}
-            placeholder="e.g. Bed 7"
+            placeholder={t("form.patioPlaceholder")}
             className={FIELD}
           />
           {fieldError("patio") && (
@@ -177,7 +170,7 @@ export function BatchForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="cherriesKg">
-            Cherry intake (kg)
+            {t("form.cherryIntake")}
           </label>
           <input
             id="cherriesKg"
@@ -195,7 +188,7 @@ export function BatchForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="currentKg">
-            Current weight (kg)
+            {t("form.currentWeight")}
           </label>
           <input
             id="currentKg"
@@ -215,7 +208,7 @@ export function BatchForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="moisturePct">
-            Moisture (%)
+            {t("form.moisture")}
           </label>
           <input
             id="moisturePct"
@@ -234,7 +227,7 @@ export function BatchForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="progressPct">
-            Progress (%)
+            {t("form.progress")}
           </label>
           <input
             id="progressPct"
@@ -260,10 +253,10 @@ export function BatchForm({
 
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="ghost" onClick={onDone}>
-          Cancel
+          {t("form.cancel")}
         </Button>
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : submitLabel}
+          {pending ? t("form.saving") : submitLabel}
         </Button>
       </div>
     </form>

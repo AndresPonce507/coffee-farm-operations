@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { DossierShell } from "@/components/dossier/dossier-shell";
 import { DossierSection } from "@/components/dossier/dossier-section";
@@ -32,6 +33,7 @@ export default async function CuppingPage({
 }) {
   const { lot } = await params;
   const lotCode = decodeURIComponent(lot);
+  const t = await getTranslations("qc");
 
   const [genealogy, qcStatus, workers, defects] = await Promise.all([
     getLotGenealogy(lotCode).catch(() => ({ nodes: [], edges: [] })),
@@ -54,17 +56,17 @@ export default async function CuppingPage({
   return (
     <DossierShell
       kind="lot"
-      title={`Catación ${lotCode}`}
-      eyebrow="Catación"
-      subtitle="Califica la taza — y ve exactamente qué la produjo"
+      title={t("cupPage.title", { lot: lotCode })}
+      eyebrow={t("cupPage.eyebrow")}
+      subtitle={t("cupPage.subtitle")}
       backHref="/qc"
-      backLabel="Todo el control de calidad"
+      backLabel={t("cupPage.backLabel")}
     >
       {status?.held && (
         <QcHoldBanner lotCode={lotCode} reason={status.holdReason} />
       )}
 
-      <DossierSection id="cupping" title="Taza y causa">
+      <DossierSection id="cupping" title={t("cupPage.sectionTitle")}>
         <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
           <div className="space-y-6">
             <CuppingScoresheet lotCode={lotCode} cuppers={cuppers} />

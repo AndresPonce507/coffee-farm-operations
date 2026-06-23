@@ -1,4 +1,5 @@
 import { MapPin } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,26 +25,27 @@ export interface WorkerProductivitySectionProps {
   events: WorkerWeigh[];
 }
 
-const RIPENESS_LABEL: Record<string, string> = {
-  ripe: "Maduro",
-  underripe: "Verde",
-  overripe: "Sobremaduro",
+const RIPENESS_LABEL_KEY: Record<string, string> = {
+  ripe: "productivity.ripenessRipe",
+  underripe: "productivity.ripenessUnderripe",
+  overripe: "productivity.ripenessOverripe",
 };
 
 export function WorkerProductivitySection({
   summary,
   events,
 }: WorkerProductivitySectionProps) {
+  const t = useTranslations("workers");
   const kgToday = summary?.kgToday ?? 0;
   const latasToday = summary?.lataCount ?? 0;
 
   return (
     <DossierSection
       id="weighs"
-      title="Pesajes y productividad"
+      title={t("productivity.sectionTitle")}
       count={events.length}
       empty={events.length === 0 && !summary}
-      emptyLabel="Sin pesajes registrados todavía"
+      emptyLabel={t("productivity.emptyLabel")}
     >
       <Card data-testid="worker-productivity-card" className="animate-rise">
         <CardContent className="space-y-5">
@@ -54,13 +56,13 @@ export function WorkerProductivitySection({
             className="flex items-center justify-between gap-4 rounded-xl bg-forest-50 px-4 py-3 ring-1 ring-forest-100 transition-colors hover:bg-forest-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
           >
             <div>
-              <p className="text-xs text-muted-fg">Hoy</p>
+              <p className="text-xs text-muted-fg">{t("productivity.today")}</p>
               <p className="font-display text-xl font-semibold tabular-nums text-ink">
                 {kgToday.toFixed(1)} kg
               </p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-muted-fg">Latas</p>
+              <p className="text-xs text-muted-fg">{t("productivity.latas")}</p>
               <p className="font-display text-xl font-semibold tabular-nums text-ink">
                 {latasToday}
               </p>
@@ -80,7 +82,9 @@ export function WorkerProductivitySection({
                       {e.kg.toFixed(1)} kg
                     </span>
                     <Badge tone="neutral">
-                      {RIPENESS_LABEL[e.ripeness] ?? e.ripeness}
+                      {RIPENESS_LABEL_KEY[e.ripeness]
+                        ? t(RIPENESS_LABEL_KEY[e.ripeness])
+                        : e.ripeness}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2 text-xs">

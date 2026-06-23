@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { DossierSection } from "@/components/dossier/dossier-section";
 import { Card, CardContent } from "@/components/ui/card";
 import { EntityLink } from "@/components/ui/entity-link";
@@ -22,13 +24,14 @@ export function PlotHarvestsSection({
   harvests: Harvest[];
   pickerIds: Record<string, string>;
 }) {
+  const t = useTranslations("plots");
   return (
     <DossierSection
       id="harvests"
-      title="Cosechas de esta parcela"
+      title={t("harvests.title")}
       count={harvests.length}
       empty={harvests.length === 0}
-      emptyLabel="Sin cosechas registradas todavía"
+      emptyLabel={t("harvests.empty")}
     >
       <Card>
         <CardContent className="px-0 py-1">

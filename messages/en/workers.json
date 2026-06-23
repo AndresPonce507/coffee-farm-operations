@@ -1,1 +1,120 @@
-{}
+{
+  "page": {
+    "title": "Trabajadores",
+    "subtitle": "Cuadrillas, asistencia y nómina diaria"
+  },
+  "summary": {
+    "headcount": "Headcount",
+    "headcountSub": "On the payroll",
+    "presentToday": "Present today",
+    "presentSub": "{n} off",
+    "dailyPayroll": "Daily payroll",
+    "dailyPayrollSub": "Present workers",
+    "crews": "Crews",
+    "crewsSub": "Active teams"
+  },
+  "attendance": {
+    "title": "Attendance",
+    "present": "Present",
+    "restDay": "Rest day",
+    "absent": "Absent",
+    "centerSub": "present"
+  },
+  "crewBoard": {
+    "title": "Crews",
+    "description": "Field teams and today’s presence on the farm",
+    "crewCount": "{n} crews",
+    "member": "member",
+    "members": "members",
+    "present": "{present}/{total} present",
+    "noneAssigned": "No one assigned",
+    "onGroundToday": "on the ground today",
+    "off": " · {n} off"
+  },
+  "roster": {
+    "title": "Nómina",
+    "description": "{n} integrantes de cuadrilla en la finca",
+    "colWorker": "Trabajador/a",
+    "colRole": "Rol",
+    "colCrew": "Cuadrilla",
+    "colSince": "Desde",
+    "colDailyRate": "Tarifa diaria",
+    "colToday": "Hoy",
+    "colAttendance": "Asistencia",
+    "colActions": "Acciones",
+    "empty": "Aún no hay trabajadores.",
+    "noCherriesToday": "No se recogieron cerezas hoy",
+    "attendancePresent": "Presente",
+    "attendanceRestDay": "Día de descanso",
+    "attendanceAbsent": "Ausente"
+  },
+  "actions": {
+    "newWorker": "New worker",
+    "addWorker": "Add worker",
+    "editWorker": "Edit worker",
+    "saveChanges": "Save changes",
+    "edit": "Edit {name}",
+    "delete": "Delete {name}",
+    "confirmDelete": "Delete \"{name}\"?",
+    "deleteFailed": "No se pudo eliminar el trabajador."
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "e.g. Rosa Quintero",
+    "role": "Role",
+    "crew": "Crew",
+    "choose": "Choose…",
+    "dayRate": "Day rate (USD)",
+    "startedYear": "Started year",
+    "attendance": "Attendance",
+    "phone": "Phone",
+    "cancel": "Cancel",
+    "saving": "Saving…"
+  },
+  "identity": {
+    "sectionTitle": "Identidad y certificaciones",
+    "crewLabel": "Cuadrilla",
+    "rehireable": "Recontratable",
+    "factRole": "Rol",
+    "factComarca": "Comarca de origen",
+    "factLanguages": "Idiomas",
+    "factSince": "Desde",
+    "factDayRate": "Jornal",
+    "currentCerts": "Certificaciones vigentes",
+    "noCerts": "Sin certificaciones vigentes",
+    "certNoExpiry": "Sin vencimiento",
+    "certExpiresIn": "Vence en {n} d",
+    "certValid": "Vigente"
+  },
+  "attendanceSection": {
+    "sectionTitle": "Asistencia",
+    "emptyLabel": "Sin eventos de asistencia todavía",
+    "chainVerified": "Cadena verificada ✓",
+    "chainNotVerified": "Cadena no verificada",
+    "kindClockIn": "Entrada",
+    "kindClockOut": "Salida",
+    "kindRestDay": "Día de descanso",
+    "kindAbsent": "Ausente"
+  },
+  "productivity": {
+    "sectionTitle": "Pesajes y productividad",
+    "emptyLabel": "Sin pesajes registrados todavía",
+    "today": "Hoy",
+    "latas": "Latas",
+    "ripenessRipe": "Maduro",
+    "ripenessUnderripe": "Verde",
+    "ripenessOverripe": "Sobremaduro"
+  },
+  "contracts": {
+    "sectionTitle": "Contratos por obra",
+    "emptyLabel": "Sin contratos por obra todavía",
+    "active": "Vigente",
+    "superseded": "Reemplazado"
+  },
+  "pay": {
+    "sectionTitle": "Historial de pagos",
+    "emptyLabel": "Sin pagos calculados todavía",
+    "madeWhole": "Ajuste a salario mínimo",
+    "gross": "Bruto ${amount}"
+  }
+}

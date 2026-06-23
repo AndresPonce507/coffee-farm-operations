@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { ArrowRight, CheckCircle2, Sprout } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { CoffeeVariety, Plot, Worker } from "@/lib/types";
 import {
@@ -52,6 +53,7 @@ export function CherryIntakeForm({
   /** Called after a successful mint so the host (dialog) can offer to close. */
   onDone?: () => void;
 }) {
+  const t = useTranslations("harvests");
   const [state, formAction, pending] = useActionState<
     IntakeActionState,
     FormData
@@ -80,12 +82,12 @@ export function CherryIntakeForm({
         </span>
         <div className="space-y-1">
           <p className="font-display text-base font-semibold text-ink">
-            Cherry lot minted
+            {t("cherryIntakeForm.minted")}
           </p>
           <p className="text-sm text-muted-fg">
-            This intake is now a traceable lot —{" "}
-            <span className="font-medium text-ink">{state.lotCode}</span> —
-            threading every metric from cherry to bag.
+            {t("cherryIntakeForm.mintedBefore")}{" "}
+            <span className="font-medium text-ink">{state.lotCode}</span>{" "}
+            {t("cherryIntakeForm.mintedAfter")}
           </p>
         </div>
 
@@ -95,13 +97,13 @@ export function CherryIntakeForm({
           name={state.lotCode}
           className="group inline-flex items-center gap-2 border border-white/60 bg-white/60 px-4 py-2 text-sm font-medium text-ink shadow-[inset_0_1px_0_0_rgba(255,255,255,0.6)] transition hover:-translate-y-px hover:bg-white/75 hover:shadow-[0_8px_20px_-8px_rgba(0,41,29,0.18)]"
         >
-          View lot {state.lotCode}
+          {t("cherryIntakeForm.viewLot", { code: state.lotCode })}
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
         </EntityLink>
 
         {onDone && (
           <Button type="button" variant="ghost" size="sm" onClick={onDone}>
-            Done
+            {t("cherryIntakeForm.done")}
           </Button>
         )}
       </div>
@@ -118,16 +120,16 @@ export function CherryIntakeForm({
       <p className="flex items-start gap-2 rounded-xl bg-forest-50/70 px-3 py-2 text-xs text-forest-700 ring-1 ring-forest-100">
         <Sprout className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
         <span>
-          Records this lata as a system-numbered, audit-ready{" "}
-          <span className="font-semibold">JC</span> lot — the genesis of its
-          traceability.
+          {t("cherryIntakeForm.intakeNoteBefore")}{" "}
+          <span className="font-semibold">JC</span>{" "}
+          {t("cherryIntakeForm.intakeNoteAfter")}
         </span>
       </p>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="intake-plotId">
-            Plot
+            {t("cherryIntakeForm.plot")}
           </label>
           <select
             id="intake-plotId"
@@ -139,7 +141,7 @@ export function CherryIntakeForm({
             aria-invalid={fieldError("plotId") ? true : undefined}
           >
             <option value="" disabled>
-              Choose…
+              {t("cherryIntakeForm.choose")}
             </option>
             {plots.map((p) => (
               <option key={p.id} value={p.id}>
@@ -154,7 +156,7 @@ export function CherryIntakeForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="intake-workerId">
-            Picker
+            {t("cherryIntakeForm.picker")}
           </label>
           <select
             id="intake-workerId"
@@ -166,7 +168,7 @@ export function CherryIntakeForm({
             aria-invalid={fieldError("workerId") ? true : undefined}
           >
             <option value="" disabled>
-              Choose…
+              {t("cherryIntakeForm.choose")}
             </option>
             {pickers.map((w) => (
               <option key={w.id} value={w.id}>
@@ -183,7 +185,7 @@ export function CherryIntakeForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="intake-cherriesKg">
-            Cherries (kg)
+            {t("cherryIntakeForm.cherries")}
           </label>
           <input
             id="intake-cherriesKg"
@@ -192,7 +194,7 @@ export function CherryIntakeForm({
             min="0"
             step="0.1"
             inputMode="decimal"
-            placeholder="e.g. 88"
+            placeholder={t("cherryIntakeForm.cherriesPlaceholder")}
             required
             disabled={pending}
             className={FIELD}
@@ -205,7 +207,7 @@ export function CherryIntakeForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="intake-variety">
-            Variety
+            {t("cherryIntakeForm.variety")}
           </label>
           <select
             id="intake-variety"
@@ -217,7 +219,7 @@ export function CherryIntakeForm({
             aria-invalid={fieldError("variety") ? true : undefined}
           >
             <option value="" disabled>
-              Choose…
+              {t("cherryIntakeForm.choose")}
             </option>
             {VARIETIES.map((v) => (
               <option key={v} value={v}>
@@ -240,11 +242,11 @@ export function CherryIntakeForm({
       <div className="flex justify-end gap-2 pt-1">
         {onDone && (
           <Button type="button" variant="ghost" onClick={onDone}>
-            Cancel
+            {t("cherryIntakeForm.cancel")}
           </Button>
         )}
         <Button type="submit" disabled={pending}>
-          {pending ? "Minting lot…" : "Record intake"}
+          {pending ? t("cherryIntakeForm.mintingLot") : t("cherryIntakeForm.recordIntake")}
         </Button>
       </div>
     </form>

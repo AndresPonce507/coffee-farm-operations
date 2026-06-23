@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Coffee, Wind } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { EntityLink } from "@/components/ui/entity-link";
 import { PageHeader } from "@/components/ui/page-header";
@@ -33,20 +34,21 @@ import { AddBatchButton } from "@/components/sections/processing/batch-actions";
  * board: just the missing deep-link affordance.
  */
 export default async function ProcessingPage() {
+  const t = await getTranslations("processing");
   const [lots, dryingLots] = await Promise.all([getLots(), getDryingLots()]);
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Beneficio"
-        subtitle="Beneficio húmedo, camas de secado y café verde"
+        title={t("page.title")}
+        subtitle={t("page.subtitle")}
       >
         <Link
           href="/drying"
           className="inline-flex items-center gap-1.5 rounded-full border border-white/60 bg-white/55 px-3.5 py-2 text-sm font-medium text-forest-600 transition-colors hover:border-white/80 hover:bg-white/75 hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-300"
         >
           <Wind aria-hidden className="h-4 w-4" />
-          Drying &amp; reposo
+          {t("page.dryingLink")}
         </Link>
         <AddBatchButton lots={lots} />
       </PageHeader>
@@ -57,14 +59,14 @@ export default async function ProcessingPage() {
 
       {dryingLots.length > 0 && (
         <section
-          aria-label="Resting lots — open a lot's drying detail"
+          aria-label={t("page.restingRegionLabel")}
           className="rounded-2xl border border-white/55 bg-white/45 px-4 py-3"
         >
           <div className="mb-2 flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-muted-fg">
             <Wind aria-hidden className="h-3.5 w-3.5" />
-            Resting lots
+            {t("page.restingLots")}
             <span className="font-normal normal-case tracking-normal text-muted-fg/80">
-              · open one to see its moisture curve and reposo gate
+              {t("page.restingHint")}
             </span>
           </div>
           <ul className="flex flex-wrap gap-2">
@@ -73,7 +75,10 @@ export default async function ProcessingPage() {
                 key={lot.lotCode}
                 data-testid="resting-lot-link"
                 data-ready={lot.reposo.ready ? "true" : "false"}
-                title={`Open lot ${lot.lotCode} — ${lot.reposo.reason}`}
+                title={t("page.openLotTitle", {
+                  code: lot.lotCode,
+                  reason: lot.reposo.reason,
+                })}
               >
                 <EntityLink
                   kind="lot"

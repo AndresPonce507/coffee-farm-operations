@@ -1,4 +1,5 @@
 import { Check, X, MapPin } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { DossierSection } from "@/components/dossier/dossier-section";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,13 +45,14 @@ export function PlotEudrSection({
 }: {
   status: PlotOriginStatus | null;
 }) {
+  const t = useTranslations("plots");
   if (!status) {
     return (
       <DossierSection
         id="eudr"
-        title="Origen EUDR"
+        title={t("eudr.title")}
         empty
-        emptyLabel="No alimenta ningún lote verde — sin debida diligencia todavía"
+        emptyLabel={t("eudr.empty")}
       >
         {null}
       </DossierSection>
@@ -58,24 +60,26 @@ export function PlotEudrSection({
   }
 
   return (
-    <DossierSection id="eudr" title="Origen EUDR">
+    <DossierSection id="eudr" title={t("eudr.title")}>
       <Card>
         <CardContent className="space-y-4 px-5 py-5">
           <div className="flex flex-wrap items-center gap-2">
             <FactChip ok={status.geolocated}>
-              {status.geolocated ? "Geolocalizado" : "Sin geolocalización"}
+              {status.geolocated
+                ? t("eudr.geolocated")
+                : t("eudr.notGeolocated")}
             </FactChip>
             <FactChip ok={status.deforestationFree}>
               {status.deforestationFree
-                ? "Libre de deforestación"
-                : "Sin declaración"}
+                ? t("eudr.deforestationFree")
+                : t("eudr.noDeclaration")}
             </FactChip>
           </div>
 
           <dl className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
             <div>
               <dt className="text-xs font-medium uppercase tracking-wide text-muted-fg">
-                Establecido
+                {t("eudr.established")}
               </dt>
               <dd className="mt-0.5 font-semibold text-ink">
                 {status.establishedYear}
@@ -83,7 +87,7 @@ export function PlotEudrSection({
             </div>
             <div>
               <dt className="text-xs font-medium uppercase tracking-wide text-muted-fg">
-                Centroide
+                {t("eudr.centroid")}
               </dt>
               <dd className="mt-0.5 inline-flex items-center gap-1 font-semibold text-ink">
                 <MapPin className="h-3.5 w-3.5 text-forest" aria-hidden />
@@ -92,7 +96,7 @@ export function PlotEudrSection({
             </div>
             <div>
               <dt className="text-xs font-medium uppercase tracking-wide text-muted-fg">
-                Corte EUDR
+                {t("eudr.cutoff")}
               </dt>
               <dd className="mt-0.5 font-semibold text-ink">{EUDR_CUTOFF}</dd>
             </div>
@@ -100,7 +104,7 @@ export function PlotEudrSection({
 
           <div>
             <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-fg">
-              Lotes verdes que alimenta
+              {t("eudr.feedsLots")}
             </p>
             <div className="flex flex-wrap gap-2">
               {status.feedsLots.map((code) => (

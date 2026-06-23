@@ -15,6 +15,7 @@ import {
   PenLine,
   Wallet,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { EntityLink } from "@/components/ui/entity-link";
@@ -73,12 +74,12 @@ function usd(n: number): string {
   });
 }
 
-/** A human label for each disbursement rail (es-PA first, no jargon). */
-const METHOD_LABEL: Record<(typeof DISBURSEMENT_METHODS)[number], string> = {
-  yappy: "Yappy",
-  nequi: "Nequi",
-  ach: "ACH (transferencia bancaria)",
-  "cash-signed": "Efectivo firmado · cash-signed",
+/** The i18n key for each disbursement rail's human label (es-PA first, no jargon). */
+const METHOD_LABEL_KEY: Record<(typeof DISBURSEMENT_METHODS)[number], string> = {
+  yappy: "methods.yappy",
+  nequi: "methods.nequi",
+  ach: "methods.ach",
+  "cash-signed": "methods.cashSigned",
 };
 
 /* ====================================================================== */
@@ -101,6 +102,7 @@ export function ComputePeriodForm({
   defaultSeason?: string;
   onDone?: () => void;
 }) {
+  const t = useTranslations("payroll");
   const [state, formAction, pending] = useActionState(
     asReducer(action),
     PAYROLL_IDLE,
@@ -121,7 +123,7 @@ export function ComputePeriodForm({
         <p className="text-sm text-muted-fg">{state.message}</p>
         {onDone && (
           <Button type="button" variant="ghost" size="sm" onClick={onDone}>
-            Done
+            {t("common.done")}
           </Button>
         )}
       </div>
@@ -132,12 +134,12 @@ export function ComputePeriodForm({
     <form action={formAction} className="space-y-4" data-testid="compute-period-form">
       <div className="space-y-1">
         <label className={LABEL} htmlFor="compute-period-id">
-          Identificador del período
+          {t("compute.periodIdLabel")}
         </label>
         <input
           id="compute-period-id"
           name="periodId"
-          placeholder="p. ej. pp-2026-06-w3"
+          placeholder={t("compute.periodIdPlaceholder")}
           required
           disabled={pending}
           className={FIELD}
@@ -151,7 +153,7 @@ export function ComputePeriodForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="compute-period-start">
-            Desde
+            {t("compute.from")}
           </label>
           <input
             id="compute-period-start"
@@ -168,7 +170,7 @@ export function ComputePeriodForm({
         </div>
         <div className="space-y-1">
           <label className={LABEL} htmlFor="compute-period-end">
-            Hasta
+            {t("compute.to")}
           </label>
           <input
             id="compute-period-end"
@@ -187,13 +189,14 @@ export function ComputePeriodForm({
 
       <div className="space-y-1">
         <label className={LABEL} htmlFor="compute-period-season">
-          Temporada <span className="text-muted-fg/60">(opcional)</span>
+          {t("compute.seasonLabel")}{" "}
+          <span className="text-muted-fg/60">{t("compute.optional")}</span>
         </label>
         <input
           id="compute-period-season"
           name="season"
           defaultValue={defaultSeason}
-          placeholder="2026-2027"
+          placeholder={t("compute.seasonPlaceholder")}
           disabled={pending}
           className={FIELD}
         />
@@ -208,12 +211,12 @@ export function ComputePeriodForm({
       <div className="flex justify-end gap-2 pt-1">
         {onDone && (
           <Button type="button" variant="ghost" onClick={onDone}>
-            Cancelar
+            {t("common.cancel")}
           </Button>
         )}
         <Button type="submit" disabled={pending}>
           <Wallet className="h-4 w-4" aria-hidden />
-          {pending ? "Calculando…" : "Calculate period"}
+          {pending ? t("compute.calculating") : t("compute.calculateButton")}
         </Button>
       </div>
     </form>
@@ -238,6 +241,7 @@ export function ApprovePayLineButton({
   workerName: string;
   action: PayrollFormAction;
 }) {
+  const t = useTranslations("payroll");
   const [state, formAction, pending] = useActionState(
     asReducer(action),
     PAYROLL_IDLE,
@@ -253,7 +257,7 @@ export function ApprovePayLineButton({
         size="sm"
         disabled={pending || approved}
         aria-live="polite"
-        aria-label={`Approve the pay line for ${workerName}`}
+        aria-label={t("approve.ariaLabel", { name: workerName })}
         className={cn(approved && "text-forest")}
       >
         {approved ? (
@@ -261,7 +265,11 @@ export function ApprovePayLineButton({
         ) : (
           <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
         )}
-        {pending ? "Approving…" : approved ? "Approved" : "Approve"}
+        {pending
+          ? t("approve.pending")
+          : approved
+            ? t("approve.approved")
+            : t("approve.approve")}
       </Button>
     </form>
   );
@@ -283,6 +291,7 @@ export function ApprovePayLineButton({
  * the pad still mounts + render-tests cleanly.
  */
 function SignaturePad({ onChange }: { onChange: (dataUrl: string | null) => void }) {
+  const t = useTranslations("payroll");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
   const dirty = useRef(false);
@@ -346,7 +355,7 @@ function SignaturePad({ onChange }: { onChange: (dataUrl: string | null) => void
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-1.5 text-xs font-medium text-muted-fg">
           <PenLine className="h-3.5 w-3.5" aria-hidden />
-          Firma del trabajador · signature
+          {t("signature.label")}
         </span>
         <button
           type="button"
@@ -354,7 +363,7 @@ function SignaturePad({ onChange }: { onChange: (dataUrl: string | null) => void
           className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-muted-fg transition hover:bg-white/60 hover:text-ink"
         >
           <Eraser className="h-3.5 w-3.5" aria-hidden />
-          Borrar
+          {t("signature.clear")}
         </button>
       </div>
       <canvas
@@ -362,7 +371,7 @@ function SignaturePad({ onChange }: { onChange: (dataUrl: string | null) => void
         data-testid="signature-pad"
         width={520}
         height={160}
-        aria-label="Firma del trabajador para el pago en efectivo"
+        aria-label={t("signature.canvasAriaLabel")}
         onPointerDown={start}
         onPointerMove={move}
         onPointerUp={end}
@@ -370,7 +379,7 @@ function SignaturePad({ onChange }: { onChange: (dataUrl: string | null) => void
         className="h-40 w-full touch-none rounded-xl border border-line bg-white/80"
       />
       <p className="text-[11px] text-muted-fg">
-        El trabajador firma aquí para confirmar que recibió el pago en efectivo.
+        {t("signature.helpText")}
       </p>
     </div>
   );
@@ -399,6 +408,7 @@ export function DisbursementForm({
   action: PayrollFormAction;
   onDone?: () => void;
 }) {
+  const t = useTranslations("payroll");
   const [state, formAction, pending] = useActionState(
     asReducer(action),
     PAYROLL_IDLE,
@@ -432,7 +442,7 @@ export function DisbursementForm({
         <p className="text-sm text-muted-fg">{state.message}</p>
         {onDone && (
           <Button type="button" variant="ghost" size="sm" onClick={onDone}>
-            Done
+            {t("common.done")}
           </Button>
         )}
       </div>
@@ -455,14 +465,14 @@ export function DisbursementForm({
       <div className="flex items-baseline justify-between gap-3 rounded-xl bg-forest-50/60 px-3 py-2">
         <span className="text-sm font-medium text-ink">{worker.workerName}</span>
         <span className="text-xs text-muted-fg">
-          neto <span className="font-semibold tabular-nums text-forest-700">{usd(worker.netUsd)}</span>
+          {t("disbursement.net")} <span className="font-semibold tabular-nums text-forest-700">{usd(worker.netUsd)}</span>
         </span>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="disb-method">
-            Método de pago
+            {t("disbursement.methodLabel")}
           </label>
           <select
             id="disb-method"
@@ -476,7 +486,7 @@ export function DisbursementForm({
           >
             {DISBURSEMENT_METHODS.map((m) => (
               <option key={m} value={m}>
-                {METHOD_LABEL[m]}
+                {t(METHOD_LABEL_KEY[m])}
               </option>
             ))}
           </select>
@@ -484,7 +494,7 @@ export function DisbursementForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="disb-amount">
-            Monto (USD)
+            {t("disbursement.amountLabel")}
           </label>
           <input
             id="disb-amount"
@@ -507,13 +517,13 @@ export function DisbursementForm({
 
       <div className="space-y-1">
         <label className={LABEL} htmlFor="disb-ref">
-          Referencia / recibo{" "}
-          <span className="text-muted-fg/60">(opcional)</span>
+          {t("disbursement.refLabel")}{" "}
+          <span className="text-muted-fg/60">{t("compute.optional")}</span>
         </label>
         <input
           id="disb-ref"
           name="ref"
-          placeholder="p. ej. yappy-tx-1024"
+          placeholder={t("disbursement.refPlaceholder")}
           disabled={pending}
           className={FIELD}
         />
@@ -529,7 +539,7 @@ export function DisbursementForm({
           )}
           {blockedForSignature && (
             <p className="mt-1 text-xs text-honey-700">
-              Capture la firma del trabajador para registrar el pago en efectivo.
+              {t("disbursement.captureSignature")}
             </p>
           )}
         </div>
@@ -544,20 +554,19 @@ export function DisbursementForm({
       <div className="flex items-center gap-2 rounded-xl border border-line bg-white/50 px-3 py-2 text-[11px] text-muted-fg">
         <HandCoins className="h-4 w-4 shrink-0 text-coffee" aria-hidden />
         <span>
-          Acción deliberada e irreversible — registra un pago ya realizado. No
-          mueve dinero por sí sola.
+          {t("disbursement.disclaimer")}
         </span>
       </div>
 
       <div className="flex justify-end gap-2 pt-1">
         {onDone && (
           <Button type="button" variant="ghost" onClick={onDone}>
-            Cancelar
+            {t("common.cancel")}
           </Button>
         )}
         <Button type="submit" disabled={pending || blockedForSignature}>
           <Banknote className="h-4 w-4" aria-hidden />
-          {pending ? "Registrando…" : "Record disbursement"}
+          {pending ? t("disbursement.recording") : t("disbursement.recordButton")}
         </Button>
       </div>
     </form>
@@ -582,15 +591,16 @@ export function DisbursementLedger({
   /** workerId → display name, resolved upstream from the pay rows. */
   workerNames: Record<string, string>;
 }) {
+  const t = useTranslations("payroll");
   if (disbursements.length === 0) return null;
 
   return (
     <Card data-testid="disbursement-ledger" className="animate-rise">
       <CardHeader>
         <div>
-          <CardTitle>Pagos registrados</CardTitle>
+          <CardTitle>{t("ledger.title")}</CardTitle>
           <CardDescription>
-            Libro de pagos del período — el más reciente primero
+            {t("ledger.description")}
           </CardDescription>
         </div>
       </CardHeader>
@@ -611,11 +621,15 @@ export function DisbursementLedger({
                     </EntityLink>
                   </p>
                   <p className="flex items-center gap-1.5 text-xs text-muted-fg">
-                    <span>{METHOD_LABEL[d.method as keyof typeof METHOD_LABEL] ?? d.method}</span>
+                    <span>
+                      {METHOD_LABEL_KEY[d.method as keyof typeof METHOD_LABEL_KEY]
+                        ? t(METHOD_LABEL_KEY[d.method as keyof typeof METHOD_LABEL_KEY])
+                        : d.method}
+                    </span>
                     {signed && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-honey-100 px-1.5 py-0.5 text-[10px] font-medium text-honey-700">
                         <PenLine className="h-3 w-3" aria-hidden />
-                        firmado
+                        {t("ledger.signed")}
                       </span>
                     )}
                     {d.ref ? (

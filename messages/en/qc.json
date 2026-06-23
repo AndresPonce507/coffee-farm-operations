@@ -1,1 +1,115 @@
-{}
+{
+  "page": {
+    "title": "Control de calidad",
+    "subtitle": "Puntajes de catación, clasificación de defectos y el QC-HOLD que impide vender un lote con fallas"
+  },
+  "cupPage": {
+    "title": "Catación {lot}",
+    "eyebrow": "Catación",
+    "subtitle": "Califica la taza — y ve exactamente qué la produjo",
+    "backLabel": "Todo el control de calidad",
+    "sectionTitle": "Taza y causa"
+  },
+  "statusTable": {
+    "title": "Quality control",
+    "description": "Cup scores, green-grading defects, and the QC-HOLD quarantine — a held lot is physically un-sellable until released",
+    "onHoldBadge": "{count} on hold",
+    "allClearBadge": "all clear",
+    "held": "On hold",
+    "clear": "Clear",
+    "emptyTitle": "No green lots to QC yet",
+    "emptyDescription": "Grade a finished lot in Inventory to mint a green lot you can cup, grade for defects, and hold.",
+    "colLot": "Lot",
+    "colState": "QC state",
+    "colLatestCup": "Latest cup",
+    "colPrimary": "Primary",
+    "colSecondary": "Secondary",
+    "colActions": "Actions",
+    "cupAria": "Cup {lot}",
+    "cup": "Cup"
+  },
+  "cupperDrift": {
+    "title": "Calibración de deriva de catadores",
+    "description": "El sesgo de cada catador/a frente a la media del panel en muestras de calibración compartidas — evidencia para corregir, nunca un puntaje rechazado",
+    "emptyTitle": "Aún no hay sesiones de calibración",
+    "emptyDescription": "Cata una muestra de calibración compartida con dos o más catadores para que el sesgo sistemático aparezca aquí.",
+    "panelLabel": "panel {mean} · n={n}",
+    "driftAria": "deriva {drift} en {attribute}"
+  },
+  "holdBanner": {
+    "onHold": "is on QC-HOLD — un-sellable",
+    "quarantined": "Quarantined pending QC review."
+  },
+  "holdControl": {
+    "holdAria": "Place QC-hold on {lot}",
+    "hold": "Hold",
+    "releaseAria": "Release QC-hold on {lot}",
+    "releasing": "Releasing…",
+    "released": "Released",
+    "release": "Release",
+    "dialogAria": "Place QC-hold on {lot}",
+    "close": "Close",
+    "title": "Place QC-hold",
+    "closeDrawer": "Close drawer",
+    "lockNote": "A held lot cannot be reserved or shipped until released — enforced in the database, not just here.",
+    "reasonLabel": "Reason",
+    "reasonPlaceholder": "e.g. off-flavor — re-cup before sale",
+    "cancel": "Cancel",
+    "holding": "Holding…",
+    "placeHold": "Place hold",
+    "holdPlaced": "QC-hold placed.",
+    "errorFallback": "Couldn't complete that — please try again.",
+    "errorDuplicate": "That hold was already recorded — refresh and try again.",
+    "errorForeignKey": "That green lot doesn't exist.",
+    "errorLocked": "This QC record is locked and can't be changed."
+  },
+  "defectForm": {
+    "title": "Green-grading defects",
+    "descriptionLog": "Log the defects found in",
+    "descriptionTail": " — primary are disqualifying, secondary are quality",
+    "bandPrimary": "Primary",
+    "bandSecondary": "Secondary",
+    "kindLabel": "Defect kind",
+    "kindPlaceholder": "e.g. full black, quaker, sour",
+    "countLabel": "Count",
+    "bandLabel": "Band",
+    "bandAria": "Defect band",
+    "errorFallback": "Could not record the defect.",
+    "recorded": "Defect recorded — bound to this lot forever.",
+    "adding": "Adding…",
+    "addDefect": "Add defect",
+    "noDefects": "No green-grading defects logged for this lot yet."
+  },
+  "scoresheet": {
+    "title": "Cupping scoresheet",
+    "descriptionLead": " · score each attribute 0–10 — the total mirrors the server's",
+    "protocolScaCva": "SCA CVA",
+    "protocolLegacy": "Legacy 100-pt",
+    "protocolAria": "Cupping protocol",
+    "errorFallback": "Could not record the cup.",
+    "cupperLabel": "Cupper",
+    "calibrationSample": "Calibration sample",
+    "scoreAria": "{attribute} score",
+    "liveTotal": "Live total",
+    "cupRecorded": "Cup recorded — bound to this lot forever.",
+    "sessionOpened": "Session opened — saving scores…",
+    "recording": "Recording…",
+    "recorded": "Recorded",
+    "recordCup": "Record cup"
+  },
+  "cupToCause": {
+    "title": "Cup-to-cause",
+    "descriptionLead": "What produced",
+    "descriptionTail": " — the lineage behind the score",
+    "emptyTitle": "No lineage data yet",
+    "emptyDescription": "This lot's farm-to-green genealogy isn't available yet — the score still binds to the lot, and the cause fills in as ferment and drying are logged.",
+    "variety": "Variety",
+    "plot": "Plot",
+    "masl": "{masl} masl",
+    "fermentCurve": "Ferment curve (pH)",
+    "dryingCurve": "Drying moisture curve",
+    "defectsLabel": "Green-grading defects",
+    "primary": "primary",
+    "secondary": "secondary"
+  }
+}

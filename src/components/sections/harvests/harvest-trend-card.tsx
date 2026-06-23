@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { BarMini } from "@/components/charts/bar-mini";
 import { getHarvests } from "@/lib/db/harvests";
@@ -39,6 +41,7 @@ function dailyTotals(harvests: { date: string; cherriesKg: number }[]): DailyTot
  * the last eight harvest days, with the farm's best day called out in the header.
  */
 export async function HarvestTrendCard() {
+  const t = await getTranslations("harvests");
   const harvests = await getHarvests();
   const days = dailyTotals(harvests);
   const best = days.reduce<DailyTotal | null>(
@@ -49,11 +52,11 @@ export async function HarvestTrendCard() {
   return (
     <Card className="animate-rise glass-hover glass-sheen">
       <CardHeader>
-        <CardTitle>Daily harvest (kg)</CardTitle>
+        <CardTitle>{t("trendCard.title")}</CardTitle>
         {best ? (
           <div className="text-right">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-fg">
-              Best day
+              {t("trendCard.bestDay")}
             </p>
             <p className="font-display text-sm font-semibold text-coffee">
               {best.label} · {kg(best.value)}
@@ -66,7 +69,7 @@ export async function HarvestTrendCard() {
           <BarMini data={days} color={BAR_COLOR} height={156} />
         ) : (
           <p className="py-10 text-center text-sm text-muted-fg">
-            No harvest recorded yet.
+            {t("trendCard.empty")}
           </p>
         )}
       </CardContent>

@@ -1,4 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { DossierSection } from "@/components/dossier/dossier-section";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,11 +21,12 @@ export function PlotYieldSection({
   yield: PlotYield;
   plotId: string;
 }) {
+  const t = useTranslations("plots");
   const clamped =
     yld.pct == null ? 0 : Math.max(0, Math.min(100, yld.pct));
 
   return (
-    <DossierSection id="yield" title="Rendimiento de temporada">
+    <DossierSection id="yield" title={t("yield.title")}>
       <Card>
         <CardContent className="space-y-4 px-5 py-5">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -41,7 +43,7 @@ export function PlotYieldSection({
               />
             </EntityLink>
             <span className="text-sm text-muted-fg">
-              de {num(yld.expectedYieldKg)} kg objetivo
+              {t("yield.ofTarget", { kg: num(yld.expectedYieldKg) })}
             </span>
             <span className="ml-auto font-display text-lg font-semibold text-forest">
               {yld.pct == null ? "—" : `${num(Math.round(yld.pct))} %`}
@@ -54,7 +56,7 @@ export function PlotYieldSection({
             aria-valuenow={Math.round(clamped)}
             aria-valuemin={0}
             aria-valuemax={100}
-            aria-label="Avance de cosecha"
+            aria-label={t("yield.progressAria")}
           >
             <div
               className="h-full rounded-full bg-forest transition-[width]"

@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import type { BatchStage } from "@/lib/types";
 import { getBatches } from "@/lib/db/processing";
 import { getLotStages } from "@/lib/db/processing-lots";
@@ -56,16 +58,8 @@ const STAGE_FILL: Record<BatchStage, ProgressTone> = {
   green: "forest",
 };
 
-const STAGE_LABEL: Record<BatchStage, string> = {
-  cherry: "Cherry",
-  fermentation: "Fermentation",
-  drying: "Drying",
-  parchment: "Parchment",
-  milled: "Milled",
-  green: "Green",
-};
-
 export async function BatchTable({ lots }: { lots: string[] }) {
+  const t = await getTranslations("processing");
   const [batches, lotStages, fermentBatches] = await Promise.all([
     getBatches(),
     getLotStages(),
@@ -87,29 +81,29 @@ export async function BatchTable({ lots }: { lots: string[] }) {
     <Card className="animate-rise overflow-hidden">
       <CardHeader>
         <div>
-          <CardTitle>All batches</CardTitle>
+          <CardTitle>{t("table.cardTitle")}</CardTitle>
           <CardDescription>
-            Every lot in the mill, from cherry intake to green coffee
+            {t("table.cardDescription")}
           </CardDescription>
         </div>
-        <Badge tone="forest">{batches.length} active</Badge>
+        <Badge tone="forest">{t("table.activeCount", { n: batches.length })}</Badge>
       </CardHeader>
 
       <CardContent className="pt-4">
         <Table className="border-separate border-spacing-0">
           <THead>
             <TR className="hover:bg-transparent">
-              <TH>Lot</TH>
-              <TH>Variety</TH>
-              <TH>Method</TH>
-              <TH>Stage</TH>
-              <TH>Patio</TH>
-              <TH>Started</TH>
-              <TH className="text-right">Input</TH>
-              <TH className="text-right">Current</TH>
-              <TH className="text-right">Moisture</TH>
-              <TH className="min-w-[10rem]">Progress</TH>
-              <TH className="text-right">Actions</TH>
+              <TH>{t("table.colLot")}</TH>
+              <TH>{t("table.colVariety")}</TH>
+              <TH>{t("table.colMethod")}</TH>
+              <TH>{t("table.colStage")}</TH>
+              <TH>{t("table.colPatio")}</TH>
+              <TH>{t("table.colStarted")}</TH>
+              <TH className="text-right">{t("table.colInput")}</TH>
+              <TH className="text-right">{t("table.colCurrent")}</TH>
+              <TH className="text-right">{t("table.colMoisture")}</TH>
+              <TH className="min-w-[10rem]">{t("table.colProgress")}</TH>
+              <TH className="text-right">{t("table.colActions")}</TH>
             </TR>
           </THead>
 
@@ -118,7 +112,7 @@ export async function BatchTable({ lots }: { lots: string[] }) {
               <TR className="hover:bg-transparent">
                 <TD colSpan={11} className="px-4 py-10 text-center">
                   <span className="inline-block rounded-xl border border-dashed border-line bg-white/40 px-4 py-3 text-sm text-muted-fg">
-                    No batches in process.
+                    {t("table.empty")}
                   </span>
                 </TD>
               </TR>
@@ -174,7 +168,7 @@ export async function BatchTable({ lots }: { lots: string[] }) {
 
                 <TD>
                   <Badge tone={STAGE_TONE[lotStage]} dot>
-                    {STAGE_LABEL[lotStage]}
+                    {t(`stages.${lotStage}`)}
                   </Badge>
                 </TD>
 

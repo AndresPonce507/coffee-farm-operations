@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Sprout } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { Plot, Worker } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -25,17 +26,18 @@ export function RecordIntakeButton({
   plots: Plot[];
   pickers: Worker[];
 }) {
+  const t = useTranslations("harvests");
   const [open, setOpen] = useState(false);
   return (
     <>
       <Button variant="primary" onClick={() => setOpen(true)}>
         <Sprout className="h-4 w-4" aria-hidden />
-        Record intake
+        {t("recordIntakeButton.label")}
       </Button>
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
-        title="Record cherry intake"
+        title={t("recordIntakeButton.dialogTitle")}
       >
         <CherryIntakeForm
           plots={plots}

@@ -1,4 +1,5 @@
 import { ShieldAlert, ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { DossierSection } from "@/components/dossier/dossier-section";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +25,7 @@ export function PlotSpraySection({
   phi: PlotPhiStatus[];
   sprays: SprayLogEntry[];
 }) {
+  const t = useTranslations("plots");
   const activePhi = phi.filter((p) => p.phiActive || p.reiActive);
   // The soonest the plot is fully clear to pick/enter again — the headline date
   // for the harvest-block warning. The per-product detail lives in the log below
@@ -36,10 +38,10 @@ export function PlotSpraySection({
   return (
     <DossierSection
       id="sprays"
-      title="Aplicaciones y estado PHI"
+      title={t("sprays.title")}
       count={sprays.length}
       empty={sprays.length === 0 && phi.length === 0}
-      emptyLabel="Sin aplicaciones registradas"
+      emptyLabel={t("sprays.empty")}
     >
       <div className="space-y-3">
         {activePhi.length > 0 ? (
@@ -51,13 +53,13 @@ export function PlotSpraySection({
               />
               <div className="space-y-1">
                 <p className="font-display text-sm font-semibold text-ink">
-                  Intervalo activo — no cosechar
-                  {clearsOn ? ` hasta el ${fmtDate(clearsOn)}` : ""}
+                  {t("sprays.activeInterval")}
+                  {clearsOn ? t("sprays.untilDate", { date: fmtDate(clearsOn) }) : ""}
                 </p>
                 <p className="text-sm text-muted-fg">
                   {activePhi.length === 1
-                    ? "1 aplicación con intervalo de pre-cosecha vigente — ver detalle abajo."
-                    : `${activePhi.length} aplicaciones con intervalo de pre-cosecha vigente — ver detalle abajo.`}
+                    ? t("sprays.activeCountOne")
+                    : t("sprays.activeCountMany", { n: activePhi.length })}
                 </p>
               </div>
             </CardContent>
@@ -66,7 +68,7 @@ export function PlotSpraySection({
           <Card className="border-forest/20">
             <CardContent className="flex items-center gap-2 px-5 py-3 text-sm text-forest">
               <ShieldCheck className="h-4 w-4" aria-hidden />
-              Sin intervalos activos — la parcela está libre para cosechar
+              {t("sprays.freeToHarvest")}
             </CardContent>
           </Card>
         ) : null}
@@ -86,7 +88,7 @@ export function PlotSpraySection({
                     <span className="font-display text-sm font-semibold text-ink">
                       {s.product}
                     </span>
-                    <Badge tone="neutral">PHI {s.phiDays} d</Badge>
+                    <Badge tone="neutral">{t("sprays.phiBadge", { days: s.phiDays })}</Badge>
                     <span className="ml-auto text-sm text-muted-fg">
                       <EntityLink
                         kind="worker"

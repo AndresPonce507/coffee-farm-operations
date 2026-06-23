@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import type { CoffeeVariety, Plot, PlotStatus } from "@/lib/types";
 import { getPlots } from "@/lib/db/plots";
 import { EntityLink } from "@/components/ui/entity-link";
@@ -35,10 +37,11 @@ const STATUS_TONE: Record<PlotStatus, BadgeTone> = {
   "at-risk": "danger",
 };
 
-const STATUS_LABEL: Record<PlotStatus, string> = {
-  healthy: "Healthy",
-  watch: "Watch",
-  "at-risk": "At risk",
+/** Status → its translation key under plots.status. */
+const STATUS_KEY: Record<PlotStatus, string> = {
+  healthy: "healthy",
+  watch: "watch",
+  "at-risk": "atRisk",
 };
 
 /** Share of expected season yield harvested so far (0–100). */
@@ -52,26 +55,27 @@ function harvestedShare(plot: Plot): number {
  * Server component (static display, no hooks/handlers).
  */
 export async function PlotsTable() {
+  const t = await getTranslations("plots");
   const plots = await getPlots();
   return (
     <Card className="animate-rise cv-auto overflow-hidden">
       <CardHeader>
-        <CardTitle>All plots</CardTitle>
+        <CardTitle>{t("table.allPlots")}</CardTitle>
       </CardHeader>
       <CardContent className="px-0 pb-0 pt-4">
         <Table className="border-0 ring-0">
           <THead>
             <TR>
-              <TH>Plot</TH>
-              <TH>Variety</TH>
-              <TH className="text-right">Altitude</TH>
-              <TH className="text-right">Area</TH>
-              <TH className="text-right">Trees</TH>
-              <TH className="text-right">Shade</TH>
-              <TH className="text-right">Established</TH>
-              <TH>Status</TH>
-              <TH className="text-right">Harvested</TH>
-              <TH className="text-right">Actions</TH>
+              <TH>{t("table.colPlot")}</TH>
+              <TH>{t("table.colVariety")}</TH>
+              <TH className="text-right">{t("table.colAltitude")}</TH>
+              <TH className="text-right">{t("table.colArea")}</TH>
+              <TH className="text-right">{t("table.colTrees")}</TH>
+              <TH className="text-right">{t("table.colShade")}</TH>
+              <TH className="text-right">{t("table.colEstablished")}</TH>
+              <TH>{t("table.colStatus")}</TH>
+              <TH className="text-right">{t("table.colHarvested")}</TH>
+              <TH className="text-right">{t("table.colActions")}</TH>
             </TR>
           </THead>
           <TBody>
@@ -114,7 +118,7 @@ export async function PlotsTable() {
                   </TD>
                   <TD>
                     <Badge tone={STATUS_TONE[plot.status]} dot>
-                      {STATUS_LABEL[plot.status]}
+                      {t(`status.${STATUS_KEY[plot.status]}`)}
                     </Badge>
                   </TD>
                   <TD className="text-right tabular-nums">
@@ -122,7 +126,7 @@ export async function PlotsTable() {
                       {kg(plot.harvestedKg)}
                     </div>
                     <div className="text-xs text-muted-fg">
-                      {pct(share)} of expected
+                      {t("table.ofExpected", { pct: pct(share) })}
                     </div>
                   </TD>
                   <TD className="text-right">

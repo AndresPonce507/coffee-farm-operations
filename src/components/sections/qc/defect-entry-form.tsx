@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { CheckCircle2, ListPlus, ShieldAlert } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { DefectCategory, GreenDefect } from "@/lib/types";
 import {
@@ -41,11 +42,6 @@ import { Segmented } from "@/components/ui/segmented";
 const FIELD =
   "h-10 w-full rounded-xl border border-line bg-white/70 px-3 text-sm text-ink outline-none transition focus:border-forest-300 focus:ring-2 focus:ring-forest-100 aria-[invalid=true]:border-cherry aria-[invalid=true]:ring-cherry-100";
 
-const BAND_OPTIONS = [
-  { id: "primary", label: "Primary" },
-  { id: "secondary", label: "Secondary" },
-];
-
 export function DefectEntryForm({
   lotCode,
   defects,
@@ -53,6 +49,11 @@ export function DefectEntryForm({
   lotCode: string;
   defects: GreenDefect[];
 }) {
+  const t = useTranslations("qc");
+  const BAND_OPTIONS = [
+    { id: "primary", label: t("defectForm.bandPrimary") },
+    { id: "secondary", label: t("defectForm.bandSecondary") },
+  ];
   const [category, setCategory] = useState<DefectCategory>("primary");
   const [state, formAction, pending] = useActionState<QcActionState, FormData>(
     recordDefectAction,
@@ -71,7 +72,7 @@ export function DefectEntryForm({
     state.status === "error"
       ? (state.message ??
         Object.values(state.errors ?? {})[0] ??
-        "Could not record the defect.")
+        t("defectForm.errorFallback"))
       : undefined;
   // Per-field error wiring (mirrors grade-green-form): drive aria-invalid + an
   // inline message off the action's per-field error map.
@@ -83,11 +84,11 @@ export function DefectEntryForm({
     <Card className="animate-rise">
       <CardHeader>
         <div>
-          <CardTitle>Green-grading defects</CardTitle>
+          <CardTitle>{t("defectForm.title")}</CardTitle>
           <CardDescription>
-            Log the defects found in{" "}
-            <span className="font-mono text-forest-700">{lotCode}</span> — primary are
-            disqualifying, secondary are quality
+            {t("defectForm.descriptionLog")}{" "}
+            <span className="font-mono text-forest-700">{lotCode}</span>
+            {t("defectForm.descriptionTail")}
           </CardDescription>
         </div>
         <ShieldAlert className="h-5 w-5 text-cherry" aria-hidden />
@@ -106,12 +107,12 @@ export function DefectEntryForm({
                 className="text-xs font-medium text-muted-fg"
                 htmlFor="defect-kind"
               >
-                Defect kind
+                {t("defectForm.kindLabel")}
               </label>
               <input
                 id="defect-kind"
                 name="defectKind"
-                placeholder="e.g. full black, quaker, sour"
+                placeholder={t("defectForm.kindPlaceholder")}
                 className={FIELD}
                 aria-invalid={invalid("defectKind")}
               />
@@ -124,7 +125,7 @@ export function DefectEntryForm({
                 className="text-xs font-medium text-muted-fg"
                 htmlFor="defect-count"
               >
-                Count
+                {t("defectForm.countLabel")}
               </label>
               <input
                 id="defect-count"
@@ -144,12 +145,14 @@ export function DefectEntryForm({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-xs font-medium text-muted-fg">Band</span>
+            <span className="text-xs font-medium text-muted-fg">
+              {t("defectForm.bandLabel")}
+            </span>
             <Segmented
               options={BAND_OPTIONS}
               value={category}
               onChange={(id) => setCategory(id as DefectCategory)}
-              ariaLabel="Defect band"
+              ariaLabel={t("defectForm.bandAria")}
             />
           </div>
 
@@ -161,7 +164,7 @@ export function DefectEntryForm({
                   className="inline-flex items-center gap-1.5 font-medium text-forest-700"
                 >
                   <CheckCircle2 className="h-4 w-4 shrink-0" />
-                  Defect recorded — bound to this lot forever.
+                  {t("defectForm.recorded")}
                 </span>
               )}
               {errorMessage && (
@@ -175,7 +178,7 @@ export function DefectEntryForm({
             </div>
             <Button type="submit" disabled={pending} className="shrink-0">
               <ListPlus className="h-4 w-4" />
-              {pending ? "Adding…" : "Add defect"}
+              {pending ? t("defectForm.adding") : t("defectForm.addDefect")}
             </Button>
           </div>
         </form>
@@ -183,9 +186,7 @@ export function DefectEntryForm({
         {/* The append-only ledger for this lot — read-only history. */}
         <div className="border-t border-line/70 pt-4">
           {defects.length === 0 ? (
-            <p className="text-sm text-muted-fg">
-              No green-grading defects logged for this lot yet.
-            </p>
+            <p className="text-sm text-muted-fg">{t("defectForm.noDefects")}</p>
           ) : (
             <ul className="space-y-2">
               {defects.map((d) => (

@@ -1,4 +1,5 @@
 import { Gauge, Scale } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { CupperDrift } from "@/lib/types";
 import {
@@ -48,6 +49,7 @@ export function CupperDriftCard({
    *  For a ~90% Ngäbe-Buglé crew a readable name, not 'w-03', is the bar. */
   nameById?: Map<string, string> | Record<string, string>;
 }) {
+  const t = useTranslations("qc");
   const resolveName = (id: string): string | undefined =>
     nameById instanceof Map ? nameById.get(id) : nameById?.[id];
 
@@ -55,11 +57,8 @@ export function CupperDriftCard({
     <Card className="animate-rise">
       <CardHeader>
         <div>
-          <CardTitle>Calibración de deriva de catadores</CardTitle>
-          <CardDescription>
-            El sesgo de cada catador/a frente a la media del panel en muestras de
-            calibración compartidas — evidencia para corregir, nunca un puntaje rechazado
-          </CardDescription>
+          <CardTitle>{t("cupperDrift.title")}</CardTitle>
+          <CardDescription>{t("cupperDrift.description")}</CardDescription>
         </div>
         <Gauge className="h-5 w-5 text-forest-600" aria-hidden />
       </CardHeader>
@@ -68,8 +67,8 @@ export function CupperDriftCard({
         {drift.length === 0 ? (
           <EmptyState
             icon={Scale}
-            title="Aún no hay sesiones de calibración"
-            description="Cata una muestra de calibración compartida con dos o más catadores para que el sesgo sistemático aparezca aquí."
+            title={t("cupperDrift.emptyTitle")}
+            description={t("cupperDrift.emptyDescription")}
           />
         ) : (
           <ul className="divide-y divide-line/60">
@@ -100,14 +99,21 @@ export function CupperDriftCard({
                       </span>
                     ) : null}
                     {name ? " · " : null}
-                    {d.attribute} · panel {num(d.panelMean, 1)} · n={d.sampleN}
+                    {d.attribute} ·{" "}
+                    {t("cupperDrift.panelLabel", {
+                      mean: num(d.panelMean, 1),
+                      n: d.sampleN,
+                    })}
                   </p>
                 </div>
                 <span
                   className={`shrink-0 font-display text-lg font-semibold tabular-nums ${driftTone(
                     d.drift,
                   )}`}
-                  aria-label={`deriva ${signedDrift(d.drift)} en ${d.attribute}`}
+                  aria-label={t("cupperDrift.driftAria", {
+                    drift: signedDrift(d.drift),
+                    attribute: d.attribute,
+                  })}
                 >
                   {signedDrift(d.drift)}
                 </span>

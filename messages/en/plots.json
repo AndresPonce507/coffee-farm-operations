@@ -1,1 +1,152 @@
-{}
+{
+  "page": {
+    "title": "Parcelas",
+    "subtitle": "Lotes de cultivo en las fincas de Janson en Volcán, Chiriquí"
+  },
+  "status": {
+    "healthy": "Healthy",
+    "watch": "Watch",
+    "atRisk": "At risk"
+  },
+  "summary": {
+    "totalArea": "Total area",
+    "totalAreaSub": "hectares",
+    "totalTrees": "Total trees",
+    "totalTreesSub": "coffee trees",
+    "avgAltitude": "Avg altitude",
+    "avgAltitudeSub": "masl",
+    "needAttention": "Need attention",
+    "needAttentionSub": "of {n} plots"
+  },
+  "explorer": {
+    "viewGrid": "Grid",
+    "viewList": "List",
+    "filterByVariety": "Filter plots by variety",
+    "all": "All",
+    "altitude": "Altitude",
+    "area": "Area",
+    "trees": "Trees",
+    "shade": "Shade",
+    "harvestProgress": "Harvest progress",
+    "harvestedOf": "{harvested} of {expected}",
+    "harvest": "Harvest",
+    "treesUnit": "trees",
+    "shadeUnit": "shade",
+    "showing": "Showing",
+    "plot": "plot",
+    "plots": "plots",
+    "of": "of"
+  },
+  "table": {
+    "allPlots": "All plots",
+    "colPlot": "Plot",
+    "colVariety": "Variety",
+    "colAltitude": "Altitude",
+    "colArea": "Area",
+    "colTrees": "Trees",
+    "colShade": "Shade",
+    "colEstablished": "Established",
+    "colStatus": "Status",
+    "colHarvested": "Harvested",
+    "colActions": "Actions",
+    "ofExpected": "{pct} of expected"
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "e.g. Tizingal Alto",
+    "block": "Block",
+    "blockPlaceholder": "e.g. Block A",
+    "variety": "Variety",
+    "choose": "Choose…",
+    "status": "Status",
+    "areaHa": "Area (ha)",
+    "altitudeMasl": "Altitude (masl)",
+    "trees": "Trees",
+    "shadePct": "Shade (%)",
+    "established": "Established",
+    "lastInspected": "Last inspected",
+    "expectedYieldKg": "Expected yield (kg)",
+    "cancel": "Cancel",
+    "saving": "Saving…"
+  },
+  "actions": {
+    "newPlot": "New plot",
+    "addPlot": "Add plot",
+    "editPlot": "Edit plot",
+    "saveChanges": "Save changes",
+    "editAria": "Edit {name}",
+    "deleteAria": "Delete {name}",
+    "deleteConfirm": "Delete \"{name}\"?",
+    "deleteFailed": "No se pudo eliminar la parcela."
+  },
+  "identity": {
+    "title": "Identidad y geometría",
+    "status": {
+      "healthy": "Saludable",
+      "watch": "En observación",
+      "atRisk": "En riesgo"
+    },
+    "variety": "Variedad",
+    "area": "Área",
+    "altitude": "Altitud",
+    "trees": "Árboles",
+    "shade": "Sombra",
+    "established": "Establecido"
+  },
+  "yield": {
+    "title": "Rendimiento de temporada",
+    "ofTarget": "de {kg} kg objetivo",
+    "progressAria": "Avance de cosecha"
+  },
+  "cost": {
+    "title": "Costo por kg",
+    "perKgGreen": "/ kg verde",
+    "drillHint": "Ver los asientos de costo que producen esta cifra."
+  },
+  "harvests": {
+    "title": "Cosechas de esta parcela",
+    "empty": "Sin cosechas registradas todavía"
+  },
+  "scouting": {
+    "title": "Monitoreo de plagas",
+    "empty": "Sin monitoreo registrado todavía",
+    "incidence": "incidencia {pct}",
+    "threshold": "(umbral {pct})",
+    "recommendControl": "Recomienda control",
+    "hold": "Mantener"
+  },
+  "sprays": {
+    "title": "Aplicaciones y estado PHI",
+    "empty": "Sin aplicaciones registradas",
+    "activeInterval": "Intervalo activo — no cosechar",
+    "untilDate": " hasta el {date}",
+    "activeCountOne": "1 aplicación con intervalo de pre-cosecha vigente — ver detalle abajo.",
+    "activeCountMany": "{n} aplicaciones con intervalo de pre-cosecha vigente — ver detalle abajo.",
+    "freeToHarvest": "Sin intervalos activos — la parcela está libre para cosechar",
+    "phiBadge": "PHI {days} d"
+  },
+  "eudr": {
+    "title": "Origen EUDR",
+    "empty": "No alimenta ningún lote verde — sin debida diligencia todavía",
+    "geolocated": "Geolocalizado",
+    "notGeolocated": "Sin geolocalización",
+    "deforestationFree": "Libre de deforestación",
+    "noDeclaration": "Sin declaración",
+    "established": "Establecido",
+    "centroid": "Centroide",
+    "cutoff": "Corte EUDR",
+    "feedsLots": "Lotes verdes que alimenta"
+  },
+  "satellite": {
+    "title": "Vegetación (NDVI)",
+    "empty": "Sin lectura confiable ahora mismo (nube / sin señal)",
+    "indexFallback": "índice",
+    "confidence": {
+      "high": "Confianza alta",
+      "medium": "Confianza media",
+      "low": "Confianza baja"
+    },
+    "optical": "Óptico",
+    "cloud": "{pct}% nube"
+  }
+}

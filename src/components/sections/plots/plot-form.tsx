@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 import type { Plot } from "@/lib/types";
 import { COFFEE_VARIETIES, PLOT_STATUSES } from "@/lib/enums";
@@ -11,10 +12,11 @@ const FIELD =
   "h-10 w-full rounded-xl border border-line bg-white/70 px-3 text-sm text-ink outline-none transition focus:border-forest-300 focus:ring-2 focus:ring-forest-100";
 const LABEL = "text-xs font-medium text-muted-fg";
 
-const STATUS_LABEL: Record<(typeof PLOT_STATUSES)[number], string> = {
-  healthy: "Healthy",
-  watch: "Watch",
-  "at-risk": "At risk",
+/** Status → its translation key under plots.status. */
+const STATUS_KEY: Record<(typeof PLOT_STATUSES)[number], string> = {
+  healthy: "healthy",
+  watch: "watch",
+  "at-risk": "atRisk",
 };
 
 type PlotAction = (prev: ActionState, fd: FormData) => Promise<ActionState>;
@@ -30,6 +32,7 @@ export function PlotForm({
   submitLabel: string;
   onDone: () => void;
 }) {
+  const t = useTranslations("plots");
   const [state, formAction, pending] = useActionState(action, IDLE);
 
   useEffect(() => {
@@ -46,13 +49,13 @@ export function PlotForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="name">
-            Name
+            {t("form.name")}
           </label>
           <input
             id="name"
             name="name"
             defaultValue={plot?.name}
-            placeholder="e.g. Tizingal Alto"
+            placeholder={t("form.namePlaceholder")}
             className={FIELD}
           />
           {fieldError("name") && (
@@ -62,13 +65,13 @@ export function PlotForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="block">
-            Block
+            {t("form.block")}
           </label>
           <input
             id="block"
             name="block"
             defaultValue={plot?.block}
-            placeholder="e.g. Block A"
+            placeholder={t("form.blockPlaceholder")}
             className={FIELD}
           />
           {fieldError("block") && (
@@ -80,7 +83,7 @@ export function PlotForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="variety">
-            Variety
+            {t("form.variety")}
           </label>
           <select
             id="variety"
@@ -89,7 +92,7 @@ export function PlotForm({
             className={FIELD}
           >
             <option value="" disabled>
-              Choose…
+              {t("form.choose")}
             </option>
             {COFFEE_VARIETIES.map((v) => (
               <option key={v} value={v}>
@@ -101,7 +104,7 @@ export function PlotForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="status">
-            Status
+            {t("form.status")}
           </label>
           <select
             id="status"
@@ -111,7 +114,7 @@ export function PlotForm({
           >
             {PLOT_STATUSES.map((s) => (
               <option key={s} value={s}>
-                {STATUS_LABEL[s]}
+                {t(`status.${STATUS_KEY[s]}`)}
               </option>
             ))}
           </select>
@@ -121,7 +124,7 @@ export function PlotForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="area_ha">
-            Area (ha)
+            {t("form.areaHa")}
           </label>
           <input
             id="area_ha"
@@ -139,7 +142,7 @@ export function PlotForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="altitude_masl">
-            Altitude (masl)
+            {t("form.altitudeMasl")}
           </label>
           <input
             id="altitude_masl"
@@ -157,7 +160,7 @@ export function PlotForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="trees">
-            Trees
+            {t("form.trees")}
           </label>
           <input
             id="trees"
@@ -174,7 +177,7 @@ export function PlotForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="shade_pct">
-            Shade (%)
+            {t("form.shadePct")}
           </label>
           <input
             id="shade_pct"
@@ -194,7 +197,7 @@ export function PlotForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="established_year">
-            Established
+            {t("form.established")}
           </label>
           <input
             id="established_year"
@@ -212,7 +215,7 @@ export function PlotForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="last_inspected">
-            Last inspected
+            {t("form.lastInspected")}
           </label>
           <input
             id="last_inspected"
@@ -231,7 +234,7 @@ export function PlotForm({
 
       <div className="space-y-1">
         <label className={LABEL} htmlFor="expected_yield_kg">
-          Expected yield (kg)
+          {t("form.expectedYieldKg")}
         </label>
         <input
           id="expected_yield_kg"
@@ -256,10 +259,10 @@ export function PlotForm({
 
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="ghost" onClick={onDone}>
-          Cancel
+          {t("form.cancel")}
         </Button>
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : submitLabel}
+          {pending ? t("form.saving") : submitLabel}
         </Button>
       </div>
     </form>

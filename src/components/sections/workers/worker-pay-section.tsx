@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EntityLink } from "@/components/ui/entity-link";
@@ -26,13 +28,14 @@ function periodLabel(start: string, end: string): string {
 }
 
 export function WorkerPaySection({ pay }: WorkerPaySectionProps) {
+  const t = useTranslations("workers");
   return (
     <DossierSection
       id="pay"
-      title="Historial de pagos"
+      title={t("pay.sectionTitle")}
       count={pay.length}
       empty={pay.length === 0}
-      emptyLabel="Sin pagos calculados todavía"
+      emptyLabel={t("pay.emptyLabel")}
     >
       <Card data-testid="worker-pay-card" className="animate-rise">
         <CardContent className="px-0 py-0">
@@ -52,13 +55,13 @@ export function WorkerPaySection({ pay }: WorkerPaySectionProps) {
                   </EntityLink>
                   {p.madeWhole && (
                     <span data-testid={`made-whole-${p.id}`}>
-                      <Badge tone="warn">Ajuste a salario mínimo</Badge>
+                      <Badge tone="warn">{t("pay.madeWhole")}</Badge>
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-4 tabular-nums">
                   <span className="text-xs text-muted-fg">
-                    Bruto ${p.grossUsd.toFixed(2)}
+                    {t("pay.gross", { amount: p.grossUsd.toFixed(2) })}
                   </span>
                   <span className="font-display text-sm font-semibold text-ink">
                     ${p.netUsd.toFixed(2)}

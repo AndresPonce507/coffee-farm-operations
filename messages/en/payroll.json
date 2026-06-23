@@ -1,1 +1,107 @@
-{}
+{
+  "common": {
+    "done": "Done",
+    "cancel": "Cancelar"
+  },
+  "summary": {
+    "payPeriods": "Pay periods",
+    "totalGross": "Total gross",
+    "totalNet": "Total net",
+    "madeWhole": "Made whole",
+    "liftedToFloor": "{n} lifted to the legal floor",
+    "workerSingular": "worker",
+    "workerPlural": "workers",
+    "allAboveFloor": "all above the floor"
+  },
+  "board": {
+    "statusPaid": "Paid",
+    "statusApproved": "Approved",
+    "statusCalculated": "Calculated",
+    "statusOpen": "Open",
+    "emptyTitle": "No pay periods yet",
+    "emptyDescription": "Open a pay period and calculate it to roll up the blended piece-rate + hourly earnings — with the legal-minimum make-whole guard applied to every worker.",
+    "workerSingular": "worker",
+    "workerPlural": "workers",
+    "gross": "Gross",
+    "net": "Net",
+    "madeWholeChip": "{n} made whole"
+  },
+  "breakdown": {
+    "makeWholeLabel": "ajustado al mínimo legal",
+    "emptyTitle": "Sin líneas de pago para este periodo",
+    "emptyDescription": "Calcula el periodo para consolidar los ingresos combinados por obra + por hora de cada trabajador/a, con el ajuste mínimo legal aplicado.",
+    "colWorker": "Trabajador/a",
+    "colPieceRate": "Por obra",
+    "colHourly": "Por hora",
+    "colMakeWhole": "Ajuste mínimo",
+    "colGross": "Bruto",
+    "colCss": "CSS",
+    "colSeguroEducativo": "Seguro Educativo",
+    "colDecimo": "Décimo",
+    "colNet": "Neto",
+    "totals": "Totales"
+  },
+  "payslip": {
+    "qrAriaLabel": "Payslip QR code"
+  },
+  "methods": {
+    "yappy": "Yappy",
+    "nequi": "Nequi",
+    "ach": "ACH (transferencia bancaria)",
+    "cashSigned": "Efectivo firmado · cash-signed"
+  },
+  "compute": {
+    "periodIdLabel": "Identificador del período",
+    "periodIdPlaceholder": "p. ej. pp-2026-06-w3",
+    "from": "Desde",
+    "to": "Hasta",
+    "seasonLabel": "Temporada",
+    "optional": "(opcional)",
+    "seasonPlaceholder": "2026-2027",
+    "calculating": "Calculando…",
+    "calculateButton": "Calculate period"
+  },
+  "approve": {
+    "ariaLabel": "Approve the pay line for {name}",
+    "pending": "Approving…",
+    "approved": "Approved",
+    "approve": "Approve"
+  },
+  "signature": {
+    "label": "Firma del trabajador · signature",
+    "clear": "Borrar",
+    "canvasAriaLabel": "Firma del trabajador para el pago en efectivo",
+    "helpText": "El trabajador firma aquí para confirmar que recibió el pago en efectivo."
+  },
+  "disbursement": {
+    "net": "neto",
+    "methodLabel": "Método de pago",
+    "amountLabel": "Monto (USD)",
+    "refLabel": "Referencia / recibo",
+    "refPlaceholder": "p. ej. yappy-tx-1024",
+    "captureSignature": "Capture la firma del trabajador para registrar el pago en efectivo.",
+    "disclaimer": "Acción deliberada e irreversible — registra un pago ya realizado. No mueve dinero por sí sola.",
+    "recording": "Registrando…",
+    "recordButton": "Record disbursement"
+  },
+  "ledger": {
+    "title": "Pagos registrados",
+    "description": "Libro de pagos del período — el más reciente primero",
+    "signed": "firmado"
+  },
+  "page": {
+    "title": "Nómina",
+    "subtitle": "Pago mixto por obra + por hora, con el ajuste al mínimo legal garantizado en la capa de datos",
+    "calculateTitle": "Calcular un período",
+    "calculateDescription": "Congela el cálculo: una línea por trabajador, con el ajuste al mínimo legal aplicado.",
+    "payslipsTitle": "Comprobantes de pago",
+    "payslipsDescription": "Toque a un trabajador para ver su comprobante bilingüe (es · ngäbere) con código QR.",
+    "viewPayslipFor": "Ver el comprobante de pago de {name}",
+    "approvePayTitle": "Aprobar y pagar",
+    "approvePayDescription": "Apruebe cada línea calculada, luego registre el pago (Yappy / Nequi / ACH / efectivo firmado).",
+    "paidSuffix": " · pagado",
+    "statusApproved": "aprobado",
+    "statusPaid": "pagado",
+    "statusCalculated": "calculado"
+  }
+}

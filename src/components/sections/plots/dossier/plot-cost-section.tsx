@@ -1,4 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { DossierSection } from "@/components/dossier/dossier-section";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,8 +26,9 @@ export function PlotCostSection({
   cost: LotCost;
   plotId: string;
 }) {
+  const t = useTranslations("plots");
   return (
-    <DossierSection id="cost" title="Costo por kg">
+    <DossierSection id="cost" title={t("cost.title")}>
       <Card>
         <CardContent className="px-5 py-5">
           {cost.costPerKgGreen != null ? (
@@ -39,7 +41,7 @@ export function PlotCostSection({
               <span className="font-display text-3xl font-bold text-ink">
                 {usd(cost.costPerKgGreen)}
               </span>
-              <span className="text-sm text-muted-fg">/ kg verde</span>
+              <span className="text-sm text-muted-fg">{t("cost.perKgGreen")}</span>
               <ArrowUpRight
                 className="h-4 w-4 text-forest opacity-60 transition group-hover:opacity-100"
                 aria-hidden
@@ -49,7 +51,7 @@ export function PlotCostSection({
             <p className="font-display text-3xl font-bold text-muted-fg">—</p>
           )}
           <p className="mt-2 text-sm text-muted-fg">
-            Ver los asientos de costo que producen esta cifra.
+            {t("cost.drillHint")}
           </p>
         </CardContent>
       </Card>
