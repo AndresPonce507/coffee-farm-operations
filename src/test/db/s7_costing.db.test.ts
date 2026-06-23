@@ -305,15 +305,22 @@ describe("S7 COGS — AD-8 grant posture", () => {
   });
   afterAll(async () => h.close());
 
-  it("authenticated can SELECT cost_entry and mv_lot_cost", async () => {
+  it("authenticated can SELECT cost_entry and the secure COGS read surface (raw matview is owner-only)", async () => {
     const a = await h.query<{ has: boolean }>(
       `select has_table_privilege('authenticated','cost_entry','select') as has;`,
     );
-    const b = await h.query<{ has: boolean }>(
+    // P4-S0 (§6.1): the RAW matview SELECT grant is REVOKED from authenticated — a
+    // matview carries no RLS, so a surviving raw grant is a cross-tenant COGS read.
+    // The authenticated read surface is the tenant-filtered mv_lot_cost_secure view.
+    const rawMv = await h.query<{ has: boolean }>(
       `select has_table_privilege('authenticated','mv_lot_cost','select') as has;`,
     );
+    const secureMv = await h.query<{ has: boolean }>(
+      `select has_table_privilege('authenticated','mv_lot_cost_secure','select') as has;`,
+    );
     expect(a[0].has).toBe(true);
-    expect(b[0].has).toBe(true);
+    expect(rawMv[0].has).toBe(false);
+    expect(secureMv[0].has).toBe(true);
   });
 
   it("no role holds a write grant on cost_entry beyond the legal INSERT path", async () => {
@@ -432,10 +439,16 @@ describe("S7 COGS — per-rule breakdown reconciles to the headline", () => {
     expect(sum).toBeCloseTo((await totalCost(h, "JC-901")) as number, 6);
   });
 
-  it("AD-8: mv_lot_cost_by_rule SELECT + cogs_breakdown_per_lot EXECUTE are authenticated-only", async () => {
+  it("AD-8: mv_lot_cost_by_rule_secure SELECT + cogs_breakdown_per_lot EXECUTE are authenticated-only", async () => {
+    // P4-S0 (§6.1): raw mv_lot_cost_by_rule is owner-only (no RLS on a matview); the
+    // authenticated read surface is the tenant-filtered _secure barrier view.
+    const rawMv = await h.query<{ has: boolean }>(
+      `select has_table_privilege('authenticated','mv_lot_cost_by_rule','select') as has;`,
+    );
+    expect(rawMv[0].has).toBe(false);
     const mv = await h.query<{ a: boolean; an: boolean }>(
-      `select has_table_privilege('authenticated','mv_lot_cost_by_rule','select') as a,
-              has_table_privilege('anon','mv_lot_cost_by_rule','select') as an;`,
+      `select has_table_privilege('authenticated','mv_lot_cost_by_rule_secure','select') as a,
+              has_table_privilege('anon','mv_lot_cost_by_rule_secure','select') as an;`,
     );
     const fn = await h.query<{ a: boolean; an: boolean }>(
       `select has_function_privilege('authenticated','cogs_breakdown_per_lot(text)','execute') as a,

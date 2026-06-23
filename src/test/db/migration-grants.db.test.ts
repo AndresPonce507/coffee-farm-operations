@@ -25,6 +25,22 @@ interface Migration {
 
 const GRANT_HYGIENE = "20260620150000_grant_hygiene";
 
+// Objects that are DELIBERATELY owner-only (no authenticated SELECT grant) and therefore
+// exempt from the (b) "every created object must grant select to authenticated" check.
+// These are NOT the "forgot to grant" trap the guard catches — they are intentionally
+// gated behind a tenant-filtered read surface.
+//
+//  - mv_lot_cost / mv_lot_cost_by_rule: P4-S0 §6.1 — a materialized view carries NO RLS
+//    and materializes as owner, so a raw authenticated SELECT grant is a cross-tenant
+//    COGS read (the #1 financial leak). The raw matviews stay owner-only; authenticated
+//    reads go through the tenant-filtered security_barrier views mv_lot_cost_secure /
+//    mv_lot_cost_by_rule_secure (which ARE granted) and the SECURITY DEFINER cogs_* ports
+//    (which read the matview as owner and self-filter by current_tenant_id()).
+const INTENTIONALLY_OWNER_ONLY = new Set<string>([
+  "mv_lot_cost",
+  "mv_lot_cost_by_rule",
+]);
+
 function stripComments(sql: string): string {
   return sql
     .split("\n")
@@ -96,6 +112,7 @@ describe("AD-8 migration grant/RLS static guard", () => {
             m.sql,
           );
         for (const obj of created) {
+          if (INTENTIONALLY_OWNER_ONLY.has(obj)) continue; // see exemption note above
           const perObjectGrant = new RegExp(
             `grant\\s+[^;]*\\bselect\\b[^;]*\\bon\\s+(?:table\\s+)?(?:public\\.)?"?${obj}"?\\b[^;]*\\bto\\b[^;]*\\bauthenticated\\b`,
           ).test(m.sql);

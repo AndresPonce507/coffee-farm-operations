@@ -56,8 +56,8 @@ async function seedFixtures(h: Harness): Promise<void> {
   // p-cuesta-piedra's picker, while w-07 has a MORE-RECENT harvest on a DIFFERENT plot
   // (p-talamanca). A correct tier-1 resolves p-cuesta-piedra → w-06; the wrong-plot
   // mutant (`where h.plot_id is not null`) would resolve → w-07 (review MED 50).
-  await h.query(sql(`insert into lots (code) values ('JC-901') on conflict (code) do nothing;`));
-  await h.query(sql(`insert into lots (code) values ('JC-902') on conflict (code) do nothing;`));
+  await h.query(sql(`insert into lots (code) values ('JC-901') on conflict (tenant_id, code) do nothing;`));
+  await h.query(sql(`insert into lots (code) values ('JC-902') on conflict (tenant_id, code) do nothing;`));
   await h.query(sql(`
     insert into harvests (id, date, plot_id, worker_id, cherries_kg, ripeness_pct, brix_avg, lot_code) values
       ('hv-p2s8-1', '2026-06-19', 'p-cuesta-piedra', 'w-06', 120, 94, 23.1, 'JC-901'),
