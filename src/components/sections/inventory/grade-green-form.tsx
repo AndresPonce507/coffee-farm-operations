@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useId, useMemo, useState } from "react";
-import Link from "next/link";
 import { ArrowRight, CheckCircle2, Coffee, Sparkles } from "lucide-react";
 
 import type { ScaGrade } from "@/lib/types";
@@ -13,6 +12,7 @@ import {
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
+import { EntityLink } from "@/components/ui/entity-link";
 import { cn } from "@/lib/utils";
 
 /**
@@ -329,13 +329,15 @@ function GradeSuccess({
       </div>
 
       <div className="mt-5 flex flex-col gap-2">
-        <Link
-          href={`/lots/${greenCode}`}
+        <EntityLink
+          kind="lot"
+          id={greenCode}
+          name={greenCode}
           className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-forest px-4 text-sm font-medium text-paper shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18),0_1px_2px_0_rgba(0,41,29,0.25)] transition-all duration-200 ease-out hover:bg-forest-700 hover:-translate-y-px"
         >
           View lot traceability
           <ArrowRight className="h-4 w-4" aria-hidden />
-        </Link>
+        </EntityLink>
         <Button type="button" variant="ghost" onClick={onClose}>
           Done
         </Button>

@@ -45,7 +45,8 @@ export function PhiChips({ rows }: { rows: PlotPhiStatus[] }) {
                 <EntityLink
                   kind="plot"
                   id={r.plotId}
-                  className="rounded outline-none transition-colors hover:text-forest-700 focus-visible:ring-2 focus-visible:ring-forest-200"
+                  anchor="sprays"
+                  className="transition-colors hover:text-forest-700"
                 >
                   {r.plotName}
                 </EntityLink>

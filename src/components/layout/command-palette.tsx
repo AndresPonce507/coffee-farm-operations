@@ -194,7 +194,7 @@ export function CommandPalette() {
       ? [
           {
             kind: "lot",
-            href: `/lots/${code}`,
+            href: entityHref.lot(code),
             label: `Go to lot ${code}`,
             Icon: Hash,
           },

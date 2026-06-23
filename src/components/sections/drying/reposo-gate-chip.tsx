@@ -1,4 +1,4 @@
-import { CheckCircle2, Lock, Hourglass, Droplets } from "lucide-react";
+import { CheckCircle2, Hourglass, Droplets } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { ReposoStatus } from "@/lib/types";
@@ -6,8 +6,10 @@ import type { ReposoStatus } from "@/lib/types";
 /**
  * ReposoGateChip — the at-a-glance verdict of THE REPOSO GATE for one lot.
  *
- * Red ("resting · 4/10 days · 11.8%") with a lock when the gate is closed; green
- * ("rest-stable · clear to mill") with a check when it's open. The chip surfaces
+ * Red ("resting · 4/10 days · 11.8%") when the gate is closed, with an hourglass
+ * when only rest-time remains (moisture already stable) or droplets when the lot
+ * still needs to dry; green ("rest-stable · clear to mill") with a check when it's
+ * open. The chip surfaces
  * the EXACT reason the database will give — but the chip is courtesy; the real
  * enforcement is the precondition inside advance_processing_stage + the
  * BEFORE-UPDATE trigger backstop on `lots`. A blocked advance is impossible at the
@@ -58,11 +60,7 @@ export function ReposoGateChip({
         className,
       )}
     >
-      {ready ? (
-        <Icon aria-hidden className="h-3.5 w-3.5" />
-      ) : (
-        <Lock aria-hidden className="h-3.5 w-3.5" />
-      )}
+      <Icon aria-hidden className="h-3.5 w-3.5" />
       <span className="tabular-nums">
         {ready ? "Rest-stable" : "Resting"}
         {!ready && restDays != null && (

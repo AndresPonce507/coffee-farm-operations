@@ -70,8 +70,14 @@ export async function updatePlot(
   if (!parsed.ok) return { status: "error", errors: parsed.errors };
 
   const sb = await getSupabase();
-  const { error } = await sb.from("plots").update(toRow(parsed.data)).eq("id", id);
+  const { data, error } = await sb
+    .from("plots")
+    .update(toRow(parsed.data))
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
   if (error) return { status: "error", message: error.message };
+  if (!data) return { status: "error", message: "Plot not found." };
 
   refresh();
   return { status: "success", message: "Plot updated." };

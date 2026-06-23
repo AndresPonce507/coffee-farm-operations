@@ -29,7 +29,20 @@ import type { DryingLot } from "@/lib/types";
  *
  * Server component (no client JS): pure presentation over the composed read.
  */
-export function DryingBoard({ lots }: { lots: DryingLot[] }) {
+export function DryingBoard({
+  lots,
+  bandMin,
+  bandMax,
+}: {
+  lots: DryingLot[];
+  /**
+   * Reposo target-band edges (SSOT `farm_season_config.reposo_moisture_min/max_pct`),
+   * threaded down to each lot's <MoistureCurve> so the drawn band tracks the exact
+   * window the reposo gate enforces — never the component's literal default.
+   */
+  bandMin?: number;
+  bandMax?: number;
+}) {
   const blocked = lots.filter((l) => !l.reposo.ready).length;
   const ready = lots.length - blocked;
 
@@ -69,8 +82,7 @@ export function DryingBoard({ lots }: { lots: DryingLot[] }) {
                     <EntityLink
                       kind="lot"
                       id={lot.lotCode}
-                      name={lot.lotCode}
-                      className="flex items-center gap-1.5 font-display text-base font-bold tracking-tight text-ink rounded-sm outline-none transition-colors hover:text-forest-700 focus-visible:ring-2 focus-visible:ring-forest/40"
+                      className="flex items-center gap-1.5 font-display text-base font-bold tracking-tight text-ink transition-colors hover:text-forest-700"
                     >
                       <Coffee aria-hidden className="h-4 w-4 text-honey-700" />
                       {lot.lotCode}
@@ -91,7 +103,12 @@ export function DryingBoard({ lots }: { lots: DryingLot[] }) {
                   <ReposoGateChip reposo={lot.reposo} />
                 </div>
 
-                <MoistureCurve curve={lot.curve} height={140} />
+                <MoistureCurve
+                  curve={lot.curve}
+                  bandMin={bandMin}
+                  bandMax={bandMax}
+                  height={140}
+                />
 
                 {/* The advance-to-mill affordance. Blocked: a disabled button
                     carrying the gate's reason (DB is the real gate; this is

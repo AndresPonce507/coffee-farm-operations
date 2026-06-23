@@ -35,6 +35,11 @@ vi.mock("@/lib/db/drying", () => ({
   getDryingLots: vi.fn(async (): Promise<DryingLot[]> => lots),
   getStationOccupancy: vi.fn(async (): Promise<StationOccupancy[]> => stations),
   getDryingWeatherRisk: vi.fn(async (): Promise<DryingWeatherRisk[]> => weatherRisk),
+  // The tuned reposo band (farm_season_config) the page threads into the board.
+  getReposoBand: vi.fn(async (): Promise<{ min: number; max: number }> => ({
+    min: 9.8,
+    max: 12.2,
+  })),
 }));
 
 import DryingPage from "@/app/(app)/drying/page";
@@ -59,6 +64,17 @@ describe("/drying page (smoke)", () => {
     // The blocked chip shows "Resting" and the mill button is locked.
     expect(screen.getByRole("status")).toHaveAttribute("data-ready", "false");
     expect(screen.getByRole("button", { name: /Mill — locked/i })).toBeDisabled();
+  });
+
+  // CRIT-5 — the page must fetch the tuned reposo band (farm_season_config) and
+  // thread it through DryingBoard into the MoistureCurve, never the hardcoded
+  // 10.5–11.5% default. The mocked getReposoBand returns the tuned 9.8–12.2% window.
+  it("threads the config-derived reposo band into the moisture curve", async () => {
+    const ui = await DryingPage();
+    render(ui);
+
+    expect(screen.getByText(/target 9\.8–12\.2%/)).toBeInTheDocument();
+    expect(screen.queryByText(/target 10\.5–11\.5%/)).not.toBeInTheDocument();
   });
 
   // Review finding #54 — the slice must ship reachable WRITE surfaces (record a

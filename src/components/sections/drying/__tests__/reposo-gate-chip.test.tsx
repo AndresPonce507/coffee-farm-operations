@@ -103,3 +103,35 @@ describe("ReposoGateChip (smoke)", () => {
     expect(chip).not.toHaveTextContent(/%/);
   });
 });
+
+describe("ReposoGateChip (state icon)", () => {
+  // Regression: the blocked branch used to hardcode <Lock>, so the computed
+  // Hourglass / Droplets icons were dead code that never rendered. The icon must
+  // reflect WHY the gate is closed: hourglass when only rest-time remains (moisture
+  // already stable), droplets when the lot still needs to dry.
+  it("shows the HOURGLASS icon when blocked but moisture is already stable (waiting on rest days)", () => {
+    const { container } = render(
+      <ReposoGateChip reposo={{ ...blocked, moistureStable: true }} />,
+    );
+    expect(container.querySelector("svg.lucide-hourglass")).toBeInTheDocument();
+    expect(container.querySelector("svg.lucide-droplets")).not.toBeInTheDocument();
+    // Never falls back to the old hardcoded lock.
+    expect(container.querySelector("svg.lucide-lock")).not.toBeInTheDocument();
+  });
+
+  it("shows the DROPLETS icon when blocked and moisture is not yet stable (still drying)", () => {
+    const { container } = render(
+      <ReposoGateChip reposo={{ ...blocked, moistureStable: false }} />,
+    );
+    expect(container.querySelector("svg.lucide-droplets")).toBeInTheDocument();
+    expect(container.querySelector("svg.lucide-hourglass")).not.toBeInTheDocument();
+    expect(container.querySelector("svg.lucide-lock")).not.toBeInTheDocument();
+  });
+
+  it("shows the CHECK icon when the gate is open", () => {
+    const { container } = render(<ReposoGateChip reposo={open} />);
+    expect(container.querySelector("svg.lucide-circle-check")).toBeInTheDocument();
+    expect(container.querySelector("svg.lucide-hourglass")).not.toBeInTheDocument();
+    expect(container.querySelector("svg.lucide-droplets")).not.toBeInTheDocument();
+  });
+});

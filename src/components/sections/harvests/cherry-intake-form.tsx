@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import Link from "next/link";
 import { ArrowRight, CheckCircle2, Sprout } from "lucide-react";
 
 import type { CoffeeVariety, Plot, Worker } from "@/lib/types";
@@ -11,6 +10,7 @@ import {
   type IntakeActionState,
 } from "@/app/(app)/harvests/actions";
 import { Button } from "@/components/ui/button";
+import { EntityLink } from "@/components/ui/entity-link";
 
 /**
  * CherryIntakeForm — the genesis WRITE of the whole farm-to-bag spine.
@@ -89,13 +89,15 @@ export function CherryIntakeForm({
           </p>
         </div>
 
-        <Link
-          href={`/lots/${state.lotCode}`}
-          className="group inline-flex items-center gap-2 rounded-xl border border-white/60 bg-white/60 px-4 py-2 text-sm font-medium text-ink shadow-[inset_0_1px_0_0_rgba(255,255,255,0.6)] transition hover:-translate-y-px hover:bg-white/75 hover:shadow-[0_8px_20px_-8px_rgba(0,41,29,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-100"
+        <EntityLink
+          kind="lot"
+          id={state.lotCode}
+          name={state.lotCode}
+          className="group inline-flex items-center gap-2 border border-white/60 bg-white/60 px-4 py-2 text-sm font-medium text-ink shadow-[inset_0_1px_0_0_rgba(255,255,255,0.6)] transition hover:-translate-y-px hover:bg-white/75 hover:shadow-[0_8px_20px_-8px_rgba(0,41,29,0.18)]"
         >
           View lot {state.lotCode}
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
-        </Link>
+        </EntityLink>
 
         {onDone && (
           <Button type="button" variant="ghost" size="sm" onClick={onDone}>

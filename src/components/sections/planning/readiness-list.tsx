@@ -53,7 +53,7 @@ export function ReadinessList({ rows }: { rows: PlotReadiness[] }) {
             kind="plot"
             id={r.plotId}
             name={r.plotName}
-            className="group block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60"
+            className="group block rounded-2xl"
           >
           <Card
             data-testid={`readiness-${r.plotId}`}

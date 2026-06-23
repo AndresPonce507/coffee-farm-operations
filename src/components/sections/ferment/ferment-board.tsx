@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { FlaskConical } from "lucide-react";
 
 import type { FermentBatch, FermentRecipe } from "@/lib/db/ferment";
@@ -69,7 +68,7 @@ export function FermentBoard({
                     kind="lot"
                     id={b.lotCode}
                     name={b.lotCode}
-                    className="rounded font-mono text-sm font-semibold text-ink underline-offset-4 outline-none ring-forest/30 transition-colors hover:text-forest hover:underline focus-visible:ring-2"
+                    className="font-mono text-sm font-semibold text-ink underline-offset-4 transition-colors hover:text-forest hover:underline"
                   >
                     {b.lotCode}
                   </EntityLink>
@@ -85,11 +84,11 @@ export function FermentBoard({
                 </div>
 
                 {/* The card body navigates to the live batch tracker. */}
-                <Link
-                  href={`/ferment/${b.id}`}
-                  data-testid={`ferment-batch-${b.id}`}
-                  aria-label={`Open ferment tracker for ${b.lotCode}`}
-                  className="-m-1 block rounded-xl p-1 outline-none ring-forest/30 transition focus-visible:ring-2"
+                <EntityLink
+                  kind="batch"
+                  id={b.id}
+                  name={b.lotCode}
+                  className="-m-1 block p-1 transition"
                 >
                   <p className="text-xs text-muted-fg">
                     {b.method}
@@ -98,7 +97,7 @@ export function FermentBoard({
                   <p className="mt-1 text-[11px] text-muted-fg/70">
                     Started {longDate(b.startedAt)}
                   </p>
-                </Link>
+                </EntityLink>
               </CardContent>
             </Card>
           );

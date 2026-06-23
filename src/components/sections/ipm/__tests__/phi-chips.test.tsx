@@ -46,9 +46,9 @@ describe("PhiChips (render/smoke)", () => {
     ).toBeInTheDocument();
   });
 
-  it("wires the plot name to the plot dossier (was COSMETIC)", () => {
+  it("drills the plot name to the dossier sprays section (was COSMETIC)", () => {
     render(<PhiChips rows={[phiActive]} />);
     const link = screen.getByRole("link", { name: /Talamanca/i });
-    expect(link).toHaveAttribute("href", "/plots/p-talamanca");
+    expect(link).toHaveAttribute("href", "/plots/p-talamanca#sprays");
   });
 });

@@ -54,7 +54,9 @@ const ICON_CHIP: Record<Accent, string> = {
 /** Sparkline text color, by accent (drives currentColor in the SVG). */
 const SPARK_COLOR: Record<Accent, string> = {
   forest: "text-forest-500",
-  honey: "text-honey",
+  // text-honey (#c8922e) is ~2.67:1 on the card — below WCAG 1.4.11's 3:1 for
+  // non-text UI. text-honey-700 (#8a5a12, ~5.5:1) is the darker text token.
+  honey: "text-honey-700",
   cherry: "text-cherry",
   coffee: "text-coffee-400",
   sky: "text-sky",

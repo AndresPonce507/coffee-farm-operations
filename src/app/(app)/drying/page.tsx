@@ -6,6 +6,7 @@ import {
   getDryingLots,
   getStationOccupancy,
   getDryingWeatherRisk,
+  getReposoBand,
 } from "@/lib/db/drying";
 
 /**
@@ -38,10 +39,11 @@ import {
  * from (app)/layout.tsx.
  */
 export default async function DryingPage() {
-  const [lots, stations, weatherRisk] = await Promise.all([
+  const [lots, stations, weatherRisk, band] = await Promise.all([
     getDryingLots(),
     getStationOccupancy(),
     getDryingWeatherRisk(),
+    getReposoBand(),
   ]);
 
   // Resting lot codes — the candidates a moisture reading / station assignment can
@@ -57,7 +59,7 @@ export default async function DryingPage() {
         <DryingWriteActions lots={lotCodes} stations={stations} />
       </PageHeader>
 
-      <DryingBoard lots={lots} />
+      <DryingBoard lots={lots} bandMin={band.min} bandMax={band.max} />
 
       <StationOccupancyBoard stations={stations} weatherRisk={weatherRisk} />
     </div>

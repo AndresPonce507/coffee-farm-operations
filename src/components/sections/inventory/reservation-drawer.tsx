@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CheckCircle2, Lock, X } from "lucide-react";
 
@@ -35,6 +35,10 @@ import { cn, kg } from "@/lib/utils";
 const FIELD =
   "h-10 w-full rounded-xl border border-line bg-white/70 px-3 text-sm text-ink outline-none transition focus:border-forest-300 focus:ring-2 focus:ring-forest-100";
 const LABEL = "text-xs font-medium text-muted-fg";
+
+/** Elements that can hold keyboard focus inside the drawer, in DOM order. */
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export function ReservationDrawer({ lot }: { lot: GreenLotAtp }) {
   const [open, setOpen] = useState(false);
@@ -81,6 +85,9 @@ function ReservationPanel({
     FormData
   >(reserveGreenLotAction, INVENTORY_IDLE);
 
+  const panelRef = useRef<HTMLDivElement>(null);
+  // The element focused right before the drawer opened, restored on close.
+  const restoreRef = useRef<HTMLElement | null>(null);
   // Portal target only exists on the client. Gate the portal on mount so SSR
   // renders nothing (this drawer is only ever opened by a client interaction).
   const [mounted, setMounted] = useState(false);
@@ -99,6 +106,29 @@ function ReservationPanel({
     };
   }, [onClose]);
 
+  // Focus management (WCAG 2.4.3 / 2.1.2) — mirrors the shared <Dialog> primitive.
+  // On open: remember the previously-focused element, then move focus to the
+  // first focusable inside the panel (or the panel itself). On close/unmount:
+  // restore focus to that remembered element so keyboard users land back on the
+  // Reserve trigger instead of resetting to <body>. `mounted` is a dep because the
+  // panel only exists once the portal has mounted on the client.
+  useEffect(() => {
+    restoreRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+
+    const panel = panelRef.current;
+    if (panel) {
+      const first = panel.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+      (first ?? panel).focus();
+    }
+
+    return () => {
+      restoreRef.current?.focus?.();
+    };
+  }, [mounted]);
+
   // A successful hold closes the drawer (the page revalidates server-side).
   useEffect(() => {
     if (state.status === "success") {
@@ -116,6 +146,34 @@ function ReservationPanel({
 
   if (!mounted) return null;
 
+  // Keep Tab/Shift+Tab inside the drawer by wrapping at the edges (focus trap).
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== "Tab") return;
+    const panel = panelRef.current;
+    if (!panel) return;
+    const focusables = Array.from(
+      panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+    );
+    if (focusables.length === 0) {
+      // Nothing focusable but the panel — keep focus pinned to it.
+      e.preventDefault();
+      panel.focus();
+      return;
+    }
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const activeEl = document.activeElement;
+    if (e.shiftKey) {
+      if (activeEl === first || !panel.contains(activeEl)) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else if (activeEl === last || !panel.contains(activeEl)) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+
   // Portal to <body> so the drawer escapes every page stacking context. The page
   // shell + cards carry lingering `transform`s (from `animate-rise`, whose end
   // state translateY(0) is still a transform → still a stacking context), which
@@ -127,6 +185,7 @@ function ReservationPanel({
       role="dialog"
       aria-modal="true"
       aria-label={`Reserve green lot ${lot.greenLotCode}`}
+      onKeyDown={onKeyDown}
     >
       {/* Click-away scrim. */}
       <button
@@ -138,7 +197,11 @@ function ReservationPanel({
       />
 
       {/* The drawer panel — slides in from the right (GPU transform). */}
-      <div className="animate-rise relative z-10 flex h-full w-full max-w-sm flex-col border-l border-white/60 bg-white/85 p-6 shadow-[0_24px_64px_-20px_rgba(0,41,29,0.45)] backdrop-blur-xl">
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        className="animate-rise relative z-10 flex h-full w-full max-w-sm flex-col border-l border-white/60 bg-white/85 p-6 shadow-[0_24px_64px_-20px_rgba(0,41,29,0.45)] backdrop-blur-xl outline-none"
+      >
         <div className="mb-1 flex items-start justify-between">
           <div>
             <h2 className="font-display text-lg font-semibold text-ink">
@@ -152,7 +215,7 @@ function ReservationPanel({
             type="button"
             onClick={onClose}
             aria-label="Close drawer"
-            className="grid h-8 w-8 place-items-center rounded-lg text-muted-fg transition hover:bg-white/60 hover:text-ink"
+            className="grid h-8 w-8 place-items-center rounded-lg text-muted-fg transition hover:bg-white/60 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-100"
           >
             <X className="h-4 w-4" />
           </button>

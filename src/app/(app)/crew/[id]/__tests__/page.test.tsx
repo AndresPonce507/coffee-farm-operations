@@ -169,9 +169,12 @@ describe("/crew/[id] dossier page (smoke)", () => {
     render(ui);
 
     // worker (roster + productivity), plot (plots section + dispatch line), dispatch-run.
-    expect(
-      screen.getByRole("link", { name: /despacho 42/i }),
-    ).toHaveAttribute("href", "/dispatch/42");
+    // The dispatch-run line links to /dispatch/42 — its accessible name is now the visible
+    // "Despacho del <date>" text (WCAG 2.5.3), not the raw run id, so match by href.
+    const dispatchLink = screen
+      .getAllByRole("link")
+      .find((a) => a.getAttribute("href") === "/dispatch/42");
+    expect(dispatchLink).toBeDefined();
 
     const hrefs = screen
       .getAllByRole("link")

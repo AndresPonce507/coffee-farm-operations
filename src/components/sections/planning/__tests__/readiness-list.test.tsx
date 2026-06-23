@@ -108,4 +108,23 @@ describe("ReadinessList (render/smoke)", () => {
     expect(hrefs).toContain("/plots/p-cuesta-piedra");
     expect(hrefs).toContain("/plots/p-las-lagunas");
   });
+
+  it("does not re-declare its own focus-ring — defers to EntityLink's centralized FOCUS_RING", () => {
+    // cn() has no tailwind-merge, so a caller-supplied focus-visible:ring-* would apply
+    // ALONGSIDE EntityLink's FOCUS_RING (ring-forest/40), with an order-dependent winner.
+    // The call site must keep only layout/shape tokens and let FOCUS_RING own the ring.
+    render(<ReadinessList rows={[ready]} />);
+    const link = screen.getByRole("link", { name: /abrir parcela Cuesta de Piedra/i });
+    const cls = link.getAttribute("class") ?? "";
+    // layout/shape tokens stay
+    expect(cls).toContain("group");
+    expect(cls).toContain("block");
+    expect(cls).toContain("rounded-2xl");
+    // no conflicting caller override of the ring color — the /60 that used to fight
+    // FOCUS_RING's /40 (cn keeps both; the winner is order-dependent) must be gone.
+    expect(cls).not.toContain("ring-forest/60");
+    // exactly one ring color in force, and it's the centralized one (from FOCUS_RING)
+    expect(cls).toContain("focus-visible:ring-forest/40");
+    expect(cls.match(/focus-visible:ring-forest\//g)).toHaveLength(1);
+  });
 });

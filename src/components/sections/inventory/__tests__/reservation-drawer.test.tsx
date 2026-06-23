@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { InventoryActionState } from "@/app/(app)/inventory/actions";
 
@@ -13,6 +13,11 @@ vi.mock("@/app/(app)/inventory/actions", () => ({
 }));
 
 import { ReservationDrawer } from "@/components/sections/inventory/reservation-drawer";
+
+// vitest config has globals off, so RTL's auto afterEach(cleanup) isn't
+// registered; register it so each test renders into a fresh document body
+// (the drawer portals to <body>, so stale trees would leak across tests).
+afterEach(cleanup);
 
 const LOT = {
   greenLotCode: "JC-552-G",
@@ -57,6 +62,55 @@ describe("ReservationDrawer (the one client island)", () => {
     // the public error surface (role=alert) carrying the friendly message.
     const toast = await screen.findByTestId("reservation-toast-region");
     expect(toast).toBeInTheDocument();
+  });
+
+  // FINDING (focus-management) — Escape closes the open drawer (rolled-own dialog
+  // had no focus trap/restore; the dismiss path must keep working alongside it).
+  it("closes the open drawer on Escape", () => {
+    render(<ReservationDrawer lot={LOT} />);
+    fireEvent.click(screen.getByRole("button", { name: /reserve/i }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  // FINDING (focus-management) — the close button must carry a focus-visible ring
+  // so keyboard users can see when it holds focus (WCAG 2.4.7).
+  it("gives the close button a focus-visible ring", () => {
+    render(<ReservationDrawer lot={LOT} />);
+    fireEvent.click(screen.getByRole("button", { name: /reserve/i }));
+    const closeBtn = screen.getByRole("button", { name: "Close drawer" });
+    expect(closeBtn.className).toMatch(/focus-visible:ring-2/);
+    expect(closeBtn.className).toMatch(/focus-visible:ring-forest-100/);
+  });
+
+  // FINDING (focus-management) — on open, focus moves INTO the drawer so keyboard
+  // users aren't stranded on the trigger behind the modal (focus trap + restore).
+  it("moves focus into the drawer on open", () => {
+    render(<ReservationDrawer lot={LOT} />);
+    fireEvent.click(screen.getByRole("button", { name: /reserve/i }));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.contains(document.activeElement)).toBe(true);
+  });
+
+  // FINDING (focus-management) — Tab from the last focusable wraps to the first.
+  it("traps Tab at the end back to the first focusable element", () => {
+    render(<ReservationDrawer lot={LOT} />);
+    fireEvent.click(screen.getByRole("button", { name: /reserve/i }));
+
+    const focusables = Array.from(
+      screen.getByRole("dialog").querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]):not([tabindex="-1"]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    );
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    last.focus();
+    expect(document.activeElement).toBe(last);
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Tab" });
+    expect(document.activeElement).toBe(first);
   });
 
   // Regression: the drawer must PORTAL to <body> so it escapes page stacking

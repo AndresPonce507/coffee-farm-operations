@@ -148,11 +148,14 @@ describe("CrewPlotsSection", () => {
 describe("CrewDispatchSection", () => {
   it("links each run to its /dispatch/[id] dossier and each plot line to /plots/[id]", () => {
     render(<CrewDispatchSection history={history} />);
+    // Dispatch link: no `name` prop — the visible "Despacho del <date>" text IS the
+    // accessible name (WCAG 2.5.3), so we match it rather than the raw run id.
     expect(
-      screen.getByRole("link", { name: /despacho 42/i }),
+      screen.getByRole("link", { name: /Despacho del 2026-06-20/i }),
     ).toHaveAttribute("href", "/dispatch/42");
+    // Plot link: aria-label uses the human-readable plotName, not the raw plotId.
     expect(
-      screen.getByRole("link", { name: /parcela p-norte-bajo/i }),
+      screen.getByRole("link", { name: /parcela Norte Bajo/i }),
     ).toHaveAttribute("href", "/plots/p-norte-bajo");
   });
 
@@ -166,7 +169,7 @@ describe("CrewDispatchSection", () => {
   it("plot pill links meet the 44px glove-friendly touch target (min-h-11)", () => {
     render(<CrewDispatchSection history={history} />);
     const plotLink = screen.getByRole("link", {
-      name: /parcela p-norte-bajo/i,
+      name: /parcela Norte Bajo/i,
     });
     // The link element must carry min-h-11 so the tap target reaches >=44px.
     expect(plotLink.className).toMatch(/min-h-11/);

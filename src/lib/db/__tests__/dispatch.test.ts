@@ -172,6 +172,7 @@ function stubByTable(byTable: Record<string, unknown[]>, error: { message: strin
   const from = vi.fn();
   const order = vi.fn();
   const eq = vi.fn();
+  const inFilter = vi.fn();
   from.mockImplementation((table: string) => {
     const result: QueryResult<unknown[]> = {
       data: byTable[table] ?? [],
@@ -187,6 +188,10 @@ function stubByTable(byTable: Record<string, unknown[]>, error: { message: strin
         eq(table, ...args);
         return builder;
       }),
+      in: vi.fn((...args: unknown[]) => {
+        inFilter(table, ...args);
+        return builder;
+      }),
       then: (
         onFulfilled: (value: QueryResult<unknown[]>) => unknown,
         onRejected?: (reason: unknown) => unknown,
@@ -195,7 +200,7 @@ function stubByTable(byTable: Record<string, unknown[]>, error: { message: strin
     return builder;
   });
   getSupabaseMock.mockReturnValue({ from });
-  return { from, order, eq };
+  return { from, order, eq, in: inFilter };
 }
 
 afterEach(() => {
@@ -350,6 +355,39 @@ describe("getDispatchToday — reads the active cards + groups their plot lines"
     const expectedToday = new Date().toISOString().slice(0, 10);
     await getDispatchToday();
     expect(eq).toHaveBeenCalledWith("v_dispatch_card", "dispatch_date", expectedToday);
+  });
+
+  // ── REGRESSION (board scale): v_dispatch_card_plots carries no dispatch_date
+  //    (it joins assignment→plot, not the run), so an unfiltered plot select loads
+  //    EVERY historical run's plot lines on each board render. The plot read MUST be
+  //    narrowed to ONLY the run ids this morning's cards reference — consistent with
+  //    the card query's date scope — so the read stays bounded as history grows.
+  it("scopes the plot read to only the run ids today's cards reference", async () => {
+    const { getDispatchToday } = await import("@/lib/db/dispatch");
+    const { in: inFilter } = stubByTable({
+      v_dispatch_card: cardRows,
+      v_dispatch_card_plots: plotRows,
+    });
+    await getDispatchToday("2026-06-21");
+    // the two card rows are runs 3 and 4 — the plot query must filter to exactly those.
+    expect(inFilter).toHaveBeenCalledWith(
+      "v_dispatch_card_plots",
+      "dispatch_run_id",
+      [3, 4],
+    );
+  });
+
+  it("skips the plot read entirely when no cards match the date (no all-history scan)", async () => {
+    const { getDispatchToday } = await import("@/lib/db/dispatch");
+    const { from, in: inFilter } = stubByTable({
+      v_dispatch_card: [],
+      v_dispatch_card_plots: plotRows,
+    });
+    const cards = await getDispatchToday("2026-06-21");
+    expect(cards).toEqual([]);
+    // with no cards there is nothing to join — the plots view is never queried.
+    expect(from).not.toHaveBeenCalledWith("v_dispatch_card_plots");
+    expect(inFilter).not.toHaveBeenCalled();
   });
 });
 

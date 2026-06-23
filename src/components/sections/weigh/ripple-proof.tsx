@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 
+import { EntityLink } from "@/components/ui/entity-link";
+import { entityHref } from "@/lib/dossier/entity-href";
 import { cn } from "@/lib/utils";
 
 /**
@@ -40,6 +42,12 @@ export interface RippleConsumer {
   href: string;
   /** The propagated delta as shown, e.g. "+18.4 kg". */
   delta: string;
+  /**
+   * When this consumer is the minted lot dossier, its code — so the row renders via the
+   * SSOT `<EntityLink kind="lot">` (canonical focus ring + reachability) instead of a raw
+   * `<Link>`. Absent for non-dossier consumers (Dashboard, offline `/harvests`).
+   */
+  lotCode?: string;
 }
 
 export interface RippleProofProps {
@@ -57,14 +65,16 @@ function fmtDelta(kg: number): string {
 
 /**
  * Derive the consumer list purely from the capture result. Online (lot code known):
- * Dashboard + the minted lot dossier. Offline (no lot code yet): Dashboard + a
- * generic "Tu lote" pointing at the `/lots` index until sync confirms the code.
+ * Dashboard + the minted lot dossier (its href resolved through the `entityHref` SSOT,
+ * carrying `lotCode` so the row renders as an `<EntityLink>`). Offline (no lot code yet):
+ * Dashboard + a generic "Tu lote" pointing at the live `/harvests` tab until sync confirms
+ * the code.
  */
 function deriveConsumers(lotCode: string | null, deltaKg: number): RippleConsumer[] {
   const delta = fmtDelta(deltaKg);
   const dashboard: RippleConsumer = { label: "Tablero · hoy", href: "/", delta };
   const lot: RippleConsumer = lotCode
-    ? { label: `Lote ${lotCode}`, href: `/lots/${lotCode}`, delta }
+    ? { label: `Lote ${lotCode}`, href: entityHref.lot(lotCode), delta, lotCode }
     : { label: "Tu lote · se confirma al sincronizar", href: "/harvests", delta };
   return [dashboard, lot];
 }
@@ -95,13 +105,10 @@ export function RippleProof({ lotCode, lastDeltaKg, className }: RippleProofProp
       </p>
 
       <ul className="mt-2.5 space-y-1.5">
-        {consumers.map((c) => (
-          <li key={c.href + c.label}>
-            <Link
-              href={c.href}
-              aria-label={`${c.label} ${c.delta}`}
-              className="group flex min-h-[44px] items-center justify-between gap-3 rounded-xl border border-line bg-white/55 px-3.5 py-2 text-sm font-medium text-ink transition hover:bg-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-100"
-            >
+        {consumers.map((c) => {
+          // Shared row interior: the label (visible entity name) + the propagated Δ.
+          const row = (
+            <>
               <span className="flex items-center gap-2">
                 <ArrowRight
                   className="h-4 w-4 text-forest transition-transform motion-safe:group-hover:translate-x-0.5"
@@ -112,9 +119,38 @@ export function RippleProof({ lotCode, lastDeltaKg, className }: RippleProofProp
               <span className="font-display font-bold tabular-nums text-forest">
                 {c.delta}
               </span>
-            </Link>
-          </li>
-        ))}
+            </>
+          );
+          // Common visual shell (no focus-visible:ring here — EntityLink supplies its
+          // canonical FOCUS_RING; the plain <Link> branch adds its own ring below).
+          const rowClass =
+            "group flex min-h-[44px] items-center justify-between gap-3 rounded-xl border border-line bg-white/55 px-3.5 py-2 text-sm font-medium text-ink transition hover:bg-white/80";
+          return (
+            <li key={c.href + c.label}>
+              {c.lotCode ? (
+                // The minted lot dossier → SSOT EntityLink (canonical ring + reachability).
+                // The visible "Lote <code>" label already names the entity, so we DROP the
+                // `name` prop: the visible text becomes the accessible name (WCAG 2.5.3).
+                <EntityLink kind="lot" id={c.lotCode} className={rowClass}>
+                  {row}
+                </EntityLink>
+              ) : (
+                // Non-dossier consumers (Dashboard "/", offline "/harvests") stay plain
+                // links with an explicit es-PA aria-label and their own focus ring.
+                <Link
+                  href={c.href}
+                  aria-label={`${c.label} ${c.delta}`}
+                  className={cn(
+                    rowClass,
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-100",
+                  )}
+                >
+                  {row}
+                </Link>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

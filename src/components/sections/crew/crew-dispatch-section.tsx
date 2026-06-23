@@ -58,8 +58,7 @@ export function CrewDispatchSection({
                 <EntityLink
                   kind="dispatch"
                   id={run.id}
-                  name={String(run.id)}
-                  className="inline-flex items-center gap-2 font-display text-sm font-semibold text-ink transition hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded-lg"
+                  className="inline-flex items-center gap-2 font-display text-sm font-semibold text-ink transition hover:text-forest rounded-lg"
                 >
                   <Send className="h-4 w-4 text-forest" aria-hidden />
                   Despacho del {run.dispatchDate}
@@ -78,8 +77,8 @@ export function CrewDispatchSection({
                       <EntityLink
                         kind="plot"
                         id={line.plotId}
-                        name={line.plotId}
-                        className="min-h-11 inline-flex items-center justify-center rounded-full bg-muted px-2 text-[11px] font-medium text-muted-fg ring-1 ring-line transition hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
+                        name={line.plotName}
+                        className="min-h-11 inline-flex items-center justify-center rounded-full bg-muted px-2 text-[11px] font-medium text-muted-fg ring-1 ring-line transition hover:text-ink"
                       >
                         {line.plotName}
                       </EntityLink>

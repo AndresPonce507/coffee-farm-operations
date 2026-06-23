@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { type DossierKind } from "@/lib/dossier/entity-href";
 
 /**
  * DossierShell — the shared chrome every entity dossier wraps.
@@ -12,14 +13,9 @@ import { ArrowLeft } from "lucide-react";
  * entity kind. World-class liquid-glass, AA on the cream aurora,
  * reduced-motion inherited (animate-rise already respects it), mobile-first.
  */
-export type DossierKind =
-  | "lot"
-  | "plot"
-  | "worker"
-  | "crew"
-  | "batch"
-  | "dispatch"
-  | "pay-period";
+// DossierKind is owned by the entity-href SSOT (src/lib/dossier/entity-href.ts).
+// Re-export it here so existing importers of this module keep resolving the type.
+export type { DossierKind };
 
 export interface DossierShellProps {
   kind: DossierKind;

@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+
 import { DossierShell } from "@/components/dossier/dossier-shell";
 import { DossierSection } from "@/components/dossier/dossier-section";
 import { CuppingScoresheet } from "@/components/sections/qc/cupping-scoresheet";
@@ -38,7 +40,15 @@ export default async function CuppingPage({
     getGreenDefects(lotCode).catch(() => []),
   ]);
 
+  // The ⌘K palette (and any hand-typed/injected URL) can route to /qc/cup/JC-999
+  // even when no such green lot exists. A cuppable lot always has a v_qc_status
+  // roll-up row; if there is none, there is no lot to cup — 404 rather than render
+  // a fabricated scoresheet for an unknown code (review finding: qc-cup-notfound).
   const status = qcStatus.find((s) => s.greenLotCode === lotCode) ?? null;
+  if (!status) {
+    notFound();
+  }
+
   const cuppers = workers.map((w) => ({ id: w.id, name: w.name }));
 
   return (

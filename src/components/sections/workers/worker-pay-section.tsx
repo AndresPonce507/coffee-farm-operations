@@ -46,8 +46,7 @@ export function WorkerPaySection({ pay }: WorkerPaySectionProps) {
                   <EntityLink
                     kind="pay-period"
                     id={p.payPeriodId}
-                    name={p.payPeriodId}
-                    className="rounded-md text-sm font-medium text-forest underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
+                    className="rounded-md text-sm font-medium text-forest underline-offset-2 hover:underline"
                   >
                     {periodLabel(p.periodStart, p.periodEnd)}
                   </EntityLink>

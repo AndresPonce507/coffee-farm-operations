@@ -127,13 +127,17 @@ describe("advanceStageAction", () => {
     const first = rpc.mock.calls[0][1] as Record<string, unknown>;
     const second = rpc.mock.calls[1][1] as Record<string, unknown>;
     expect(first.p_idempotency_key).not.toBe(second.p_idempotency_key);
-    // device_seq must be genuinely unique per call — Date.now() collides on two
-    // advances within the same millisecond, breaking the lot_event
-    // (device_id, device_seq) unique key.
+    // device_seq must be genuinely unique per call — a clock-derived seed
+    // collides across simultaneous serverless instances, breaking the lot_event
+    // (device_id, device_seq) unique key, so each call draws an independent
+    // CSPRNG uint32 instead.
     expect(first.p_device_seq).not.toBe(second.p_device_seq);
-    // A valid non-negative integer (the validator's device_seq contract).
+    // A valid non-negative integer in the uint32 range (the validator's
+    // device_seq contract: a non-negative SAFE integer).
     expect(Number.isInteger(first.p_device_seq)).toBe(true);
     expect(first.p_device_seq as number).toBeGreaterThanOrEqual(0);
+    expect(first.p_device_seq as number).toBeLessThanOrEqual(0xffffffff);
+    expect(Number.isSafeInteger(first.p_device_seq)).toBe(true);
   });
 
   it("forwards a STABLE idempotency key from the form (a double-submit dedupes)", async () => {

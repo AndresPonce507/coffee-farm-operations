@@ -406,6 +406,11 @@ export function DisbursementForm({
   const [method, setMethod] =
     useState<(typeof DISBURSEMENT_METHODS)[number]>("yappy");
   const [signature, setSignature] = useState<string | null>(null);
+  // Mint the exactly-once anchor ONCE per mount so a double-submit reuses the same
+  // key — the RPC dedupes on it (UNIQUE idempotency_key), so two clicks book one
+  // payment. Without this the action falls back to a fresh uuid each submit, and a
+  // double-tap would create two records.
+  const [idem] = useState(() => crypto.randomUUID());
 
   const cashSigned = method === "cash-signed";
   // a cash-signed payment cannot be submitted until a signature is captured (the
@@ -442,6 +447,8 @@ export function DisbursementForm({
     >
       <input type="hidden" name="payPeriodId" value={payPeriodId} />
       <input type="hidden" name="workerId" value={worker.workerId} />
+      {/* exactly-once anchor — stable per mount, so a double-submit dedupes to one. */}
+      <input type="hidden" name="idempotencyKey" value={idem} />
       {/* the captured signature data-URL rides up as the signatureRef field. */}
       <input type="hidden" name="signatureRef" value={signature ?? ""} />
 

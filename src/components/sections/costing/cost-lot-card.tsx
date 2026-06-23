@@ -143,11 +143,13 @@ export function CostLotCard({
         </ul>
 
         {/* AD-4 honest provenance: the count of cost drivers contributing to
-            this lot, linking through to the cost_entry audit trail behind them. */}
+            this lot, linking through to the cost_entry audit trail behind them.
+            No `name` prop — the visible "N cost drivers · provenance" text IS the
+            accessible name (WCAG 2.5.3 Label-in-Name); a `name={code}` aria-label
+            would not contain that visible text and would violate it. */}
         <EntityLink
           kind="lot"
           id={code}
-          name={code}
           anchor="cost-entries"
           className="inline-flex items-center gap-1.5 rounded-md px-1 py-0.5 text-xs font-medium text-forest transition-colors hover:bg-forest-100/60"
         >

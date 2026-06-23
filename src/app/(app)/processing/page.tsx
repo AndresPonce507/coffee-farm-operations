@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Coffee, Wind } from "lucide-react";
 
+import { EntityLink } from "@/components/ui/entity-link";
 import { PageHeader } from "@/components/ui/page-header";
 import { getLots } from "@/lib/db/lots";
 import { getDryingLots } from "@/lib/db/drying";
@@ -68,14 +69,16 @@ export default async function ProcessingPage() {
           </div>
           <ul className="flex flex-wrap gap-2">
             {dryingLots.map((lot) => (
-              <li key={lot.lotCode}>
-                <Link
-                  href={`/lots/${lot.lotCode}`}
-                  data-testid="resting-lot-link"
-                  data-ready={lot.reposo.ready ? "true" : "false"}
-                  title={`Open lot ${lot.lotCode} — ${lot.reposo.reason}`}
-                  aria-label={`Open drying detail for lot ${lot.lotCode}`}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-white/60 bg-white/60 px-3 py-1.5 text-xs font-semibold text-forest-600 transition-colors hover:border-white/80 hover:bg-white/80 hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-300"
+              <li
+                key={lot.lotCode}
+                data-testid="resting-lot-link"
+                data-ready={lot.reposo.ready ? "true" : "false"}
+                title={`Open lot ${lot.lotCode} — ${lot.reposo.reason}`}
+              >
+                <EntityLink
+                  kind="lot"
+                  id={lot.lotCode}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/60 bg-white/60 px-3 py-1.5 text-xs font-semibold text-forest-600 transition-colors hover:border-white/80 hover:bg-white/80 hover:text-forest"
                 >
                   <Coffee aria-hidden className="h-3.5 w-3.5 text-honey-700" />
                   {lot.lotCode}
@@ -87,7 +90,7 @@ export default async function ProcessingPage() {
                         : "h-1.5 w-1.5 rounded-full bg-cherry"
                     }
                   />
-                </Link>
+                </EntityLink>
               </li>
             ))}
           </ul>

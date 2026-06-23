@@ -36,9 +36,15 @@ describe("WorkerPaySection", () => {
   it("links each pay line to its /pay-period/[id]", () => {
     render(<WorkerPaySection pay={[payLine({})]} />);
     const lines = screen.getByTestId("worker-pay-lines");
-    expect(
-      within(lines).getByRole("link", { name: /periodo de pago pp-2026-06/i }),
-    ).toHaveAttribute("href", "/pay-period/pp-2026-06");
+    // No `name` prop: the visible period label IS the accessible name (WCAG 2.5.3),
+    // so we must NOT override it with the raw pay-period id.
+    const link = within(lines).getByRole("link");
+    expect(link).toHaveAttribute("href", "/pay-period/pp-2026-06");
+    expect(link).not.toHaveAttribute("aria-label");
+    // Accessible name is the visible es-PA period window (a date range, e.g.
+    // "31-may – 14-jun"), never the raw pay-period id.
+    expect(link.textContent).toMatch(/\d{2}-[a-zé]{3}.*–.*\d{2}-[a-zé]{3}/i);
+    expect(link.textContent).not.toMatch(/pp-2026-06/);
   });
 
   it("renders the gross and net figures", () => {

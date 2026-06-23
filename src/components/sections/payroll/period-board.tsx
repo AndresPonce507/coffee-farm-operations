@@ -18,8 +18,9 @@ import { cn, longDate } from "@/lib/utils";
  *
  * The active period (the one being viewed) gets a forest ring so the board reads as
  * "you are here". Server Component — the route hands in the periods (newest first
- * from `getPayPeriods`). Each card is a Next <Link href={`/payroll/${id}`}>. The
- * only motion is the shared card rise (reduced-motion-safe in globals.css).
+ * from `getPayPeriods`). Each card is a Next <Link> into the pay-period dossier via
+ * `entityHref["pay-period"](id)` (→ /pay-period/[id]). The only motion is the shared
+ * card rise (reduced-motion-safe in globals.css).
  */
 export interface PeriodBoardProps {
   periods: PayPeriodSummary[];

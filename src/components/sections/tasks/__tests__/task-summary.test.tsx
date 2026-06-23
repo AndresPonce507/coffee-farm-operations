@@ -17,27 +17,27 @@ const TASKS: FarmTask[] = [
   {
     id: "t1", title: "Prune Block A shade trees", category: "Pruning",
     plotId: "p1", plotName: "Tizingal Alto", assignee: "Marisol Quintero",
-    due: "2026-06-18", status: "todo", priority: "high",
+    workerId: null, due: "2026-06-18", status: "todo", priority: "high",
   },
   {
     id: "t2", title: "Apply foliar fertilizer", category: "Fertilizing",
     plotId: "p2", plotName: "Paso Ancho", assignee: "Diego Santamaría",
-    due: "2026-06-22", status: "in-progress", priority: "medium",
+    workerId: null, due: "2026-06-22", status: "in-progress", priority: "medium",
   },
   {
     id: "t3", title: "Scout for broca beetle", category: "Pest Control",
     plotId: null, plotName: null, assignee: "Ana Beltrán",
-    due: "2026-06-25", status: "blocked", priority: "high",
+    workerId: null, due: "2026-06-25", status: "blocked", priority: "high",
   },
   {
     id: "t4", title: "Weed nursery rows", category: "Weeding",
     plotId: "p3", plotName: "Bajo Mono", assignee: "Carlos Pineda",
-    due: "2026-06-19", status: "done", priority: "low",
+    workerId: null, due: "2026-06-19", status: "done", priority: "low",
   },
   {
     id: "t5", title: "Mulch newly planted Geisha", category: "Planting",
     plotId: "p1", plotName: "Tizingal Alto", assignee: "Marisol Quintero",
-    due: "2026-06-20", status: "todo", priority: "medium",
+    workerId: null, due: "2026-06-20", status: "todo", priority: "medium",
   },
 ];
 

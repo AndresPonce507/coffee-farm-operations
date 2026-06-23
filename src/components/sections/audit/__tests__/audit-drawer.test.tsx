@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AuditDrawer } from "@/components/sections/audit/audit-drawer";
@@ -133,6 +133,141 @@ describe("AuditDrawer (smoke)", () => {
     expect(link).not.toBeNull();
     expect(link?.getAttribute("href")).toBe("/lots/JC-564");
     expect(link).toHaveTextContent("JC-564");
+  });
+
+  // FINDING (focus-management) — Escape closes the drawer (was already wired;
+  // pinned so the trap work below doesn't regress the dismiss path).
+  it("closes on Escape", () => {
+    const onClose = vi.fn();
+    render(
+      <AuditDrawer
+        open
+        onClose={onClose}
+        streamKey="JC-564"
+        events={FIXTURE}
+        chainVerified
+      />,
+    );
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  // FINDING (focus-management) — the close button must carry a focus-visible ring
+  // so keyboard users can see when it holds focus (WCAG 2.4.7).
+  it("gives the close button a focus-visible ring", () => {
+    render(
+      <AuditDrawer
+        open
+        onClose={vi.fn()}
+        streamKey="JC-564"
+        events={FIXTURE}
+        chainVerified
+      />,
+    );
+    const closeBtn = screen.getByRole("button", { name: "Close audit trail" });
+    expect(closeBtn.className).toMatch(/focus-visible:ring-2/);
+    expect(closeBtn.className).toMatch(/focus-visible:ring-forest-100/);
+  });
+
+  // FINDING (focus-management) — on open, focus must move INTO the drawer (was:
+  // no focus trap, keyboard users left stranded on the trigger behind the modal).
+  it("moves focus into the drawer on open", () => {
+    render(
+      <AuditDrawer
+        open
+        onClose={vi.fn()}
+        streamKey="JC-564"
+        events={FIXTURE}
+        chainVerified
+      />,
+    );
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.contains(document.activeElement)).toBe(true);
+  });
+
+  // FINDING (focus-management) — Tab from the last focusable wraps to the first.
+  it("traps Tab at the end back to the first focusable element", () => {
+    render(
+      <AuditDrawer
+        open
+        onClose={vi.fn()}
+        streamKey="JC-564"
+        events={FIXTURE}
+        chainVerified
+      />,
+    );
+
+    const focusables = Array.from(
+      screen.getByRole("dialog").querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]):not([tabindex="-1"]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    );
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    last.focus();
+    expect(document.activeElement).toBe(last);
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Tab" });
+    expect(document.activeElement).toBe(first);
+  });
+
+  // FINDING (focus-management) — Shift+Tab from the first focusable wraps to last.
+  it("traps Shift+Tab at the start back to the last focusable element", () => {
+    render(
+      <AuditDrawer
+        open
+        onClose={vi.fn()}
+        streamKey="JC-564"
+        events={FIXTURE}
+        chainVerified
+      />,
+    );
+
+    const focusables = Array.from(
+      screen.getByRole("dialog").querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]):not([tabindex="-1"]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    );
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    first.focus();
+    expect(document.activeElement).toBe(first);
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Tab", shiftKey: true });
+    expect(document.activeElement).toBe(last);
+  });
+
+  // FINDING (focus-management) — closing restores focus to whatever was focused
+  // before open, so keyboard focus returns to the trigger, not <body>.
+  it("restores focus to the previously focused element on close", () => {
+    document.body.innerHTML = '<button id="trigger">Open</button>';
+    const trigger = document.getElementById("trigger") as HTMLButtonElement;
+    trigger.focus();
+    expect(document.activeElement).toBe(trigger);
+
+    const { rerender } = render(
+      <AuditDrawer
+        open
+        onClose={vi.fn()}
+        streamKey="JC-564"
+        events={FIXTURE}
+        chainVerified
+      />,
+    );
+    expect(screen.getByRole("dialog").contains(document.activeElement)).toBe(true);
+
+    rerender(
+      <AuditDrawer
+        open={false}
+        onClose={vi.fn()}
+        streamKey="JC-564"
+        events={FIXTURE}
+        chainVerified
+      />,
+    );
+    expect(document.activeElement).toBe(trigger);
+
+    document.body.innerHTML = "";
   });
 
   // Regression: the slide-over must PORTAL to <body> so it escapes page stacking

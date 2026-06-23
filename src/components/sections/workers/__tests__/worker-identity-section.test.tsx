@@ -54,7 +54,10 @@ describe("WorkerIdentitySection", () => {
     expect(within(card).getByText("es, ngäbere")).toBeInTheDocument();
     expect(within(card).getByText("$18.50")).toBeInTheDocument();
 
-    const crewLink = within(card).getByRole("link", { name: /crew/i });
+    // aria-label uses the human-readable crew name (WCAG 2.5.3), not the raw id.
+    const crewLink = within(card).getByRole("link", {
+      name: /cuadrilla Cuadrilla Norte/i,
+    });
     expect(crewLink).toHaveAttribute("href", "/crew/crew-norte");
   });
 

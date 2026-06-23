@@ -33,14 +33,15 @@ const batches: FermentBatch[] = [
 describe("FermentBoard (smoke)", () => {
   it("renders a card per ferment batch linking to its tracker", () => {
     render(<FermentBoard batches={batches} lots={["JC-800", "JC-801"]} recipes={[]} />);
-    expect(screen.getByTestId("ferment-batch-b1")).toHaveAttribute(
-      "href",
-      "/ferment/b1",
-    );
-    expect(screen.getByTestId("ferment-batch-b2")).toHaveAttribute(
-      "href",
-      "/ferment/b2",
-    );
+    // The batch-tracker link is an EntityLink (kind="batch") — it carries the
+    // centralized focus ring + an es-PA aria-label "Abrir tanda <lot>", and still
+    // resolves to /ferment/<id> via the entityHref SSOT.
+    expect(
+      screen.getByRole("link", { name: /abrir tanda JC-800/i }),
+    ).toHaveAttribute("href", "/ferment/b1");
+    expect(
+      screen.getByRole("link", { name: /abrir tanda JC-801/i }),
+    ).toHaveAttribute("href", "/ferment/b2");
     expect(screen.getAllByText("JC-800").length).toBeGreaterThan(0);
   });
 

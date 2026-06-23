@@ -34,7 +34,7 @@ function renderActivityText(text: string): React.ReactNode {
       <EntityLink
         kind="lot"
         id={code}
-        className="rounded font-medium text-forest underline-offset-2 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-300"
+        className="font-medium text-forest underline-offset-2 transition-colors hover:underline"
       >
         {code}
       </EntityLink>

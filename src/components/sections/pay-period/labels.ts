@@ -29,9 +29,11 @@ export function methodLabelEs(method: string): string {
       return "Nequi";
     case "ach":
       return "ACH";
+    case "cash-signed":
+      return "efectivo firmado";
     case "cash":
     case "efectivo":
-      return "efectivo firmado";
+      return "efectivo";
     default:
       return method;
   }

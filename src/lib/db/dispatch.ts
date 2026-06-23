@@ -142,9 +142,21 @@ export const getDispatchToday = cache(
       .order("crew_name", { ascending: true });
     if (cardError) throw new Error(`getDispatchToday: ${cardError.message}`);
 
+    // Scope the plot read to ONLY the runs this morning's cards reference.
+    // v_dispatch_card_plots carries no dispatch_date (it joins assignment→plot,
+    // not the run), so an unfiltered select would load EVERY historical run's
+    // plot lines on each board render — a board that grows without bound. The
+    // card query already pins to one dispatch_date; narrowing the plots to those
+    // runs' ids keeps the two reads consistent (and short-circuits when there are
+    // no cards). RLS (security_invoker) still applies — this only narrows, it
+    // never widens, so it stays tenant-safe.
+    const runIds = (cardData as DispatchCardRow[]).map((c) => Number(c.id));
+    if (runIds.length === 0) return [];
+
     const { data: plotData, error: plotError } = await client
       .from("v_dispatch_card_plots")
-      .select("*");
+      .select("*")
+      .in("dispatch_run_id", runIds);
     if (plotError) throw new Error(`getDispatchToday: ${plotError.message}`);
 
     // Group the plot lines by their run id once (avoids a per-card query).

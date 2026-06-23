@@ -1,10 +1,6 @@
 import { cache } from "react";
 
 import { getSupabase } from "@/lib/supabase/server";
-import type {
-  CertifiedApplicator,
-  PlotOption,
-} from "@/components/sections/ipm/spray-log-form";
 
 /* ====================================================================== */
 /* P2-S12 — Cert-gated applicator + plot read-port for the spray form.    */
@@ -13,6 +9,20 @@ import type {
 /* v_worker_certs_valid. The DB log_spray RPC re-checks the same gate      */
 /* fail-closed; this list just makes the gate visible in the picker.       */
 /* ====================================================================== */
+
+/** A plot the spray can be logged against. */
+export interface PlotOption {
+  id: string;
+  name: string;
+}
+
+/** An applicator + whether they currently hold a VALID pesticide-handling cert.
+ *  `certified` is computed server-side from v_worker_certs_valid (S1). */
+export interface CertifiedApplicator {
+  id: string;
+  name: string;
+  certified: boolean;
+}
 
 /** The cert kind that gates spray work. */
 export const SPRAY_CERT_KIND = "pesticide-handling";

@@ -91,6 +91,26 @@ describe("WorkerProfileSheet", () => {
     expect(screen.getByText("Ngäbe-Buglé")).toBeInTheDocument();
   });
 
+  it("renders the ngäbere language chip with WCAG-AA contrast-safe tokens", () => {
+    render(
+      <WorkerProfileSheet
+        name="Rosa Quintero"
+        languages={["es", "ngäbere"]}
+        attendance={[]}
+        contracts={[]}
+        certs={[]}
+        chainVerified
+      />,
+    );
+    const chip = screen.getByText("es · ngäbere").closest("span");
+    expect(chip).not.toBeNull();
+    // AA-safe (5.14:1) — mirrors the crew-roster-board chip.
+    expect(chip).toHaveClass("bg-muted", "text-muted-fg", "ring-line");
+    // The prior sky pair (4.11:1) must be gone.
+    expect(chip).not.toHaveClass("bg-sky-100");
+    expect(chip).not.toHaveClass("text-sky");
+  });
+
   it("renders the attendance timeline with an event kind", () => {
     render(
       <WorkerProfileSheet

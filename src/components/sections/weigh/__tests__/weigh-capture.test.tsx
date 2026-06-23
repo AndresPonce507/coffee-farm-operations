@@ -186,4 +186,28 @@ describe("WeighCapture", () => {
     // …and the button is usable again (not stuck busy).
     expect(gps).toBeEnabled();
   });
+
+  it("clears a stale GPS error after a successful retry (no contradictory UI)", async () => {
+    const { deps } = depsWith();
+    // First attempt fails (permission denied / timeout), the retry succeeds.
+    deps.getPosition = vi
+      .fn<NonNullable<WeighCaptureDeps["getPosition"]>>()
+      .mockResolvedValueOnce(null)
+      .mockResolvedValue({ lat: 8.777835, lng: -82.633982 });
+    render(<WeighCapture pickers={PICKERS} plots={PLOTS} farmKgToday={100} deps={deps} />);
+
+    const gps = screen.getByRole("button", { name: /GPS/i });
+
+    // First tap fails → the calm inline error surfaces.
+    fireEvent.click(gps);
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent(/GPS|parcela|plot/i),
+    );
+
+    // Second tap succeeds → the stale error must be gone (not contradicting success).
+    await waitFor(() => expect(gps).toBeEnabled());
+    fireEvent.click(gps);
+    await waitFor(() => expect(screen.getByText("GPS set")).toBeInTheDocument());
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
 });

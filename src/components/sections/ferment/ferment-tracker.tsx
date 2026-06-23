@@ -21,6 +21,7 @@ import { longDate } from "@/lib/utils";
 import { CutpointAlert } from "./cutpoint-alert";
 import { FermentCurve } from "./ferment-curve";
 import { LogReadingForm } from "./log-reading-form";
+import { LogWaterForm } from "./log-water-form";
 import { WaterChip } from "./water-chip";
 
 /**
@@ -191,8 +192,22 @@ export function FermentTracker({
           </CardContent>
         </Card>
 
-        <div className="flex items-stretch">
+        <div className="flex flex-col gap-4">
           <WaterChip water={water} />
+          <Card className="animate-rise">
+            <CardHeader>
+              <div>
+                <CardTitle>Agua de molino</CardTitle>
+                <CardDescription>
+                  Registra cada toma de agua del beneficio — alimenta el
+                  consumo por kilo
+                </CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <LogWaterForm batchId={batch.id} />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

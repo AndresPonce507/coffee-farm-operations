@@ -44,12 +44,19 @@ export function ProgressBar({ value, tone = "forest", className }: ProgressBarPr
       )}
     >
       <div
+        data-testid="progress-fill"
         className={cn(
-          "relative h-full rounded-full transition-[width] duration-500 ease-out",
+          // GPU-only fill: a full-width slab anchored left, sized by
+          // transform: scaleX() — no `width` reflow, no JS tween. The global
+          // prefers-reduced-motion rule zeroes the duration; motion-reduce
+          // belt-and-braces drops the transition entirely.
+          "relative h-full w-full origin-left rounded-full",
+          "will-change-transform transition-transform duration-500 ease-out",
+          "motion-reduce:transition-none",
           TONE_FILL[tone],
           TONE_GLOW[tone],
         )}
-        style={{ width: `${clamped}%` }}
+        style={{ transform: `scaleX(${clamped / 100})` }}
       >
         {/* Inner gloss: top highlight fading to a soft floor, painted over the tone fill. */}
         <span

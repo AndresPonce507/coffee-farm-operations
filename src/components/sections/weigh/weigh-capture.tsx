@@ -167,6 +167,7 @@ export function WeighCapture({
         });
       });
     setGpsBusy(true);
+    setError(null); // clear any stale error so a successful retry isn't contradicted.
     try {
       const pos = await getPos();
       if (!pos) {
@@ -191,6 +192,7 @@ export function WeighCapture({
 
   const tryScale = useCallback(async () => {
     setScaleBusy(true);
+    setError(null); // clear any stale error so a successful retry isn't contradicted.
     try {
       const r = await readScale();
       if (r.ok) {

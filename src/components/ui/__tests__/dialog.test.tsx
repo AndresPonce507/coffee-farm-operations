@@ -116,6 +116,15 @@ describe("Dialog", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  // FINDING (focus-management) — the header close button must carry a
+  // focus-visible ring so keyboard users can see when it holds focus (WCAG 2.4.7).
+  it("gives the header close button a focus-visible ring", () => {
+    render(<DialogWithBody open onClose={() => {}} />);
+    const closeBtn = screen.getByRole("button", { name: "Close dialog" });
+    expect(closeBtn.className).toMatch(/focus-visible:ring-2/);
+    expect(closeBtn.className).toMatch(/focus-visible:ring-forest-100/);
+  });
+
   // Regression: the modal must PORTAL to <body> so it escapes page stacking
   // contexts. Rendered inline, a transformed ancestor (the app shell / cards carry
   // a lingering `animate-rise` transform) traps the z-50 layer below sibling cards
