@@ -101,11 +101,11 @@ const productivity: CrewProductivity = {
 describe("CrewRosterSection", () => {
   it("renders each member name as a link to their /workers/[id] dossier", () => {
     render(<CrewRosterSection members={members} />);
-    const lucia = screen.getByRole("link", { name: /worker w-06/i });
+    const lucia = screen.getByRole("link", { name: /trabajador w-06/i });
     expect(lucia).toHaveAttribute("href", "/workers/w-06");
     expect(within(lucia).getByText("Lucía")).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /worker w-07/i }),
+      screen.getByRole("link", { name: /trabajador w-07/i }),
     ).toHaveAttribute("href", "/workers/w-07");
   });
 
@@ -120,7 +120,7 @@ describe("CrewRosterSection", () => {
 describe("CrewPlotsSection", () => {
   it("renders each plot as a link to its /plots/[id] dossier", () => {
     render(<CrewPlotsSection plots={plots} />);
-    const link = screen.getByRole("link", { name: /plot p-norte-bajo/i });
+    const link = screen.getByRole("link", { name: /parcela p-norte-bajo/i });
     expect(link).toHaveAttribute("href", "/plots/p-norte-bajo");
     expect(within(link).getByText("Norte Bajo")).toBeInTheDocument();
   });
@@ -137,10 +137,10 @@ describe("CrewDispatchSection", () => {
   it("links each run to its /dispatch/[id] dossier and each plot line to /plots/[id]", () => {
     render(<CrewDispatchSection history={history} />);
     expect(
-      screen.getByRole("link", { name: /dispatch 42/i }),
+      screen.getByRole("link", { name: /despacho 42/i }),
     ).toHaveAttribute("href", "/dispatch/42");
     expect(
-      screen.getByRole("link", { name: /plot p-norte-bajo/i }),
+      screen.getByRole("link", { name: /parcela p-norte-bajo/i }),
     ).toHaveAttribute("href", "/plots/p-norte-bajo");
   });
 
@@ -150,13 +150,22 @@ describe("CrewDispatchSection", () => {
       screen.getByText(/sin despachos registrados/i),
     ).toBeInTheDocument();
   });
+
+  it("plot pill links meet the 44px glove-friendly touch target (min-h-11)", () => {
+    render(<CrewDispatchSection history={history} />);
+    const plotLink = screen.getByRole("link", {
+      name: /parcela p-norte-bajo/i,
+    });
+    // The link element must carry min-h-11 so the tap target reaches >=44px.
+    expect(plotLink.className).toMatch(/min-h-11/);
+  });
 });
 
 describe("CrewProductivitySection", () => {
   it("links each picker to their /workers/[id] dossier and shows the crew total", () => {
     render(<CrewProductivitySection productivity={productivity} />);
     expect(
-      screen.getByRole("link", { name: /worker w-06/i }),
+      screen.getByRole("link", { name: /trabajador w-06/i }),
     ).toHaveAttribute("href", "/workers/w-06");
     expect(screen.getByText("70.0 kg")).toBeInTheDocument();
   });

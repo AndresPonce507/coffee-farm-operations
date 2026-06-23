@@ -77,7 +77,7 @@ export async function HarvestLogTable({
                   <EntityLink
                     kind="lot"
                     id={h.lotCode}
-                    className="font-mono text-xs text-coffee underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
+                    className="rounded font-mono text-xs text-coffee underline-offset-2 transition-colors hover:text-forest hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper focus-visible:text-forest focus-visible:underline"
                   >
                     {h.lotCode}
                   </EntityLink>
@@ -86,19 +86,23 @@ export async function HarvestLogTable({
                   <EntityLink
                     kind="plot"
                     id={h.plotId}
-                    className="font-medium text-ink underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
+                    className="rounded font-medium text-ink underline-offset-2 transition-colors hover:text-forest hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper focus-visible:text-forest focus-visible:underline"
                   >
                     {h.plotName}
                   </EntityLink>
                 </TD>
                 <TD className="whitespace-nowrap text-muted-fg">
-                  <EntityLink
-                    kind="worker"
-                    id={h.workerId}
-                    className="text-muted-fg underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
-                  >
-                    {h.picker}
-                  </EntityLink>
+                  {h.workerId != null ? (
+                    <EntityLink
+                      kind="worker"
+                      id={h.workerId}
+                      className="rounded text-muted-fg underline-offset-2 transition-colors hover:text-forest hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper focus-visible:text-forest focus-visible:underline"
+                    >
+                      {h.picker}
+                    </EntityLink>
+                  ) : (
+                    h.picker
+                  )}
                 </TD>
                 <TD className="whitespace-nowrap text-right font-medium tabular-nums text-ink">
                   {kg(h.cherriesKg)}

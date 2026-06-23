@@ -135,7 +135,8 @@ export function CupToCausePanel({
                     <EntityLink
                       kind="plot"
                       id={plot.id}
-                      className="font-medium text-forest-700 underline-offset-4 hover:underline"
+                      name={`${plot.id} ${plot.name}`}
+                      className="font-medium text-forest-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
                     >
                       {plot.name}
                     </EntityLink>
@@ -165,7 +166,8 @@ export function CupToCausePanel({
                     <EntityLink
                       kind="lot"
                       id={s.code}
-                      className="font-mono text-xs text-muted-fg underline-offset-4 transition-colors hover:text-forest-700 hover:underline"
+                      name={s.code}
+                      className="font-mono text-xs text-muted-fg underline-offset-4 transition-colors hover:text-forest-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
                     >
                       {s.code}
                     </EntityLink>

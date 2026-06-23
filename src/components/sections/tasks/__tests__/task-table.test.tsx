@@ -104,7 +104,7 @@ describe("TaskTable — EntityLink wiring (Phase-5)", () => {
     render(ui);
 
     // t1 has plotId="p1", plotName="Tizingal Alto" → link to /plots/p1
-    const plotLink = screen.getByRole("link", { name: /Abrir plot p1/i });
+    const plotLink = screen.getByRole("link", { name: /Abrir parcela p1/i });
     expect(plotLink).toHaveAttribute("href", "/plots/p1");
     expect(plotLink).toHaveTextContent("Tizingal Alto");
   });
@@ -125,7 +125,7 @@ describe("TaskTable — EntityLink wiring (Phase-5)", () => {
     render(ui);
 
     // t1 has workerId="w1", assignee="Marisol Quintero" → link to /workers/w1
-    const workerLink = screen.getByRole("link", { name: /Abrir worker w1/i });
+    const workerLink = screen.getByRole("link", { name: /Abrir trabajador w1/i });
     expect(workerLink).toHaveAttribute("href", "/workers/w1");
     expect(workerLink).toHaveTextContent("Marisol Quintero");
   });

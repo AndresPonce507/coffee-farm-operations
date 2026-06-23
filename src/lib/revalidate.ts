@@ -33,7 +33,10 @@ export type EventKind =
   | "spray"
   | "qc-hold"
   | "plot"
-  | "disbursement";
+  | "disbursement"
+  | "worker"
+  | "task"
+  | "processing-batch";
 
 /**
  * Per-event downstream consumer routes (the §2 propagation-contract table). Each
@@ -61,6 +64,12 @@ export const RIPPLE: Record<EventKind, readonly string[]> = {
   plot: ["/plots", "/map"],
   // Payroll disbursement — the pay-period accrual + the crew/payroll surfaces.
   disbursement: ["/payroll", "/crew"],
+  // Worker create/update/delete — worker roster feeds Workers tab and the Dashboard.
+  worker: ["/workers", "/"],
+  // Task create/update/delete/status-change — Tasks tab + Dashboard.
+  task: ["/tasks", "/"],
+  // Processing batch create/update/delete — Processing tab + Dashboard.
+  "processing-batch": ["/processing", "/"],
 };
 
 /**

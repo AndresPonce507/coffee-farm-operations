@@ -43,7 +43,7 @@ describe("PayPeriodLinesSection", () => {
     // EntityLink carries the es-PA aria-label (the contract); the desktop table
     // and the mobile record-card both render the same link, so scope to the table.
     const table = screen.getByRole("table");
-    const link = within(table).getByRole("link", { name: /worker w-06/i });
+    const link = within(table).getByRole("link", { name: /trabajador w-06/i });
     expect(link).toHaveAttribute("href", "/workers/w-06");
     // the worker's NAME is the visible link text (connectivity-by-name AC).
     expect(link).toHaveTextContent("Lucía Morales");
@@ -56,7 +56,7 @@ describe("PayPeriodLinesSection", () => {
       />,
     );
     const table = screen.getByRole("table");
-    const link = within(table).getByRole("link", { name: /crew crew-tizingal/i });
+    const link = within(table).getByRole("link", { name: /cuadrilla crew-tizingal/i });
     expect(link).toHaveAttribute("href", "/crew/crew-tizingal");
     expect(link).toHaveTextContent("Crew Tizingal");
   });
@@ -68,13 +68,13 @@ describe("PayPeriodLinesSection", () => {
     const table = screen.getByRole("table");
     // no /crew/[id] link is emitted for an off-roster worker.
     expect(
-      within(table).queryByRole("link", { name: /crew/i }),
+      within(table).queryByRole("link", { name: /cuadrilla/i }),
     ).not.toBeInTheDocument();
     // the crew name still shows as plain text — no fabricated link.
     expect(within(table).getByText("Crew Gone")).toBeInTheDocument();
     // the worker link still renders.
     expect(
-      within(table).getByRole("link", { name: /worker w-06/i }),
+      within(table).getByRole("link", { name: /trabajador w-06/i }),
     ).toBeInTheDocument();
   });
 

@@ -7,8 +7,8 @@ import type { LotCost } from "@/lib/types";
 
 /* The /plots/[id] dossier's cost-per-kg section. cost-per-kg-green is a COMPUTED
  * value — per the smart-bar rule you can't edit it, so it DRILLS to the editable
- * source records (the cost-entry ledger anchor #cost-entries on this same
- * dossier). A null verdict shows an honest em-dash (the green-kg denominator is
+ * source records (the #cost section on this same dossier — DossierSection id="cost").
+ * A null verdict shows an honest em-dash (the green-kg denominator is
  * 0/undeclared), never a fabricated 0. Pure Server Component. */
 
 const usd = (n: number) =>
@@ -33,7 +33,7 @@ export function PlotCostSection({
             <EntityLink
               kind="plot"
               id={plotId}
-              anchor="cost-entries"
+              anchor="cost"
               className="group inline-flex items-baseline gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
             >
               <span className="font-display text-3xl font-bold text-ink">

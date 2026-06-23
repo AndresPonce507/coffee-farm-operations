@@ -58,7 +58,7 @@ describe("PlotsExplorer (smoke)", () => {
   it("links each grid plot card name to its plot dossier", () => {
     render(<PlotsExplorer plots={plots} />);
     // EntityLink carries an es-PA aria-label; the visible plot name nests inside it.
-    const link = screen.getByRole("link", { name: /plot p1/i });
+    const link = screen.getByRole("link", { name: /parcela p1/i });
     expect(link).toHaveAttribute("href", "/plots/p1");
     expect(link).toHaveTextContent("Tizingal Alto");
   });
@@ -69,7 +69,7 @@ describe("PlotsExplorer (smoke)", () => {
     // Switch to list view.
     const listToggle = screen.getByRole("button", { name: /^List$/ });
     fireEvent.click(listToggle);
-    const link = screen.getByRole("link", { name: /plot p2/i });
+    const link = screen.getByRole("link", { name: /parcela p2/i });
     expect(link).toHaveAttribute("href", "/plots/p2");
     expect(link).toHaveTextContent("Paso Ancho");
   });

@@ -96,6 +96,7 @@ export function WorkerIdentitySection({
               <EntityLink
                 kind="crew"
                 id={worker.crewId}
+                name={worker.crewId}
                 className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
               >
                 <Badge tone="forest" dot>

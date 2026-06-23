@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import { getSupabase } from "@/lib/supabase/server";
 import { formToRecord, trimmed } from "@/lib/validation/shared";
@@ -26,8 +26,7 @@ const toRow = (w: WorkerInput) => ({
 });
 
 function refresh() {
-  revalidatePath("/workers");
-  revalidatePath("/");
+  reactiveRefresh("worker");
 }
 
 export async function createWorker(

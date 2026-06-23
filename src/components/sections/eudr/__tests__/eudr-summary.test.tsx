@@ -45,10 +45,27 @@ describe("EudrSummary (smoke)", () => {
   it("each lot card links to its dossier on /lots/[code]", async () => {
     const ui = await EudrSummary();
     render(ui);
-    expect(screen.getByTestId("eudr-lot-JC-701")).toHaveAttribute(
-      "href",
-      "/lots/JC-701#eudr",
-    );
+    // eudr-lot-<code> is a <span> wrapper around the EntityLink; the inner <a>
+    // carries the href to the lot dossier.
+    const wrapper = screen.getByTestId("eudr-lot-JC-701");
+    const link = wrapper.querySelector("a");
+    expect(link).toHaveAttribute("href", "/lots/JC-701#eudr");
+  });
+
+  it("lot card wrapper is NOT an anchor — plot EntityLinks must not be nested inside a lot <a>", async () => {
+    const ui = await EudrSummary();
+    render(ui);
+    // The lot code is rendered inside a <span data-testid="eudr-lot-*"> that
+    // contains a single EntityLink <a>. The card's outer container must NOT be
+    // an <a>, so plot EntityLinks are never nested inside the lot anchor.
+    const lotWrapper = screen.getByTestId("eudr-lot-JC-701");
+    // Wrapper is a span, not an anchor.
+    expect(lotWrapper.tagName).toBe("SPAN");
+    const lotAnchor = lotWrapper.querySelector("a");
+    expect(lotAnchor).not.toBeNull();
+    // The lot anchor must NOT contain any other <a> (plot EntityLinks are siblings,
+    // not descendants — nested <a> in <a> is invalid HTML).
+    expect(lotAnchor!.querySelector("a")).toBeNull();
   });
 
   it("renders an empty state when there are no green lots", async () => {

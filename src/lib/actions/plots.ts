@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import { getSupabase } from "@/lib/supabase/server";
 import { formToRecord, trimmed } from "@/lib/validation/shared";
@@ -29,8 +29,7 @@ const toRow = (p: PlotInput) => ({
 });
 
 function refresh() {
-  revalidatePath("/plots");
-  revalidatePath("/");
+  reactiveRefresh("plot");
 }
 
 export async function createPlot(

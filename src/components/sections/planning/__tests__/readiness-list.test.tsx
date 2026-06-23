@@ -93,8 +93,8 @@ describe("ReadinessList (render/smoke)", () => {
 
   it("plot name heading is navigable — rendered inside the EntityLink anchor", () => {
     render(<ReadinessList rows={[ready]} />);
-    // EntityLink sets aria-label="Abrir plot <id>" — query by that label
-    const link = screen.getByRole("link", { name: /abrir plot p-cuesta-piedra/i });
+    // EntityLink sets aria-label="Abrir parcela <id>" — query by that label
+    const link = screen.getByRole("link", { name: /abrir parcela p-cuesta-piedra/i });
     expect(link).toHaveAttribute("href", "/plots/p-cuesta-piedra");
     // the card is nested inside the link
     expect(within(link).getByTestId("readiness-p-cuesta-piedra")).toBeInTheDocument();

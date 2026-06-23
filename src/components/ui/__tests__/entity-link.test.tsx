@@ -34,15 +34,53 @@ describe("EntityLink", () => {
     );
   });
 
-  it("carries an es-PA aria-label naming the entity for screen readers", () => {
+  it("does NOT set aria-label when name is omitted — visible children supply the accessible name (WCAG 2.5.3)", () => {
     render(
       <EntityLink kind="worker" id="w42">
         Ana
       </EntityLink>,
     );
+    // The link must be reachable by its visible text — NOT by a slug aria-label that
+    // shadows and discards it (2.5.3 Label-in-Name violation).
+    const link = screen.getByRole("link", { name: "Ana" });
+    expect(link).toBeInTheDocument();
+    expect(link).not.toHaveAttribute("aria-label");
+  });
+
+  it("uses the visible name in the aria-label when a name prop is provided", () => {
+    render(
+      <EntityLink kind="worker" id="w42" name="Lupita González">
+        Lupita González
+      </EntityLink>,
+    );
     expect(
-      screen.getByRole("link", { name: /worker w42/i }),
+      screen.getByRole("link", { name: /abrir trabajador lupita gonzález/i }),
     ).toBeInTheDocument();
+  });
+
+  it("uses Spanish kind labels in aria-label when name prop is provided, for all dossier kinds", () => {
+    const cases: Array<[Parameters<typeof EntityLink>[0]["kind"], string]> = [
+      ["lot", "lote"],
+      ["plot", "parcela"],
+      ["crew", "cuadrilla"],
+      ["batch", "tanda"],
+      ["dispatch", "despacho"],
+      ["pay-period", "periodo de pago"],
+    ];
+    for (const [kind, esLabel] of cases) {
+      const humanName = `Entidad ${esLabel}`;
+      const { unmount } = render(
+        <EntityLink kind={kind} id="x1" name={humanName}>
+          {humanName}
+        </EntityLink>,
+      );
+      expect(
+        screen.getByRole("link", {
+          name: new RegExp(`abrir ${esLabel} entidad`, "i"),
+        }),
+      ).toBeInTheDocument();
+      unmount();
+    }
   });
 
   it("forwards a className so the existing card markup keeps its styling", () => {

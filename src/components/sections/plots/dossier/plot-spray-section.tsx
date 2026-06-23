@@ -91,7 +91,7 @@ export function PlotSpraySection({
                       <EntityLink
                         kind="worker"
                         id={s.workerId}
-                        className="font-medium text-forest underline-offset-2 hover:underline"
+                        className="rounded-md font-medium text-forest underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
                       >
                         {s.workerName}
                       </EntityLink>

@@ -35,6 +35,7 @@ export function CrewPlotsSection({
             <EntityLink
               kind="plot"
               id={plot.plotId}
+              name={plot.plotId}
               className="glass-card glass-hover flex items-start gap-3 rounded-2xl p-3.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
             >
               <span

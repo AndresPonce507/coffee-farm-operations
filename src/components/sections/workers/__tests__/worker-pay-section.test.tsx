@@ -37,7 +37,7 @@ describe("WorkerPaySection", () => {
     render(<WorkerPaySection pay={[payLine({})]} />);
     const lines = screen.getByTestId("worker-pay-lines");
     expect(
-      within(lines).getByRole("link", { name: /pay-period pp-2026-06/i }),
+      within(lines).getByRole("link", { name: /periodo de pago pp-2026-06/i }),
     ).toHaveAttribute("href", "/pay-period/pp-2026-06");
   });
 

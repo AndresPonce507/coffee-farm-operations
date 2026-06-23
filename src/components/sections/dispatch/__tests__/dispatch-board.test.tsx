@@ -189,9 +189,9 @@ describe("DispatchBoard (async Server Component render)", () => {
 
     render(await DispatchBoard());
 
-    // EntityLink renders an <a> with aria-label "Abrir crew <id>" and href "/crew/<id>".
+    // EntityLink renders an <a> with aria-label "Abrir cuadrilla <id>" and href "/crew/<id>".
     // Find the link by its href to confirm the crew column header is wired.
-    const link = screen.getByRole("link", { name: /abrir crew crew-norte/i });
+    const link = screen.getByRole("link", { name: /abrir cuadrilla crew-norte/i });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute("href", "/crew/crew-norte");
   });

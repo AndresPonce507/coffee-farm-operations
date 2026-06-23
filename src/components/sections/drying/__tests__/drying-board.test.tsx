@@ -57,12 +57,12 @@ describe("DryingBoard (smoke)", () => {
 
   it("links each lot's code to its /lots/[code] dossier (entity-bearing row → dossier)", () => {
     render(<DryingBoard lots={[restingLot, readyLot]} />);
-    const link = screen.getByRole("link", { name: /Abrir lot JC-571/i });
+    const link = screen.getByRole("link", { name: /Abrir lote JC-571/i });
     expect(link).toHaveAttribute("href", "/lots/JC-571");
     expect(link).toHaveTextContent("JC-571");
     // The other lot's code is also a dossier link.
     expect(
-      screen.getByRole("link", { name: /Abrir lot JC-572/i }),
+      screen.getByRole("link", { name: /Abrir lote JC-572/i }),
     ).toHaveAttribute("href", "/lots/JC-572");
   });
 

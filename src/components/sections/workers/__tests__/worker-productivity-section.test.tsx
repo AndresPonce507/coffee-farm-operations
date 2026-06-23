@@ -54,10 +54,10 @@ describe("WorkerProductivitySection", () => {
     const list = screen.getByTestId("worker-weigh-events");
 
     expect(
-      within(list).getByRole("link", { name: /plot p-tizingal-alto/i }),
+      within(list).getByRole("link", { name: /parcela p-tizingal-alto/i }),
     ).toHaveAttribute("href", "/plots/p-tizingal-alto");
     expect(
-      within(list).getByRole("link", { name: /lot JC-564/i }),
+      within(list).getByRole("link", { name: /lote JC-564/i }),
     ).toHaveAttribute("href", "/lots/JC-564");
   });
 

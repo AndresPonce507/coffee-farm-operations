@@ -31,7 +31,7 @@ describe("PayPeriodDisbursementsSection", () => {
     );
     // EntityLink carries the es-PA aria-label (the contract); the worker NAME is
     // the resolved visible link text (the page hands in the workerId→name map).
-    const link = screen.getByRole("link", { name: /worker w-06/i });
+    const link = screen.getByRole("link", { name: /trabajador w-06/i });
     expect(link).toHaveAttribute("href", "/workers/w-06");
     expect(link).toHaveTextContent("Lucía Morales");
   });

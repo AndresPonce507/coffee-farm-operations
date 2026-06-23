@@ -45,6 +45,31 @@ const STATUS = {
   secondaryDefects: 0,
 } as unknown as QcStatus;
 
+describe("CupToCausePanel — EntityLink focus-visible accessibility (WCAG 2.4.7)", () => {
+  it("plot EntityLink carries focus-visible ring classes for keyboard navigation", () => {
+    render(
+      <CupToCausePanel
+        lotCode="JC-101"
+        genealogy={GENEALOGY}
+        status={STATUS}
+        plot={{ id: "p-tizingal", name: "Tizingal-Alto", altitudeMasl: 1650 }}
+      />,
+    );
+    // The plot link's accessible name is the visible text "Tizingal-Alto" (no `name`
+    // prop passed, so no aria-label override — WCAG 2.5.3 Label-in-Name safe).
+    const link = screen.getByRole("link", { name: /Tizingal-Alto/i });
+    expect(link.className).toMatch(/focus-visible:/);
+  });
+
+  it("lineage stage EntityLink carries focus-visible ring classes for keyboard navigation", () => {
+    render(
+      <CupToCausePanel lotCode="JC-101" genealogy={GENEALOGY} status={STATUS} />,
+    );
+    const link = screen.getByRole("link", { name: /JC-050/i });
+    expect(link.className).toMatch(/focus-visible:/);
+  });
+});
+
 describe("CupToCausePanel — plot + lineage codes are dossier links (L3 wire-up)", () => {
   it("links the originating plot to its plot dossier", () => {
     render(
@@ -55,7 +80,7 @@ describe("CupToCausePanel — plot + lineage codes are dossier links (L3 wire-up
         plot={{ id: "p-tizingal", name: "Tizingal-Alto", altitudeMasl: 1650 }}
       />,
     );
-    const link = screen.getByRole("link", { name: /Tizingal-Alto|plot p-tizingal/i });
+    const link = screen.getByRole("link", { name: /parcela p-tizingal/i });
     expect(link).toHaveAttribute("href", "/plots/p-tizingal");
     expect(link).toHaveTextContent("Tizingal-Alto");
   });
@@ -66,7 +91,7 @@ describe("CupToCausePanel — plot + lineage codes are dossier links (L3 wire-up
     );
     const cherry = screen.getByRole("link", { name: /JC-050/i });
     expect(cherry).toHaveAttribute("href", "/lots/JC-050");
-    const green = screen.getByRole("link", { name: /lot JC-101/i });
+    const green = screen.getByRole("link", { name: /lote JC-101/i });
     expect(green).toHaveAttribute("href", "/lots/JC-101");
   });
 
@@ -81,7 +106,7 @@ describe("CupToCausePanel — plot + lineage codes are dossier links (L3 wire-up
     );
     // The honest-degradation contract: no fabricated plot → no plot link.
     expect(
-      screen.queryByRole("link", { name: /plot p-/i }),
+      screen.queryByRole("link", { name: /parcela p-/i }),
     ).not.toBeInTheDocument();
   });
 });

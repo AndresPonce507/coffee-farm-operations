@@ -84,6 +84,7 @@ export function CupperDriftCard({
                   <EntityLink
                     kind="worker"
                     id={d.cupperId}
+                    name={name}
                     className={
                       name
                         ? "block truncate text-sm font-medium text-ink underline-offset-4 hover:text-forest-700 hover:underline"

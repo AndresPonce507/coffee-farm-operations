@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import { getSupabase } from "@/lib/supabase/server";
 import { formToRecord, trimmed } from "@/lib/validation/shared";
@@ -27,8 +27,7 @@ const toRow = (b: BatchInput) => ({
 });
 
 function refresh() {
-  revalidatePath("/processing");
-  revalidatePath("/");
+  reactiveRefresh("processing-batch");
 }
 
 export async function createBatch(

@@ -118,8 +118,8 @@ describe("QrPayslip", () => {
 
   it("wraps the headline in an EntityLink navigating to /workers/[workerId]", () => {
     render(<QrPayslip payslip={basePayslip({ workerId: "w-7" })} />);
-    // EntityLink renders an <a> with aria-label matching /worker w-7/i
-    const link = screen.getByRole("link", { name: /worker w-7/i });
+    // EntityLink renders an <a> with aria-label matching /trabajador w-7/i
+    const link = screen.getByRole("link", { name: /trabajador w-7/i });
     expect(link).toHaveAttribute("href", "/workers/w-7");
     expect(link).toHaveTextContent("Eduardo Bejarano");
   });
@@ -128,7 +128,7 @@ describe("QrPayslip", () => {
     render(
       <QrPayslip payslip={basePayslip({ workerId: "w-7", preferredName: "Lalo" })} />,
     );
-    const link = screen.getByRole("link", { name: /worker w-7/i });
+    const link = screen.getByRole("link", { name: /trabajador w-7/i });
     expect(link).toHaveAttribute("href", "/workers/w-7");
     expect(link).toHaveTextContent("Lalo");
   });

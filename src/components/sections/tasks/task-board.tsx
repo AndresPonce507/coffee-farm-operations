@@ -93,7 +93,7 @@ function TaskTile({ task }: { task: FarmTask }) {
       <h4 className="text-sm font-medium leading-snug text-ink">{task.title}</h4>
       {task.plotName && (
         task.plotId ? (
-          <EntityLink kind="plot" id={task.plotId}>
+          <EntityLink kind="plot" id={task.plotId} name={String(task.plotId)}>
             <p className="mt-1 text-xs text-muted-fg">{task.plotName}</p>
           </EntityLink>
         ) : (
@@ -105,7 +105,7 @@ function TaskTile({ task }: { task: FarmTask }) {
         <div className="flex min-w-0 items-center gap-2">
           <Avatar name={task.assignee} size="sm" />
           {task.workerId ? (
-            <EntityLink kind="worker" id={task.workerId}>
+            <EntityLink kind="worker" id={task.workerId} name={String(task.workerId)}>
               <span className="truncate text-xs font-medium text-ink">{task.assignee}</span>
             </EntityLink>
           ) : (

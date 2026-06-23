@@ -83,6 +83,7 @@ export async function PlotsTable() {
                     <EntityLink
                       kind="plot"
                       id={plot.id}
+                      name={plot.id}
                       className="group/plot inline-flex flex-col rounded-md outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
                     >
                       <span className="font-medium text-ink transition-colors group-hover/plot:text-forest">

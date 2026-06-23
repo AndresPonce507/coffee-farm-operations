@@ -263,7 +263,7 @@ describe("role=tree no-JS fallback", () => {
       // (e.g. "JC-100" must not also match "JC-100W"/"JC-100N") — each lineage
       // code resolves to exactly ONE dossier link.
       const link = within(tree).getByRole("link", {
-        name: new RegExp(`^abrir lot ${code}$`, "i"),
+        name: new RegExp(`^abrir lote ${code}$`, "i"),
       });
       expect(link).toHaveAttribute("href", `/lots/${code}`);
     }

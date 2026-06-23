@@ -49,6 +49,7 @@ export function SprayHistory({ rows }: { rows: SprayLogEntry[] }) {
                   <EntityLink
                     kind="plot"
                     id={r.plotId}
+                    name={r.plotId}
                     className="underline underline-offset-2 outline-none transition-colors hover:text-forest focus-visible:text-forest focus-visible:underline"
                   >
                     {r.plotName}
@@ -59,6 +60,7 @@ export function SprayHistory({ rows }: { rows: SprayLogEntry[] }) {
                   <EntityLink
                     kind="worker"
                     id={r.workerId}
+                    name={r.workerId}
                     className="underline underline-offset-2 outline-none transition-colors hover:text-forest focus-visible:text-forest focus-visible:underline"
                   >
                     {r.workerName}

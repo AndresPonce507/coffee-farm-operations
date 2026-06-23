@@ -69,4 +69,23 @@ describe("PlotHarvestsSection", () => {
     expect(screen.getByTestId("section-harvests")).toBeInTheDocument();
     expect(screen.getByText(/Sin cosechas/i)).toBeInTheDocument();
   });
+
+  it("EntityLinks carry focus-visible ring classes matching the worker-dossier pattern", () => {
+    render(
+      <PlotHarvestsSection harvests={harvests} pickerIds={pickerIds} />,
+    );
+
+    const pickerLink = screen
+      .getByText("Lupita González")
+      .closest("a") as HTMLAnchorElement;
+    const lotLink = screen
+      .getByRole("link", { name: /Abrir lote JC-564/i }) as HTMLAnchorElement;
+
+    for (const link of [pickerLink, lotLink]) {
+      expect(link.className).toContain("focus-visible:ring-2");
+      expect(link.className).toContain("focus-visible:ring-forest/40");
+      expect(link.className).toContain("focus-visible:outline-none");
+      expect(link.className).toContain("rounded-md");
+    }
+  });
 });

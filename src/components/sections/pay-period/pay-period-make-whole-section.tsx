@@ -73,6 +73,7 @@ export function PayPeriodMakeWholeSection({
                 <EntityLink
                   kind="worker"
                   id={line.workerId}
+                  name={line.workerId}
                   className="font-medium text-ink underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
                 >
                   {line.workerName}

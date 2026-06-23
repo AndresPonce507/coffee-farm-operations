@@ -93,6 +93,7 @@ function PlotCard({ plot }: PlotCardProps) {
             <EntityLink
               kind="plot"
               id={plot.id}
+              name={plot.id}
               className="rounded-md outline-none transition-colors hover:text-forest focus-visible:ring-2 focus-visible:ring-forest/40"
             >
               {plot.name}
@@ -158,6 +159,7 @@ function PlotRow({ plot }: PlotRowProps) {
             <EntityLink
               kind="plot"
               id={plot.id}
+              name={plot.id}
               className="rounded-md outline-none transition-colors hover:text-forest focus-visible:ring-2 focus-visible:ring-forest/40"
             >
               {plot.name}

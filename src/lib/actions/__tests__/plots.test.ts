@@ -150,7 +150,7 @@ afterEach(() => {
 });
 
 describe("createPlot", () => {
-  it("runs the ord max-lookup, inserts the snake_case row at ord = max+1, and refreshes /plots + /", async () => {
+  it("runs the ord max-lookup, inserts the snake_case row at ord = max+1, and refreshes /plots + /map", async () => {
     const m = makeClient(); // ord default [{ord:4}] → new ord 5
     getSupabaseMock.mockReturnValue(m.client);
 
@@ -173,7 +173,7 @@ describe("createPlot", () => {
     expect(row).not.toHaveProperty("harvested_kg");
 
     expect(revalidatePathMock).toHaveBeenCalledWith("/plots");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/map");
   });
 
   it("rejects a blank name app-side (errors.name) without an insert or revalidate", async () => {
@@ -233,7 +233,7 @@ describe("createPlot", () => {
 });
 
 describe("updatePlot", () => {
-  it("updates by id with the snake_case toRow, then refreshes /plots + /", async () => {
+  it("updates by id with the snake_case toRow, then refreshes /plots + /map", async () => {
     const m = makeClient();
     getSupabaseMock.mockReturnValue(m.client);
 
@@ -249,7 +249,7 @@ describe("updatePlot", () => {
     expect(row).not.toHaveProperty("id");
 
     expect(revalidatePathMock).toHaveBeenCalledWith("/plots");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/map");
   });
 
   it("rejects a missing id with {status:'error', message:'Missing plot id.'} — no update", async () => {
@@ -286,7 +286,7 @@ describe("updatePlot", () => {
 });
 
 describe("deletePlot", () => {
-  it("deletes by id, then refreshes /plots + /", async () => {
+  it("deletes by id, then refreshes /plots + /map", async () => {
     const m = makeClient();
     getSupabaseMock.mockReturnValue(m.client);
 
@@ -296,7 +296,7 @@ describe("deletePlot", () => {
     expect(m.del).toHaveBeenCalledTimes(1);
     expect(m.deleteEq).toHaveBeenCalledWith("id", "plot-1");
     expect(revalidatePathMock).toHaveBeenCalledWith("/plots");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/map");
   });
 
   it("rejects an empty id with {status:'error', message:'Missing plot id.'} — no delete", async () => {

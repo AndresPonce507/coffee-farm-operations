@@ -53,6 +53,7 @@ export function PayPeriodDisbursementsSection({
                   <EntityLink
                     kind="worker"
                     id={d.workerId}
+                    name={d.workerId}
                     className="font-medium text-ink underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
                   >
                     {name}

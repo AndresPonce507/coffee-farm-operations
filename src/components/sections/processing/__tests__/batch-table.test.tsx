@@ -229,8 +229,8 @@ describe("BatchTable (smoke)", () => {
     const ui = await BatchTable({ lots: ["JC-564"] });
     render(ui);
 
-    // EntityLink auto-generates aria-label="Abrir batch {id}" using the ferment uuid.
-    const iconLink = screen.getByRole("link", { name: /abrir batch fb-uuid-tap-test/i });
+    // EntityLink auto-generates aria-label="Abrir tanda {id}" using the ferment uuid.
+    const iconLink = screen.getByRole("link", { name: /abrir tanda fb-uuid-tap-test/i });
 
     // Must have min-h-11 and min-w-11 (≥44px) so the touch target is large enough.
     expect(iconLink.className).toContain("min-h-11");

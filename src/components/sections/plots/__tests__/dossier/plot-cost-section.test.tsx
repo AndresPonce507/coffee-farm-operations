@@ -13,8 +13,9 @@ describe("PlotCostSection", () => {
     expect(screen.getByText(/4\.25/)).toBeInTheDocument();
 
     // Smart-bar: a computed value drills to the editable source records.
+    // The plot dossier section id is "cost" — anchor must match the real DOM id.
     const drill = screen.getByRole("link");
-    expect(drill).toHaveAttribute("href", "/plots/p-tizingal-alto#cost-entries");
+    expect(drill).toHaveAttribute("href", "/plots/p-tizingal-alto#cost");
   });
 
   it("shows an honest em-dash (never a fabricated 0) when green-kg is undeclared", () => {

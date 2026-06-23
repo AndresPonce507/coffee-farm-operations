@@ -93,6 +93,7 @@ export function WorkerAttendanceSection({
                       <EntityLink
                         kind="plot"
                         id={e.plotId}
+                        name={e.plotId}
                         className="mt-0.5 inline-block rounded-md text-xs font-medium text-forest underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
                       >
                         {e.plotId}

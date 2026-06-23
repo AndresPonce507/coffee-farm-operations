@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ShieldCheck, ShieldAlert, MapPin } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -70,17 +69,27 @@ export async function EudrSummary() {
 
       <div className="stagger grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {lots.map((lot) => (
-          <Link
-            key={lot.code}
-            href={`/lots/${lot.code}#eudr`}
-            data-testid={`eudr-lot-${lot.code}`}
-            className="block rounded-2xl outline-none ring-forest/30 transition focus-visible:ring-2"
-          >
+          // Plain div — never wrap a card in <a> when its body also contains
+          // <EntityLink> anchors (nested <a> in <a> is invalid HTML and breaks
+          // both navigations). The lot code header carries its own discrete link.
+          <div key={lot.code}>
             <Card className="h-full transition-transform hover:-translate-y-0.5">
               <CardContent className="space-y-3">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono text-sm font-semibold text-ink">
-                    {lot.code}
+                  {/*
+                    Lot code → lot dossier link. This is the ONLY <a> for the
+                    lot entity on this card, so plot EntityLinks below are safe
+                    siblings (never descendants of this anchor).
+                  */}
+                  <span data-testid={`eudr-lot-${lot.code}`}>
+                    <EntityLink
+                      kind="lot"
+                      id={lot.code}
+                      anchor="eudr"
+                      className="rounded font-mono text-sm font-semibold text-ink underline-offset-4 outline-none ring-forest/30 transition-colors hover:text-forest hover:underline focus-visible:ring-2"
+                    >
+                      {lot.code}
+                    </EntityLink>
                   </span>
                   <EudrStatusBadge status={lot.status} />
                 </div>
@@ -111,7 +120,7 @@ export async function EudrSummary() {
                 )}
               </CardContent>
             </Card>
-          </Link>
+          </div>
         ))}
       </div>
     </div>

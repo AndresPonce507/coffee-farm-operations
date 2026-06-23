@@ -170,7 +170,7 @@ describe("/crew/[id] dossier page (smoke)", () => {
 
     // worker (roster + productivity), plot (plots section + dispatch line), dispatch-run.
     expect(
-      screen.getByRole("link", { name: /dispatch 42/i }),
+      screen.getByRole("link", { name: /despacho 42/i }),
     ).toHaveAttribute("href", "/dispatch/42");
 
     const hrefs = screen

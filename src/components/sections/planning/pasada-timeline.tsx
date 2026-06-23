@@ -71,7 +71,7 @@ export function PasadaTimeline({ plans }: { plans: PasadaPlan[] }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <h3 className="truncate font-display text-sm font-semibold text-ink">
-                      <EntityLink kind="plot" id={p.plotId}>
+                      <EntityLink kind="plot" id={p.plotId} name={p.plotId}>
                         {p.plotName}
                       </EntityLink>
                     </h3>

@@ -208,8 +208,8 @@ describe("DisbursementLedger", () => {
         workerNames={{ "w-7": "Rosa López" }}
       />,
     );
-    // EntityLink renders an <a aria-label="Abrir worker w-7">; find it by that label.
-    const link = screen.getByRole("link", { name: /Abrir worker w-7/i });
+    // EntityLink renders an <a aria-label="Abrir trabajador w-7">; find it by that label.
+    const link = screen.getByRole("link", { name: /Abrir trabajador w-7/i });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute("href", "/workers/w-7");
     // The visible worker name text lives inside the link.

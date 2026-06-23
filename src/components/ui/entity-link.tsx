@@ -4,6 +4,20 @@ import { type ReactNode } from "react";
 import { entityHref, type DossierKind } from "@/lib/dossier/entity-href";
 
 /**
+ * Frozen es-PA vocabulary for each dossier kind, matching the CommandPalette labels.
+ * Using `satisfies` to keep it narrowly typed while preserving literal inference.
+ */
+const KIND_ES = {
+  lot: "lote",
+  plot: "parcela",
+  worker: "trabajador",
+  crew: "cuadrilla",
+  batch: "tanda",
+  dispatch: "despacho",
+  "pay-period": "periodo de pago",
+} as const satisfies Record<DossierKind, string>;
+
+/**
  * EntityLink — the NAVIGATE / DRILL smart-bar primitive (facet-03 §1.3).
  *
  * Wraps any entity-naming or computed markup in a real `<a href>` resolved through the
@@ -15,6 +29,9 @@ import { entityHref, type DossierKind } from "@/lib/dossier/entity-href";
  * - NAVIGATE: `<EntityLink kind="plot" id={plot.id}>…card…</EntityLink>`.
  * - DRILL:    `<EntityLink kind="lot" id={code} anchor="cost-entries">…kpi…</EntityLink>`
  *   deep-links to the editable source records that produce a computed value.
+ * - Pass `name` (the human-readable entity name, e.g. "Lupita González") for a far
+ *   richer screen-reader announcement: "Abrir trabajador Lupita González" instead of the
+ *   raw slug "Abrir trabajador w-03".
  */
 export function EntityLink({
   kind,
@@ -22,6 +39,7 @@ export function EntityLink({
   children,
   className,
   anchor,
+  name,
 }: {
   kind: DossierKind;
   /** Accepts a number (e.g. a numeric dispatch-run id) — `entityHref` coerces it. */
@@ -30,13 +48,27 @@ export function EntityLink({
   className?: string;
   /** DRILL: deep-link to a source section on the destination dossier. */
   anchor?: string;
+  /**
+   * Optional human-readable name (e.g. worker's full name, lot code label).
+   * When provided the aria-label becomes "Abrir trabajador Lupita González" instead of
+   * the raw slug "Abrir trabajador w-03", greatly improving es-PA screen-reader UX.
+   */
+  name?: string;
 }) {
   const href = entityHref[kind](String(id), anchor ? { anchor } : undefined);
+  const kindEs = KIND_ES[kind];
+  // Only set aria-label when the caller supplies an explicit `name`.
+  // When omitted, the visible children ARE the accessible name — forcing a slug
+  // aria-label would silently override them and violate WCAG 2.5.3 (Label-in-Name).
+  // Pass `name` only when children are non-text (icons, thumbnails, etc.) or when you
+  // want a richer announcement than the raw visible text (e.g. "Abrir trabajador Lupita
+  // González" rather than just "Lupita González").
+  const ariaLabel = name ? `Abrir ${kindEs} ${name}` : undefined;
   return (
     <Link
       href={href}
       className={className}
-      aria-label={`Abrir ${kind} ${id}`}
+      aria-label={ariaLabel}
       prefetch={false}
     >
       {children}

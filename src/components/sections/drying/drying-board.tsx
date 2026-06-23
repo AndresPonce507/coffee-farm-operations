@@ -69,6 +69,7 @@ export function DryingBoard({ lots }: { lots: DryingLot[] }) {
                     <EntityLink
                       kind="lot"
                       id={lot.lotCode}
+                      name={lot.lotCode}
                       className="flex items-center gap-1.5 font-display text-base font-bold tracking-tight text-ink rounded-sm outline-none transition-colors hover:text-forest-700 focus-visible:ring-2 focus-visible:ring-forest/40"
                     >
                       <Coffee aria-hidden className="h-4 w-4 text-honey-700" />

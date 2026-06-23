@@ -68,6 +68,7 @@ export function FermentBoard({
                   <EntityLink
                     kind="lot"
                     id={b.lotCode}
+                    name={b.lotCode}
                     className="rounded font-mono text-sm font-semibold text-ink underline-offset-4 outline-none ring-forest/30 transition-colors hover:text-forest hover:underline focus-visible:ring-2"
                   >
                     {b.lotCode}

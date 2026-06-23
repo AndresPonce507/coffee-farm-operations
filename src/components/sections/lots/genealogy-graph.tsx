@@ -509,6 +509,7 @@ function TreeNode({
         <EntityLink
           kind="lot"
           id={node.code}
+          name={node.code}
           className="font-medium underline-offset-4 transition-colors hover:text-forest hover:underline"
         >
           {node.code}

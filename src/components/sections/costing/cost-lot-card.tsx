@@ -85,6 +85,7 @@ export function CostLotCard({
             <EntityLink
               kind="lot"
               id={code}
+              name={code}
               className="font-mono text-sm font-semibold text-ink underline-offset-2 transition-colors hover:text-forest-700 hover:underline focus-visible:text-forest-700 focus-visible:underline outline-none"
             >
               {code}
@@ -146,6 +147,7 @@ export function CostLotCard({
         <EntityLink
           kind="lot"
           id={code}
+          name={code}
           anchor="cost-entries"
           className="inline-flex items-center gap-1.5 rounded-md px-1 py-0.5 text-xs font-medium text-forest transition-colors hover:bg-forest-100/60"
         >

@@ -62,8 +62,8 @@ describe("ScoutingBoard (render/smoke)", () => {
 
   it("wires the plot name to the plot dossier (was COSMETIC)", () => {
     render(<ScoutingBoard rows={[recommend]} />);
-    // EntityLink sets aria-label="Abrir plot <id>" — query by that accessible name.
-    const link = screen.getByRole("link", { name: /abrir plot p-cuesta-piedra/i });
+    // EntityLink sets aria-label="Abrir parcela <id>" — query by that accessible name.
+    const link = screen.getByRole("link", { name: /abrir parcela p-cuesta-piedra/i });
     expect(link).toHaveAttribute("href", "/plots/p-cuesta-piedra");
   });
 

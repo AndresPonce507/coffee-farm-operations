@@ -27,7 +27,7 @@ describe("QcStatusTable — lot code is a dossier link (L3 wire-up)", () => {
   it("links the green-lot code to its lot dossier in the desktop table", () => {
     render(<QcStatusTable rows={ROWS} />);
     const desktop = screen.getByTestId("qc-table-desktop");
-    const link = within(desktop).getByRole("link", { name: /abrir lot JC-101/i });
+    const link = within(desktop).getByRole("link", { name: /abrir lote JC-101/i });
     expect(link).toHaveAttribute("href", "/lots/JC-101");
   });
 

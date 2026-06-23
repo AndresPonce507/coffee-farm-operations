@@ -65,6 +65,12 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
+// The page now also reads the cost_entry ledger for the #cost-entries section;
+// mock getCostBreakdown so the test has no Supabase dep.
+vi.mock("@/lib/db/cogs", () => ({
+  getCostBreakdown: vi.fn(async () => []),
+}));
+
 // The page also awaits the S8 EUDR dossier; mock that port too (no Supabase).
 vi.mock("@/lib/db/eudr", () => ({
   getLotEudrDossier: vi.fn(
@@ -120,6 +126,11 @@ describe("/lots/[code] page (smoke)", () => {
     // S8: the EUDR due-diligence dossier renders below the lineage (green lot).
     expect(screen.getByTestId("eudr-badge-compliant")).toBeInTheDocument();
     expect(screen.getByText("Barú Vista")).toBeInTheDocument();
+
+    // ANCHOR GUARD: the #cost-entries section must always render on the lot dossier
+    // so the provenance drill from CostLotCard (anchor="cost-entries") scrolls to a
+    // real DOM node and never silently lands on a dead fragment.
+    expect(screen.getByTestId("section-cost-entries")).toBeInTheDocument();
   });
 
   it("does NOT render the EUDR dossier for a non-green lot (it's not yet an export lot)", async () => {

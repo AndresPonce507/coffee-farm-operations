@@ -51,7 +51,7 @@ export function PlotHarvestsSection({
                       <EntityLink
                         kind="worker"
                         id={pickerId}
-                        className="font-medium text-forest underline-offset-2 hover:underline"
+                        className="rounded-md font-medium text-forest underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
                       >
                         {h.picker}
                       </EntityLink>
@@ -63,7 +63,8 @@ export function PlotHarvestsSection({
                     <EntityLink
                       kind="lot"
                       id={h.lotCode}
-                      className="font-medium text-coffee underline-offset-2 hover:underline"
+                      name={h.lotCode}
+                      className="rounded-md font-medium text-coffee underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
                     >
                       {h.lotCode}
                     </EntityLink>

@@ -48,9 +48,9 @@ describe("FermentBoard (smoke)", () => {
     render(<FermentBoard batches={batches} lots={["JC-800", "JC-801"]} recipes={[]} />);
     // The lot code names a Lot entity — under the no-dead-UI mandate it must be a
     // real <a href> to the lot dossier, distinct from the card's batch link.
-    const lotLink = screen.getByRole("link", { name: /abrir lot JC-800/i });
+    const lotLink = screen.getByRole("link", { name: /abrir lote JC-800/i });
     expect(lotLink).toHaveAttribute("href", "/lots/JC-800");
-    const lotLink2 = screen.getByRole("link", { name: /abrir lot JC-801/i });
+    const lotLink2 = screen.getByRole("link", { name: /abrir lote JC-801/i });
     expect(lotLink2).toHaveAttribute("href", "/lots/JC-801");
   });
 

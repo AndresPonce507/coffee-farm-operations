@@ -141,6 +141,7 @@ export async function TaskTable({
                       <EntityLink
                         kind="plot"
                         id={task.plotId}
+                        name={String(task.plotId)}
                         className="text-muted-fg underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
                       >
                         {task.plotName}
@@ -157,6 +158,7 @@ export async function TaskTable({
                         <EntityLink
                           kind="worker"
                           id={task.workerId}
+                          name={String(task.workerId)}
                           className="text-ink underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
                         >
                           {task.assignee}

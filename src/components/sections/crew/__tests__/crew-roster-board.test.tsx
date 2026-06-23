@@ -180,14 +180,14 @@ describe("CrewRosterBoard", () => {
     render(<CrewRosterBoard members={[member()]} />);
     const card = screen.getByTestId("worker-card-w-1");
     // The worker name must be inside an <a> that navigates to the worker dossier.
-    const link = within(card).getByRole("link", { name: /abrir worker w-1/i });
+    const link = within(card).getByRole("link", { name: /abrir trabajador w-1/i });
     expect(link).toHaveAttribute("href", "/workers/w-1");
   });
 
   it("crew column header h3 is wrapped in an EntityLink to /crew/[crewId]", () => {
     render(<CrewRosterBoard members={[member({ crewId: "c-1" })]} />);
     // The crew heading must be navigable.
-    const link = screen.getByRole("link", { name: /abrir crew c-1/i });
+    const link = screen.getByRole("link", { name: /abrir cuadrilla c-1/i });
     expect(link).toHaveAttribute("href", "/crew/c-1");
     expect(within(link).getByRole("heading", { name: "Cuadrilla Volcán" })).toBeInTheDocument();
   });

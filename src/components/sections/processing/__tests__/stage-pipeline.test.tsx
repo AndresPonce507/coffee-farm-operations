@@ -96,7 +96,7 @@ describe("StagePipeline (smoke)", () => {
     ];
 
     for (const { code, href } of lotLinks) {
-      const link = screen.getByRole("link", { name: new RegExp(`Abrir lot ${code}`) });
+      const link = screen.getByRole("link", { name: new RegExp(`Abrir lote ${code}`) });
       expect(link).toHaveAttribute("href", href);
       expect(link).toHaveTextContent(code);
     }

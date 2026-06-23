@@ -45,6 +45,14 @@ describe("PlotSpraySection", () => {
     expect(applicator).toHaveAttribute("href", "/workers/w-marco");
   });
 
+  it("applicator link carries focus-visible ring classes for keyboard accessibility", () => {
+    render(<PlotSpraySection phi={phi} sprays={sprays} />);
+    const applicator = screen.getByText("Marco Pérez").closest("a");
+    expect(applicator).toHaveClass("focus-visible:ring-2");
+    expect(applicator).toHaveClass("focus-visible:outline-none");
+    expect(applicator).toHaveClass("rounded-md");
+  });
+
   it("renders the empty state when there is no spray history", () => {
     render(<PlotSpraySection phi={[]} sprays={[]} />);
     expect(screen.getByTestId("section-sprays")).toBeInTheDocument();

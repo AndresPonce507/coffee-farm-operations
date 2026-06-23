@@ -98,6 +98,7 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
                         <EntityLink
                           kind="lot"
                           id={row.greenLotCode}
+                          name={row.greenLotCode}
                           className="font-mono text-sm font-medium text-ink underline-offset-4 transition-colors hover:text-forest-700 hover:underline group-hover:text-forest-700"
                         >
                           {row.greenLotCode}
@@ -156,6 +157,7 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
                     <EntityLink
                       kind="lot"
                       id={row.greenLotCode}
+                      name={row.greenLotCode}
                       className="font-mono text-sm font-medium text-ink underline-offset-4 hover:text-forest-700 hover:underline"
                     >
                       {row.greenLotCode}

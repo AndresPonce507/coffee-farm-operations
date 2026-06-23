@@ -39,19 +39,19 @@ describe("SprayHistory (render/smoke)", () => {
 
   it("wires the plot name to the plot dossier (was COSMETIC)", () => {
     render(<SprayHistory rows={[entry]} />);
-    const link = screen.getByRole("link", { name: /Talamanca|plot p-talamanca/i });
+    const link = screen.getByRole("link", { name: /parcela p-talamanca/i });
     expect(link).toHaveAttribute("href", "/plots/p-talamanca");
   });
 
   it("wires the applicator name to the worker dossier (was COSMETIC)", () => {
     render(<SprayHistory rows={[entry]} />);
-    const link = screen.getByRole("link", { name: /Lucía Mendez|worker w-agro/i });
+    const link = screen.getByRole("link", { name: /trabajador w-agro/i });
     expect(link).toHaveAttribute("href", "/workers/w-agro");
   });
 
   it("plot link carries link-affordance classes (underline, hover, focus-visible)", () => {
     render(<SprayHistory rows={[entry]} />);
-    const link = screen.getByRole("link", { name: /Talamanca|plot p-talamanca/i });
+    const link = screen.getByRole("link", { name: /parcela p-talamanca/i });
     expect(link.className).toMatch(/underline-offset-2/);
     expect(link.className).toMatch(/hover:text-forest/);
     expect(link.className).toMatch(/focus-visible:text-forest/);
@@ -59,7 +59,7 @@ describe("SprayHistory (render/smoke)", () => {
 
   it("worker link carries link-affordance classes (underline, hover, focus-visible)", () => {
     render(<SprayHistory rows={[entry]} />);
-    const link = screen.getByRole("link", { name: /Lucía Mendez|worker w-agro/i });
+    const link = screen.getByRole("link", { name: /trabajador w-agro/i });
     expect(link.className).toMatch(/underline-offset-2/);
     expect(link.className).toMatch(/hover:text-forest/);
     expect(link.className).toMatch(/focus-visible:text-forest/);

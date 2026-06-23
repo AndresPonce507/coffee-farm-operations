@@ -101,8 +101,8 @@ describe("TaskBoard (smoke)", () => {
     const ui = await TaskBoard();
     render(ui);
 
-    // t1 has plotId="p1" — EntityLink emits aria-label="Abrir plot p1" on the <a>
-    const plotLinks = screen.getAllByRole("link", { name: /Abrir plot p1/i });
+    // t1 has plotId="p1" — EntityLink emits aria-label="Abrir parcela p1" on the <a>
+    const plotLinks = screen.getAllByRole("link", { name: /Abrir parcela p1/i });
     expect(plotLinks.length).toBeGreaterThan(0);
     expect(plotLinks[0]).toHaveAttribute("href", "/plots/p1");
     // the link wraps the plot name text
@@ -139,8 +139,8 @@ describe("TaskBoard (smoke)", () => {
     const ui = await TaskBoard();
     render(ui);
 
-    // t1 has workerId="w1" — EntityLink emits aria-label="Abrir worker w1" on the <a>
-    const workerLinks = screen.getAllByRole("link", { name: /Abrir worker w1/i });
+    // t1 has workerId="w1" — EntityLink emits aria-label="Abrir trabajador w1" on the <a>
+    const workerLinks = screen.getAllByRole("link", { name: /Abrir trabajador w1/i });
     expect(workerLinks.length).toBeGreaterThan(0);
     expect(workerLinks[0]).toHaveAttribute("href", "/workers/w1");
     // the link wraps the assignee name text

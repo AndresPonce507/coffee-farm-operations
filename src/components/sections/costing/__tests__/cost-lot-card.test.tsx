@@ -77,8 +77,8 @@ describe("CostLotCard (smoke + provenance)", () => {
       />,
     );
     // The lot code must be wrapped in an <a> pointing at /lots/JC-101 (no hash).
-    // Both EntityLinks carry aria-label="Abrir lot JC-101"; distinguish by href.
-    const links = screen.getAllByRole("link", { name: /Abrir lot JC-101/ });
+    // Both EntityLinks carry aria-label="Abrir lote JC-101"; distinguish by href.
+    const links = screen.getAllByRole("link", { name: /Abrir lote JC-101/ });
     const headlineLink = links.find(
       (l) => l.getAttribute("href") === "/lots/JC-101",
     );
@@ -95,7 +95,7 @@ describe("CostLotCard (smoke + provenance)", () => {
         breakdown={breakdown}
       />,
     );
-    // EntityLink renders an <a> with aria-label="Abrir lot JC-101".
+    // EntityLink renders an <a> with aria-label="Abrir lote JC-101".
     // With anchor="cost-entries" it resolves to /lots/JC-101#cost-entries.
     const prov = screen.getByTestId("cost-provenance-JC-101");
     // The testid is on a span inside the <a>; climb to the parent link.
