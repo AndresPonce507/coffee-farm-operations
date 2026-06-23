@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Search,
   CornerDownLeft,
@@ -65,7 +66,10 @@ function lotCodeFrom(query: string): string | null {
  *   - `batch fb-118` / `ferment …` → /ferment/<id>
  *   - a green-lot code (JC-NNN)  → ALSO offers /qc/cup/<code>
  */
-function entityResultsFrom(raw: string): Result[] {
+function entityResultsFrom(
+  raw: string,
+  t: (key: string, vars?: Record<string, string>) => string,
+): Result[] {
   const q = raw.trim();
   if (q === "") return [];
   const out: Result[] = [];
@@ -77,7 +81,7 @@ function entityResultsFrom(raw: string): Result[] {
     out.push({
       kind: "worker",
       href: entityHref.worker(id),
-      label: `Abrir trabajador ${id}`,
+      label: t("commandPalette.openWorker", { id }),
       Icon: Users,
     });
   }
@@ -89,7 +93,7 @@ function entityResultsFrom(raw: string): Result[] {
     out.push({
       kind: "crew",
       href: entityHref.crew(id),
-      label: `Abrir cuadrilla ${id}`,
+      label: t("commandPalette.openCrew", { id }),
       Icon: HeartHandshake,
     });
   }
@@ -102,7 +106,7 @@ function entityResultsFrom(raw: string): Result[] {
     out.push({
       kind: "plot",
       href: entityHref.plot(id),
-      label: `Abrir parcela ${id}`,
+      label: t("commandPalette.openPlot", { id }),
       Icon: Sprout,
     });
   }
@@ -114,7 +118,7 @@ function entityResultsFrom(raw: string): Result[] {
     out.push({
       kind: "dispatch",
       href: entityHref.dispatch(id),
-      label: `Abrir despacho ${id}`,
+      label: t("commandPalette.openDispatch", { id }),
       Icon: Send,
     });
   }
@@ -126,7 +130,7 @@ function entityResultsFrom(raw: string): Result[] {
     out.push({
       kind: "pay-period",
       href: entityHref["pay-period"](id),
-      label: `Abrir periodo de pago ${id}`,
+      label: t("commandPalette.openPayPeriod", { id }),
       Icon: Banknote,
     });
   }
@@ -138,7 +142,7 @@ function entityResultsFrom(raw: string): Result[] {
     out.push({
       kind: "batch",
       href: entityHref.batch(id),
-      label: `Abrir tanda ${id}`,
+      label: t("commandPalette.openBatch", { id }),
       Icon: Beaker,
     });
   }
@@ -152,7 +156,7 @@ function entityResultsFrom(raw: string): Result[] {
     out.push({
       kind: "cup",
       href: `/qc/cup/${code}`,
-      label: `Ver taza de ${code}`,
+      label: t("commandPalette.viewCup", { code }),
       Icon: Award,
     });
   }
@@ -174,6 +178,7 @@ function entityResultsFrom(raw: string): Result[] {
  */
 export function CommandPalette() {
   const router = useRouter();
+  const t = useTranslations("layout");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -185,9 +190,12 @@ export function CommandPalette() {
 
   const results = useMemo<Result[]>(() => {
     const q = query.trim().toLowerCase();
-    const navHits: Result[] = NAV.filter((n) =>
-      q === "" ? true : n.label.toLowerCase().includes(q),
-    ).map((n) => ({ kind: "nav", href: n.href, label: n.label, Icon: n.icon }));
+    const navHits: Result[] = NAV.map((n) => ({
+      kind: "nav" as const,
+      href: n.href,
+      label: t(`nav.${n.key}`),
+      Icon: n.icon,
+    })).filter((r) => (q === "" ? true : r.label.toLowerCase().includes(q)));
 
     const code = lotCodeFrom(query);
     const lotHit: Result[] = code
@@ -195,7 +203,7 @@ export function CommandPalette() {
           {
             kind: "lot",
             href: entityHref.lot(code),
-            label: `Go to lot ${code}`,
+            label: t("commandPalette.goToLot", { code }),
             Icon: Hash,
           },
         ]
@@ -203,9 +211,9 @@ export function CommandPalette() {
     // Phase 5 orphan-wire: the lot jump leads, then the other entity-kind jumps
     // (worker/plot/crew/dispatch/pay-period/batch + the cup-of-this-lot drill),
     // then the nav routes. Every entity href comes from the entityHref SSOT.
-    const entityHits = entityResultsFrom(query);
+    const entityHits = entityResultsFrom(query, t);
     return [...lotHit, ...entityHits, ...navHits];
-  }, [query]);
+  }, [query, t]);
 
   // Stable per-row ids so the input's aria-activedescendant can point at the
   // highlighted option (ARIA combobox pattern). Keyed by kind+href like the
@@ -261,12 +269,12 @@ export function CommandPalette() {
         type="button"
         onClick={() => setOpen(true)}
         data-testid="command-palette-trigger"
-        aria-label="Open command palette"
+        aria-label={t("commandPalette.triggerLabel")}
         aria-keyshortcuts="Meta+K Control+K"
         className="relative hidden h-9 max-w-sm flex-1 items-center gap-2 rounded-xl border border-line bg-card pl-9 pr-2 text-sm text-muted-fg/80 outline-none transition hover:border-forest-300 focus:border-forest-300 focus:ring-2 focus:ring-forest-100 md:flex"
       >
         <Search className="pointer-events-none absolute left-3 h-4 w-4 text-muted-fg" />
-        <span className="truncate">Search plots, lots, workers…</span>
+        <span className="truncate">{t("commandPalette.triggerPlaceholder")}</span>
         <kbd className="ml-auto hidden rounded border border-line bg-muted px-1.5 py-0.5 font-sans text-[10px] font-medium text-muted-fg lg:inline">
           ⌘K
         </kbd>
@@ -289,7 +297,7 @@ export function CommandPalette() {
             <div
               role="dialog"
               aria-modal="true"
-              aria-label="Command palette"
+              aria-label={t("commandPalette.dialogLabel")}
               data-testid="command-palette"
               onClick={(e) => e.stopPropagation()}
               className="animate-rise w-full max-w-lg overflow-hidden rounded-2xl border border-white/60 bg-white/90 shadow-2xl backdrop-blur-xl"
@@ -326,12 +334,12 @@ export function CommandPalette() {
                   // announces its expanded state + the currently-highlighted
                   // option so screen readers track arrow navigation.
                   role="combobox"
-                  aria-label="Search routes and lots"
+                  aria-label={t("commandPalette.inputLabel")}
                   aria-controls={LISTBOX_ID}
                   aria-expanded={results.length > 0}
                   aria-autocomplete="list"
                   aria-activedescendant={activeId}
-                  placeholder="Jump to a page, or type a lot number…"
+                  placeholder={t("commandPalette.inputPlaceholder")}
                   className="h-12 w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted-fg/70"
                 />
               </div>
@@ -339,7 +347,7 @@ export function CommandPalette() {
               <ul
                 id={LISTBOX_ID}
                 role="listbox"
-                aria-label="Results"
+                aria-label={t("commandPalette.resultsLabel")}
                 className="max-h-80 overflow-y-auto p-2"
               >
                 {results.length === 0 ? (
@@ -347,8 +355,7 @@ export function CommandPalette() {
                     data-testid="command-palette-empty"
                     className="px-3 py-6 text-center text-sm text-muted-fg"
                   >
-                    Sin resultados — prueba un lote (701), un trabajador (w-03) o
-                    un lote/parcela (p-tizingal-alto).
+                    {t("commandPalette.empty")}
                   </li>
                 ) : (
                   results.map((r, i) => (

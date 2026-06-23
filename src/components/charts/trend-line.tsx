@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/utils";
 
 export interface TrendLineProps {
@@ -30,6 +32,7 @@ export function TrendLine({
   height = 200,
   className,
 }: TrendLineProps) {
+  const t = useTranslations("ui");
   const points = data.length;
 
   // Explicit empty state — a labelled placeholder instead of a chart frame with
@@ -42,9 +45,9 @@ export function TrendLine({
           className="flex items-center justify-center text-sm text-muted-fg"
           style={{ height }}
           role="img"
-          aria-label="Trend line chart with no data."
+          aria-label={t("trendLine.noDataAria")}
         >
-          No trend data yet.
+          {t("trendLine.empty")}
         </div>
       </div>
     );
@@ -104,8 +107,14 @@ export function TrendLine({
 
   const ariaSummary =
     points > 0
-      ? `Trend line from ${data[0].label} to ${data[points - 1].label}, ${points} points, ranging ${min} to ${max}.`
-      : "Trend line chart with no data.";
+      ? t("trendLine.ariaSummary", {
+          from: data[0].label,
+          to: data[points - 1].label,
+          points,
+          min,
+          max,
+        })
+      : t("trendLine.noDataAria");
 
   return (
     <div className={cn("w-full", className)}>

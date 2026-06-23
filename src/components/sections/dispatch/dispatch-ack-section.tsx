@@ -1,4 +1,5 @@
 import { CheckCircle2, Clock, ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { DossierSection } from "@/components/dossier/dossier-section";
 import type { DispatchCard } from "@/lib/types";
@@ -20,11 +21,12 @@ export interface DispatchAckSectionProps {
 }
 
 export function DispatchAckSection({ run }: DispatchAckSectionProps) {
+  const t = useTranslations("dispatch");
   const acknowledged = run.status === "acknowledged";
   const sent = run.status === "sent" || acknowledged;
 
   return (
-    <DossierSection id="ack" title="Confirmación de la cuadrilla">
+    <DossierSection id="ack" title={t("ack.title")}>
       <article className="glass-card rounded-2xl p-5">
         <div className="flex items-start gap-3">
           <span
@@ -40,17 +42,17 @@ export function DispatchAckSection({ run }: DispatchAckSectionProps) {
           <div>
             <p className="font-display text-base font-semibold text-ink">
               {acknowledged
-                ? "Confirmado por el líder de cuadrilla"
+                ? t("ack.confirmedTitle")
                 : sent
-                  ? "Enviado — esperando confirmación"
-                  : "Aún sin enviar"}
+                  ? t("ack.sentTitle")
+                  : t("ack.draftTitle")}
             </p>
             <p className="mt-1 text-sm text-muted-fg">
               {acknowledged
-                ? "El líder marcó la tarjeta como recibida en el grupo."
+                ? t("ack.confirmedBody")
                 : sent
-                  ? "La tarjeta se compartió; la confirmación llega cuando el líder responde."
-                  : "Esta tarjeta todavía es un borrador; compártela para iniciar el día."}
+                  ? t("ack.sentBody")
+                  : t("ack.draftBody")}
             </p>
           </div>
         </div>
@@ -58,11 +60,7 @@ export function DispatchAckSection({ run }: DispatchAckSectionProps) {
         {/* The injection-safety note: the ack is evidence, never an action. */}
         <p className="mt-4 flex items-start gap-2 rounded-xl border border-line/60 bg-paper/60 px-3.5 py-2.5 text-xs leading-relaxed text-muted-fg">
           <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-forest" aria-hidden />
-          <span>
-            La confirmación es solo evidencia de recepción. El texto entrante de la
-            cuadrilla nunca ejecuta una acción — el despacho es saliente e iniciado
-            por el dueño.
-          </span>
+          <span>{t("ack.injectionNote")}</span>
         </p>
       </article>
     </DossierSection>

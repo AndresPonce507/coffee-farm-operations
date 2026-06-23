@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { CloudOff, RotateCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ export default function AppError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("common");
   useEffect(() => {
     // Keep the detail in the console for us; never surface it to the farmer.
     console.error("(app) route error:", error);
@@ -39,17 +41,16 @@ export default function AppError({
           </div>
 
           <h2 className="mt-4 font-display text-lg font-semibold text-ink">
-            We couldn&apos;t load the farm data right now
+            {t("error.app.title")}
           </h2>
           <p className="mx-auto mt-1 max-w-sm text-sm text-muted-fg">
-            The connection to the farm records dropped for a moment. This is
-            usually temporary — give it another try.
+            {t("error.app.body")}
           </p>
 
           <div className="mt-6 flex items-center justify-center">
             <Button onClick={() => reset()}>
               <RotateCw className="h-4 w-4" />
-              Try again
+              {t("error.app.retry")}
             </Button>
           </div>
         </CardContent>

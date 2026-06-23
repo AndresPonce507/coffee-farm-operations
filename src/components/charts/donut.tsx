@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/utils";
 
 export interface DonutDatum {
@@ -48,6 +50,7 @@ export function Donut({
   centerSub,
   className,
 }: DonutProps) {
+  const t = useTranslations("ui");
   const radius = (size - thickness) / 2;
   const circumference = 2 * Math.PI * radius;
   const center = size / 2;
@@ -66,9 +69,9 @@ export function Donut({
         )}
         style={{ width: size, height: size }}
         role="img"
-        aria-label="Donut chart with no data."
+        aria-label={t("donut.noDataAria")}
       >
-        No data yet.
+        {t("donut.empty")}
       </div>
     );
   }
@@ -114,13 +117,13 @@ export function Donut({
 
   const ariaLabel =
     data.length > 0
-      ? `Donut chart. ${data
+      ? `${t("donut.ariaPrefix")} ${data
           .map((d) => {
             const share = total > 0 ? Math.round((Math.max(d.value, 0) / total) * 100) : 0;
-            return `${d.label}: ${share}%`;
+            return t("donut.ariaSlice", { label: d.label, share });
           })
           .join(", ")}.`
-      : "Donut chart with no data.";
+      : t("donut.noDataAria");
 
   return (
     <div

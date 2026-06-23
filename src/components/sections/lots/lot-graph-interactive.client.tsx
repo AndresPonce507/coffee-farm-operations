@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 /** Minimal escape for a lot code embedded in an attribute selector string. */
 function cssEscape(value: string): string {
@@ -34,6 +35,7 @@ export function LotGraphInteractive({
   viewBox?: string;
   ariaLabel?: string;
 }) {
+  const t = useTranslations("lots");
   const [scale, setScale] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [trace, setTrace] = useState<string | null>(null);
@@ -87,7 +89,11 @@ export function LotGraphInteractive({
       )}
       <div
         role="group"
-        aria-label={ariaLabel ? `${ariaLabel} (pan and zoom)` : "Pan and zoom"}
+        aria-label={
+          ariaLabel
+            ? t("graphInteractive.panZoomGroup", { label: ariaLabel })
+            : t("graphInteractive.panZoom")
+        }
         className="touch-none cursor-grab overflow-hidden active:cursor-grabbing"
         data-trace={trace ?? undefined}
         onPointerDown={onPointerDown}
@@ -110,13 +116,13 @@ export function LotGraphInteractive({
 
       {/* zoom chrome — small, opaque-chip controls (AA) */}
       <div className="absolute right-3 top-3 flex flex-col gap-1.5">
-        <ZoomBtn label="Zoom in" onClick={() => zoom(0.25)}>
+        <ZoomBtn label={t("graphInteractive.zoomIn")} onClick={() => zoom(0.25)}>
           +
         </ZoomBtn>
-        <ZoomBtn label="Zoom out" onClick={() => zoom(-0.25)}>
+        <ZoomBtn label={t("graphInteractive.zoomOut")} onClick={() => zoom(-0.25)}>
           −
         </ZoomBtn>
-        <ZoomBtn label="Reset view" onClick={reset}>
+        <ZoomBtn label={t("graphInteractive.resetView")} onClick={reset}>
           ⤢
         </ZoomBtn>
       </div>

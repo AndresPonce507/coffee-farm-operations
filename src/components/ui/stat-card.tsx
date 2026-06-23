@@ -1,4 +1,5 @@
 import { ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -156,7 +157,10 @@ export function StatCard({
  * keeps AA contrast over the glass surface.
  */
 function ProvenanceLine({ derivedFromCount, asOf }: StatProvenance) {
-  const harvests = derivedFromCount === 1 ? "harvest" : "harvests";
+  const t = useTranslations("ui");
+  const unit = t(
+    derivedFromCount === 1 ? "statCard.harvestOne" : "statCard.harvestMany",
+  );
   return (
     <p className="mt-3 inline-flex max-w-full items-center gap-1.5 rounded-lg bg-paper/80 px-2 py-1 text-[0.6875rem] font-medium leading-none text-muted-fg ring-1 ring-black/5">
       <span
@@ -164,7 +168,10 @@ function ProvenanceLine({ derivedFromCount, asOf }: StatProvenance) {
         className={cn("h-1.5 w-1.5 shrink-0 rounded-full", "bg-forest-500")}
       />
       <span className="truncate">
-        derived from {derivedFromCount.toLocaleString()} {harvests}
+        {t("statCard.derivedFrom", {
+          count: derivedFromCount.toLocaleString(),
+          unit,
+        })}
         {asOf ? <> · {asOf}</> : null}
       </span>
     </p>
@@ -179,6 +186,7 @@ function Sparkline({
   values: number[];
   className?: string;
 }) {
+  const t = useTranslations("ui");
   const WIDTH = values.length - 1; // viewBox x-units: one per gap between points
   const HEIGHT = 36;
   const PAD = 3; // vertical breathing room so peaks/troughs aren't clipped
@@ -200,7 +208,7 @@ function Sparkline({
   return (
     <svg
       role="img"
-      aria-label="Trend sparkline"
+      aria-label={t("statCard.trendSparkline")}
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
       preserveAspectRatio="none"
       width="100%"

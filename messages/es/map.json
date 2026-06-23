@@ -1,1 +1,10 @@
-{}
+{
+  "farmMap": {
+    "regionLabel": "Mapa de parcelas de la finca",
+    "plotListLabel": "Lista de parcelas"
+  },
+  "skeleton": {
+    "loadingLabel": "Cargando mapa",
+    "loadingText": "Cargando mapa…"
+  }
+}

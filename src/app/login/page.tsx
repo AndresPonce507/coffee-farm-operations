@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 import { JansonMark } from "@/components/layout/logo";
 import { LoginForm } from "@/components/auth/login-form";
 
-export const metadata: Metadata = {
-  title: "Sign in — Janson Coffee",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("auth");
+  return {
+    title: t("loginPage.metaTitle"),
+  };
+}
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const t = await getTranslations("auth");
   return (
     <main className="grid min-h-screen place-items-center bg-gradient-to-b from-forest-50 to-paper px-4">
       <div className="w-full max-w-sm">
@@ -19,7 +24,7 @@ export default function LoginPage() {
             Janson Coffee
           </h1>
           <p className="mt-1 text-sm text-muted-fg">
-            Farm Operations · sign in to continue
+            {t("loginPage.tagline")}
           </p>
         </div>
 
@@ -28,7 +33,7 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-6 text-center text-[11px] text-muted-fg">
-          Janson Coffee · Volcán, Chiriquí · since 1990
+          {t("loginPage.footer")}
         </p>
       </div>
     </main>

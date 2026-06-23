@@ -1,1 +1,65 @@
-{}
+{
+  "dialog": {
+    "close": "Close",
+    "closeDialog": "Close dialog"
+  },
+  "smartForm": {
+    "view": "Ver →",
+    "done": "Done",
+    "cancel": "Cancel"
+  },
+  "atpMeter": {
+    "ariaLabel": "Available to promise",
+    "valueText": "{available} available of {total}",
+    "committed": "committed",
+    "total": "total",
+    "available": "available"
+  },
+  "statCard": {
+    "trendSparkline": "Trend sparkline",
+    "harvestOne": "harvest",
+    "harvestMany": "harvests",
+    "derivedFrom": "derived from {count} {unit}"
+  },
+  "donut": {
+    "noDataAria": "Donut chart with no data.",
+    "empty": "No data yet.",
+    "ariaPrefix": "Donut chart.",
+    "ariaSlice": "{label}: {share}%"
+  },
+  "trendLine": {
+    "noDataAria": "Trend line chart with no data.",
+    "empty": "No trend data yet.",
+    "ariaSummary": "Trend line from {from} to {to}, {points} points, ranging {min} to {max}."
+  },
+  "barMini": {
+    "noDataAria": "Bar chart with no data.",
+    "empty": "No harvest data yet.",
+    "ariaLabel": "Bar chart of {count} values, from {firstLabel} ({firstValue}) to {lastLabel} ({lastValue})."
+  },
+  "costDecomposition": {
+    "noDataAria": "Cost decomposition with no data.",
+    "ariaPrefix": "Cost decomposition.",
+    "ariaSlice": "{label}: {share}",
+    "tableCaption": "Cost decomposition by category",
+    "tableCategory": "Category",
+    "tableShare": "Share",
+    "tableValue": "Value"
+  },
+  "costWaterfall": {
+    "noDataAria": "Cost waterfall with no data.",
+    "ariaPrefix": "Cost waterfall.",
+    "ariaStep": "{label}: {value} per kg",
+    "ariaTotal": "Total cost {total} per kg green.",
+    "tableCaption": "Cost build-up per kg green",
+    "tableDriver": "Driver",
+    "tableCost": "Cost ({unit})",
+    "tableRunningTotal": "Running total",
+    "tableTotal": "Total"
+  },
+  "statRing": {
+    "ariaLabelPrefix": "{label}: ",
+    "ariaPercent": "{n} percent",
+    "ariaSublabel": " — {sublabel}"
+  }
+}

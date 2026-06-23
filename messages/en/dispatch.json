@@ -1,1 +1,82 @@
-{}
+{
+  "page": {
+    "title": "Despacho Matutino",
+    "subtitle": "Planes por cuadrilla según la madurez, compartidos como tarjeta bilingüe — iniciado por el dueño"
+  },
+  "board": {
+    "tiles": {
+      "crewsLabel": "Crews",
+      "crewsSub": "to dispatch this morning",
+      "draftedLabel": "Drafted",
+      "draftedSub": "ready to share",
+      "sharedLabel": "Shared",
+      "sharedSub": "out to the crew leads",
+      "acknowledgedLabel": "Acknowledged",
+      "acknowledgedSub": "crew lead confirmed"
+    },
+    "noCrews": "No crews on the roster yet — enroll a crew on the Crew page to dispatch.",
+    "crewSectionLabel": "Dispatch — {crewName}",
+    "noDispatch": "No dispatch yet — generate the ripeness-aware plan for {crewName}."
+  },
+  "run": {
+    "title": "El despacho",
+    "season": "Temporada",
+    "plots": "Parcelas",
+    "ripenessThreshold": "Umbral madurez"
+  },
+  "assignments": {
+    "title": "Asignaciones",
+    "noPlots": "Sin parcelas en este despacho",
+    "target": "meta {target} kg",
+    "assignedCrew": "Cuadrilla asignada",
+    "noWorkers": "Sin trabajadores en el padrón de la cuadrilla",
+    "ripeness": {
+      "high": "muy maduro",
+      "medium": "maduro",
+      "low": "casi maduro"
+    }
+  },
+  "lifecycle": {
+    "title": "Ciclo de vida",
+    "stages": {
+      "draftLabel": "Borrador",
+      "draftHint": "Generado al amanecer",
+      "sentLabel": "Enviado",
+      "sentHint": "Compartido con la cuadrilla",
+      "acknowledgedLabel": "Confirmado",
+      "acknowledgedHint": "Recibido por el líder"
+    },
+    "via": "vía {channel}",
+    "supersededNote": "Este despacho fue reemplazado por uno más reciente (historial).",
+    "idempotencyKey": "Clave única:"
+  },
+  "ack": {
+    "title": "Confirmación de la cuadrilla",
+    "confirmedTitle": "Confirmado por el líder de cuadrilla",
+    "sentTitle": "Enviado — esperando confirmación",
+    "draftTitle": "Aún sin enviar",
+    "confirmedBody": "El líder marcó la tarjeta como recibida en el grupo.",
+    "sentBody": "La tarjeta se compartió; la confirmación llega cuando el líder responde.",
+    "draftBody": "Esta tarjeta todavía es un borrador; compártela para iniciar el día.",
+    "injectionNote": "La confirmación es solo evidencia de recepción. El texto entrante de la cuadrilla nunca ejecuta una acción — el despacho es saliente e iniciado por el dueño."
+  },
+  "preview": {
+    "cardLabel": "Dispatch card for {crewName}"
+  },
+  "share": {
+    "shared": "Compartido",
+    "sharing": "Compartiendo…",
+    "share": "Compartir",
+    "shareLabel": "Compartir despacho de {crewName}",
+    "shareTitle": "Compartir · share",
+    "sharedAnnouncement": "Despacho compartido con la cuadrilla.",
+    "markSentError": "No se pudo marcar como enviado. Vuelve a intentarlo."
+  },
+  "generate": {
+    "drafting": "Drafting…",
+    "redraft": "Re-draft",
+    "generate": "Generate dispatch",
+    "label": "{label} for {crewName}",
+    "error": "Could not draft the dispatch. Try again."
+  }
+}

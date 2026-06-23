@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { SatelliteBoard } from "@/components/sections/satellite/satellite-board";
 
@@ -14,12 +16,13 @@ import { SatelliteBoard } from "@/components/sections/satellite/satellite-board"
  * remote-sensing read port (v_plot_vegetation). The app shell is provided by
  * (app)/layout.tsx; this page renders only its inner content.
  */
-export default function SatellitePage() {
+export default async function SatellitePage() {
+  const t = await getTranslations("satellite");
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Satélite"
-        subtitle="Salud de la vegetación NDVI / SAR con una insignia de confianza honesta para la nube de Volcán"
+        title={t("page.title")}
+        subtitle={t("page.subtitle")}
       />
       <SatelliteBoard />
     </div>

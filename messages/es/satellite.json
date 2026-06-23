@@ -1,1 +1,28 @@
-{}
+{
+  "page": {
+    "title": "Satélite",
+    "subtitle": "Salud de la vegetación NDVI / SAR con una insignia de confianza honesta para la nube de Volcán"
+  },
+  "board": {
+    "mapAria": "Mapa de la finca — salud de la vegetación",
+    "legendTitle": "Confianza NDVI / SAR",
+    "windowsAria": "Ventanas de seguridad PHI / REI",
+    "windowsHeading": "Ventanas de seguridad activas (PHI / REI)",
+    "perPlotAria": "Salud de la vegetación por parcela",
+    "perPlotHeading": "Salud de la vegetación por parcela — NDVI / NDRE fusionados con SAR",
+    "seenClearly": "Vista clara",
+    "seenClearlySub": "óptico de alta confianza",
+    "radarCarried": "Sostenido por radar",
+    "radarCarriedSub": "respaldo SAR bajo la nube",
+    "honestlyUnknown": "Honestamente desconocido",
+    "honestlyUnknownLegendSub": "sin señal clara",
+    "honestlyUnknownTileSub": "sin señal clara — marcado, no oculto"
+  },
+  "grid": {
+    "emptyTitle": "Aún no hay lecturas satelitales",
+    "emptyDescription": "Ingresa una pasada de Sentinel-2 / Sentinel-1 (o registra una lectura en caché) y la salud de la vegetación de cada parcela aparece aquí con una insignia de confianza honesta.",
+    "indexFallback": "índice",
+    "indexAria": "Índice de vegetación de {plotName}",
+    "cloudSuffix": "{pct}% de nube"
+  }
+}

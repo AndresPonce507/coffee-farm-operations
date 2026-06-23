@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { EmptyState } from "@/components/ui/empty-state";
 
 /**
@@ -32,6 +34,7 @@ export function DossierSection({
   emptyLabel,
   children,
 }: DossierSectionProps) {
+  const t = useTranslations("dossier");
   return (
     <section id={id} className="scroll-mt-24" data-testid={`section-${id}`}>
       <div className="mb-3 flex items-center gap-2">
@@ -43,7 +46,7 @@ export function DossierSection({
         )}
       </div>
       {empty ? (
-        <EmptyState title={emptyLabel ?? "Sin registros todavía"} />
+        <EmptyState title={emptyLabel ?? t("section.emptyDefault")} />
       ) : (
         children
       )}

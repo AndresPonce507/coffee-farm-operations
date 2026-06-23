@@ -1,1 +1,36 @@
-{}
+{
+  "genealogyGraph": {
+    "empty": "No lineage to display.",
+    "unknownStage": "Unknown",
+    "ariaLabel": "Lot genealogy graph: {nodes} lots, {edges} mass transfers.",
+    "yieldLossTitle": "{code}: {kg} yield loss",
+    "treeAriaLabel": "Lot genealogy outline",
+    "alreadyShown": "(already shown)",
+    "soldLot": "(sold lot)"
+  },
+  "costEntries": {
+    "title": "Asientos de costo (libro diario)",
+    "empty": "Sin asientos de costo directamente asignados a este lote",
+    "note": "Entradas del libro diario etiquetadas directamente en este lote. Los costos generales y de agronomía se distribuyen vía el cálculo de costo por kg verde que aparece arriba.",
+    "reversal": "(reversión #{id})",
+    "ruleDirectLabor": "Mano de obra",
+    "ruleProcessing": "Procesamiento",
+    "ruleAgronomy": "Agronomía",
+    "ruleOverhead": "Generales"
+  },
+  "graphInteractive": {
+    "panZoomGroup": "{label} (pan and zoom)",
+    "panZoom": "Pan and zoom",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "resetView": "Reset view"
+  },
+  "page": {
+    "title": "Lot {code}",
+    "eyebrow": "Lote",
+    "subtitle": "Trazabilidad de la finca a la bolsa — flujo de masa desde la cereza hasta el lote verde vendido",
+    "backLabel": "Todos los lotes",
+    "lineageSection": "Linaje (de la finca a la bolsa)",
+    "eudrSection": "Diligencia debida EUDR"
+  }
+}

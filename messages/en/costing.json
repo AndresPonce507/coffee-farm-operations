@@ -1,1 +1,57 @@
-{}
+{
+  "page": {
+    "title": "Costos",
+    "subtitle": "Costo real por kg de verde — el número del que vive la finca"
+  },
+  "summary": {
+    "greenPriced": "Green priced",
+    "greenPricedSub": "cost denominator",
+    "lotsCosted": "Lots costed",
+    "lotsCostedSub": "of {count} green",
+    "avgCostPerKg": "Avg cost / kg",
+    "avgCostPerKgSub": "green-kg weighted",
+    "cheapestLot": "Cheapest lot",
+    "cheapestLotSub": "{cost}/kg",
+    "noCostedLots": "no costed lots"
+  },
+  "lotList": {
+    "emptyTitle": "No green lots have been graded yet. Cost-per-kg-green appears here once a lot reaches the green stage."
+  },
+  "lotCard": {
+    "greenKg": "{kg} green",
+    "greenNotDeclared": "green-kg not yet declared",
+    "costPerKgGreen": "Cost / kg green",
+    "provenanceSingular": "{count} cost driver · provenance",
+    "provenancePlural": "{count} cost drivers · provenance"
+  },
+  "entryForm": {
+    "driver": "Driver",
+    "driverWorkerDay": "Worker-day",
+    "driverTask": "Task",
+    "driverProcessingBatch": "Processing batch",
+    "allocationRule": "Allocation rule",
+    "ruleDirectLabor": "Direct labor → lot",
+    "ruleProcessing": "Processing → lot",
+    "ruleAgronomy": "Agronomy → plot",
+    "ruleOverhead": "Overhead → farm",
+    "target": "Target",
+    "kindLot": "Lot",
+    "kindPlot": "Plot",
+    "kindFarm": "Farm (whole)",
+    "targetCode": "Target code",
+    "wholeFarmNoTarget": "Whole farm — no target",
+    "choose": "Choose…",
+    "amountUsd": "Amount (USD)",
+    "memo": "Memo",
+    "memoPlaceholder": "Optional note",
+    "errorInvalidAmount": "Enter a valid amount.",
+    "errorNegativeAmount": "Amount must be at least 0 — corrections post as a reversal.",
+    "errorChooseTargetLot": "Choose a lot for this cost.",
+    "errorChooseTargetPlot": "Choose a plot for this cost.",
+    "errorChooseTargetFarm": "Choose a farm for this cost.",
+    "cancel": "Cancel",
+    "booking": "Booking…",
+    "bookCost": "Book cost",
+    "bookACost": "Book a cost"
+  }
+}

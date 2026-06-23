@@ -1,1 +1,39 @@
-{}
+{
+  "page": {
+    "title": "EUDR",
+    "subtitle": "Debida diligencia libre de deforestación — origen geolocalizado por lote verde"
+  },
+  "summary": {
+    "empty": "No green lots yet. EUDR due-diligence dossiers appear here once a lot reaches the green stage.",
+    "exportReady": "Export-ready",
+    "exportReadySub": "of {count} green lots",
+    "needsAttention": "Needs attention",
+    "needsAttentionSub": "incomplete or unverified origin",
+    "cutoff": "Cutoff",
+    "cutoffSub": "deforestation-free since 2020-12-31",
+    "noPlotsTraced": "No plots of origin traced"
+  },
+  "dossier": {
+    "title": "EUDR due-diligence dossier",
+    "subtitle": "Plots of origin · deforestation-free since {cutoff}",
+    "noOrigin": "This lot's lineage doesn't reach a harvested plot, so its origin can't yet be substantiated. Link the source lots' harvests to place it under EUDR due diligence.",
+    "established": "est. {year}",
+    "notGeolocated": "Not geolocated",
+    "deforestationFree": "Deforestation-free",
+    "deforestationFreeWithBasis": "Deforestation-free · {basis}",
+    "undeclared": "Undeclared",
+    "footnote": "Geolocation + deforestation-free declaration per plot of production (EU Regulation 2023/1115)."
+  },
+  "statusBadge": {
+    "compliant": "EUDR compliant",
+    "incomplete": "Incomplete",
+    "noOrigin": "Origin unverified"
+  },
+  "declareForm": {
+    "basisEstablishedPreCutoff": "Established before 2020 cutoff",
+    "basisSatelliteMonitoring": "Satellite monitoring",
+    "basisFieldSurvey": "Field survey",
+    "basisLabel": "Deforestation-free basis for this plot",
+    "submit": "Declare deforestation-free"
+  }
+}

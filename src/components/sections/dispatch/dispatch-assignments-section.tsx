@@ -1,4 +1,5 @@
 import { MapPin, Mountain, UserRound } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { DossierSection } from "@/components/dossier/dossier-section";
 import { EntityLink } from "@/components/ui/entity-link";
@@ -32,27 +33,22 @@ const RIPENESS_TONE: Record<RipenessTarget, string> = {
   low: "border-sky/30 bg-sky-100/60 text-sky",
 };
 
-const RIPENESS_ES: Record<RipenessTarget, string> = {
-  high: "muy maduro",
-  medium: "maduro",
-  low: "casi maduro",
-};
-
 export function DispatchAssignmentsSection({
   run,
   crewMembers,
 }: DispatchAssignmentsSectionProps) {
+  const t = useTranslations("dispatch");
   return (
     <DossierSection
       id="assignments"
-      title="Asignaciones"
+      title={t("assignments.title")}
       count={run.plots.length}
     >
       <div className="space-y-5">
         {/* Plot lines → /plots/[id]. */}
         {run.plots.length === 0 ? (
           <p className="rounded-xl border border-line/60 bg-white/50 px-3.5 py-6 text-center text-sm text-muted-fg">
-            Sin parcelas en este despacho
+            {t("assignments.noPlots")}
           </p>
         ) : (
           <ul className="space-y-2.5">
@@ -80,7 +76,7 @@ export function DispatchAssignmentsSection({
                       {p.targetKg !== null && (
                         <>
                           <span aria-hidden>·</span>
-                          <span>meta {num(p.targetKg)} kg</span>
+                          <span>{t("assignments.target", { target: num(p.targetKg) })}</span>
                         </>
                       )}
                     </span>
@@ -91,7 +87,7 @@ export function DispatchAssignmentsSection({
                       RIPENESS_TONE[p.ripenessTarget],
                     )}
                   >
-                    {RIPENESS_ES[p.ripenessTarget]}
+                    {t(`assignments.ripeness.${p.ripenessTarget}`)}
                   </span>
                 </EntityLink>
               </li>
@@ -102,11 +98,11 @@ export function DispatchAssignmentsSection({
         {/* Crew roster → /workers/[id]. */}
         <div>
           <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-forest/70">
-            Cuadrilla asignada
+            {t("assignments.assignedCrew")}
           </h3>
           {crewMembers.length === 0 ? (
             <p className="rounded-xl border border-line/60 bg-white/50 px-3.5 py-4 text-center text-sm text-muted-fg">
-              Sin trabajadores en el padrón de la cuadrilla
+              {t("assignments.noWorkers")}
             </p>
           ) : (
             <ul className="flex flex-wrap gap-2">

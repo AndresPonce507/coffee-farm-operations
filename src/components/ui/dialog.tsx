@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 
 /** Elements that can hold keyboard focus inside the modal, in DOM order. */
@@ -24,6 +25,7 @@ export function Dialog({
   title: string;
   children: ReactNode;
 }) {
+  const t = useTranslations("ui");
   const panelRef = useRef<HTMLDivElement>(null);
   // The element focused right before the modal opened, restored on close.
   const restoreRef = useRef<HTMLElement | null>(null);
@@ -116,7 +118,7 @@ export function Dialog({
     >
       <button
         type="button"
-        aria-label="Close"
+        aria-label={t("dialog.close")}
         tabIndex={-1}
         onClick={onClose}
         className="absolute inset-0 cursor-default bg-forest/40 backdrop-blur-sm"
@@ -140,7 +142,7 @@ export function Dialog({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close dialog"
+            aria-label={t("dialog.closeDialog")}
             className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted-fg transition hover:bg-white/60 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-100"
           >
             <X className="h-4 w-4" />

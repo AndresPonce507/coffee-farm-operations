@@ -1,1 +1,57 @@
-{}
+{
+  "page": {
+    "title": "Costos",
+    "subtitle": "Costo real por kg de verde — el número del que vive la finca"
+  },
+  "summary": {
+    "greenPriced": "Verde costeado",
+    "greenPricedSub": "denominador del costo",
+    "lotsCosted": "Lotes costeados",
+    "lotsCostedSub": "de {count} verde",
+    "avgCostPerKg": "Costo prom. / kg",
+    "avgCostPerKgSub": "ponderado por kg verde",
+    "cheapestLot": "Lote más barato",
+    "cheapestLotSub": "{cost}/kg",
+    "noCostedLots": "sin lotes costeados"
+  },
+  "lotList": {
+    "emptyTitle": "Aún no se ha clasificado ningún lote verde. El costo por kg de verde aparece aquí cuando un lote llega a la etapa de verde."
+  },
+  "lotCard": {
+    "greenKg": "{kg} verde",
+    "greenNotDeclared": "kg verde aún sin declarar",
+    "costPerKgGreen": "Costo / kg verde",
+    "provenanceSingular": "{count} generador de costo · procedencia",
+    "provenancePlural": "{count} generadores de costo · procedencia"
+  },
+  "entryForm": {
+    "driver": "Generador",
+    "driverWorkerDay": "Jornal",
+    "driverTask": "Tarea",
+    "driverProcessingBatch": "Tanda de procesamiento",
+    "allocationRule": "Regla de asignación",
+    "ruleDirectLabor": "Mano de obra directa → lote",
+    "ruleProcessing": "Procesamiento → lote",
+    "ruleAgronomy": "Agronomía → parcela",
+    "ruleOverhead": "Gastos generales → finca",
+    "target": "Destino",
+    "kindLot": "Lote",
+    "kindPlot": "Parcela",
+    "kindFarm": "Finca (completa)",
+    "targetCode": "Código de destino",
+    "wholeFarmNoTarget": "Finca completa — sin destino",
+    "choose": "Elegir…",
+    "amountUsd": "Monto (USD)",
+    "memo": "Nota",
+    "memoPlaceholder": "Nota opcional",
+    "errorInvalidAmount": "Ingrese un monto válido.",
+    "errorNegativeAmount": "El monto debe ser al menos 0 — las correcciones se registran como reversión.",
+    "errorChooseTargetLot": "Elija un lote para este costo.",
+    "errorChooseTargetPlot": "Elija una parcela para este costo.",
+    "errorChooseTargetFarm": "Elija una finca para este costo.",
+    "cancel": "Cancelar",
+    "booking": "Registrando…",
+    "bookCost": "Registrar costo",
+    "bookACost": "Registrar un costo"
+  }
+}

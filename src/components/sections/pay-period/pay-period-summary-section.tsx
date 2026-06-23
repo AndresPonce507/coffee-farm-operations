@@ -1,4 +1,5 @@
 import { CalendarRange, Coins, HeartHandshake, Users, Wallet } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card } from "@/components/ui/card";
 import { DossierSection } from "@/components/dossier/dossier-section";
@@ -34,36 +35,39 @@ interface Stat {
 }
 
 export function PayPeriodSummarySection({ period }: PayPeriodSummarySectionProps) {
+  const t = useTranslations("payPeriod");
   const stats: Stat[] = [
     {
-      label: "Trabajadores",
+      label: t("summary.workers"),
       value: String(period.workerCount),
       icon: Users,
     },
     {
-      label: "Bruto total",
+      label: t("summary.totalGross"),
       value: usd(period.totalGrossUsd),
       icon: Wallet,
     },
     {
-      label: "Neto total",
+      label: t("summary.totalNet"),
       value: usd(period.totalNetUsd),
       icon: Coins,
     },
     {
-      label: "Ajuste al mínimo",
+      label: t("summary.makeWhole"),
       value: usd(period.totalMakeWholeUsd),
       sub:
         period.madeWholeCount > 0
-          ? `${period.madeWholeCount} ${period.madeWholeCount === 1 ? "trabajador llevado" : "trabajadores llevados"} al mínimo legal`
-          : "todos sobre el mínimo legal",
+          ? period.madeWholeCount === 1
+            ? t("summary.makeWholeSubOne", { count: period.madeWholeCount })
+            : t("summary.makeWholeSubOther", { count: period.madeWholeCount })
+          : t("summary.makeWholeSubNone"),
       icon: HeartHandshake,
       highlight: true,
     },
   ];
 
   return (
-    <DossierSection id="summary" title="Resumen del período">
+    <DossierSection id="summary" title={t("summary.title")}>
       <div className="space-y-4">
         {/* Window + status header. */}
         <Card className="animate-rise">
@@ -81,10 +85,12 @@ export function PayPeriodSummarySection({ period }: PayPeriodSummarySectionProps
                   {period.periodEnd}
                 </p>
                 <p className="text-xs text-muted-fg">
-                  {period.season ? `Temporada ${period.season} · ` : ""}
-                  Estado: {statusLabelEs(period.status)}
+                  {period.season
+                    ? t("summary.seasonPrefix", { season: period.season })
+                    : ""}
+                  {t("summary.statusLine", { status: statusLabelEs(period.status) })}
                   {period.calculatedAt
-                    ? ` · calculado ${period.calculatedAt}`
+                    ? t("summary.calculatedSuffix", { date: period.calculatedAt })
                     : ""}
                 </p>
               </div>
@@ -95,7 +101,7 @@ export function PayPeriodSummarySection({ period }: PayPeriodSummarySectionProps
               data-testid="summary-drill-lines"
               className="inline-flex min-h-9 items-center gap-1.5 self-start rounded-lg px-2 text-xs font-medium text-forest transition-colors hover:text-forest-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 sm:self-auto"
             >
-              Ver las líneas de pago
+              {t("summary.viewLines")}
             </a>
           </div>
         </Card>
@@ -109,7 +115,7 @@ export function PayPeriodSummarySection({ period }: PayPeriodSummarySectionProps
             <a
               key={label}
               href="#lines"
-              aria-label={`${label}: ${value}. Ver las líneas de pago que lo producen`}
+              aria-label={t("summary.statDrillAria", { label, value })}
               className={cn(
                 "flex items-center gap-3 px-5 py-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40",
                 highlight ? "bg-honey-100/40 hover:bg-honey-100/60" : "hover:bg-white/40",

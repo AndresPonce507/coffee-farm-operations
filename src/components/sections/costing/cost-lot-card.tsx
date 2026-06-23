@@ -1,4 +1,5 @@
 import { Receipt } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { CostWaterfall } from "@/components/charts/cost-waterfall";
@@ -55,6 +56,7 @@ export function CostLotCard({
   breakdown,
   className,
 }: CostLotCardProps) {
+  const t = useTranslations("costing");
   const figures = categoryFiguresFromAllocated(breakdown, greenKg);
 
   // Honest provenance: the count of cost DRIVERS actually contributing to this
@@ -92,13 +94,13 @@ export function CostLotCard({
             </EntityLink>
             <p className="mt-0.5 text-xs text-muted-fg">
               {greenKg > 0
-                ? `${kg(greenKg)} green`
-                : "green-kg not yet declared"}
+                ? t("lotCard.greenKg", { kg: kg(greenKg) })
+                : t("lotCard.greenNotDeclared")}
             </p>
           </div>
           <div className="text-right">
             <p className="text-[10px] uppercase tracking-wide text-muted-fg">
-              Cost / kg green
+              {t("lotCard.costPerKgGreen")}
             </p>
             <p
               data-testid={`cost-headline-${code}`}
@@ -158,8 +160,9 @@ export function CostLotCard({
             className="inline-flex items-center gap-1.5"
           >
             <Receipt className="h-3.5 w-3.5" aria-hidden />
-            {num(driverCount)} cost {driverCount === 1 ? "driver" : "drivers"} ·
-            provenance
+            {driverCount === 1
+              ? t("lotCard.provenanceSingular", { count: num(driverCount) })
+              : t("lotCard.provenancePlural", { count: num(driverCount) })}
           </span>
         </EntityLink>
       </CardContent>

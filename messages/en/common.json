@@ -1,1 +1,29 @@
-{}
+{
+  "error": {
+    "app": {
+      "title": "We couldn't load the farm data right now",
+      "body": "The connection to the farm records dropped for a moment. This is usually temporary — give it another try.",
+      "retry": "Try again"
+    },
+    "crew": {
+      "title": "No pudimos cargar esta cuadrilla",
+      "body": "La conexión con los registros de la finca se interrumpió por un momento. Suele ser temporal — intenta de nuevo.",
+      "retry": "Reintentar"
+    },
+    "dispatch": {
+      "title": "No pudimos cargar este despacho",
+      "body": "La conexión con los registros de la finca se interrumpió un momento. Suele ser temporal — inténtalo de nuevo.",
+      "retry": "Reintentar"
+    },
+    "payPeriod": {
+      "title": "No pudimos cargar este período de pago",
+      "body": "La conexión con los registros de la finca se interrumpió un momento. Suele ser temporal — inténtalo de nuevo.",
+      "retry": "Reintentar"
+    },
+    "worker": {
+      "title": "No pudimos cargar este trabajador",
+      "body": "La conexión con los registros de la finca se interrumpió un momento. Suele ser temporal — intenta de nuevo.",
+      "retry": "Reintentar"
+    }
+  }
+}

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   LayoutDashboard,
   Sprout,
@@ -28,31 +29,39 @@ import { JansonLogo } from "./logo";
 import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
+/**
+ * NAV — the single source of truth for the app's primary navigation, shared by
+ * the desktop Sidebar, the MobileNav drawer, and the ⌘K CommandPalette. Each
+ * entry carries a stable `key` that resolves to a localized label via the
+ * `layout.nav.<key>` dictionary (consumers call `useTranslations("layout")`),
+ * so a route is reachable everywhere at once and its copy switches per locale.
+ */
 export const NAV = [
-  { href: "/", label: "Panel", icon: LayoutDashboard },
-  { href: "/plots", label: "Parcelas", icon: Sprout },
-  { href: "/map", label: "Mapa", icon: Map },
-  { href: "/weigh", label: "Pesaje", icon: Scale },
-  { href: "/harvests", label: "Cosechas", icon: Coffee },
-  { href: "/plan", label: "Plan", icon: CalendarRange },
-  { href: "/dispatch", label: "Despacho", icon: Send },
-  { href: "/processing", label: "Beneficio", icon: FlaskConical },
-  { href: "/ferment", label: "Fermentación", icon: Beaker },
-  { href: "/drying", label: "Secado", icon: Wind },
-  { href: "/inventory", label: "Inventario", icon: Boxes },
-  { href: "/qc", label: "Calidad", icon: Award },
-  { href: "/satellite", label: "Satélite", icon: Satellite },
-  { href: "/scouting", label: "Monitoreo", icon: Bug },
-  { href: "/costing", label: "Costos", icon: Coins },
-  { href: "/eudr", label: "EUDR", icon: ShieldCheck },
-  { href: "/workers", label: "Trabajadores", icon: Users },
-  { href: "/crew", label: "Cuadrillas", icon: HeartHandshake },
-  { href: "/payroll", label: "Nómina", icon: Banknote },
-  { href: "/tasks", label: "Tareas", icon: ListChecks },
+  { href: "/", key: "dashboard", icon: LayoutDashboard },
+  { href: "/plots", key: "plots", icon: Sprout },
+  { href: "/map", key: "map", icon: Map },
+  { href: "/weigh", key: "weigh", icon: Scale },
+  { href: "/harvests", key: "harvests", icon: Coffee },
+  { href: "/plan", key: "plan", icon: CalendarRange },
+  { href: "/dispatch", key: "dispatch", icon: Send },
+  { href: "/processing", key: "processing", icon: FlaskConical },
+  { href: "/ferment", key: "ferment", icon: Beaker },
+  { href: "/drying", key: "drying", icon: Wind },
+  { href: "/inventory", key: "inventory", icon: Boxes },
+  { href: "/qc", key: "qc", icon: Award },
+  { href: "/satellite", key: "satellite", icon: Satellite },
+  { href: "/scouting", key: "scouting", icon: Bug },
+  { href: "/costing", key: "costing", icon: Coins },
+  { href: "/eudr", key: "eudr", icon: ShieldCheck },
+  { href: "/workers", key: "workers", icon: Users },
+  { href: "/crew", key: "crew", icon: HeartHandshake },
+  { href: "/payroll", key: "payroll", icon: Banknote },
+  { href: "/tasks", key: "tasks", icon: ListChecks },
 ] as const;
 
 export function Sidebar() {
   const pathname = usePathname();
+  const t = useTranslations("layout");
 
   return (
     <aside className="glass-forest sticky top-0 hidden h-screen w-64 shrink-0 flex-col text-paper md:flex">
@@ -63,7 +72,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 px-3">
-        {NAV.map(({ href, label, icon: Icon }) => {
+        {NAV.map(({ href, key, icon: Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
           return (
             <Link
@@ -83,7 +92,7 @@ export function Sidebar() {
                   active ? "text-honey" : "text-paper/55 group-hover:text-paper/80"
                 )}
               />
-              {label}
+              {t(`nav.${key}`)}
               {active && (
                 <span className="ml-auto h-1.5 w-1.5 rounded-full bg-honey" />
               )}

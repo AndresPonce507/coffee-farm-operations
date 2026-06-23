@@ -1,1 +1,11 @@
-{}
+{
+  "drawer": {
+    "dialogLabel": "Pista de auditoría de {streamKey}",
+    "close": "Cerrar",
+    "eyebrow": "Pista de auditoría",
+    "chainVerified": "Cadena verificada",
+    "chainUnverified": "Cadena sin verificar",
+    "closeTrail": "Cerrar pista de auditoría",
+    "empty": "Aún no hay eventos registrados para este flujo."
+  }
+}

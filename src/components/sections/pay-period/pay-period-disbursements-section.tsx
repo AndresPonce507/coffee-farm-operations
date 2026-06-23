@@ -1,4 +1,5 @@
 import { BadgeCheck, PenLine } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card } from "@/components/ui/card";
 import { DossierSection } from "@/components/dossier/dossier-section";
@@ -31,13 +32,14 @@ export function PayPeriodDisbursementsSection({
   disbursements,
   workerNames,
 }: PayPeriodDisbursementsSectionProps) {
+  const t = useTranslations("payPeriod");
   return (
     <DossierSection
       id="disbursements"
-      title="Pagos registrados"
+      title={t("disbursements.title")}
       count={disbursements.length}
       empty={disbursements.length === 0}
-      emptyLabel="Sin pagos registrados todavía"
+      emptyLabel={t("disbursements.empty")}
     >
       <Card className="animate-rise overflow-hidden">
         <ul className="divide-y divide-white/50">
@@ -64,10 +66,10 @@ export function PayPeriodDisbursementsSection({
                     {d.signatureRef ? (
                       <span
                         className="inline-flex items-center gap-1 text-forest"
-                        title="Pago en efectivo con firma"
+                        title={t("disbursements.signedTitle")}
                       >
                         <PenLine className="h-3 w-3" aria-hidden="true" />
-                        firmado
+                        {t("disbursements.signed")}
                       </span>
                     ) : null}
                     <span className="text-muted-fg/70">· {d.disbursedAt}</span>

@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { DossierSection } from "@/components/dossier/dossier-section";
 import { Card, CardContent } from "@/components/ui/card";
 import type { CostEntry } from "@/lib/types";
@@ -37,28 +39,26 @@ const fmtDate = (iso: string) =>
     year: "numeric",
   });
 
-const RULE_LABEL: Record<string, string> = {
-  "direct-labor": "Mano de obra",
-  processing: "Procesamiento",
-  agronomy: "Agronomía",
-  overhead: "Generales",
-};
-
 export function LotCostEntriesSection({ entries }: { entries: CostEntry[] }) {
+  const t = useTranslations("lots");
+  const ruleLabel: Record<string, string> = {
+    "direct-labor": t("costEntries.ruleDirectLabor"),
+    processing: t("costEntries.ruleProcessing"),
+    agronomy: t("costEntries.ruleAgronomy"),
+    overhead: t("costEntries.ruleOverhead"),
+  };
   return (
     <DossierSection
       id="cost-entries"
-      title="Asientos de costo (libro diario)"
+      title={t("costEntries.title")}
       count={entries.length}
       empty={entries.length === 0}
-      emptyLabel="Sin asientos de costo directamente asignados a este lote"
+      emptyLabel={t("costEntries.empty")}
     >
       <Card>
         <CardContent className="px-0 py-1">
           <p className="px-5 pb-2 pt-1 text-xs text-muted-fg">
-            Entradas del libro diario etiquetadas directamente en este lote.
-            Los costos generales y de agronomía se distribuyen vía el cálculo
-            de costo por kg verde que aparece arriba.
+            {t("costEntries.note")}
           </p>
           <ul className="divide-y divide-line">
             {entries.map((e) => (
@@ -71,10 +71,10 @@ export function LotCostEntriesSection({ entries }: { entries: CostEntry[] }) {
                   {fmtDate(e.occurredAt)}
                 </span>
                 <span className="min-w-0 flex-1 text-sm font-medium text-ink">
-                  {RULE_LABEL[e.allocationRule] ?? e.allocationRule}
+                  {ruleLabel[e.allocationRule] ?? e.allocationRule}
                   {e.reversesId != null && (
                     <span className="ml-1.5 text-xs text-muted-fg">
-                      (reversión #{e.reversesId})
+                      {t("costEntries.reversal", { id: e.reversesId })}
                     </span>
                   )}
                 </span>

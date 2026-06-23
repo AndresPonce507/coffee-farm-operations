@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Check, Share2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { resolveAdapter, defaultDispatchChannel } from "@/lib/integration/dispatch/resolve";
@@ -63,6 +64,7 @@ export function DispatchShareButton({
   markSentAction,
   className,
 }: DispatchShareButtonProps) {
+  const t = useTranslations("dispatch");
   const [pending, startTransition] = useTransition();
   const [sent, setSent] = useState(card.status === "sent" || card.status === "acknowledged");
   const [error, setError] = useState<string | null>(null);
@@ -98,17 +100,17 @@ export function DispatchShareButton({
         } catch {
           // the action THREW — the send was not recorded. Keep the button
           // un-sent and actionable so the manager can retry; never lie "sent".
-          setError("No se pudo marcar como enviado. Vuelve a intentarlo.");
+          setError(t("share.markSentError"));
           return;
         }
         if (markSentFailed(actionResult)) {
           // the action returned an error state — same: do NOT mark sent.
-          setError("No se pudo marcar como enviado. Vuelve a intentarlo.");
+          setError(t("share.markSentError"));
           return;
         }
       }
       // confirmed sent: write the live-region message, THEN flip the visual state.
-      setStatusMsg("Despacho compartido con la cuadrilla.");
+      setStatusMsg(t("share.sharedAnnouncement"));
       setSent(true);
     });
   }
@@ -129,7 +131,7 @@ export function DispatchShareButton({
           className={cn("text-forest", className)}
         >
           <Check className="h-4 w-4" aria-hidden="true" />
-          Compartido
+          {t("share.shared")}
         </Button>
       ) : (
         <Button
@@ -137,12 +139,12 @@ export function DispatchShareButton({
           variant="primary"
           onClick={onClick}
           disabled={pending}
-          aria-label={`Compartir despacho de ${card.crewName}`}
-          title="Compartir · share"
+          aria-label={t("share.shareLabel", { crewName: card.crewName })}
+          title={t("share.shareTitle")}
           className={className}
         >
           <Share2 className="h-4 w-4" aria-hidden="true" />
-          {pending ? "Compartiendo…" : "Compartir"}
+          {pending ? t("share.sharing") : t("share.share")}
         </Button>
       )}
       {error && (

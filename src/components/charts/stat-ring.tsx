@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/utils";
 
 export interface StatRingProps {
@@ -48,6 +50,7 @@ export function StatRing({
   track = "#E7DED0",
   className,
 }: StatRingProps) {
+  const t = useTranslations("ui");
   // Coerce a non-finite input (NaN/±Infinity) to 0 BEFORE clamping: Math.min/
   // Math.max pass NaN straight through (→ "NaN%") and let Infinity read as a
   // false 100%. This guard means no caller can ever paint a non-finite ring.
@@ -64,9 +67,9 @@ export function StatRing({
   const sheenId = `${uid}-sheen`;
 
   const ariaLabel = [
-    label ? `${label}: ` : "",
-    `${Math.round(clamped)} percent`,
-    sublabel ? ` — ${sublabel}` : "",
+    label ? t("statRing.ariaLabelPrefix", { label }) : "",
+    t("statRing.ariaPercent", { n: Math.round(clamped) }),
+    sublabel ? t("statRing.ariaSublabel", { sublabel }) : "",
   ].join("");
 
   return (

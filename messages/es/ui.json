@@ -1,1 +1,65 @@
-{}
+{
+  "dialog": {
+    "close": "Cerrar",
+    "closeDialog": "Cerrar diálogo"
+  },
+  "smartForm": {
+    "view": "Ver →",
+    "done": "Listo",
+    "cancel": "Cancelar"
+  },
+  "atpMeter": {
+    "ariaLabel": "Disponible para prometer",
+    "valueText": "{available} disponible de {total}",
+    "committed": "comprometido",
+    "total": "total",
+    "available": "disponible"
+  },
+  "statCard": {
+    "trendSparkline": "Minigráfico de tendencia",
+    "harvestOne": "cosecha",
+    "harvestMany": "cosechas",
+    "derivedFrom": "calculado a partir de {count} {unit}"
+  },
+  "donut": {
+    "noDataAria": "Gráfico de dona sin datos.",
+    "empty": "Aún no hay datos.",
+    "ariaPrefix": "Gráfico de dona.",
+    "ariaSlice": "{label}: {share}%"
+  },
+  "trendLine": {
+    "noDataAria": "Gráfico de líneas de tendencia sin datos.",
+    "empty": "Aún no hay datos de tendencia.",
+    "ariaSummary": "Línea de tendencia de {from} a {to}, {points} puntos, de {min} a {max}."
+  },
+  "barMini": {
+    "noDataAria": "Gráfico de barras sin datos.",
+    "empty": "Aún no hay datos de cosecha.",
+    "ariaLabel": "Gráfico de barras de {count} valores, de {firstLabel} ({firstValue}) a {lastLabel} ({lastValue})."
+  },
+  "costDecomposition": {
+    "noDataAria": "Desglose de costos sin datos.",
+    "ariaPrefix": "Desglose de costos.",
+    "ariaSlice": "{label}: {share}",
+    "tableCaption": "Desglose de costos por categoría",
+    "tableCategory": "Categoría",
+    "tableShare": "Participación",
+    "tableValue": "Valor"
+  },
+  "costWaterfall": {
+    "noDataAria": "Cascada de costos sin datos.",
+    "ariaPrefix": "Cascada de costos.",
+    "ariaStep": "{label}: {value} por kg",
+    "ariaTotal": "Costo total {total} por kg de café verde.",
+    "tableCaption": "Acumulado de costo por kg de café verde",
+    "tableDriver": "Componente",
+    "tableCost": "Costo ({unit})",
+    "tableRunningTotal": "Total acumulado",
+    "tableTotal": "Total"
+  },
+  "statRing": {
+    "ariaLabelPrefix": "{label}: ",
+    "ariaPercent": "{n} por ciento",
+    "ariaSublabel": " — {sublabel}"
+  }
+}

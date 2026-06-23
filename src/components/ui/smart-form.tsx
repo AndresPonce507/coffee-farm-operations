@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { CheckCircle2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,7 @@ export function SmartForm({
     fieldError: (k: string) => string | undefined;
   }) => ReactNode;
 }) {
+  const t = useTranslations("ui");
   const [state, formAction, pending] = useActionState(action, SMART_IDLE);
   // Stable per-mount key so a double-submit dedupes to one record on the write door.
   const [idemKey] = useState(() => crypto.randomUUID());
@@ -82,12 +84,12 @@ export function SmartForm({
             href={state.href}
             className="text-sm font-medium text-forest underline"
           >
-            Ver →
+            {t("smartForm.view")}
           </a>
         )}
         {onDone && (
           <Button type="button" variant="ghost" size="sm" onClick={onDone}>
-            Done
+            {t("smartForm.done")}
           </Button>
         )}
       </div>
@@ -108,7 +110,7 @@ export function SmartForm({
       <div className="flex justify-end gap-2 pt-1">
         {onDone && (
           <Button type="button" variant="ghost" onClick={onDone}>
-            Cancel
+            {t("smartForm.cancel")}
           </Button>
         )}
         <Button type="submit" disabled={pending}>

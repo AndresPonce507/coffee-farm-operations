@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Menu, X } from "lucide-react";
 import { JansonLogo } from "./logo";
 import { NAV } from "./sidebar";
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils";
  */
 export function MobileNav() {
   const pathname = usePathname();
+  const t = useTranslations("layout");
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -65,7 +67,7 @@ export function MobileNav() {
         <button
           ref={triggerRef}
           type="button"
-          aria-label="Abrir menú de navegación"
+          aria-label={t("mobileNav.openMenu")}
           aria-haspopup="dialog"
           aria-expanded={open}
           aria-controls="mobile-nav-drawer"
@@ -76,7 +78,7 @@ export function MobileNav() {
         </button>
         {current && (
           <span className="font-display text-sm font-semibold text-ink">
-            {current.label}
+            {t(`nav.${current.key}`)}
           </span>
         )}
       </div>
@@ -100,7 +102,7 @@ export function MobileNav() {
             <button
               type="button"
               tabIndex={-1}
-              aria-label="Cerrar menú de navegación"
+              aria-label={t("mobileNav.closeMenu")}
               onClick={closeWithFocus}
               className={cn(
                 "absolute inset-0 h-full w-full cursor-default bg-ink/40 backdrop-blur-sm transition-opacity duration-300",
@@ -113,7 +115,7 @@ export function MobileNav() {
               id="mobile-nav-drawer"
               role="dialog"
               aria-modal="true"
-              aria-label="Navegación principal"
+              aria-label={t("mobileNav.primaryNav")}
               className={cn(
                 "glass-forest absolute left-0 top-0 flex h-full w-[82%] max-w-xs flex-col text-paper shadow-2xl",
                 "transition-transform duration-300 ease-out will-change-transform",
@@ -130,7 +132,7 @@ export function MobileNav() {
                 <button
                   ref={closeRef}
                   type="button"
-                  aria-label="Cerrar menú de navegación"
+                  aria-label={t("mobileNav.closeMenu")}
                   onClick={closeWithFocus}
                   className="grid h-9 w-9 place-items-center rounded-xl text-paper/70 transition hover:bg-paper/10 hover:text-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper/40"
                 >
@@ -139,7 +141,7 @@ export function MobileNav() {
               </div>
 
               <nav className="flex-1 space-y-1 overflow-y-auto px-3">
-                {NAV.map(({ href, label, icon: Icon }) => {
+                {NAV.map(({ href, key, icon: Icon }) => {
                   const active = isActive(href);
                   return (
                     <Link
@@ -161,7 +163,7 @@ export function MobileNav() {
                             : "text-paper/55 group-hover:text-paper/80",
                         )}
                       />
-                      {label}
+                      {t(`nav.${key}`)}
                       {active && (
                         <span className="ml-auto h-1.5 w-1.5 rounded-full bg-honey" />
                       )}

@@ -1,1 +1,39 @@
-{}
+{
+  "page": {
+    "title": "EUDR",
+    "subtitle": "Debida diligencia libre de deforestación — origen geolocalizado por lote verde"
+  },
+  "summary": {
+    "empty": "Aún no hay lotes verdes. Los expedientes de debida diligencia EUDR aparecen aquí cuando un lote llega a la etapa de café verde.",
+    "exportReady": "Listo para exportar",
+    "exportReadySub": "de {count} lotes verdes",
+    "needsAttention": "Requiere atención",
+    "needsAttentionSub": "origen incompleto o sin verificar",
+    "cutoff": "Fecha límite",
+    "cutoffSub": "libre de deforestación desde 2020-12-31",
+    "noPlotsTraced": "Sin parcelas de origen rastreadas"
+  },
+  "dossier": {
+    "title": "Expediente de debida diligencia EUDR",
+    "subtitle": "Parcelas de origen · libre de deforestación desde {cutoff}",
+    "noOrigin": "El linaje de este lote no llega a una parcela cosechada, por lo que su origen aún no se puede sustentar. Vincule las cosechas de los lotes de origen para colocarlo bajo la debida diligencia EUDR.",
+    "established": "est. {year}",
+    "notGeolocated": "Sin geolocalizar",
+    "deforestationFree": "Libre de deforestación",
+    "deforestationFreeWithBasis": "Libre de deforestación · {basis}",
+    "undeclared": "Sin declarar",
+    "footnote": "Geolocalización + declaración libre de deforestación por parcela de producción (EU Regulation 2023/1115)."
+  },
+  "statusBadge": {
+    "compliant": "Conforme con EUDR",
+    "incomplete": "Incompleto",
+    "noOrigin": "Origen sin verificar"
+  },
+  "declareForm": {
+    "basisEstablishedPreCutoff": "Establecida antes de la fecha límite de 2020",
+    "basisSatelliteMonitoring": "Monitoreo satelital",
+    "basisFieldSurvey": "Inspección de campo",
+    "basisLabel": "Base de libre de deforestación para esta parcela",
+    "submit": "Declarar libre de deforestación"
+  }
+}

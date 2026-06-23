@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { CostingSummary } from "@/components/sections/costing/costing-summary";
 import { CostLotList } from "@/components/sections/costing/cost-lot-list";
@@ -33,6 +35,7 @@ import {
  * re-implements the COGS sum.
  */
 export default async function CostingPage() {
+  const t = await getTranslations("costing");
   const [lots, plots] = await Promise.all([
     getGreenReachableLots(),
     getGreenReachablePlots(),
@@ -41,8 +44,8 @@ export default async function CostingPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Costos"
-        subtitle="Costo real por kg de verde — el número del que vive la finca"
+        title={t("page.title")}
+        subtitle={t("page.subtitle")}
       >
         <BookCostButton lots={lots} plots={plots} />
       </PageHeader>
