@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { DossierShell } from "@/components/dossier/dossier-shell";
 import { CrewRosterSection } from "@/components/sections/crew/crew-roster-section";
@@ -31,6 +32,7 @@ export default async function CrewDossierPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const t = await getTranslations("crew");
 
   // 1. Resolve the anchor crew first (the existence gate). One cheap getter.
   const crew = await getCrewById(id);
@@ -47,14 +49,21 @@ export default async function CrewDossierPage({
     <DossierShell
       kind="crew"
       title={crew.crewName}
-      eyebrow="Cuadrilla"
-      subtitle={`${crew.memberCount} ${
-        crew.memberCount === 1 ? "integrante" : "integrantes"
-      } · ${crew.presentCount} ${
-        crew.presentCount === 1 ? "presente" : "presentes"
-      } hoy`}
+      eyebrow={t("dossier.eyebrow")}
+      subtitle={t("dossier.subtitle", {
+        members: `${crew.memberCount} ${
+          crew.memberCount === 1
+            ? t("dossier.memberOne")
+            : t("dossier.memberOther")
+        }`,
+        present: `${crew.presentCount} ${
+          crew.presentCount === 1
+            ? t("dossier.presentOne")
+            : t("dossier.presentOther")
+        }`,
+      })}
       backHref="/crew"
-      backLabel="Todas las cuadrillas"
+      backLabel={t("dossier.backLabel")}
     >
       <CrewRosterSection members={crew.members} />
       <CrewPlotsSection plots={assignedPlots} />

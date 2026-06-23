@@ -3,6 +3,15 @@
     "title": "Cuadrillas",
     "subtitle": "El sistema de registro de las personas — compañeros con nombre que regresan"
   },
+  "dossier": {
+    "eyebrow": "Cuadrilla",
+    "backLabel": "Todas las cuadrillas",
+    "subtitle": "{members} · {present} hoy",
+    "memberOne": "integrante",
+    "memberOther": "integrantes",
+    "presentOne": "presente",
+    "presentOther": "presentes"
+  },
   "summary": {
     "crews": "Cuadrillas",
     "members": "Integrantes",

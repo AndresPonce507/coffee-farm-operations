@@ -3,6 +3,13 @@
     "title": "Despacho Matutino",
     "subtitle": "Planes por cuadrilla según la madurez, compartidos como tarjeta bilingüe — iniciado por el dueño"
   },
+  "dossier": {
+    "eyebrow": "Despacho",
+    "backLabel": "Todos los despachos",
+    "subtitle": "{date} · {plots} · temporada {season}",
+    "plotOne": "parcela",
+    "plotOther": "parcelas"
+  },
   "board": {
     "tiles": {
       "crewsLabel": "Crews",

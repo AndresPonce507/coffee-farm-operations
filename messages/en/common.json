@@ -1,4 +1,16 @@
 {
+  "loading": {
+    "costing": "Loading costing",
+    "crew": "Loading crew",
+    "crewDetail": "Cargando cuadrilla",
+    "dispatchDetail": "Cargando despacho",
+    "drying": "Loading drying",
+    "eudr": "Loading EUDR",
+    "payroll": "Loading payroll",
+    "plan": "Loading harvest plan",
+    "processing": "Loading processing",
+    "weigh": "Loading weigh"
+  },
   "error": {
     "app": {
       "title": "We couldn't load the farm data right now",

@@ -3,6 +3,11 @@
     "title": "Trabajadores",
     "subtitle": "Cuadrillas, asistencia y nómina diaria"
   },
+  "dossier": {
+    "eyebrow": "Trabajador",
+    "backLabel": "Todos los trabajadores",
+    "subtitle": "{role} · {crew}"
+  },
   "summary": {
     "headcount": "Personal",
     "headcountSub": "En la nómina",

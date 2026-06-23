@@ -8,9 +8,12 @@
  * no data, no client JS. Glassy animate-pulse placeholders float over the global
  * LivingBackground; reduced-motion is inherited from globals.css.
  */
+import { useTranslations } from "next-intl";
+
 export default function DispatchDossierLoading() {
+  const t = useTranslations("common");
   return (
-    <div className="space-y-6" aria-busy="true" aria-label="Cargando despacho">
+    <div className="space-y-6" aria-busy="true" aria-label={t("loading.dispatchDetail")}>
       {/* Back-link placeholder. */}
       <div className="h-5 w-40 animate-pulse rounded bg-line" />
 

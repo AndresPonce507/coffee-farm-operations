@@ -3,6 +3,13 @@
     "title": "Fermentación",
     "subtitle": "Fermentación en beneficio húmedo — curvas en vivo, alertas de punto de corte, agua del eco-beneficio"
   },
+  "dossier": {
+    "title": "Lote {lotCode}",
+    "eyebrow": "Lote en fermentación",
+    "subtitle": "Cabina de calidad por lote — curvas de pH/temp/Brix, punto de corte y agua por kg",
+    "backLabel": "Todas las fermentaciones",
+    "trackerTitle": "Seguimiento de fermentación"
+  },
   "board": {
     "emptyTitle": "Nothing fermenting yet",
     "emptyDescription": "Start a ferment on a milled-in lot to open the make-quality loop — live pH/temp/Brix curves and a cut-point alert before the window closes.",

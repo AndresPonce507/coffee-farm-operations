@@ -1,4 +1,16 @@
 {
+  "loading": {
+    "costing": "Cargando costeo",
+    "crew": "Cargando cuadrilla",
+    "crewDetail": "Cargando cuadrilla",
+    "dispatchDetail": "Cargando despacho",
+    "drying": "Cargando secado",
+    "eudr": "Cargando EUDR",
+    "payroll": "Cargando nómina",
+    "plan": "Cargando plan de cosecha",
+    "processing": "Cargando procesamiento",
+    "weigh": "Cargando pesaje"
+  },
   "error": {
     "app": {
       "title": "No pudimos cargar los datos de la finca en este momento",

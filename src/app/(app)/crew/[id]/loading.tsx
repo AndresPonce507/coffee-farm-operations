@@ -8,9 +8,12 @@
  * no data imports, no client JS, no props. Glassy animate-pulse placeholders float
  * over the global LivingBackground; animate-rise respects prefers-reduced-motion.
  */
+import { useTranslations } from "next-intl";
+
 export default function CrewDossierLoading() {
+  const t = useTranslations("common");
   return (
-    <div className="space-y-6" aria-busy="true" aria-label="Cargando cuadrilla">
+    <div className="space-y-6" aria-busy="true" aria-label={t("loading.crewDetail")}>
       {/* Back link */}
       <div className="h-5 w-40 animate-pulse rounded-lg bg-line" />
 

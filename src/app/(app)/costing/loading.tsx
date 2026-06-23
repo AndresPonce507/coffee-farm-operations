@@ -10,9 +10,12 @@
  * `animate-pulse` placeholders float over the global LivingBackground, sized to
  * match what lands.
  */
+import { useTranslations } from "next-intl";
+
 export default function CostingLoading() {
+  const t = useTranslations("common");
   return (
-    <div className="space-y-6" aria-busy="true" aria-label="Loading costing">
+    <div className="space-y-6" aria-busy="true" aria-label={t("loading.costing")}>
       {/* Header — mirrors PageHeader (title + subtitle, hairline divider). */}
       <div className="animate-rise relative mb-6 pb-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">

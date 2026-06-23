@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { DossierShell } from "@/components/dossier/dossier-shell";
 import { DispatchRunSection } from "@/components/sections/dispatch/dispatch-run-section";
@@ -29,6 +30,7 @@ export default async function DispatchDossierPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const t = await getTranslations("dispatch");
 
   // 1. Resolve the ANCHOR run first (the existence gate). One getter.
   const dossier = await getDispatchRunDossier(id);
@@ -40,12 +42,18 @@ export default async function DispatchDossierPage({
     <DossierShell
       kind="dispatch"
       title={run.crewName}
-      eyebrow="Despacho"
-      subtitle={`${run.dispatchDate} · ${run.plotCount} ${
-        run.plotCount === 1 ? "parcela" : "parcelas"
-      } · temporada ${run.season}`}
+      eyebrow={t("dossier.eyebrow")}
+      subtitle={t("dossier.subtitle", {
+        date: run.dispatchDate,
+        plots: `${run.plotCount} ${
+          run.plotCount === 1
+            ? t("dossier.plotOne")
+            : t("dossier.plotOther")
+        }`,
+        season: run.season,
+      })}
       backHref="/dispatch"
-      backLabel="Todos los despachos"
+      backLabel={t("dossier.backLabel")}
     >
       <DispatchRunSection run={run} crewLanguages={crewLanguages} />
       <DispatchAssignmentsSection run={run} crewMembers={crewMembers} />

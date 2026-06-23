@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { getPlotsGeoJSON, getReserveGeoJSON } from "@/lib/db/geo";
 import { MapCanvas } from "@/components/islands/MapCanvas.client";
 import { PALETTE } from "@/lib/brand";
@@ -12,14 +14,15 @@ import { PALETTE } from "@/lib/brand";
  * (AD-3) so labels never sit directly on the translucent map veil.
  */
 
-const LEGEND: { label: string; color: string; ring?: boolean }[] = [
-  { label: "Healthy", color: PALETTE.forest500 },
-  { label: "Watch", color: PALETTE.honey },
-  { label: "At risk", color: PALETTE.cherry },
-  { label: "Reserve", color: PALETTE.forest, ring: true },
+const LEGEND: { key: string; color: string; ring?: boolean }[] = [
+  { key: "healthy", color: PALETTE.forest500 },
+  { key: "watch", color: PALETTE.honey },
+  { key: "atRisk", color: PALETTE.cherry },
+  { key: "reserve", color: PALETTE.forest, ring: true },
 ];
 
 export default async function MapPage() {
+  const t = await getTranslations("map");
   const [plots, reserve] = await Promise.all([
     getPlotsGeoJSON(),
     getReserveGeoJSON(),
@@ -37,10 +40,10 @@ export default async function MapPage() {
             Janson Coffee · Volcán
           </p>
           <h1 className="mt-0.5 font-display text-lg font-bold text-ink">
-            Mapa de la finca
+            {t("page.title")}
           </h1>
           <p className="mt-1 text-xs text-muted-fg">
-            Lotes de cultivo coloreados según su salud, con la reserva protegida del quetzal.
+            {t("page.subtitle")}
           </p>
         </div>
       </div>
@@ -48,8 +51,8 @@ export default async function MapPage() {
       {/* Legend — floating glass, opaque chip rows (AD-3). */}
       <div className="glass pointer-events-none absolute bottom-4 left-4 z-10 rounded-2xl p-3">
         <ul className="space-y-1.5 rounded-xl bg-card/95 px-3 py-2.5">
-          {LEGEND.map(({ label, color, ring }) => (
-            <li key={label} className="flex items-center gap-2 text-xs text-ink">
+          {LEGEND.map(({ key, color, ring }) => (
+            <li key={key} className="flex items-center gap-2 text-xs text-ink">
               <span
                 aria-hidden
                 className="h-3 w-3 shrink-0 rounded-[4px]"
@@ -59,7 +62,7 @@ export default async function MapPage() {
                     : { background: color }
                 }
               />
-              <span className="font-medium">{label}</span>
+              <span className="font-medium">{t(`legend.${key}`)}</span>
             </li>
           ))}
         </ul>
@@ -68,7 +71,7 @@ export default async function MapPage() {
       {/* PLACEHOLDER notice — these boundaries aren't surveyed yet (family gate). */}
       <div className="glass pointer-events-none absolute right-4 top-4 z-10 max-w-[15rem] rounded-2xl p-2.5">
         <p className="rounded-lg bg-card/95 px-3 py-2 text-[11px] leading-snug text-muted-fg">
-          Boundaries are placeholders pending the family’s traced plot outlines.
+          {t("placeholderNote")}
         </p>
       </div>
     </div>
