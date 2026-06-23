@@ -67,10 +67,10 @@ describe("DispatchAssignmentsSection", () => {
   it("links each plot line to its /plots/[id] dossier", () => {
     render(<DispatchAssignmentsSection run={run} crewMembers={members} />);
 
-    const plotLink = screen.getByRole("link", { name: /parcela p-norte-bajo/i });
+    const plotLink = screen.getByRole("link", { name: /parcela Norte Bajo/i });
     expect(plotLink).toHaveAttribute("href", "/plots/p-norte-bajo");
     expect(
-      screen.getByRole("link", { name: /parcela p-norte-alto/i }),
+      screen.getByRole("link", { name: /parcela Norte Alto/i }),
     ).toHaveAttribute("href", "/plots/p-norte-alto");
   });
 
@@ -78,7 +78,7 @@ describe("DispatchAssignmentsSection", () => {
     render(<DispatchAssignmentsSection run={run} crewMembers={members} />);
 
     expect(
-      screen.getByRole("link", { name: /trabajador w-06/i }),
+      screen.getByRole("link", { name: /trabajador Lucía/i }),
     ).toHaveAttribute("href", "/workers/w-06");
   });
 

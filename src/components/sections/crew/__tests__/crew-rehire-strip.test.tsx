@@ -102,8 +102,8 @@ describe("CrewRehireStrip", () => {
         rehireAction={vi.fn(async () => undefined)}
       />,
     );
-    // EntityLink renders an <a> whose aria-label is "Abrir trabajador <id>".
-    const link = screen.getByRole("link", { name: /trabajador w-06/i });
+    // EntityLink renders an <a> whose aria-label is "Abrir trabajador <name>" (preferredName).
+    const link = screen.getByRole("link", { name: /abrir trabajador lucía/i });
     expect(link).toHaveAttribute("href", "/workers/w-06");
     expect(link).toHaveTextContent("Lucía");
   });

@@ -43,7 +43,7 @@ describe("WorkerAttendanceSection", () => {
     render(<WorkerAttendanceSection events={events} chainVerified />);
     const tl = screen.getByTestId("worker-attendance-timeline");
     expect(
-      within(tl).getByRole("link", { name: /parcela p-tizingal-alto/i }),
+      within(tl).getByRole("link", { name: /p-tizingal-alto/i }),
     ).toHaveAttribute("href", "/plots/p-tizingal-alto");
   });
 

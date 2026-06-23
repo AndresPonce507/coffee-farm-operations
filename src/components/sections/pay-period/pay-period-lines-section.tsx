@@ -49,7 +49,7 @@ function CrewName({ line }: { line: PayPeriodPayLine }) {
     <EntityLink
       kind="crew"
       id={line.crewId}
-      name={line.crewName}
+      name={line.crewName ?? undefined}
       className="text-xs text-muted-fg underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
     >
       {line.crewName}

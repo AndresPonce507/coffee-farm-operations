@@ -65,8 +65,10 @@ describe("declarePlotDeforestationFree", () => {
       p_basis: "established-pre-cutoff",
     });
     expect(res).toEqual({ ok: true });
-    expect(revalidatePathMock).toHaveBeenCalledWith("/lots/JC-701");
+    // reactiveRefresh("eudr-declaration") fans out to both /eudr and /lots/[code]
+    // (the route-segment pattern, not the concrete lot path).
     expect(revalidatePathMock).toHaveBeenCalledWith("/eudr");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/lots/[code]");
   });
 
   it("withdraws a declaration (p_free=false) with a null basis and still revalidates", async () => {
@@ -160,7 +162,7 @@ describe("declarePlotDeforestationFree", () => {
     await declarePlotDeforestationFree("p-baru-vista", true, "satellite-monitoring");
 
     expect(revalidatePathMock).toHaveBeenCalledWith("/eudr");
-    // No specific lot to revalidate → revalidate the lot route segment broadly.
-    expect(revalidatePathMock).toHaveBeenCalledWith("/lots/[code]", "page");
+    // reactiveRefresh always fans out to the /lots/[code] route segment pattern.
+    expect(revalidatePathMock).toHaveBeenCalledWith("/lots/[code]");
   });
 });

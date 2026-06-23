@@ -53,8 +53,9 @@ describe("PlotsTable (smoke)", () => {
     const ui = await PlotsTable();
     render(ui);
 
-    // EntityLink carries an es-PA aria-label; the visible plot name nests inside it.
-    const link = screen.getByRole("link", { name: /parcela p1/i });
+    // EntityLink carries an es-PA aria-label using the human-readable name, not the raw id.
+    // aria-label = "Abrir parcela Tizingal Alto" (kind_es + plot.name).
+    const link = screen.getByRole("link", { name: /abrir parcela tizingal alto/i });
     expect(link).toHaveAttribute("href", "/plots/p1");
     expect(link).toHaveTextContent("Tizingal Alto");
   });
