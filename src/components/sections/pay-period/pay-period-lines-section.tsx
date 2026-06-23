@@ -32,7 +32,7 @@ function WorkerName({ line }: { line: PayPeriodPayLine }) {
     <EntityLink
       kind="worker"
       id={line.workerId}
-      name={line.workerId}
+      name={line.workerName}
       className="font-medium text-ink underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
     >
       {line.workerName}
@@ -49,7 +49,7 @@ function CrewName({ line }: { line: PayPeriodPayLine }) {
     <EntityLink
       kind="crew"
       id={line.crewId}
-      name={line.crewId}
+      name={line.crewName}
       className="text-xs text-muted-fg underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
     >
       {line.crewName}

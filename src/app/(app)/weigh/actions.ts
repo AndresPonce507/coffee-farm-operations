@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import {
   recordWeighIn,
@@ -82,10 +82,7 @@ export async function recordWeighInAction(
   });
 
   if (result.ok) {
-    revalidatePath("/weigh");
-    revalidatePath("/harvests");
-    revalidatePath("/crew");
-    revalidatePath("/");
+    reactiveRefresh("weigh-in");
   }
   return toState(result);
 }

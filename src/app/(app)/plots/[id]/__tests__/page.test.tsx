@@ -149,6 +149,19 @@ describe("/plots/[id] dossier page", () => {
     expect(links.some((h) => h.startsWith("/lots/JC-564"))).toBe(true);
   });
 
+  it("eyebrow and back-link say 'Parcela'/'Todas las parcelas' — not 'Lote' — to avoid coffee-lot collision", async () => {
+    const ui = await PlotDossierPage({
+      params: Promise.resolve({ id: "p-tizingal-alto" }),
+    });
+    render(ui);
+    // Eyebrow — rendered as a <p> with the entity-kind label.
+    expect(screen.getByText("Parcela")).toBeInTheDocument();
+    expect(screen.queryByText("Lote")).not.toBeInTheDocument();
+    // Back-link label.
+    expect(screen.getByText("Todas las parcelas")).toBeInTheDocument();
+    expect(screen.queryByText("Todos los lotes")).not.toBeInTheDocument();
+  });
+
   it("calls notFound() for an unknown plot id instead of fabricating a dossier", async () => {
     vi.mocked(notFound).mockClear();
     await expect(

@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import { getSupabase } from "@/lib/supabase/server";
 
@@ -78,12 +78,7 @@ export async function declarePlotDeforestationFree(
 
   // The verdict engine (eudr_lot_status over lot_origin_plots) is the SSOT —
   // revalidate so the dossier badge + per-plot facts re-fetch the just-made claim.
-  if (lotCode) {
-    revalidatePath(`/lots/${lotCode}`);
-  } else {
-    revalidatePath("/lots/[code]", "page");
-  }
-  revalidatePath("/eudr");
+  reactiveRefresh("eudr-declaration");
 
   return { ok: true };
 }

@@ -52,7 +52,7 @@ export function ScoutingBoard({ rows }: { rows: IpmThresholdStatus[] }) {
                     <EntityLink
                       kind="plot"
                       id={r.plotId}
-                      name={r.plotId}
+                      name={r.plotName}
                       className="rounded outline-none transition-colors hover:text-forest-700 focus-visible:ring-2 focus-visible:ring-forest-200"
                     >
                       {r.plotName}

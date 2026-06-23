@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import { getSupabase } from "@/lib/supabase/server";
 
@@ -179,6 +179,6 @@ export async function bookCostEntry(
   // a refresh hiccup must not fail the booking (the next refresh/read recovers).
   await sb.rpc("refresh_lot_cost");
 
-  revalidatePath("/costing");
+  reactiveRefresh("cost-entry");
   return { ok: true };
 }

@@ -105,7 +105,7 @@ function WorkerCard({
       )}
     >
       <div className="flex items-start gap-3">
-        <EntityLink kind="worker" id={member.workerId} name={member.workerId} className="flex min-w-0 flex-1 items-start gap-3">
+        <EntityLink kind="worker" id={member.workerId} name={member.preferredName?.trim() || member.name} className="flex min-w-0 flex-1 items-start gap-3">
           <Avatar
             name={member.name}
             size="md"
@@ -206,7 +206,7 @@ export function CrewRosterBoard({
                 >
                   <header className="flex items-center justify-between gap-2 px-1">
                     {column.crewId ? (
-                      <EntityLink kind="crew" id={column.crewId} name={column.crewId}>
+                      <EntityLink kind="crew" id={column.crewId} name={column.crewName}>
                         <h3 className="font-display text-sm font-semibold text-ink">
                           {column.crewName}
                         </h3>

@@ -179,15 +179,25 @@ describe("CrewRosterBoard", () => {
   it("worker name/avatar block is wrapped in an EntityLink to /workers/[workerId]", () => {
     render(<CrewRosterBoard members={[member()]} />);
     const card = screen.getByTestId("worker-card-w-1");
-    // The worker name must be inside an <a> that navigates to the worker dossier.
-    const link = within(card).getByRole("link", { name: /abrir trabajador w-1/i });
+    // WCAG 2.5.3: aria-label must contain the visible name (not slug).
+    // EntityLink renders aria-label="Abrir trabajador <name>" — name is member.preferredName or member.name.
+    const link = within(card).getByRole("link", { name: /abrir trabajador Rosa Quintero/i });
+    expect(link).toHaveAttribute("href", "/workers/w-1");
+  });
+
+  it("worker EntityLink uses preferredName when set", () => {
+    render(<CrewRosterBoard members={[member({ preferredName: "Rosita" })]} />);
+    const card = screen.getByTestId("worker-card-w-1");
+    // preferredName takes precedence in both the aria-label and visible text.
+    const link = within(card).getByRole("link", { name: /abrir trabajador Rosita/i });
     expect(link).toHaveAttribute("href", "/workers/w-1");
   });
 
   it("crew column header h3 is wrapped in an EntityLink to /crew/[crewId]", () => {
     render(<CrewRosterBoard members={[member({ crewId: "c-1" })]} />);
-    // The crew heading must be navigable.
-    const link = screen.getByRole("link", { name: /abrir cuadrilla c-1/i });
+    // WCAG 2.5.3: aria-label must contain the visible crew name (not slug).
+    // EntityLink renders aria-label="Abrir cuadrilla <crewName>".
+    const link = screen.getByRole("link", { name: /abrir cuadrilla Cuadrilla Volcán/i });
     expect(link).toHaveAttribute("href", "/crew/c-1");
     expect(within(link).getByRole("heading", { name: "Cuadrilla Volcán" })).toBeInTheDocument();
   });

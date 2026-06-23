@@ -25,7 +25,7 @@ export function PlotHarvestsSection({
   return (
     <DossierSection
       id="harvests"
-      title="Cosechas de este lote"
+      title="Cosechas de esta parcela"
       count={harvests.length}
       empty={harvests.length === 0}
       emptyLabel="Sin cosechas registradas todavía"

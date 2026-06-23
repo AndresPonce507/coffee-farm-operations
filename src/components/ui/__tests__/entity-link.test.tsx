@@ -103,4 +103,33 @@ describe("EntityLink", () => {
       "/lots/JC%207%2F12",
     );
   });
+
+  // WCAG 2.4.7 / 2.4.11 — Focus not obscured / Focus Appearance
+  // EntityLink must carry a default focus-visible ring so every call site gains a
+  // keyboard focus indicator without 24 per-call edits.
+  it("carries a default focus-visible ring class so keyboard focus is always visible (WCAG 2.4.7 / 2.4.11)", () => {
+    render(
+      <EntityLink kind="plot" id="p1">
+        Plot
+      </EntityLink>,
+    );
+    const link = screen.getByRole("link");
+    // The rendered element must include the focus-visible ring utilities even when the
+    // caller passes no className at all.
+    expect(link.className).toMatch(/focus-visible:ring-2/);
+    expect(link.className).toMatch(/focus-visible:ring-forest/);
+  });
+
+  it("merges caller className with the default focus-visible ring (no duplication, caller classes preserved)", () => {
+    render(
+      <EntityLink kind="crew" id="c3" className="block glass-row">
+        Cuadrilla 3
+      </EntityLink>,
+    );
+    const link = screen.getByRole("link");
+    // Caller classes preserved.
+    expect(link).toHaveClass("block", "glass-row");
+    // Default focus ring still present.
+    expect(link.className).toMatch(/focus-visible:ring-2/);
+  });
 });

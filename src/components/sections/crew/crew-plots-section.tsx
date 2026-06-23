@@ -24,10 +24,10 @@ export function CrewPlotsSection({
   return (
     <DossierSection
       id="plots"
-      title="Lotes asignados"
+      title="Parcelas asignadas"
       count={plots.length}
       empty={plots.length === 0}
-      emptyLabel="Esta cuadrilla aún no ha sido despachada a ningún lote"
+      emptyLabel="Esta cuadrilla aún no ha sido despachada a ninguna parcela"
     >
       <ul role="list" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {plots.map((plot) => (
@@ -35,7 +35,7 @@ export function CrewPlotsSection({
             <EntityLink
               kind="plot"
               id={plot.plotId}
-              name={plot.plotId}
+              name={plot.plotName}
               className="glass-card glass-hover flex items-start gap-3 rounded-2xl p-3.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
             >
               <span

@@ -70,6 +70,15 @@ describe("PlotHarvestsSection", () => {
     expect(screen.getByText(/Sin cosechas/i)).toBeInTheDocument();
   });
 
+  it("section title uses 'parcela' not 'lote' to avoid collision with the coffee-lot entity", () => {
+    render(
+      <PlotHarvestsSection harvests={harvests} pickerIds={pickerIds} />,
+    );
+    // The section heading must say 'parcela', never 'lote' (which is the coffee-lot entity word).
+    expect(screen.getByText(/parcela/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Cosechas de este lote/i)).not.toBeInTheDocument();
+  });
+
   it("EntityLinks carry focus-visible ring classes matching the worker-dossier pattern", () => {
     render(
       <PlotHarvestsSection harvests={harvests} pickerIds={pickerIds} />,

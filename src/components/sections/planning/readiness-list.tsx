@@ -52,7 +52,7 @@ export function ReadinessList({ rows }: { rows: PlotReadiness[] }) {
             key={r.plotId}
             kind="plot"
             id={r.plotId}
-            name={r.plotId}
+            name={r.plotName}
             className="group block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60"
           >
           <Card

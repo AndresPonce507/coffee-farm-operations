@@ -36,7 +36,15 @@ export type EventKind =
   | "disbursement"
   | "worker"
   | "task"
-  | "processing-batch";
+  | "processing-batch"
+  // App-route action EventKinds (P5 -- "Connected Estate" write paths)
+  | "ferment"
+  | "drying"
+  | "dispatch"
+  | "inventory-update"
+  | "crew-event"
+  | "plan-event"
+  | "eudr-declaration";
 
 /**
  * Per-event downstream consumer routes (the §2 propagation-contract table). Each
@@ -62,14 +70,30 @@ export const RIPPLE: Record<EventKind, readonly string[]> = {
   "qc-hold": ["/qc", "/inventory", "/dispatch"],
   // Plot edit — plot facts feed the Plots tab, the Map, and the plot dossier.
   plot: ["/plots", "/map"],
-  // Payroll disbursement — the pay-period accrual + the crew/payroll surfaces.
-  disbursement: ["/payroll", "/crew"],
+  // Payroll disbursement -- the pay-period accrual + the crew/payroll surfaces.
+  // Also busts /costing because computePayPeriodAction writes pay-period cost lines.
+  disbursement: ["/payroll", "/crew", "/costing"],
   // Worker create/update/delete — worker roster feeds Workers tab and the Dashboard.
   worker: ["/workers", "/"],
   // Task create/update/delete/status-change — Tasks tab + Dashboard.
   task: ["/tasks", "/"],
   // Processing batch create/update/delete — Processing tab + Dashboard.
   "processing-batch": ["/processing", "/"],
+  // Ferment batch start / reading / mill-water log -- Ferment tab + Dashboard.
+  ferment: ["/ferment", "/"],
+  // Drying -- moisture reading + station assignment. Feeds Drying tab, Processing
+  // (shared lot-state), and Dashboard.
+  drying: ["/drying", "/processing", "/"],
+  // Dispatch -- generate / send / ack.
+  dispatch: ["/dispatch"],
+  // Inventory update -- grade green lot / reserve green lot.
+  "inventory-update": ["/inventory", "/"],
+  // Crew event -- attendance, enrol, por-obra signing, certification, rehire.
+  "crew-event": ["/crew", "/workers", "/"],
+  // Plan event -- schedule/re-plan pasada, maturation signal.
+  "plan-event": ["/plan", "/tasks", "/"],
+  // EUDR declaration -- deforestation-free assertion on a lot.
+  "eudr-declaration": ["/eudr", "/lots/[code]"],
 };
 
 /**

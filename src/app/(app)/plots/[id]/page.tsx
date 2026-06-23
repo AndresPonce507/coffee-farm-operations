@@ -82,10 +82,10 @@ export default async function PlotDossierPage({
     <DossierShell
       kind="plot"
       title={plot.name}
-      eyebrow="Lote"
+      eyebrow="Parcela"
       subtitle={`${plot.variety} · ${plot.areaHa} ha · ${plot.altitudeMasl} msnm`}
       backHref="/plots"
-      backLabel="Todos los lotes"
+      backLabel="Todas las parcelas"
     >
       <PlotIdentitySection plot={plot} />
       <PlotYieldSection yield={yld} plotId={id} />

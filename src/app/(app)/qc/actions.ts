@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import {
   placeQcHold,
@@ -101,9 +101,7 @@ export type QcActionState =
 export const QC_IDLE: QcActionState = { status: "idle" };
 
 function refresh() {
-  revalidatePath("/qc");
-  revalidatePath("/inventory");
-  revalidatePath("/");
+  reactiveRefresh("qc-hold");
 }
 
 function holdToState(result: QcHoldResult, ok: string): QcActionState {

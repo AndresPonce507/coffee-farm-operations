@@ -87,7 +87,6 @@ export function WorkerProductivitySection({
                     <EntityLink
                       kind="plot"
                       id={e.plotId}
-                      name={e.plotId}
                       className="inline-flex items-center gap-1 rounded-md font-medium text-forest underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
                     >
                       <MapPin className="h-3.5 w-3.5" aria-hidden />
@@ -99,7 +98,6 @@ export function WorkerProductivitySection({
                     <EntityLink
                       kind="lot"
                       id={e.lotCode}
-                      name={e.lotCode}
                       className="rounded-md font-medium text-coffee underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
                     >
                       {e.lotCode}

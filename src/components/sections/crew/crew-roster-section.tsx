@@ -40,7 +40,7 @@ export function CrewRosterSection({
             <EntityLink
               kind="worker"
               id={member.workerId}
-              name={member.workerId}
+              name={member.preferredName?.trim() || member.name}
               className="glass-card glass-hover flex items-center gap-3 rounded-2xl p-3.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
             >
               <Avatar

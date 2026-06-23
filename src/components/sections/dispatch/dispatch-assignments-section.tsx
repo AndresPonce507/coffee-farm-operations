@@ -61,7 +61,7 @@ export function DispatchAssignmentsSection({
                 <EntityLink
                   kind="plot"
                   id={p.plotId}
-                  name={p.plotId}
+                  name={p.plotName}
                   className="flex min-h-12 items-center justify-between gap-3 rounded-xl border border-line/60 bg-white/55 px-3.5 py-2.5 transition-colors hover:border-forest/40 hover:bg-forest-100/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
                 >
                   <span className="min-w-0">
@@ -115,7 +115,7 @@ export function DispatchAssignmentsSection({
                   <EntityLink
                     kind="worker"
                     id={m.workerId}
-                    name={m.workerId}
+                    name={m.preferredName ?? m.name}
                     className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-line/60 bg-white/55 px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:border-forest/40 hover:bg-forest-100/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
                   >
                     <UserRound className="h-3.5 w-3.5 text-forest" aria-hidden />

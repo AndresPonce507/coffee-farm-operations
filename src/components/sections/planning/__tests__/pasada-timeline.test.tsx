@@ -40,12 +40,13 @@ const plans: PasadaPlan[] = [
 describe("PasadaTimeline — EntityLink navigation", () => {
   it("links the plot name in each pasada row to its /plots/[id] dossier", () => {
     render(<PasadaTimeline plans={plans} />);
-    // Both plot names must be navigable links to their dossiers.
-    const link1 = screen.getByRole("link", { name: /parcela p-cuesta-piedra/i });
+    // WCAG 2.5.3: aria-label must contain the visible plot name (not slug).
+    // EntityLink renders aria-label="Abrir parcela <plotName>".
+    const link1 = screen.getByRole("link", { name: /parcela Cuesta de Piedra/i });
     expect(link1).toHaveAttribute("href", "/plots/p-cuesta-piedra");
     expect(link1).toHaveTextContent("Cuesta de Piedra");
 
-    const link2 = screen.getByRole("link", { name: /parcela p-las-lagunas/i });
+    const link2 = screen.getByRole("link", { name: /parcela Las Lagunas/i });
     expect(link2).toHaveAttribute("href", "/plots/p-las-lagunas");
     expect(link2).toHaveTextContent("Las Lagunas");
   });

@@ -53,6 +53,13 @@ describe("PlotSpraySection", () => {
     expect(applicator).toHaveClass("rounded-md");
   });
 
+  it("clear-PHI message says 'parcela' not 'lote' to avoid coffee-lot entity collision", () => {
+    // phi=[] means no active hold but sprays exist → renders the "free to harvest" card.
+    render(<PlotSpraySection phi={[]} sprays={sprays} />);
+    expect(screen.getByText(/la parcela está libre para cosechar/i)).toBeInTheDocument();
+    expect(screen.queryByText(/el lote está libre/i)).not.toBeInTheDocument();
+  });
+
   it("renders the empty state when there is no spray history", () => {
     render(<PlotSpraySection phi={[]} sprays={[]} />);
     expect(screen.getByTestId("section-sprays")).toBeInTheDocument();

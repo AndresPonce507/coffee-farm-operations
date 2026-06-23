@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import {
   computePayPeriod,
@@ -68,8 +68,7 @@ export async function computePayPeriodAction(
     hourlyRateSource: str(raw, "hourlyRateSource") ?? "daily",
   });
   if (result.ok) {
-    revalidatePath("/payroll");
-    revalidatePath("/costing");
+    reactiveRefresh("disbursement");
   }
   return toState(result, "Pay period calculated.");
 }
@@ -81,7 +80,7 @@ export async function approvePayLineAction(
   const raw = formToRecord(formData);
   const sb = await getSupabase();
   const result = await approvePayLine(sb as unknown as ApprovePayLineStore, raw);
-  if (result.ok) revalidatePath("/payroll");
+  if (result.ok) reactiveRefresh("disbursement");
   return toState(result, "Pay line approved.");
 }
 
@@ -100,8 +99,7 @@ export async function recordDisbursementAction(
     { ...raw, idempotencyKey: idempotencyKeyOrNew(raw) },
   );
   if (result.ok) {
-    revalidatePath("/payroll");
-    revalidatePath("/costing");
+    reactiveRefresh("disbursement");
   }
   return toState(result, "Disbursement recorded.");
 }

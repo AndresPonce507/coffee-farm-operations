@@ -2,6 +2,7 @@ import Link from "next/link";
 import { type ReactNode } from "react";
 
 import { entityHref, type DossierKind } from "@/lib/dossier/entity-href";
+import { cn } from "@/lib/utils";
 
 /**
  * Frozen es-PA vocabulary for each dossier kind, matching the CommandPalette labels.
@@ -16,6 +17,14 @@ const KIND_ES = {
   dispatch: "despacho",
   "pay-period": "periodo de pago",
 } as const satisfies Record<DossierKind, string>;
+
+/**
+ * Default focus-visible ring applied to every EntityLink so every call site satisfies
+ * WCAG 2.4.7 / 2.4.11 without per-call edits. Caller className is merged on top via cn()
+ * so sites that already declare their own focus-visible:ring work without duplication.
+ */
+const FOCUS_RING =
+  "outline-none focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper rounded-xl";
 
 /**
  * EntityLink — the NAVIGATE / DRILL smart-bar primitive (facet-03 §1.3).
@@ -67,7 +76,7 @@ export function EntityLink({
   return (
     <Link
       href={href}
-      className={className}
+      className={cn(FOCUS_RING, className)}
       aria-label={ariaLabel}
       prefetch={false}
     >

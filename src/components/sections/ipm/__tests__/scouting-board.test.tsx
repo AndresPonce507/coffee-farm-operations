@@ -62,8 +62,9 @@ describe("ScoutingBoard (render/smoke)", () => {
 
   it("wires the plot name to the plot dossier (was COSMETIC)", () => {
     render(<ScoutingBoard rows={[recommend]} />);
-    // EntityLink sets aria-label="Abrir parcela <id>" — query by that accessible name.
-    const link = screen.getByRole("link", { name: /abrir parcela p-cuesta-piedra/i });
+    // EntityLink sets aria-label="Abrir parcela <name>" — human plotName, not slug.
+    // WCAG 2.5.3: the accessible name must contain the visible label.
+    const link = screen.getByRole("link", { name: /abrir parcela Cuesta de Piedra/i });
     expect(link).toHaveAttribute("href", "/plots/p-cuesta-piedra");
   });
 

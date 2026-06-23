@@ -49,7 +49,7 @@ export async function TopPickersCard() {
 
               <Avatar name={picker.name} size="md" className="ring-white/60" />
 
-              <EntityLink kind="worker" id={picker.id} name={picker.id} className="flex min-w-0 flex-1 flex-col">
+              <EntityLink kind="worker" id={picker.id} name={picker.name} className="flex min-w-0 flex-1 flex-col">
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="truncate text-sm font-medium text-ink">{picker.name}</p>
                   <p className="shrink-0 text-sm font-semibold tabular-nums text-ink">
@@ -82,7 +82,7 @@ export async function TopPickersCard() {
                 >
                   <span className="w-4 shrink-0" aria-hidden="true" />
                   <Avatar name={picker.name} size="md" className="ring-white/60" />
-                  <EntityLink kind="worker" id={picker.id} name={picker.id} className="block min-w-0 flex-1">
+                  <EntityLink kind="worker" id={picker.id} name={picker.name} className="block min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-ink">{picker.name}</p>
                     <p className="text-xs text-muted-fg">{picker.crew}</p>
                   </EntityLink>

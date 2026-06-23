@@ -599,7 +599,7 @@ export function DisbursementLedger({
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-ink">
-                    <EntityLink kind="worker" id={d.workerId} name={d.workerId}>
+                    <EntityLink kind="worker" id={d.workerId} name={workerNames[d.workerId] ?? d.workerId}>
                       {workerNames[d.workerId] ?? d.workerId}
                     </EntityLink>
                   </p>

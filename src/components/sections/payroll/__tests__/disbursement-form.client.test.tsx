@@ -208,8 +208,9 @@ describe("DisbursementLedger", () => {
         workerNames={{ "w-7": "Rosa López" }}
       />,
     );
-    // EntityLink renders an <a aria-label="Abrir trabajador w-7">; find it by that label.
-    const link = screen.getByRole("link", { name: /Abrir trabajador w-7/i });
+    // WCAG 2.5.3: aria-label must contain the visible name (not slug).
+    // EntityLink renders aria-label="Abrir trabajador Rosa López" (the visible name from workerNames map).
+    const link = screen.getByRole("link", { name: /Abrir trabajador Rosa López/i });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute("href", "/workers/w-7");
     // The visible worker name text lives inside the link.

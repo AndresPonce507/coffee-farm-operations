@@ -69,7 +69,7 @@ export function CrewDispatchSection({
                 </Badge>
               </div>
               <p className="mt-1 text-xs text-muted-fg">
-                {run.plotCount} {run.plotCount === 1 ? "lote" : "lotes"}
+                {run.plotCount} {run.plotCount === 1 ? "parcela" : "parcelas"}
               </p>
               {run.plots.length > 0 ? (
                 <ul className="mt-2 flex flex-wrap gap-1.5">

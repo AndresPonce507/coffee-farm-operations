@@ -102,7 +102,7 @@ function entityResultsFrom(raw: string): Result[] {
     out.push({
       kind: "plot",
       href: entityHref.plot(id),
-      label: `Abrir lote ${id}`,
+      label: `Abrir parcela ${id}`,
       Icon: Sprout,
     });
   }

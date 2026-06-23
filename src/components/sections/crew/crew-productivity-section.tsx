@@ -69,7 +69,7 @@ export function CrewProductivitySection({
             <EntityLink
               kind="worker"
               id={picker.workerId}
-              name={picker.workerId}
+              name={picker.name}
               className="glass-card flex items-center justify-between gap-3 rounded-xl p-3 transition hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
             >
               <span className="truncate font-medium text-ink">

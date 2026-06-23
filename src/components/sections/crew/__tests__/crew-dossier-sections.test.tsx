@@ -101,11 +101,12 @@ const productivity: CrewProductivity = {
 describe("CrewRosterSection", () => {
   it("renders each member name as a link to their /workers/[id] dossier", () => {
     render(<CrewRosterSection members={members} />);
-    const lucia = screen.getByRole("link", { name: /trabajador w-06/i });
+    // EntityLink uses preferredName (or full name) → "Abrir trabajador Lucía"
+    const lucia = screen.getByRole("link", { name: /trabajador Lucía/i });
     expect(lucia).toHaveAttribute("href", "/workers/w-06");
     expect(within(lucia).getByText("Lucía")).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /trabajador w-07/i }),
+      screen.getByRole("link", { name: /trabajador Carlos Beker/i }),
     ).toHaveAttribute("href", "/workers/w-07");
   });
 
@@ -120,16 +121,27 @@ describe("CrewRosterSection", () => {
 describe("CrewPlotsSection", () => {
   it("renders each plot as a link to its /plots/[id] dossier", () => {
     render(<CrewPlotsSection plots={plots} />);
-    const link = screen.getByRole("link", { name: /parcela p-norte-bajo/i });
+    // EntityLink uses the human-readable plotName as aria-label → "Abrir parcela Norte Bajo"
+    const link = screen.getByRole("link", { name: /parcela Norte Bajo/i });
     expect(link).toHaveAttribute("href", "/plots/p-norte-bajo");
     expect(within(link).getByText("Norte Bajo")).toBeInTheDocument();
   });
 
-  it("renders the empty state when the crew has no assigned plots", () => {
+  it("uses 'parcela' (not 'lote') in the empty-state copy to avoid collision with the coffee-lot entity", () => {
     render(<CrewPlotsSection plots={[]} />);
     expect(
-      screen.getByText(/aún no ha sido despachada a ningún lote/i),
+      screen.getByText(/ninguna parcela/i),
     ).toBeInTheDocument();
+    // Must NOT say "ningún lote" — that word is reserved for the coffee-lot entity.
+    expect(
+      screen.queryByText(/ningún lote/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("section title uses 'Parcelas' not 'Lotes' to avoid entity-name collision", () => {
+    render(<CrewPlotsSection plots={plots} />);
+    expect(screen.getByText(/Parcelas asignadas/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Lotes asignados/i)).not.toBeInTheDocument();
   });
 });
 
@@ -159,13 +171,21 @@ describe("CrewDispatchSection", () => {
     // The link element must carry min-h-11 so the tap target reaches >=44px.
     expect(plotLink.className).toMatch(/min-h-11/);
   });
+
+  it("renders plotCount as 'parcela/parcelas' not 'lote/lotes' to avoid coffee-lot entity collision", () => {
+    render(<CrewDispatchSection history={history} />);
+    // history fixture has plotCount: 1 → singular
+    expect(screen.getByText(/1 parcela/i)).toBeInTheDocument();
+    expect(screen.queryByText(/1 lote/i)).not.toBeInTheDocument();
+  });
 });
 
 describe("CrewProductivitySection", () => {
   it("links each picker to their /workers/[id] dossier and shows the crew total", () => {
     render(<CrewProductivitySection productivity={productivity} />);
+    // EntityLink uses the picker's full name → "Abrir trabajador Lucía Morales"
     expect(
-      screen.getByRole("link", { name: /trabajador w-06/i }),
+      screen.getByRole("link", { name: /trabajador Lucía Morales/i }),
     ).toHaveAttribute("href", "/workers/w-06");
     expect(screen.getByText("70.0 kg")).toBeInTheDocument();
   });

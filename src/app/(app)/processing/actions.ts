@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import {
   advanceProcessingStage,
@@ -58,8 +58,7 @@ function nextDeviceSeq(): number {
 }
 
 function refresh() {
-  revalidatePath("/processing");
-  revalidatePath("/");
+  reactiveRefresh("processing-batch");
 }
 
 /** Map the advance command's friendly/labelled result onto the form's state. */

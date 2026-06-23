@@ -121,7 +121,7 @@ export function PayBreakdownTable({ rows, className }: PayBreakdownTableProps) {
               >
                 <TD>
                   <div className="flex flex-col">
-                    <EntityLink kind="worker" id={r.workerId} name={r.workerId}>
+                    <EntityLink kind="worker" id={r.workerId} name={r.workerName}>
                       <span className="font-medium text-ink">{r.workerName}</span>
                     </EntityLink>
                     {r.crewName ? (
@@ -200,7 +200,7 @@ export function PayBreakdownTable({ rows, className }: PayBreakdownTableProps) {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <EntityLink kind="worker" id={r.workerId} name={r.workerId}>
+                <EntityLink kind="worker" id={r.workerId} name={r.workerName}>
                   <p className="font-medium text-ink">{r.workerName}</p>
                 </EntityLink>
                 {r.crewName ? (

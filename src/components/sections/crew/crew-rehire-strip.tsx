@@ -111,7 +111,7 @@ export function CrewRehireStrip({
                     <EntityLink
                       kind="worker"
                       id={member.workerId}
-                      name={member.workerId}
+                      name={member.preferredName || member.name}
                       className="rounded text-left font-display text-sm font-semibold text-ink transition-colors hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-300"
                     >
                       {member.preferredName || member.name}

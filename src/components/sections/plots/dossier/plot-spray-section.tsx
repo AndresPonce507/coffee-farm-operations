@@ -66,7 +66,7 @@ export function PlotSpraySection({
           <Card className="border-forest/20">
             <CardContent className="flex items-center gap-2 px-5 py-3 text-sm text-forest">
               <ShieldCheck className="h-4 w-4" aria-hidden />
-              Sin intervalos activos — el lote está libre para cosechar
+              Sin intervalos activos — la parcela está libre para cosechar
             </CardContent>
           </Card>
         ) : null}

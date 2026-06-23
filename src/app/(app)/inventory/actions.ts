@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import {
   gradeGreenLot,
@@ -38,8 +38,7 @@ export type InventoryActionState =
 export const INVENTORY_IDLE: InventoryActionState = { status: "idle" };
 
 function refresh() {
-  revalidatePath("/inventory");
-  revalidatePath("/");
+  reactiveRefresh("inventory-update");
 }
 
 /** Map the grade command's friendly/labelled result onto the form's state. */

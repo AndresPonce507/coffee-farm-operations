@@ -195,7 +195,7 @@ export async function DispatchBoard() {
                 <EntityLink
                   kind="crew"
                   id={col.crewId}
-                  name={col.crewId}
+                  name={col.crewName}
                   className="font-display text-sm font-semibold uppercase tracking-wide text-muted-fg underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
                 >
                   {col.crewName}

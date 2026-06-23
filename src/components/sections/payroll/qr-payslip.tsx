@@ -115,7 +115,7 @@ export function QrPayslip({ payslip, deepLink }: QrPayslipProps) {
             {bilingual(PAYSLIP_TERMS.payslip, showNg)}
           </p>
           <h2 className="mt-1 truncate font-display text-lg font-semibold text-ink">
-            <EntityLink kind="worker" id={payslip.workerId} name={payslip.workerId}>
+            <EntityLink kind="worker" id={payslip.workerId} name={headline}>
               {headline}
             </EntityLink>
           </h2>
