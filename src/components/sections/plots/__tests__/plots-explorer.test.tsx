@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import type { Plot } from "@/lib/types";
 
@@ -38,9 +38,9 @@ describe("PlotsExplorer (smoke)", () => {
     expect(screen.getByRole("button", { name: /Geisha/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Pacamara/ })).toBeInTheDocument();
     // Grid is the default view → each plot card renders its name heading.
-    expect(
-      screen.getByRole("heading", { name: "Tizingal Alto" }),
-    ).toBeInTheDocument();
+    // The name now nests inside an EntityLink (es-PA aria-label), so assert by
+    // visible text rather than the heading's accessible name.
+    expect(screen.getByText("Tizingal Alto")).toBeInTheDocument();
   });
 
   it("shows the result count for the rendered plots", () => {
@@ -52,5 +52,27 @@ describe("PlotsExplorer (smoke)", () => {
       .getAllByText(/Showing/, { selector: "p" })
       .find((el) => el.textContent?.replace(/\s+/g, " ").trim() === "Showing 3 plots.");
     expect(summary).toBeDefined();
+  });
+
+  // Phase 5 D2 — formerly-COSMETIC grid card names now drill into /plots/[id].
+  it("links each grid plot card name to its plot dossier", () => {
+    render(<PlotsExplorer plots={plots} />);
+    // EntityLink receives `name` so aria-label is "Abrir parcela <plot.name>" (human name,
+    // not raw id) — far richer for es-PA screen readers per the updated EntityLink contract.
+    const link = screen.getByRole("link", { name: /abrir parcela tizingal alto/i });
+    expect(link).toHaveAttribute("href", "/plots/p1");
+    expect(link).toHaveTextContent("Tizingal Alto");
+  });
+
+  // Phase 5 D2 — the list view plot rows are dossier links too.
+  it("links each list plot row name to its plot dossier", () => {
+    render(<PlotsExplorer plots={plots} />);
+    // Switch to list view.
+    const listToggle = screen.getByRole("button", { name: /^List$/ });
+    fireEvent.click(listToggle);
+    // aria-label is "Abrir parcela <plot.name>" (human name, not raw id).
+    const link = screen.getByRole("link", { name: /abrir parcela paso ancho/i });
+    expect(link).toHaveAttribute("href", "/plots/p2");
+    expect(link).toHaveTextContent("Paso Ancho");
   });
 });

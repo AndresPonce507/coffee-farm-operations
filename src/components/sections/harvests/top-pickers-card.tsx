@@ -1,6 +1,7 @@
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { EntityLink } from "@/components/ui/entity-link";
 import { getPickers } from "@/lib/db/workers";
 import { kg } from "@/lib/utils";
 
@@ -27,8 +28,8 @@ export async function TopPickersCard() {
     <Card className="animate-rise">
       <CardHeader>
         <div>
-          <CardTitle>Top pickers today</CardTitle>
-          <CardDescription>Cherries picked since this morning</CardDescription>
+          <CardTitle>Mejores cosecheros hoy</CardTitle>
+          <CardDescription>Cerezas cosechadas desde la mañana</CardDescription>
         </div>
       </CardHeader>
 
@@ -48,7 +49,7 @@ export async function TopPickersCard() {
 
               <Avatar name={picker.name} size="md" className="ring-white/60" />
 
-              <div className="min-w-0 flex-1">
+              <EntityLink kind="worker" id={picker.id} name={picker.name} className="flex min-w-0 flex-1 flex-col">
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="truncate text-sm font-medium text-ink">{picker.name}</p>
                   <p className="shrink-0 text-sm font-semibold tabular-nums text-ink">
@@ -63,7 +64,7 @@ export async function TopPickersCard() {
                   />
                   <span className="shrink-0 text-xs text-muted-fg">{picker.crew}</span>
                 </div>
-              </div>
+              </EntityLink>
             </li>
           ))}
         </ol>
@@ -71,7 +72,7 @@ export async function TopPickersCard() {
         {idle.length > 0 && (
           <div className="mt-5 border-t border-line pt-4">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-fg">
-              Off today
+              Sin actividad hoy
             </p>
             <ul className="mt-3 space-y-2">
               {idle.map((picker) => (
@@ -81,10 +82,10 @@ export async function TopPickersCard() {
                 >
                   <span className="w-4 shrink-0" aria-hidden="true" />
                   <Avatar name={picker.name} size="md" className="ring-white/60" />
-                  <div className="min-w-0 flex-1">
+                  <EntityLink kind="worker" id={picker.id} name={picker.name} className="block min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-ink">{picker.name}</p>
                     <p className="text-xs text-muted-fg">{picker.crew}</p>
-                  </div>
+                  </EntityLink>
                   <p className="shrink-0 text-sm font-semibold tabular-nums text-muted-fg">
                     {kg(picker.todayKg)}
                   </p>

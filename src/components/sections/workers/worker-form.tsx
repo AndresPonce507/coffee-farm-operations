@@ -4,7 +4,6 @@ import { useActionState, useEffect } from "react";
 
 import type { Worker } from "@/lib/types";
 import { ATTENDANCE_STATUSES, WORKER_ROLES } from "@/lib/enums";
-import { CREWS } from "@/lib/data/workers";
 import { IDLE, type ActionState } from "@/lib/actions/workers";
 import { Button } from "@/components/ui/button";
 
@@ -19,11 +18,14 @@ export function WorkerForm({
   action,
   submitLabel,
   onDone,
+  crews,
 }: {
   worker?: Worker;
   action: WorkerAction;
   submitLabel: string;
   onDone: () => void;
+  /** Crew names sourced LIVE from getCrews() by the RSC parent (no mock const). */
+  crews: readonly string[];
 }) {
   const [state, formAction, pending] = useActionState(action, IDLE);
 
@@ -82,7 +84,7 @@ export function WorkerForm({
             <option value="" disabled>
               Choose…
             </option>
-            {CREWS.map((c) => (
+            {crews.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>

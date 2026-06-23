@@ -1,4 +1,4 @@
-import { CheckCircle2, Lock, Hourglass, Droplets } from "lucide-react";
+import { CheckCircle2, Hourglass, Droplets } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { ReposoStatus } from "@/lib/types";
@@ -6,8 +6,10 @@ import type { ReposoStatus } from "@/lib/types";
 /**
  * ReposoGateChip — the at-a-glance verdict of THE REPOSO GATE for one lot.
  *
- * Red ("resting · 4/10 days · 11.8%") with a lock when the gate is closed; green
- * ("rest-stable · clear to mill") with a check when it's open. The chip surfaces
+ * Red ("resting · 4/10 days · 11.8%") when the gate is closed, with an hourglass
+ * when only rest-time remains (moisture already stable) or droplets when the lot
+ * still needs to dry; green ("rest-stable · clear to mill") with a check when it's
+ * open. The chip surfaces
  * the EXACT reason the database will give — but the chip is courtesy; the real
  * enforcement is the precondition inside advance_processing_stage + the
  * BEFORE-UPDATE trigger backstop on `lots`. A blocked advance is impossible at the
@@ -48,21 +50,14 @@ export function ReposoGateChip({
         ready
           ? "bg-forest-100 text-forest-600"
           // Blocked is the most-shown state, read outdoors in glare. Plain
-          // `text-cherry` (#b5482e) on the cherry-100 tint is only 4.124:1 — under
-          // the WCAG-AA 4.5:1 floor for this 12px-semibold label. Darken the TEXT to
-          // #8f3522 (6.0:1 on the tint, 7.78:1 on white) while keeping the red tint.
-          // Mirrors the honey-700/forest-600 "darker text on light bg" pattern; an
-          // inline hex (not a token) because the shared globals.css/badge tokens are
-          // out of this slice's edit scope.
-          : "bg-cherry-100 text-[#8f3522]",
+          // `text-cherry` on the cherry-100 tint is only 4.69:1 — fine for body, but
+          // this 12px-semibold label uses the darker `cherry-700` token (#8f3522,
+          // 6.0:1 on the tint) for extra headroom. Mirrors honey-700/forest-600.
+          : "bg-cherry-100 text-cherry-700",
         className,
       )}
     >
-      {ready ? (
-        <Icon aria-hidden className="h-3.5 w-3.5" />
-      ) : (
-        <Lock aria-hidden className="h-3.5 w-3.5" />
-      )}
+      <Icon aria-hidden className="h-3.5 w-3.5" />
       <span className="tabular-nums">
         {ready ? "Rest-stable" : "Resting"}
         {!ready && restDays != null && (

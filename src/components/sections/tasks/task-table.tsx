@@ -18,10 +18,8 @@ import {
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/data-table";
-import { longDate, relativeDay } from "@/lib/utils";
-
-/** Fixed "today" the mock data is anchored to (matches relativeDay default). */
-const TODAY = "2026-06-20";
+import { EntityLink } from "@/components/ui/entity-link";
+import { longDate, relativeDay, today } from "@/lib/utils";
 
 /** Category pills — each TaskCategory maps to a full, literal Badge tone. */
 const CATEGORY_TONE: Record<TaskCategory, BadgeTone> = {
@@ -68,7 +66,7 @@ function isOverdue(task: FarmTask): boolean {
   if (task.status === "done") return false;
   return (
     new Date(task.due + "T00:00:00").getTime() <
-    new Date(TODAY + "T00:00:00").getTime()
+    new Date(today() + "T00:00:00").getTime()
   );
 }
 
@@ -136,7 +134,16 @@ export async function TaskTable({
                   </TD>
 
                   <TD className="whitespace-nowrap text-muted-fg">
-                    {task.plotName ?? (
+                    {task.plotId != null ? (
+                      <EntityLink
+                        kind="plot"
+                        id={task.plotId}
+                        name={task.plotName ?? undefined}
+                        className="text-muted-fg underline-offset-2 transition-colors hover:text-forest hover:underline"
+                      >
+                        {task.plotName}
+                      </EntityLink>
+                    ) : (
                       <span aria-hidden="true">—</span>
                     )}
                   </TD>
@@ -144,7 +151,18 @@ export async function TaskTable({
                   <TD>
                     <span className="flex items-center gap-2 whitespace-nowrap">
                       <Avatar name={task.assignee} size="sm" />
-                      <span className="text-ink">{task.assignee}</span>
+                      {task.workerId != null ? (
+                        <EntityLink
+                          kind="worker"
+                          id={task.workerId}
+                          name={task.assignee ?? undefined}
+                          className="text-ink underline-offset-2 transition-colors hover:text-forest hover:underline"
+                        >
+                          {task.assignee}
+                        </EntityLink>
+                      ) : (
+                        <span className="text-ink">{task.assignee}</span>
+                      )}
                     </span>
                   </TD>
 
@@ -159,7 +177,7 @@ export async function TaskTable({
                     <span
                       className={
                         overdue
-                          ? "ml-2 text-xs text-cherry/80"
+                          ? "ml-2 text-xs text-cherry"
                           : "ml-2 text-xs text-muted-fg"
                       }
                     >

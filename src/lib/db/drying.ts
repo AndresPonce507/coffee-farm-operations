@@ -143,6 +143,40 @@ export const getReposoStatuses = cache(async (): Promise<ReposoStatus[]> => {
   return (data as ReposoStatusRow[]).map(mapReposoStatus);
 });
 
+/* ---------------- reposo target band (farm_season_config) ---------------- */
+
+export interface ReposoBand {
+  min: number;
+  max: number;
+}
+
+interface ReposoBandRow {
+  reposo_moisture_min_pct: number | string | null;
+  reposo_moisture_max_pct: number | string | null;
+}
+
+/**
+ * The tunable reposo target band — the moisture window the gate enforces and the
+ * curve must be drawn against. SSOT: `farm_season_config.reposo_moisture_min_pct`
+ * / `reposo_moisture_max_pct` (the same columns the DB's reposo verdict reads), so
+ * the band drawn in <MoistureCurve> can never drift from the window the family
+ * tunes. The singleton config row is read LIMIT 1; the literal 10.5–11.5% fallback
+ * matches the migration's column defaults for the (un-seeded) empty-config case.
+ */
+export const getReposoBand = cache(async (): Promise<ReposoBand> => {
+  const { data, error } = await (await getSupabase())
+    .from("farm_season_config")
+    .select("reposo_moisture_min_pct, reposo_moisture_max_pct")
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(`getReposoBand: ${error.message}`);
+  const row = data as ReposoBandRow | null;
+  return {
+    min: row?.reposo_moisture_min_pct == null ? 10.5 : Number(row.reposo_moisture_min_pct),
+    max: row?.reposo_moisture_max_pct == null ? 11.5 : Number(row.reposo_moisture_max_pct),
+  };
+});
+
 /** Upcoming cover/move risk per open-air drying station (the weather-coupled alert). */
 export const getDryingWeatherRisk = cache(async (): Promise<DryingWeatherRisk[]> => {
   const { data, error } = await (await getSupabase())

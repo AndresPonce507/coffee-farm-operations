@@ -67,6 +67,59 @@ describe("CostLotCard (smoke + provenance)", () => {
     expect(screen.getByTestId("cost-decomposition-JC-101")).toBeInTheDocument();
   });
 
+  it("lot code headline is an EntityLink navigating to the lot dossier", () => {
+    render(
+      <CostLotCard
+        code="JC-101"
+        costPerKgGreen={4.0}
+        greenKg={60}
+        breakdown={breakdown}
+      />,
+    );
+    // The lot code must be wrapped in an <a> pointing at /lots/JC-101 (no hash).
+    // Only the headline carries aria-label="Abrir lote JC-101" — the provenance
+    // link intentionally has NO `name` so its visible text is its accessible name.
+    const headlineLink = screen.getByRole("link", { name: "Abrir lote JC-101" });
+    expect(headlineLink).toHaveAttribute("href", "/lots/JC-101");
+    expect(headlineLink).toHaveTextContent("JC-101");
+  });
+
+  it("provenance link uses EntityLink (kind=lot, anchor=cost-entries)", () => {
+    render(
+      <CostLotCard
+        code="JC-101"
+        costPerKgGreen={4.0}
+        greenKg={60}
+        breakdown={breakdown}
+      />,
+    );
+    // EntityLink renders an <a> with aria-label="Abrir lote JC-101".
+    // With anchor="cost-entries" it resolves to /lots/JC-101#cost-entries.
+    const prov = screen.getByTestId("cost-provenance-JC-101");
+    // The testid is on a span inside the <a>; climb to the parent link.
+    const link = prov.closest("a");
+    expect(link).not.toBeNull();
+    expect(link).toHaveAttribute("href", "/lots/JC-101#cost-entries");
+  });
+
+  it("WCAG 2.5.3 Label-in-Name: provenance link's accessible name IS its visible text (no name={code} aria-label)", () => {
+    render(
+      <CostLotCard
+        code="JC-101"
+        costPerKgGreen={4.0}
+        greenKg={60}
+        breakdown={breakdown}
+      />,
+    );
+    const prov = screen.getByTestId("cost-provenance-JC-101");
+    const link = prov.closest("a")!;
+    // The provenance link must NOT carry an "Abrir lote JC-101" aria-label — that
+    // text isn't visible on this affordance, so it would violate Label-in-Name.
+    expect(link).not.toHaveAttribute("aria-label");
+    // Its accessible name comes from the visible text instead.
+    expect(link).toHaveAccessibleName(/cost drivers? · provenance/);
+  });
+
   it("links to provenance with the count of contributing cost drivers (not a misleading ledger-row count)", () => {
     render(
       <CostLotCard
@@ -76,12 +129,14 @@ describe("CostLotCard (smoke + provenance)", () => {
         breakdown={breakdown}
       />,
     );
-    const link = screen.getByTestId("cost-provenance-JC-101");
+    const prov = screen.getByTestId("cost-provenance-JC-101");
+    // Climb from the span to the parent EntityLink <a>.
+    const link = prov.closest("a")!;
     // The provenance affordance points at the lot's ledger (the audit trail).
     expect(link).toHaveAttribute("href", expect.stringContaining("JC-101"));
     // All four rules are non-zero here, so "4 cost drivers".
-    expect(link).toHaveTextContent("4");
-    expect(link).toHaveTextContent(/driver/);
+    expect(prov).toHaveTextContent("4");
+    expect(prov).toHaveTextContent(/driver/);
   });
 
   it("D-COST CRIT: the per-category readouts reconcile to the headline — overhead + agronomy are NOT $0", () => {

@@ -25,8 +25,8 @@ export default function DispatchPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Morning Dispatch"
-        subtitle="Ripeness-aware per-crew plans, shared as a bilingual card — owner-initiated"
+        title="Despacho Matutino"
+        subtitle="Planes por cuadrilla según la madurez, compartidos como tarjeta bilingüe — iniciado por el dueño"
       />
 
       <DispatchBoard />

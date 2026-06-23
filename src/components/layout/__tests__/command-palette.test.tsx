@@ -82,6 +82,81 @@ describe("CommandPalette (S9)", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
+  // Phase 5 orphan-wire (US-05) — ⌘K must resolve EVERY connected entity kind to
+  // its dossier via the entityHref SSOT, not just lots. The typed-shape recognizers
+  // mirror the existing lot-code pattern: the palette emits a candidate destination
+  // and the route's own notFound() is the authority. Each assertion below proves one
+  // kind round-trips to the right entityHref(...) path.
+  describe("entity-kind resolution (Phase 5 orphan-wire US-05)", () => {
+    function type(value: string) {
+      open();
+      fireEvent.change(screen.getByLabelText("Search routes and lots"), {
+        target: { value },
+      });
+    }
+
+    it("resolves a worker id (w-NN) to /workers/<id>", () => {
+      type("w-03");
+      const r = screen.getByTestId("command-result-/workers/w-03");
+      expect(r).toBeInTheDocument();
+      fireEvent.click(r);
+      expect(push).toHaveBeenCalledWith("/workers/w-03");
+    });
+
+    it("resolves a plot id (p-slug) to /plots/<id>", () => {
+      type("p-tizingal-alto");
+      expect(
+        screen.getByTestId("command-result-/plots/p-tizingal-alto"),
+      ).toBeInTheDocument();
+    });
+
+    it("resolves a crew id (crew-...) to /crew/<id>", () => {
+      type("crew-norte");
+      expect(
+        screen.getByTestId("command-result-/crew/crew-norte"),
+      ).toBeInTheDocument();
+    });
+
+    it("resolves a dispatch run (disp NN) to /dispatch/<id>", () => {
+      type("disp 42");
+      const r = screen.getByTestId("command-result-/dispatch/42");
+      expect(r).toBeInTheDocument();
+      fireEvent.click(r);
+      expect(push).toHaveBeenCalledWith("/dispatch/42");
+    });
+
+    it("resolves a pay period (pp <id>) to /pay-period/<id>", () => {
+      type("pp 2026-w12");
+      expect(
+        screen.getByTestId("command-result-/pay-period/2026-w12"),
+      ).toBeInTheDocument();
+    });
+
+    it("resolves a ferment batch (batch <id>) to /ferment/<id>", () => {
+      type("batch fb-118");
+      expect(
+        screen.getByTestId("command-result-/ferment/fb-118"),
+      ).toBeInTheDocument();
+    });
+
+    it("offers a cup-score destination for a green-lot code alongside the lot", () => {
+      type("711");
+      // The lot destination still resolves (back-compat) …
+      expect(
+        screen.getByTestId("command-result-/lots/JC-711"),
+      ).toBeInTheDocument();
+      // … and the cup dossier for that lot is offered too.
+      expect(
+        screen.getByTestId("command-result-/qc/cup/JC-711"),
+      ).toBeInTheDocument();
+    });
+
+    it("shows no entity result for free text that matches no kind", () => {
+      type("zzqqxx");
+      expect(screen.getByTestId("command-palette-empty")).toBeInTheDocument();
+    });
+  });
+
   // Regression: the palette overlay must PORTAL to <body> so it escapes page
   // stacking contexts. Rendered inline, a transformed ancestor (the app shell /
   // cards carry a lingering `animate-rise` translateY(0) transform) traps the

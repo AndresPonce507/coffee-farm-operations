@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import {
   enrollCrewMember,
@@ -112,9 +112,7 @@ export async function recordAttendanceAction(
   });
 
   if (result.ok) {
-    revalidatePath("/crew");
-    revalidatePath("/workers");
-    revalidatePath("/");
+    reactiveRefresh("crew-event");
   }
   return toState(result, "Attendance recorded.");
 }
@@ -134,8 +132,7 @@ export async function enrollCrewMemberAction(
   });
 
   if (result.ok) {
-    revalidatePath("/crew");
-    revalidatePath("/workers");
+    reactiveRefresh("crew-event");
   }
   return toState(result, "Worker enrolled.");
 }
@@ -153,8 +150,7 @@ export async function signPorObraAction(
   });
 
   if (result.ok) {
-    revalidatePath("/crew");
-    revalidatePath("/workers");
+    reactiveRefresh("crew-event");
   }
   return toState(result, "Contract signed.");
 }
@@ -172,8 +168,7 @@ export async function recordCertificationAction(
   });
 
   if (result.ok) {
-    revalidatePath("/crew");
-    revalidatePath("/workers");
+    reactiveRefresh("crew-event");
   }
   return toState(result, "Certification recorded.");
 }
@@ -193,8 +188,7 @@ export async function rehireWorkerAction(
   });
 
   if (result.ok) {
-    revalidatePath("/crew");
-    revalidatePath("/workers");
+    reactiveRefresh("crew-event");
   }
   return toState(result, "Worker rehired.");
 }

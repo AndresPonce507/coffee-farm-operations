@@ -85,4 +85,23 @@ describe("VegetationGrid (render/smoke)", () => {
     render(<VegetationGrid rows={[]} />);
     expect(screen.getByTestId("vegetation-empty")).toBeInTheDocument();
   });
+
+  it("wires each plot card to its plot dossier vegetation section (no dead UI)", () => {
+    render(<VegetationGrid rows={[highOptical]} />);
+    // the formerly-COSMETIC card is now an entity link to the plot dossier,
+    // deep-linked to its satellite/vegetation section. The card tile is nested
+    // inside that link.
+    const link = screen.getByRole("link");
+    expect(link).toHaveAttribute("href", "/plots/p-cuesta-piedra#vegetation");
+    expect(within(link).getByTestId("veg-p-cuesta-piedra")).toBeInTheDocument();
+  });
+
+  it("links every card — a SAR-fallback and a no-signal plot drill in too", () => {
+    render(<VegetationGrid rows={[sarMedium, noSignal]} />);
+    const hrefs = screen
+      .getAllByRole("link")
+      .map((a) => a.getAttribute("href"));
+    expect(hrefs).toContain("/plots/p-talamanca#vegetation");
+    expect(hrefs).toContain("/plots/p-las-lagunas#vegetation");
+  });
 });

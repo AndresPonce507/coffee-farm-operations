@@ -1,6 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { EntityLink } from "@/components/ui/entity-link";
 import { getPlots } from "@/lib/db/plots";
 import type { Plot, PlotStatus } from "@/lib/types";
 import { pct, kg } from "@/lib/utils";
@@ -40,32 +41,38 @@ function PlotHealthRow({ plot }: { plot: Plot }) {
       : 0;
 
   return (
-    <li className="glass-hover -mx-2 flex items-center gap-4 rounded-xl px-2 py-3.5 transition-colors hover:bg-white/55">
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-3">
-          <p className="truncate text-sm font-medium text-ink">{plot.name}</p>
-          <Badge tone={STATUS_TONE[plot.status]} dot>
-            {STATUS_LABEL[plot.status]}
-          </Badge>
+    <li>
+      <EntityLink
+        kind="plot"
+        id={plot.id}
+        className="glass-hover -mx-2 flex items-center gap-4 rounded-xl px-2 py-3.5 transition-colors hover:bg-white/55 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-300"
+      >
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-3">
+            <p className="truncate text-sm font-medium text-ink">{plot.name}</p>
+            <Badge tone={STATUS_TONE[plot.status]} dot>
+              {STATUS_LABEL[plot.status]}
+            </Badge>
+          </div>
+          <p className="mt-0.5 text-xs text-muted-fg">{plot.variety}</p>
+          <div className="mt-2.5 flex items-center gap-3">
+            <ProgressBar
+              value={progress}
+              tone={STATUS_BAR_TONE[plot.status]}
+              className="flex-1"
+            />
+            <span className="w-9 shrink-0 text-right text-xs font-semibold tabular-nums text-ink">
+              {pct(progress)}
+            </span>
+          </div>
+          <p className="mt-1.5 text-xs text-muted-fg">
+            {kg(plot.harvestedKg)}{" "}
+            <span className="text-muted-fg/70">
+              of {kg(plot.expectedYieldKg)}
+            </span>
+          </p>
         </div>
-        <p className="mt-0.5 text-xs text-muted-fg">{plot.variety}</p>
-        <div className="mt-2.5 flex items-center gap-3">
-          <ProgressBar
-            value={progress}
-            tone={STATUS_BAR_TONE[plot.status]}
-            className="flex-1"
-          />
-          <span className="w-9 shrink-0 text-right text-xs font-semibold tabular-nums text-ink">
-            {pct(progress)}
-          </span>
-        </div>
-        <p className="mt-1.5 text-xs text-muted-fg">
-          {kg(plot.harvestedKg)}{" "}
-          <span className="text-muted-fg/70">
-            of {kg(plot.expectedYieldKg)}
-          </span>
-        </p>
-      </div>
+      </EntityLink>
     </li>
   );
 }

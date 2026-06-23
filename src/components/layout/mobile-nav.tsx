@@ -65,7 +65,7 @@ export function MobileNav() {
         <button
           ref={triggerRef}
           type="button"
-          aria-label="Open navigation menu"
+          aria-label="Abrir menú de navegación"
           aria-haspopup="dialog"
           aria-expanded={open}
           aria-controls="mobile-nav-drawer"
@@ -100,7 +100,7 @@ export function MobileNav() {
             <button
               type="button"
               tabIndex={-1}
-              aria-label="Close navigation menu"
+              aria-label="Cerrar menú de navegación"
               onClick={closeWithFocus}
               className={cn(
                 "absolute inset-0 h-full w-full cursor-default bg-ink/40 backdrop-blur-sm transition-opacity duration-300",
@@ -113,7 +113,7 @@ export function MobileNav() {
               id="mobile-nav-drawer"
               role="dialog"
               aria-modal="true"
-              aria-label="Main navigation"
+              aria-label="Navegación principal"
               className={cn(
                 "glass-forest absolute left-0 top-0 flex h-full w-[82%] max-w-xs flex-col text-paper shadow-2xl",
                 "transition-transform duration-300 ease-out will-change-transform",
@@ -130,7 +130,7 @@ export function MobileNav() {
                 <button
                   ref={closeRef}
                   type="button"
-                  aria-label="Close navigation menu"
+                  aria-label="Cerrar menú de navegación"
                   onClick={closeWithFocus}
                   className="grid h-9 w-9 place-items-center rounded-xl text-paper/70 transition hover:bg-paper/10 hover:text-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-paper/40"
                 >

@@ -131,8 +131,12 @@ describe("CherryIntakeForm", () => {
 
     fireEvent.submit(container.querySelector("form") as HTMLFormElement);
 
-    // the minted code is shown and linked to the lot's traceability page.
-    const link = await screen.findByRole("link", { name: /JC-742/i });
+    // the minted code is shown and linked to the lot's traceability page via
+    // the EntityLink primitive — its es-PA aria-label names the lot (the icon
+    // makes the children non-text, so the human name is carried explicitly).
+    const link = await screen.findByRole("link", {
+      name: "Abrir lote JC-742",
+    });
     expect(link).toHaveAttribute("href", "/lots/JC-742");
     // and it celebrates the mint (the genesis-of-traceability message).
     expect(screen.getByText(/traceable lot/i)).toBeInTheDocument();

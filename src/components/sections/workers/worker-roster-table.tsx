@@ -2,7 +2,9 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/data-table";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { EntityLink } from "@/components/ui/entity-link";
 import { getWorkers } from "@/lib/db/workers";
+import { getCrews } from "@/lib/db/people";
 import { usd } from "@/lib/utils";
 import type { AttendanceStatus } from "@/lib/types";
 import { WorkerRowActions } from "./worker-actions";
@@ -15,9 +17,9 @@ const ATTENDANCE_TONE: Record<AttendanceStatus, BadgeTone> = {
 };
 
 const ATTENDANCE_LABEL: Record<AttendanceStatus, string> = {
-  present: "Present",
-  "rest-day": "Rest day",
-  absent: "Absent",
+  present: "Presente",
+  "rest-day": "Día de descanso",
+  absent: "Ausente",
 };
 
 /**
@@ -25,15 +27,28 @@ const ATTENDANCE_LABEL: Record<AttendanceStatus, string> = {
  * Server component: static display only, no hooks or handlers.
  */
 export async function WorkerRosterTable() {
-  const workers = await getWorkers();
+  const [workers, crews] = await Promise.all([getWorkers(), getCrews()]);
+  // Crew names for the inline edit form's crew picker (live, mock-free).
+  const crewNames = crews
+    .map((c) => c.crewName)
+    .filter((n): n is string => Boolean(n));
+
+  // Build a name→id map so the crew column cell can be wired to the crew dossier.
+  const crewNameToId = new Map(
+    crews
+      .filter((c): c is typeof c & { crewName: string; crewId: string } =>
+        Boolean(c.crewName) && Boolean(c.crewId)
+      )
+      .map((c) => [c.crewName, c.crewId])
+  );
 
   return (
     <Card className="animate-rise overflow-hidden">
       <CardHeader>
         <div>
-          <CardTitle>Roster</CardTitle>
+          <CardTitle>Nómina</CardTitle>
           <CardDescription>
-            {workers.length} crew members across the farm
+            {workers.length} integrantes de cuadrilla en la finca
           </CardDescription>
         </div>
       </CardHeader>
@@ -42,14 +57,14 @@ export async function WorkerRosterTable() {
         <Table className="border-0">
           <THead>
             <TR className="hover:bg-transparent">
-              <TH className="pl-5">Worker</TH>
-              <TH>Role</TH>
-              <TH>Crew</TH>
-              <TH className="text-right">Since</TH>
-              <TH className="text-right">Day rate</TH>
-              <TH className="text-right">Today</TH>
-              <TH className="text-right">Attendance</TH>
-              <TH className="pr-5 text-right">Actions</TH>
+              <TH className="pl-5">Trabajador/a</TH>
+              <TH>Rol</TH>
+              <TH>Cuadrilla</TH>
+              <TH className="text-right">Desde</TH>
+              <TH className="text-right">Tarifa diaria</TH>
+              <TH className="text-right">Hoy</TH>
+              <TH className="text-right">Asistencia</TH>
+              <TH className="pr-5 text-right">Acciones</TH>
             </TR>
           </THead>
           <TBody>
@@ -57,7 +72,7 @@ export async function WorkerRosterTable() {
               <TR className="hover:bg-transparent">
                 <TD colSpan={8} className="px-5 py-10 text-center">
                   <span className="inline-block rounded-xl border border-dashed border-line bg-white/40 px-4 py-3 text-sm text-muted-fg">
-                    No workers yet.
+                    Aún no hay trabajadores.
                   </span>
                 </TD>
               </TR>
@@ -65,13 +80,30 @@ export async function WorkerRosterTable() {
             {workers.map((worker) => (
               <TR key={worker.id}>
                 <TD className="pl-5">
-                  <div className="flex items-center gap-3">
+                  <EntityLink
+                    kind="worker"
+                    id={worker.id}
+                    className="-mx-2 flex items-center gap-3 rounded-xl px-2 py-1 transition hover:bg-white/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
+                  >
                     <Avatar name={worker.name} size="md" />
                     <span className="font-medium text-ink">{worker.name}</span>
-                  </div>
+                  </EntityLink>
                 </TD>
                 <TD className="text-muted-fg">{worker.role}</TD>
-                <TD className="text-muted-fg">{worker.crew}</TD>
+                <TD className="text-muted-fg">
+                  {(() => {
+                    const crewId = worker.crew
+                      ? crewNameToId.get(worker.crew) ?? null
+                      : null;
+                    return crewId ? (
+                      <EntityLink kind="crew" id={crewId}>
+                        {worker.crew}
+                      </EntityLink>
+                    ) : (
+                      worker.crew
+                    );
+                  })()}
+                </TD>
                 <TD className="text-right tabular-nums text-muted-fg">
                   {worker.startedYear}
                 </TD>
@@ -82,7 +114,7 @@ export async function WorkerRosterTable() {
                   {worker.todayKg > 0 ? (
                     <span className="font-medium text-ink">{worker.todayKg} kg</span>
                   ) : (
-                    <span className="text-muted-fg" aria-label="No cherries picked today">
+                    <span className="text-muted-fg" aria-label="No se recogieron cerezas hoy">
                       —
                     </span>
                   )}
@@ -93,7 +125,7 @@ export async function WorkerRosterTable() {
                   </Badge>
                 </TD>
                 <TD className="pr-5 text-right">
-                  <WorkerRowActions worker={worker} />
+                  <WorkerRowActions worker={worker} crews={crewNames} />
                 </TD>
               </TR>
             ))}

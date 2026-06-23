@@ -2,6 +2,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { QcStatusTable } from "@/components/sections/qc/qc-status-table";
 import { CupperDriftCard } from "@/components/sections/qc/cupper-drift-card";
 import { getCupperDrift, getQcStatus } from "@/lib/db/qc";
+import { getWorkers } from "@/lib/db/workers";
 
 /**
  * QC & cupping — the "/qc" route (P2-S6, the make-quality trunk capstone).
@@ -20,18 +21,26 @@ import { getCupperDrift, getQcStatus } from "@/lib/db/qc";
  * /qc/cup/[lot]. The app shell comes from (app)/layout.tsx.
  */
 export default async function QcPage() {
-  const [status, drift] = await Promise.all([getQcStatus(), getCupperDrift()]);
+  const [status, drift, workers] = await Promise.all([
+    getQcStatus(),
+    getCupperDrift(),
+    getWorkers(),
+  ]);
+
+  // Resolve cupper ids → human names so the drift card labels each cupper by NAME,
+  // not an opaque worker code (MED-11). Unmapped ids fall back to the raw code.
+  const nameById = new Map(workers.map((w) => [w.id, w.name]));
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Quality control"
-        subtitle="Cup scores, defect grading, and the QC-HOLD that keeps a flawed lot from being sold"
+        title="Control de calidad"
+        subtitle="Puntajes de catación, clasificación de defectos y el QC-HOLD que impide vender un lote con fallas"
       />
 
       <QcStatusTable rows={status} />
 
-      <CupperDriftCard drift={drift} />
+      <CupperDriftCard drift={drift} nameById={nameById} />
     </div>
   );
 }

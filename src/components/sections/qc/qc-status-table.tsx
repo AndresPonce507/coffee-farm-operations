@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { THead, TBody, TR, TH, TD } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import { num } from "@/lib/utils";
 import { QcHoldControl } from "./qc-hold-control";
 
@@ -94,15 +95,20 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
                   {rows.map((row) => (
                     <TR key={row.greenLotCode} className="group align-middle">
                       <TD>
-                        <span className="font-mono text-sm font-medium text-ink transition-colors group-hover:text-forest-700">
+                        <EntityLink
+                          kind="lot"
+                          id={row.greenLotCode}
+                          name={row.greenLotCode}
+                          className="font-mono text-sm font-medium text-ink underline-offset-4 transition-colors hover:text-forest-700 hover:underline group-hover:text-forest-700"
+                        >
                           {row.greenLotCode}
-                        </span>
+                        </EntityLink>
                       </TD>
                       <TD>
                         <div className="flex flex-col gap-0.5">
                           <HeldBadge held={row.held} />
                           {row.held && row.holdReason && (
-                            <span className="max-w-[16rem] truncate text-xs text-cherry/80">
+                            <span className="max-w-[16rem] truncate text-xs text-cherry">
                               {row.holdReason}
                             </span>
                           )}
@@ -148,9 +154,14 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
                   className="rounded-2xl border border-white/60 bg-white/55 p-4 shadow-[0_8px_24px_-16px_rgba(0,41,29,0.35)]"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <p className="font-mono text-sm font-medium text-ink">
+                    <EntityLink
+                      kind="lot"
+                      id={row.greenLotCode}
+                      name={row.greenLotCode}
+                      className="font-mono text-sm font-medium text-ink underline-offset-4 hover:text-forest-700 hover:underline"
+                    >
                       {row.greenLotCode}
-                    </p>
+                    </EntityLink>
                     <HeldBadge held={row.held} />
                   </div>
                   {row.held && row.holdReason && (
@@ -174,6 +185,7 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
                   <div className="mt-3 flex items-center justify-end gap-2">
                     <Link
                       href={`/qc/cup/${encodeURIComponent(row.greenLotCode)}`}
+                      aria-label={`Cup ${row.greenLotCode}`}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white/60 px-3 py-2 text-xs font-medium text-ink transition hover:border-forest-300 hover:text-forest-700"
                     >
                       <Coffee className="h-3.5 w-3.5" />

@@ -109,8 +109,8 @@ describe("<GenealogyGraph> (server SVG)", () => {
     const { container } = render(
       <GenealogyGraph graph={graph} terminalCode="JC-200" />,
     );
-    // JC-100 split 600+400=1000kg but its children only carry 110+90=200kg
-    // forward — the lost mass is drawn as a dashed wisp somewhere in the figure.
+    // JC-100W: received 90 kg, forwarded 70 kg (lost 20 kg) and JC-100N: received
+    // 40 kg, forwarded 30 kg (lost 10 kg) -> two wisps.
     const dashed = container.querySelectorAll("[stroke-dasharray]");
     expect(dashed.length).toBeGreaterThan(0);
   });
@@ -249,6 +249,23 @@ describe("role=tree no-JS fallback", () => {
     // The child codes the edges carry are reachable as text in the tree too.
     for (const code of ["JC-100", "JC-100W", "JC-100N", "JC-200"]) {
       expect(within(tree).getAllByText(new RegExp(code)).length).toBeGreaterThan(0);
+    }
+  });
+
+  it("renders each lineage node's code as an <EntityLink> to its lot dossier (cross-entity coherence)", () => {
+    render(<GenealogyGraph graph={graph} terminalCode="JC-200" />);
+    const tree = screen.getByRole("tree");
+
+    // Every node in the operable lineage outline is a real link to that lot's
+    // dossier — the connectivity mechanism the connected-estate mandate demands.
+    for (const code of ["JC-100", "JC-100W", "JC-100N", "JC-200"]) {
+      // Anchored so a code is not a substring-match of a longer sibling code
+      // (e.g. "JC-100" must not also match "JC-100W"/"JC-100N") — each lineage
+      // code resolves to exactly ONE dossier link.
+      const link = within(tree).getByRole("link", {
+        name: new RegExp(`^abrir lote ${code}$`, "i"),
+      });
+      expect(link).toHaveAttribute("href", `/lots/${code}`);
     }
   });
 });

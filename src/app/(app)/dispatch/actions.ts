@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import {
   generateDispatch,
@@ -169,7 +169,7 @@ export async function generateDispatchAction(
   });
 
   if (result.ok) {
-    revalidatePath("/dispatch");
+    reactiveRefresh("dispatch");
     return { status: "success", message: "Dispatch drafted.", runId: result.runId };
   }
   return toErrorState(result);
@@ -199,7 +199,7 @@ export async function markDispatchSentAction(
   });
 
   if (result.ok) {
-    revalidatePath("/dispatch");
+    reactiveRefresh("dispatch");
     return { status: "success", message: "Dispatch shared.", runId: result.runId };
   }
   return toErrorState(result);
@@ -225,7 +225,7 @@ export async function recordDispatchAckAction(
   });
 
   if (result.ok) {
-    revalidatePath("/dispatch");
+    reactiveRefresh("dispatch");
     return { status: "success", message: "Acknowledgement recorded." };
   }
   return toErrorState(result);

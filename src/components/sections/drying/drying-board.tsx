@@ -4,6 +4,7 @@ import { Coffee, MapPin } from "lucide-react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
+import { EntityLink } from "@/components/ui/entity-link";
 import { ReposoGateChip } from "./reposo-gate-chip";
 import { MoistureCurve } from "./moisture-curve";
 import { cn, kg } from "@/lib/utils";
@@ -28,7 +29,20 @@ import type { DryingLot } from "@/lib/types";
  *
  * Server component (no client JS): pure presentation over the composed read.
  */
-export function DryingBoard({ lots }: { lots: DryingLot[] }) {
+export function DryingBoard({
+  lots,
+  bandMin,
+  bandMax,
+}: {
+  lots: DryingLot[];
+  /**
+   * Reposo target-band edges (SSOT `farm_season_config.reposo_moisture_min/max_pct`),
+   * threaded down to each lot's <MoistureCurve> so the drawn band tracks the exact
+   * window the reposo gate enforces — never the component's literal default.
+   */
+  bandMin?: number;
+  bandMax?: number;
+}) {
   const blocked = lots.filter((l) => !l.reposo.ready).length;
   const ready = lots.length - blocked;
 
@@ -65,10 +79,14 @@ export function DryingBoard({ lots }: { lots: DryingLot[] }) {
               >
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div>
-                    <p className="flex items-center gap-1.5 font-display text-base font-bold tracking-tight text-ink">
+                    <EntityLink
+                      kind="lot"
+                      id={lot.lotCode}
+                      className="flex items-center gap-1.5 font-display text-base font-bold tracking-tight text-ink transition-colors hover:text-forest-700"
+                    >
                       <Coffee aria-hidden className="h-4 w-4 text-honey-700" />
                       {lot.lotCode}
-                    </p>
+                    </EntityLink>
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted-fg">
                       {lot.variety && <span>{lot.variety}</span>}
                       {lot.currentKg != null && (
@@ -85,7 +103,12 @@ export function DryingBoard({ lots }: { lots: DryingLot[] }) {
                   <ReposoGateChip reposo={lot.reposo} />
                 </div>
 
-                <MoistureCurve curve={lot.curve} height={140} />
+                <MoistureCurve
+                  curve={lot.curve}
+                  bandMin={bandMin}
+                  bandMax={bandMax}
+                  height={140}
+                />
 
                 {/* The advance-to-mill affordance. Blocked: a disabled button
                     carrying the gate's reason (DB is the real gate; this is
@@ -98,7 +121,7 @@ export function DryingBoard({ lots }: { lots: DryingLot[] }) {
                     <Link
                       href="/processing"
                       title="Advance this lot to milling on the Processing surface"
-                      aria-label={`Advance lot ${lot.lotCode} to milling`}
+                      aria-label={`Advance to mill — lot ${lot.lotCode}`}
                       className={cn(
                         "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
                         "bg-forest text-paper hover:bg-forest-600",

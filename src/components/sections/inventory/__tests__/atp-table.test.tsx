@@ -106,4 +106,36 @@ describe("AtpTable (smoke)", () => {
     );
     expect(soldOut).toBeTruthy();
   });
+
+  // ── Phase 5 wire-up: every green-lot code is a dossier link (D2 / J4) ──
+  // The lot code was COSMETIC (a plain <span>). The mandate makes every
+  // entity-naming row a real <a href> to its dossier — here the lot dossier
+  // at /lots/[code]. (wire-up-audit §11 "green-lot rows link /lots/[code]".)
+  it("links every green-lot code to its /lots/[code] dossier (NAVIGATE)", () => {
+    render(<AtpTable rows={ROWS} />);
+
+    for (const row of ROWS) {
+      // The lot code is now an <a href> (it appears in both the desktop row and
+      // the mobile card; at least one is the dossier link).
+      const links = screen
+        .getAllByRole("link", { name: new RegExp(row.greenLotCode, "i") })
+        .filter(
+          (el) =>
+            el.getAttribute("href") === `/lots/${row.greenLotCode}`,
+        );
+      expect(links.length).toBeGreaterThan(0);
+      // The link text is the lot code itself.
+      expect(links[0]).toHaveTextContent(row.greenLotCode);
+    }
+  });
+
+  it("links the sold-out lot's code too (the STUB is the Reserve button, not the row)", () => {
+    render(<AtpTable rows={ROWS} />);
+    // JC-561-G has ATP 0 (its Reserve button is the intentional "Sold out" STUB),
+    // but its code must STILL navigate to the dossier — the row is not dead.
+    const link = screen
+      .getAllByRole("link", { name: /JC-561-G/i })
+      .find((el) => el.getAttribute("href") === "/lots/JC-561-G");
+    expect(link).toBeTruthy();
+  });
 });

@@ -17,6 +17,24 @@ const genealogy: LotGenealogy = {
       mintedAt: "2026-05-01",
     },
     {
+      code: "JC-100W",
+      stage: "parchment",
+      variety: "Geisha",
+      originKg: 600,
+      currentKg: 450,
+      isSingleOrigin: true,
+      mintedAt: "2026-05-05",
+    },
+    {
+      code: "JC-100N",
+      stage: "drying",
+      variety: "Geisha",
+      originKg: 400,
+      currentKg: 280,
+      isSingleOrigin: true,
+      mintedAt: "2026-05-05",
+    },
+    {
       code: "JC-200",
       stage: "green",
       variety: "Geisha",
@@ -27,7 +45,10 @@ const genealogy: LotGenealogy = {
     },
   ],
   edges: [
-    { parentCode: "JC-100", childCode: "JC-200", kind: "process", kg: 200 },
+    { parentCode: "JC-100", childCode: "JC-100W", kind: "split", kg: 600 },
+    { parentCode: "JC-100", childCode: "JC-100N", kind: "split", kg: 400 },
+    { parentCode: "JC-100W", childCode: "JC-200", kind: "blend", kg: 120 },
+    { parentCode: "JC-100N", childCode: "JC-200", kind: "blend", kg: 80 },
   ],
 };
 
@@ -42,6 +63,12 @@ vi.mock("next/navigation", () => ({
   notFound: vi.fn(() => {
     throw NOT_FOUND;
   }),
+}));
+
+// The page now also reads the cost_entry ledger for the #cost-entries section;
+// mock getCostBreakdown so the test has no Supabase dep.
+vi.mock("@/lib/db/cogs", () => ({
+  getCostBreakdown: vi.fn(async () => []),
 }));
 
 // The page also awaits the S8 EUDR dossier; mock that port too (no Supabase).
@@ -79,6 +106,15 @@ describe("/lots/[code] page (smoke)", () => {
     // The read port was called with the route's lot code.
     expect(getLotGenealogy).toHaveBeenCalledWith("JC-200");
 
+    // Retrofit: the page now wraps its content in the shared <DossierShell>
+    // (data-dossier="lot") with a localized eyebrow + back link, so all 7
+    // dossiers share chrome. The data + sections are unchanged.
+    expect(screen.getByTestId("dossier-lot")).toBeInTheDocument();
+    expect(screen.getByText("Lote")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /todos los lotes/i }),
+    ).toHaveAttribute("href", "/lots");
+
     // The header names the lot, and the genealogy figure renders.
     expect(
       screen.getByRole("heading", { level: 1, name: /JC-200/ }),
@@ -90,6 +126,11 @@ describe("/lots/[code] page (smoke)", () => {
     // S8: the EUDR due-diligence dossier renders below the lineage (green lot).
     expect(screen.getByTestId("eudr-badge-compliant")).toBeInTheDocument();
     expect(screen.getByText("Barú Vista")).toBeInTheDocument();
+
+    // ANCHOR GUARD: the #cost-entries section must always render on the lot dossier
+    // so the provenance drill from CostLotCard (anchor="cost-entries") scrolls to a
+    // real DOM node and never silently lands on a dead fragment.
+    expect(screen.getByTestId("section-cost-entries")).toBeInTheDocument();
   });
 
   it("does NOT render the EUDR dossier for a non-green lot (it's not yet an export lot)", async () => {

@@ -1,5 +1,6 @@
 import type { LotEdge, LotGenealogy, LotNode } from "@/lib/types";
 import { layoutGenealogy, type PositionedNode } from "@/lib/ui/graph-layout";
+import { EntityLink } from "@/components/ui/entity-link";
 import { LotGraphInteractive } from "./lot-graph-interactive.client";
 import { cn, kg } from "@/lib/utils";
 
@@ -436,6 +437,14 @@ function GenealogyTree({
     .filter((n) => !hasParent.has(n.code))
     .sort((a, b) => a.code.localeCompare(b.code));
 
+  // Tree-GLOBAL "already rendered" set: the lineage is a DAG (a blend lot has two
+  // parents), so a diamond node is reached down two paths. We render its full
+  // entry (with its <EntityLink>) exactly ONCE; any later occurrence collapses to
+  // a non-link "(already shown)" leaf. This keeps each lot's dossier link unique
+  // across the whole outline (no duplicate links to one lot) while still showing
+  // the full lineage. Shared mutable set threaded through the synchronous walk.
+  const rendered = new Set<string>();
+
   return (
     <ul
       role="tree"
@@ -450,7 +459,7 @@ function GenealogyTree({
           byCode={byCode}
           edgeKg={null}
           terminalCode={terminalCode}
-          seen={new Set()}
+          rendered={rendered}
         />
       ))}
     </ul>
@@ -463,25 +472,26 @@ function TreeNode({
   byCode,
   edgeKg,
   terminalCode,
-  seen,
+  rendered,
 }: {
   node: LotNode;
   childEdges: Map<string, LotEdge[]>;
   byCode: Map<string, LotNode>;
   edgeKg: { kind: string; kg: number } | null;
   terminalCode?: string;
-  seen: Set<string>;
+  /** Tree-global set of codes already given a full (linked) entry. */
+  rendered: Set<string>;
 }) {
-  // Guard against accidental cycles in malformed data.
-  if (seen.has(node.code)) {
+  // Already rendered somewhere in the outline (a DAG diamond or a cycle): show a
+  // non-link breadcrumb so each lot's dossier link stays unique tree-wide.
+  if (rendered.has(node.code)) {
     return (
       <li role="treeitem" className="text-muted-fg pl-2">
         {node.code} (already shown)
       </li>
     );
   }
-  const nextSeen = new Set(seen);
-  nextSeen.add(node.code);
+  rendered.add(node.code);
 
   const kids = (childEdges.get(node.code) ?? [])
     .slice()
@@ -496,7 +506,14 @@ function TreeNode({
   return (
     <li role="treeitem" aria-expanded={kids.length > 0 ? true : undefined}>
       <span className="text-ink inline-flex flex-wrap items-baseline gap-2 py-1">
-        <span className="font-medium">{node.code}</span>
+        <EntityLink
+          kind="lot"
+          id={node.code}
+          name={node.code}
+          className="font-medium underline-offset-4 transition-colors hover:text-forest hover:underline"
+        >
+          {node.code}
+        </EntityLink>
         <span className="text-muted-fg text-xs">
           {stageLabel(node.stage)} · {kgLabel(node.currentKg)}
         </span>
@@ -522,7 +539,7 @@ function TreeNode({
                 byCode={byCode}
                 edgeKg={{ kind: e.kind, kg: e.kg }}
                 terminalCode={terminalCode}
-                seen={nextSeen}
+                rendered={rendered}
               />
             );
           })}

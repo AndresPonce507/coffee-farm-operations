@@ -59,12 +59,11 @@ const VISUALS: Record<SyncState["status"], Visual> = {
     Icon: RefreshCw,
     label: "Syncing",
     aria: (s) => `Syncing ${s.pending} change${s.pending === 1 ? "" : "s"} to the server`,
-    // text-[#2a527d] is a darker sky for TEXT on the light sky-100 fill (WCAG AA):
-    // 6.26:1 on the solid count badge, 6.77:1 on the sky-100/60 pill body. The
-    // plain text-sky #3b6ea5 only reaches 4.11:1 on the badge — below the 4.5:1
-    // floor for the 11px font-semibold count, the load-bearing datum.
-    tone: "border-sky-100 bg-sky-100/60 text-[#2a527d]",
-    badge: "bg-sky-100 text-[#2a527d]",
+    // sky-700 (#2a527d) is the darker sky TEXT token for the light sky-100 fill (WCAG
+    // AA): 6.26:1 on the solid count badge, 6.77:1 on the sky-100/60 pill body. Plain
+    // text-sky only reaches 4.11:1 on the badge — below the floor for the 11px count.
+    tone: "border-sky-100 bg-sky-100/60 text-sky-700",
+    badge: "bg-sky-100 text-sky-700",
     count: (s) => s.pending,
     spin: true,
   },
@@ -82,12 +81,11 @@ const VISUALS: Record<SyncState["status"], Visual> = {
     label: "Needs attention",
     aria: (s) =>
       `${s.dead} change${s.dead === 1 ? "" : "s"} failed and need attention`,
-    // text-[#9e3a22] is a darker cherry for TEXT on the light cherry-100 fill
-    // (WCAG AA): 5.26:1 on the solid count badge, 5.59:1 on the cherry-100/70
-    // pill body. The plain text-cherry #b5482e only reaches 4.12:1 on the badge,
-    // below the 4.5:1 floor for the 11px font-semibold count.
-    tone: "border-cherry-100 bg-cherry-100/70 text-[#9e3a22]",
-    badge: "bg-cherry-100 text-[#9e3a22]",
+    // cherry-700 (#8f3522) is the darker cherry TEXT token for the light cherry-100
+    // fill (WCAG AA): 6.0:1 on the solid count badge. Plain text-cherry only reaches
+    // 4.69:1 — fine for body, but this 11px font-semibold count uses the darker token.
+    tone: "border-cherry-100 bg-cherry-100/70 text-cherry-700",
+    badge: "bg-cherry-100 text-cherry-700",
     count: (s) => s.dead,
   },
 };

@@ -10,6 +10,8 @@ export interface HarvestRow {
   plot_id: string;
   plot_name: string;
   picker: string;
+  /** FK to the workers table — forwarded by harvests_view from harvests.worker_id. */
+  worker_id: string;
   cherries_kg: number | string;
   ripeness_pct: number | string;
   brix_avg: number | string;
@@ -23,6 +25,7 @@ export function mapHarvest(r: HarvestRow): Harvest {
     plotId: r.plot_id,
     plotName: r.plot_name,
     picker: r.picker,
+    workerId: r.worker_id,
     cherriesKg: Number(r.cherries_kg),
     ripenessPct: Number(r.ripeness_pct),
     brixAvg: Number(r.brix_avg),
@@ -39,3 +42,24 @@ export const getHarvests = cache(async (): Promise<Harvest[]> => {
   if (error) throw new Error(`getHarvests: ${error.message}`);
   return (data as HarvestRow[]).map(mapHarvest);
 });
+
+/**
+ * Every harvest for ONE plot — the /plots/[id] dossier's Harvests section
+ * (facet-02 §5). Thin, additive, read-only: the same `harvests_view`
+ * `getHarvests()` reads, narrowed to a single plot and ordered newest first
+ * (reverse-chronological log). Returns [] for a plot with no harvests (honest
+ * empty, not a throw) so the section renders its empty state. Writes never flow
+ * through here.
+ */
+export const getHarvestsForPlot = cache(
+  async (plotId: string): Promise<Harvest[]> => {
+    const { data, error } = await (await getSupabase())
+      .from("harvests_view")
+      .select("*")
+      .eq("plot_id", plotId)
+      .order("date", { ascending: false })
+      .order("id");
+    if (error) throw new Error(`getHarvestsForPlot: ${error.message}`);
+    return (data as HarvestRow[]).map(mapHarvest);
+  },
+);

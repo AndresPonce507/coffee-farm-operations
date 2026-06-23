@@ -59,4 +59,25 @@ describe("ScoutingBoard (render/smoke)", () => {
     render(<ScoutingBoard rows={[]} />);
     expect(screen.getByTestId("scouting-empty")).toBeInTheDocument();
   });
+
+  it("wires the plot name to the plot dossier (was COSMETIC)", () => {
+    render(<ScoutingBoard rows={[recommend]} />);
+    // EntityLink sets aria-label="Abrir parcela <name>" — human plotName, not slug.
+    // WCAG 2.5.3: the accessible name must contain the visible label.
+    const link = screen.getByRole("link", { name: /abrir parcela Cuesta de Piedra/i });
+    expect(link).toHaveAttribute("href", "/plots/p-cuesta-piedra");
+  });
+
+  it("links a fired control task to the tasks board", () => {
+    render(<ScoutingBoard rows={[recommend]} />);
+    const link = screen.getByRole("link", { name: /control task/i });
+    expect(link).toHaveAttribute("href", "/tasks");
+  });
+
+  it("does not render a task link when nothing fired (below threshold)", () => {
+    render(<ScoutingBoard rows={[hold]} />);
+    expect(
+      screen.queryByRole("link", { name: /control task/i }),
+    ).not.toBeInTheDocument();
+  });
 });

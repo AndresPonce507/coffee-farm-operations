@@ -43,10 +43,27 @@ export function longDate(iso: string): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-/** Relative day label from an ISO date vs a fixed "today" used across the mock data. */
-export function relativeDay(iso: string, today = "2026-06-20"): string {
+/**
+ * Today's local date as `YYYY-MM-DD`. Uses local Y/M/D components (not UTC) to stay
+ * consistent with the `new Date(iso + "T00:00:00")` local-midnight parsing the date
+ * helpers use, so there is no timezone off-by-one. Tests pin it with
+ * `vi.setSystemTime(...)`.
+ */
+export function today(): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/**
+ * Relative day label from an ISO date vs "today". Defaults to the REAL current local
+ * date so live-DB read surfaces (activity feed, task due dates) label events correctly
+ * — a frozen anchor made every post-anchor live event render as "in Nd". Callers that
+ * need a deterministic anchor (tests) pin the clock with `vi.setSystemTime`.
+ */
+export function relativeDay(iso: string, todayStr: string = today()): string {
   const a = new Date(iso + "T00:00:00").getTime();
-  const b = new Date(today + "T00:00:00").getTime();
+  const b = new Date(todayStr + "T00:00:00").getTime();
   const days = Math.round((a - b) / 86_400_000);
   if (days === 0) return "Today";
   if (days === -1) return "Yesterday";

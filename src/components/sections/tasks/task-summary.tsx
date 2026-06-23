@@ -3,23 +3,23 @@ import { ListChecks, Loader, TriangleAlert, Flag } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Tile } from "@/components/ui/tile";
 import { getTasks } from "@/lib/db/tasks";
-import { num } from "@/lib/utils";
-
-/** "Today" for the mock data — tasks due before this are overdue. */
-const TODAY = "2026-06-20";
+import { num, today } from "@/lib/utils";
 
 /**
  * TaskSummary — at-a-glance counts for the agronomy task board.
  * A divided grid of borderless Tiles inside a single Card surface.
- * Server component (pure render over static mock data).
+ * Server component (pure render over the task reads).
  */
 export async function TaskSummary() {
   const tasks = await getTasks();
 
+  // Overdue keys off the LIVE today() — the same source the board + table use, so the
+  // tile never disagrees with the rows it summarizes (a frozen anchor drifted apart).
+  const todayStr = today();
   const openCount = tasks.filter((t) => t.status === "todo").length;
   const inProgressCount = tasks.filter((t) => t.status === "in-progress").length;
   const overdueCount = tasks.filter(
-    (t) => t.due < TODAY && t.status !== "done"
+    (t) => t.due < todayStr && t.status !== "done"
   ).length;
   const highPriorityCount = tasks.filter(
     (t) => t.priority === "high" && t.status !== "done"

@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import { getSupabase } from "@/lib/supabase/server";
 import type { TaskStatus } from "@/lib/types";
@@ -26,8 +26,7 @@ const toRow = (t: TaskInput) => ({
 });
 
 function refresh() {
-  revalidatePath("/tasks");
-  revalidatePath("/");
+  reactiveRefresh("task");
 }
 
 export async function createTask(

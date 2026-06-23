@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import { getSupabase } from "@/lib/supabase/server";
 import { isISODate } from "@/lib/validation/shared";
@@ -150,8 +150,7 @@ export async function schedulePasada(input: SchedulePasadaInput): Promise<PlanRe
     ...(await writeEnvelope(sb)),
   });
   if (error) return { ok: false, error: friendlyError(error.message) };
-  revalidatePath("/plan");
-  revalidatePath("/tasks");
+  reactiveRefresh("plan-event");
   return { ok: true };
 }
 
@@ -191,8 +190,7 @@ export async function replanPasada(input: ReplanPasadaInput): Promise<PlanResult
     ...(await writeEnvelope(sb)),
   });
   if (error) return { ok: false, error: friendlyError(error.message) };
-  revalidatePath("/plan");
-  revalidatePath("/tasks");
+  reactiveRefresh("plan-event");
   return { ok: true };
 }
 
@@ -245,6 +243,6 @@ export async function recordMaturationSignal(input: MaturationSignalInput): Prom
     ...(await writeEnvelope(sb)),
   });
   if (error) return { ok: false, error: friendlyError(error.message) };
-  revalidatePath("/plan");
+  reactiveRefresh("plan-event");
   return { ok: true };
 }

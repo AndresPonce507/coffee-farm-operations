@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Dialog } from "@/components/ui/dialog";
+import { EntityLink } from "@/components/ui/entity-link";
 import { cn } from "@/lib/utils";
 import type {
   AttendanceEvent,
@@ -107,13 +108,14 @@ export function CrewRehireStrip({
                 <div className="flex items-start gap-3">
                   <Avatar name={member.name} size="md" />
                   <div className="min-w-0 flex-1">
-                    <button
-                      type="button"
-                      onClick={() => setOpenWorker(member.workerId)}
+                    <EntityLink
+                      kind="worker"
+                      id={member.workerId}
+                      name={member.preferredName || member.name}
                       className="rounded text-left font-display text-sm font-semibold text-ink transition-colors hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-300"
                     >
                       {member.preferredName || member.name}
-                    </button>
+                    </EntityLink>
                     <p className="mt-0.5 truncate text-xs text-muted-fg">
                       {member.role} · {member.crewName}
                     </p>

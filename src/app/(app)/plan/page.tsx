@@ -20,8 +20,8 @@ export default function PlanPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Harvest Plan"
-        subtitle="Ripeness-ranked plots & a pasada calendar staggered down the altitude gradient"
+        title="Plan de Cosecha"
+        subtitle="Parcelas ordenadas por madurez y un calendario de pasadas escalonado según el gradiente de altitud"
       />
 
       <HarvestPlanner />

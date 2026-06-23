@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import { num } from "@/lib/utils";
 
 /**
@@ -54,10 +55,10 @@ export function CupperDriftCard({
     <Card className="animate-rise">
       <CardHeader>
         <div>
-          <CardTitle>Cupper-drift calibration</CardTitle>
+          <CardTitle>Calibración de deriva de catadores</CardTitle>
           <CardDescription>
-            Each cupper&apos;s bias vs the panel mean on shared calibration samples —
-            evidence to correct for, never a score rejected
+            El sesgo de cada catador/a frente a la media del panel en muestras de
+            calibración compartidas — evidencia para corregir, nunca un puntaje rechazado
           </CardDescription>
         </div>
         <Gauge className="h-5 w-5 text-forest-600" aria-hidden />
@@ -67,8 +68,8 @@ export function CupperDriftCard({
         {drift.length === 0 ? (
           <EmptyState
             icon={Scale}
-            title="No calibration sessions yet"
-            description="Cup a shared calibration sample with two or more cuppers to surface systematic bias here."
+            title="Aún no hay sesiones de calibración"
+            description="Cata una muestra de calibración compartida con dos o más catadores para que el sesgo sistemático aparezca aquí."
           />
         ) : (
           <ul className="divide-y divide-line/60">
@@ -80,15 +81,18 @@ export function CupperDriftCard({
                 className="flex items-center justify-between gap-4 py-2.5"
               >
                 <div className="min-w-0">
-                  <p
+                  <EntityLink
+                    kind="worker"
+                    id={d.cupperId}
+                    name={name}
                     className={
                       name
-                        ? "truncate text-sm font-medium text-ink"
-                        : "font-mono text-sm font-medium text-ink"
+                        ? "block truncate text-sm font-medium text-ink underline-offset-4 hover:text-forest-700 hover:underline"
+                        : "block font-mono text-sm font-medium text-ink underline-offset-4 hover:text-forest-700 hover:underline"
                     }
                   >
                     {name ?? d.cupperId}
-                  </p>
+                  </EntityLink>
                   <p className="mt-0.5 text-xs capitalize text-muted-fg">
                     {name ? (
                       <span className="font-mono lowercase text-muted-fg/80">
@@ -103,7 +107,7 @@ export function CupperDriftCard({
                   className={`shrink-0 font-display text-lg font-semibold tabular-nums ${driftTone(
                     d.drift,
                   )}`}
-                  aria-label={`drift ${signedDrift(d.drift)} on ${d.attribute}`}
+                  aria-label={`deriva ${signedDrift(d.drift)} en ${d.attribute}`}
                 >
                   {signedDrift(d.drift)}
                 </span>

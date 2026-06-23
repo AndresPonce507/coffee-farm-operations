@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef } from "react";
+
 import { Check } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -27,7 +29,7 @@ export type RipenessValue = (typeof RIPENESS_ORDER)[number];
 const ACCENT: Record<RipenessValue, { ring: string; on: string }> = {
   underripe: { ring: "ring-honey-700", on: "bg-honey-100 text-honey-700" },
   ripe: { ring: "ring-forest", on: "bg-forest-100 text-forest" },
-  overripe: { ring: "ring-cherry", on: "bg-cherry-100 text-[#8a2f1c]" },
+  overripe: { ring: "ring-cherry", on: "bg-cherry-100 text-cherry-700" },
 };
 
 export interface RipenessPadProps {
@@ -37,21 +39,55 @@ export interface RipenessPadProps {
 }
 
 export function RipenessPad({ value, onChange, className }: RipenessPadProps) {
+  // Roving tabindex: only one radio is in the Tab order at a time (the selected
+  // one, or the first when nothing is chosen). Arrow keys move the selection AND
+  // DOM focus across the group, wrapping at the ends. Tap/click is untouched
+  // (glove-friendly). WAI-ARIA radiogroup pattern.
+  const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const activeIndex = value ? RIPENESS_ORDER.indexOf(value) : 0;
+
+  function moveTo(nextIndex: number) {
+    const next = RIPENESS_ORDER[nextIndex];
+    onChange(next);
+    buttonRefs.current[nextIndex]?.focus();
+  }
+
+  function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    const count = RIPENESS_ORDER.length;
+    switch (event.key) {
+      case "ArrowDown":
+      case "ArrowRight":
+        event.preventDefault();
+        moveTo((activeIndex + 1) % count);
+        break;
+      case "ArrowUp":
+      case "ArrowLeft":
+        event.preventDefault();
+        moveTo((activeIndex - 1 + count) % count);
+        break;
+    }
+  }
+
   return (
     <div
       role="radiogroup"
       aria-label="Ripeness"
+      onKeyDown={handleKeyDown}
       className={cn("grid grid-cols-3 gap-2.5", className)}
     >
-      {RIPENESS_ORDER.map((r) => {
+      {RIPENESS_ORDER.map((r, i) => {
         const selected = value === r;
         const label = RIPENESS_LABELS[r];
         return (
           <button
             key={r}
+            ref={(el) => {
+              buttonRefs.current[i] = el;
+            }}
             type="button"
             role="radio"
             aria-checked={selected}
+            tabIndex={i === activeIndex ? 0 : -1}
             onClick={() => onChange(r)}
             className={cn(
               "glass-card flex min-h-[76px] flex-col items-center justify-center gap-1 rounded-2xl px-2 py-3 text-center transition-all duration-200 will-change-transform",

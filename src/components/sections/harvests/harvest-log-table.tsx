@@ -2,6 +2,7 @@ import type { Plot, Worker } from "@/lib/types";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/data-table";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { EntityLink } from "@/components/ui/entity-link";
 import { getHarvests } from "@/lib/db/harvests";
 import { kg, num, longDate, shortDate } from "@/lib/utils";
 import { HarvestRowActions } from "./harvest-actions";
@@ -45,9 +46,9 @@ export async function HarvestLogTable({
     <Card className="animate-rise overflow-hidden">
       <CardHeader>
         <div>
-          <CardTitle>Harvest log</CardTitle>
+          <CardTitle>Registro de cosecha</CardTitle>
           <CardDescription>
-            Most recent {rows.length} picking records, newest first
+            Los {rows.length} registros de cosecha más recientes, del más nuevo al más antiguo
           </CardDescription>
         </div>
       </CardHeader>
@@ -56,14 +57,14 @@ export async function HarvestLogTable({
         <Table className="border-0 ring-0">
           <THead className="bg-white/70">
             <TR>
-              <TH>Date</TH>
-              <TH>Lot</TH>
-              <TH>Plot</TH>
-              <TH>Picker</TH>
-              <TH className="text-right">Cherries</TH>
-              <TH>Ripeness</TH>
+              <TH>Fecha</TH>
+              <TH>Lote</TH>
+              <TH>Parcela</TH>
+              <TH>Cosechero/a</TH>
+              <TH className="text-right">Cerezas</TH>
+              <TH>Madurez</TH>
               <TH className="text-right">Brix</TH>
-              <TH className="text-right">Actions</TH>
+              <TH className="text-right">Acciones</TH>
             </TR>
           </THead>
           <TBody>
@@ -73,14 +74,36 @@ export async function HarvestLogTable({
                   <span title={longDate(h.date)}>{shortDate(h.date)}</span>
                 </TD>
                 <TD>
-                  <span className="font-mono text-xs text-coffee">
+                  <EntityLink
+                    kind="lot"
+                    id={h.lotCode}
+                    className="rounded font-mono text-xs text-coffee underline-offset-2 transition-colors hover:text-forest hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper focus-visible:text-forest focus-visible:underline"
+                  >
                     {h.lotCode}
-                  </span>
+                  </EntityLink>
                 </TD>
                 <TD className="whitespace-nowrap font-medium text-ink">
-                  {h.plotName}
+                  <EntityLink
+                    kind="plot"
+                    id={h.plotId}
+                    className="rounded font-medium text-ink underline-offset-2 transition-colors hover:text-forest hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper focus-visible:text-forest focus-visible:underline"
+                  >
+                    {h.plotName}
+                  </EntityLink>
                 </TD>
-                <TD className="whitespace-nowrap text-muted-fg">{h.picker}</TD>
+                <TD className="whitespace-nowrap text-muted-fg">
+                  {h.workerId != null ? (
+                    <EntityLink
+                      kind="worker"
+                      id={h.workerId}
+                      className="rounded text-muted-fg underline-offset-2 transition-colors hover:text-forest hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper focus-visible:text-forest focus-visible:underline"
+                    >
+                      {h.picker}
+                    </EntityLink>
+                  ) : (
+                    h.picker
+                  )}
+                </TD>
                 <TD className="whitespace-nowrap text-right font-medium tabular-nums text-ink">
                   {kg(h.cherriesKg)}
                 </TD>

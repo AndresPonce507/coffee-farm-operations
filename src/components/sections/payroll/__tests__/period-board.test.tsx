@@ -42,11 +42,11 @@ describe("PeriodBoard", () => {
     expect(within(board).getAllByText("$4,820.50").length).toBeGreaterThan(0);
   });
 
-  it("links each card to /payroll?period=<id> (the searchParam the page consumes)", () => {
+  it("links each card to the /pay-period/[id] dossier", () => {
     render(<PeriodBoard periods={[period({ id: "pp-xyz" })]} />);
     const link = screen.getByTestId("period-card-pp-xyz");
     expect(link.tagName).toBe("A");
-    expect(link).toHaveAttribute("href", "/payroll?period=pp-xyz");
+    expect(link).toHaveAttribute("href", "/pay-period/pp-xyz");
   });
 
   it("shows the make-whole chip only for periods where the floor fired", () => {

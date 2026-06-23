@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ShieldCheck, ShieldAlert, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { EntityLink } from "@/components/ui/entity-link";
 import { cn } from "@/lib/utils";
 import type { LotEvent } from "@/lib/types";
 
@@ -13,6 +14,10 @@ import {
   eventKindIcon,
   humanizeKind,
 } from "./event-kind-style";
+
+/** Elements that can hold keyboard focus inside the drawer, in DOM order. */
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export interface AuditDrawerProps {
   /** Whether the slide-over is shown. Rendered out of the tree when false. */
@@ -61,6 +66,9 @@ export function AuditDrawer({
   events,
   chainVerified,
 }: AuditDrawerProps) {
+  const panelRef = useRef<HTMLElement>(null);
+  // The element focused right before the drawer opened, restored on close.
+  const restoreRef = useRef<HTMLElement | null>(null);
   // Portal target only exists on the client. Gate the portal on mount so SSR
   // renders nothing (the drawer is always opened by a client interaction anyway).
   const [mounted, setMounted] = useState(false);
@@ -79,7 +87,59 @@ export function AuditDrawer({
     };
   }, [open, onClose]);
 
+  // Focus management (WCAG 2.4.3 / 2.1.2) — mirrors the shared <Dialog> primitive.
+  // On open: remember the previously-focused element, then move focus to the
+  // first focusable inside the panel (or the panel itself). On close/unmount:
+  // restore focus to that remembered element so keyboard users land back on the
+  // trigger instead of resetting to <body>. `mounted` is a dep because the panel
+  // only exists once the portal has mounted on the client.
+  useEffect(() => {
+    if (!open) return;
+    restoreRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+
+    const panel = panelRef.current;
+    if (panel) {
+      const first = panel.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+      (first ?? panel).focus();
+    }
+
+    return () => {
+      restoreRef.current?.focus?.();
+    };
+  }, [open, mounted]);
+
   if (!open || !mounted) return null;
+
+  // Keep Tab/Shift+Tab inside the drawer by wrapping at the edges (focus trap).
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== "Tab") return;
+    const panel = panelRef.current;
+    if (!panel) return;
+    const focusables = Array.from(
+      panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+    );
+    if (focusables.length === 0) {
+      // Nothing focusable but the panel — keep focus pinned to it.
+      e.preventDefault();
+      panel.focus();
+      return;
+    }
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const activeEl = document.activeElement;
+    if (e.shiftKey) {
+      if (activeEl === first || !panel.contains(activeEl)) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else if (activeEl === last || !panel.contains(activeEl)) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
 
   const VerifyIcon = chainVerified ? ShieldCheck : ShieldAlert;
 
@@ -94,6 +154,7 @@ export function AuditDrawer({
       role="dialog"
       aria-modal="true"
       aria-label={`Audit trail for ${streamKey}`}
+      onKeyDown={onKeyDown}
     >
       {/* Click-away backdrop — soft forest scrim, mild blur on the chrome only. */}
       <button
@@ -108,8 +169,10 @@ export function AuditDrawer({
           Enters via the shared GPU transform+opacity entrance (animate-rise),
           which globals.css already neutralises under prefers-reduced-motion. */}
       <aside
+        ref={panelRef}
+        tabIndex={-1}
         className={cn(
-          "animate-rise relative z-10 flex h-full w-full max-w-md flex-col",
+          "animate-rise relative z-10 flex h-full w-full max-w-md flex-col outline-none",
           "border-l border-white/60 bg-white/85 backdrop-blur-xl",
           "shadow-[0_24px_64px_-20px_rgba(0,41,29,0.45)]",
         )}
@@ -121,7 +184,9 @@ export function AuditDrawer({
               Audit trail
             </p>
             <h2 className="font-display text-lg font-semibold text-ink">
-              {streamKey}
+              <EntityLink kind="lot" id={streamKey}>
+                {streamKey}
+              </EntityLink>
             </h2>
             <div className="mt-2" data-testid="chain-badge">
               <Badge tone={chainVerified ? "forest" : "honey"} className="gap-1.5">
@@ -134,7 +199,7 @@ export function AuditDrawer({
             type="button"
             onClick={onClose}
             aria-label="Close audit trail"
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted-fg transition hover:bg-white/60 hover:text-ink"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted-fg transition hover:bg-white/60 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-100"
           >
             <X className="h-4 w-4" />
           </button>

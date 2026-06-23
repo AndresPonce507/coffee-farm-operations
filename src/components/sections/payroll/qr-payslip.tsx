@@ -1,6 +1,7 @@
 import { ArrowDownToLine, Sparkles } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
+import { EntityLink } from "@/components/ui/entity-link";
 import type { Payslip } from "@/lib/db/payroll";
 import { payslipQrSvg } from "@/lib/payroll/qr";
 import { cn, longDate } from "@/lib/utils";
@@ -114,7 +115,9 @@ export function QrPayslip({ payslip, deepLink }: QrPayslipProps) {
             {bilingual(PAYSLIP_TERMS.payslip, showNg)}
           </p>
           <h2 className="mt-1 truncate font-display text-lg font-semibold text-ink">
-            {headline}
+            <EntityLink kind="worker" id={payslip.workerId} name={headline}>
+              {headline}
+            </EntityLink>
           </h2>
           {hasDistinctLegalName ? (
             <p className="truncate text-xs text-muted-fg">

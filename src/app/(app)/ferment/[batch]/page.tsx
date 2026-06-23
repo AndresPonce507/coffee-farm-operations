@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 
+import { DossierShell } from "@/components/dossier/dossier-shell";
+import { DossierSection } from "@/components/dossier/dossier-section";
 import { FermentTracker } from "@/components/sections/ferment/ferment-tracker";
 import {
   getFermentBatches,
@@ -41,21 +41,22 @@ export default async function FermentBatchPage({
   ]);
 
   return (
-    <div className="space-y-6">
-      <Link
-        href="/ferment"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-fg transition hover:text-ink"
-      >
-        <ArrowLeft className="h-4 w-4" aria-hidden />
-        All ferments
-      </Link>
-
-      <FermentTracker
-        batch={batch}
-        curve={curve}
-        cutpoint={cutpoint}
-        water={water}
-      />
-    </div>
+    <DossierShell
+      kind="batch"
+      title={`Lote ${batch.lotCode}`}
+      eyebrow="Lote en fermentación"
+      subtitle="Cabina de calidad por lote — curvas de pH/temp/Brix, punto de corte y agua por kg"
+      backHref="/ferment"
+      backLabel="Todas las fermentaciones"
+    >
+      <DossierSection id="tracker" title="Seguimiento de fermentación">
+        <FermentTracker
+          batch={batch}
+          curve={curve}
+          cutpoint={cutpoint}
+          water={water}
+        />
+      </DossierSection>
+    </DossierShell>
   );
 }

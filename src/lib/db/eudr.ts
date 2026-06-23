@@ -6,6 +6,7 @@ import type {
   EudrOriginPlot,
   EudrStatus,
   LotEudrDossier,
+  PlotOriginStatus,
 } from "@/lib/types";
 
 /* ====================================================================== */
@@ -95,6 +96,45 @@ export const getLotEudrDossier = cache(
 );
 
 /**
+ * One PLOT's EUDR origin status (for the /plots/[id] dossier, facet-02 §7) — the
+ * plot's own due-diligence facts (geolocation + deforestation-free declaration +
+ * basis) and the distinct green lots its cherries feed. Reads the same
+ * `lot_origin_plots` view the lot dossier reads, narrowed to a single plot: each
+ * returned row is the plot under one green lot, all carrying identical plot-level
+ * facts, so the first row supplies the facts and every row contributes a fed-lot
+ * code. Returns null when the plot feeds no green lot (origin that can't be
+ * substantiated is surfaced honestly, never a fabricated pass). Read-only.
+ */
+export const getPlotOriginStatus = cache(
+  async (plotId: string): Promise<PlotOriginStatus | null> => {
+    const { data, error } = await (await getSupabase())
+      .from("lot_origin_plots")
+      .select("*")
+      .eq("plot_id", plotId)
+      .order("green_lot_code", { ascending: true });
+    if (error) throw new Error(`getPlotOriginStatus: ${error.message}`);
+
+    const rows = (data as OriginPlotRow[]) ?? [];
+    if (rows.length === 0) return null;
+
+    const facts = mapOriginPlot(rows[0]);
+    const feedsLots = Array.from(
+      new Set(rows.map((r) => r.green_lot_code)),
+    );
+    return {
+      plotId: facts.plotId,
+      plotName: facts.plotName,
+      establishedYear: facts.establishedYear,
+      centroid: facts.centroid,
+      geolocated: facts.geolocated,
+      deforestationFree: facts.deforestationFree,
+      declBasis: facts.declBasis,
+      feedsLots,
+    };
+  },
+);
+
+/**
  * The EUDR compliance summary across every green lot — each green lot's dossier,
  * for the /eudr overview. Reads the green-lot inventory (greenlots port) then
  * resolves each lot's dossier in parallel.
@@ -103,3 +143,24 @@ export const getEudrSummary = cache(async (): Promise<LotEudrDossier[]> => {
   const lots = await getGreenLotAtp();
   return Promise.all(lots.map((l) => getLotEudrDossier(l.greenLotCode)));
 });
+
+/** A minimal {plotId, plotName} tuple — the only fields the EudrSummary origin-plot
+ *  EntityLink rows need. Derived from `getLotOriginPlots`; no extra DB round-trip. */
+export interface OriginPlotRef {
+  plotId: string;
+  plotName: string;
+}
+
+/**
+ * Returns the list of {plotId, plotName} tuples for the origin plots of ONE green
+ * lot, so the EudrSummary table can wrap each origin-plot row in an EntityLink
+ * kind='plot'. Previously `EudrLot.originPlots` was only a count (number) with no
+ * IDs — this getter exposes the IDs without touching the schema (derived from the
+ * same `lot_origin_plots` view that `getLotOriginPlots` already reads).
+ */
+export const getEudrOriginPlotIds = cache(
+  async (code: string): Promise<OriginPlotRef[]> => {
+    const plots = await getLotOriginPlots(code);
+    return plots.map((p) => ({ plotId: p.plotId, plotName: p.plotName }));
+  },
+);

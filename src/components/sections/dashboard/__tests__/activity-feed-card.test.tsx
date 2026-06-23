@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActivityItem } from "@/lib/types";
 
 // ActivityFeedCard is an async Server Component that awaits getActivity.
@@ -20,6 +20,12 @@ import { ActivityFeedCard } from "@/components/sections/dashboard/activity-feed-
 // register it explicitly so each test renders into a fresh document body.
 afterEach(cleanup);
 
+// relativeDay() now defaults to the REAL local date, so pin the clock to the date the
+// fixtures are anchored to (2026-06-20) — the first item (at "2026-06-20") then labels
+// "Today" deterministically regardless of when the suite runs.
+beforeEach(() => vi.setSystemTime(new Date("2026-06-20T12:00:00")));
+afterEach(() => vi.useRealTimers());
+
 describe("ActivityFeedCard (smoke)", () => {
   it("renders the card title without throwing", async () => {
     const ui = await ActivityFeedCard();
@@ -35,9 +41,37 @@ describe("ActivityFeedCard (smoke)", () => {
     expect(
       screen.getByText("Crew Norte delivered 920 kg of Geisha cherries"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Lot JC-564 moved to the drying beds")).toBeInTheDocument();
+    // The JC-564 event now splits its lot code into a link, so the prose around
+    // it renders as fragments rather than one text node.
+    expect(screen.getByText("JC-564")).toBeInTheDocument();
+    expect(screen.getByText(/moved to the drying beds/)).toBeInTheDocument();
     expect(screen.getByText("Pruning finished on Tizingal Alto")).toBeInTheDocument();
     // relativeDay("2026-06-20") against the fixed today → "Today".
     expect(screen.getByText("Today")).toBeInTheDocument();
+  });
+
+  it("wires the lot code in an event to its lot dossier (no dead UI)", async () => {
+    const ui = await ActivityFeedCard();
+    render(ui);
+
+    // The JC-564 token inside the free-text event becomes a real <a href>,
+    // while the surrounding prose renders verbatim around it.
+    const lotLink = screen.getByText("JC-564").closest("a");
+    expect(lotLink).not.toBeNull();
+    expect(lotLink).toHaveAttribute("href", "/lots/JC-564");
+    // Surrounding prose preserved (split into fragments around the link).
+    expect(screen.getByText(/Lot/)).toBeInTheDocument();
+    expect(screen.getByText(/moved to the drying beds/)).toBeInTheDocument();
+  });
+
+  it("leaves events that name no entity as plain (non-link) text", async () => {
+    const ui = await ActivityFeedCard();
+    render(ui);
+
+    // No lot code in this text → no fabricated link.
+    const plain = screen
+      .getByText("Crew Norte delivered 920 kg of Geisha cherries")
+      .closest("a");
+    expect(plain).toBeNull();
   });
 });

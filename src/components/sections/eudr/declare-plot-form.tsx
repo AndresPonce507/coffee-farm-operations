@@ -4,6 +4,7 @@ import { useState, useTransition, type FormEvent } from "react";
 import { Loader2, ShieldCheck } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { EUDR_CUTOFF } from "@/lib/types";
 import {
   declarePlotDeforestationFree,
   type EudrBasis,
@@ -19,7 +20,10 @@ const BASES: ReadonlyArray<{ value: EudrBasis; label: string; preCutoffOnly?: bo
   { value: "field-survey", label: "Field survey" },
 ];
 
-const EUDR_CUTOFF_YEAR = 2020;
+/** Cutoff YEAR derived from the EUDR_CUTOFF date SSOT (@/lib/types) — never a
+ *  hard-coded magic number. A plot established in this year or before is eligible
+ *  for the 'established-pre-cutoff' basis. */
+const EUDR_CUTOFF_YEAR = new Date(EUDR_CUTOFF).getFullYear();
 
 const SELECT =
   "h-8 rounded-lg border border-line bg-white/70 px-2 text-[12px] text-ink outline-none transition focus:border-forest-300 focus:ring-2 focus:ring-forest-100";
@@ -48,8 +52,9 @@ export function DeclarePlotForm({
   className?: string;
 }) {
   const preCutoff = establishedYear <= EUDR_CUTOFF_YEAR;
-  // Only offer 'established-pre-cutoff' for a pre-2020 plot (the DB would reject
-  // it otherwise — surface the option set the data layer will actually accept).
+  // Only offer 'established-pre-cutoff' for a pre-cutoff plot (established in
+  // EUDR_CUTOFF_YEAR or before); the DB would reject it otherwise — surface the
+  // option set the data layer will actually accept.
   const options = BASES.filter((b) => !b.preCutoffOnly || preCutoff);
 
   const [basis, setBasis] = useState<EudrBasis>(options[0].value);

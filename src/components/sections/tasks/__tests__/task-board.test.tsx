@@ -1,6 +1,11 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { FarmTask } from "@/lib/types";
+
+// Overdue keys off the REAL local date now; pin the clock to the 2026-06-20 anchor the
+// fixtures assume so the overdue row (due 2026-06-18) and future rows stay deterministic.
+beforeEach(() => vi.setSystemTime(new Date("2026-06-20T12:00:00")));
+afterEach(() => vi.useRealTimers());
 
 /**
  * TaskBoard is an async Server Component that awaits getTasks() from the DB
@@ -13,26 +18,31 @@ const TASKS: FarmTask[] = [
   {
     id: "t1", title: "Prune Block A shade trees", category: "Pruning",
     plotId: "p1", plotName: "Tizingal Alto", assignee: "Marisol Quintero",
+    workerId: "w1",
     due: "2026-06-18", status: "todo", priority: "high",
   },
   {
     id: "t2", title: "Apply foliar fertilizer", category: "Fertilizing",
     plotId: "p2", plotName: "Paso Ancho", assignee: "Diego Santamaría",
+    workerId: "w2",
     due: "2026-06-22", status: "in-progress", priority: "medium",
   },
   {
     id: "t3", title: "Scout for broca beetle", category: "Pest Control",
     plotId: null, plotName: null, assignee: "Ana Beltrán",
+    workerId: null,
     due: "2026-06-25", status: "blocked", priority: "high",
   },
   {
     id: "t4", title: "Weed nursery rows", category: "Weeding",
     plotId: "p3", plotName: "Bajo Mono", assignee: "Carlos Pineda",
+    workerId: "w3",
     due: "2026-06-19", status: "done", priority: "low",
   },
   {
     id: "t5", title: "Mulch newly planted Geisha", category: "Planting",
     plotId: "p1", plotName: "Tizingal Alto", assignee: "Marisol Quintero",
+    workerId: "w1",
     due: "2026-06-20", status: "todo", priority: "medium",
   },
 ];
@@ -78,6 +88,7 @@ describe("TaskBoard (smoke)", () => {
         plotId: "p1",
         plotName: "Geisha Alto",
         assignee: "Ana Pérez",
+        workerId: "w9",
         due: "2026-04-01",
         status: "todo",
         priority: "high",
@@ -89,5 +100,83 @@ describe("TaskBoard (smoke)", () => {
     expect(screen.getByText("Pasada 2 — pick Geisha Alto")).toBeInTheDocument();
     // the category pill renders its label (the icon + tone resolved, no crash).
     expect(screen.getByText("Harvest")).toBeInTheDocument();
+  });
+
+  it("plotName links to /plots/[id] when plotId is non-null", async () => {
+    const ui = await TaskBoard();
+    render(ui);
+
+    // WCAG 2.5.3: aria-label must contain the visible plot name (not slug).
+    // t1 has plotId="p1", plotName="Tizingal Alto" — EntityLink emits aria-label="Abrir parcela Tizingal Alto"
+    const plotLinks = screen.getAllByRole("link", { name: /Abrir parcela Tizingal Alto/i });
+    expect(plotLinks.length).toBeGreaterThan(0);
+    expect(plotLinks[0]).toHaveAttribute("href", "/plots/p1");
+    // the link wraps the plot name text
+    expect(plotLinks[0]).toHaveTextContent("Tizingal Alto");
+  });
+
+  it("plotName is plain text (no link) when plotId is null", async () => {
+    const { getTasks } = await import("@/lib/db/tasks");
+    vi.mocked(getTasks).mockResolvedValueOnce([
+      {
+        id: "t3b",
+        title: "Scout for broca beetle",
+        category: "Pest Control",
+        plotId: null,
+        plotName: null,
+        assignee: "Ana Beltrán",
+        workerId: null,
+        due: "2026-06-25",
+        status: "blocked",
+        priority: "high",
+      },
+    ]);
+
+    const ui = await TaskBoard();
+    render(ui);
+
+    // No plot link should appear for this tile (plotId is null, plotName is null)
+    const links = screen.queryAllByRole("link");
+    const plotLink = links.find((l) => l.getAttribute("href")?.startsWith("/plots/"));
+    expect(plotLink).toBeUndefined();
+  });
+
+  it("assignee name links to /workers/[workerId] when workerId is non-null", async () => {
+    const ui = await TaskBoard();
+    render(ui);
+
+    // WCAG 2.5.3: aria-label must contain the visible assignee name (not slug).
+    // t1 has workerId="w1", assignee="Marisol Quintero" — EntityLink emits aria-label="Abrir trabajador Marisol Quintero"
+    const workerLinks = screen.getAllByRole("link", { name: /Abrir trabajador Marisol Quintero/i });
+    expect(workerLinks.length).toBeGreaterThan(0);
+    expect(workerLinks[0]).toHaveAttribute("href", "/workers/w1");
+    // the link wraps the assignee name text
+    expect(workerLinks[0]).toHaveTextContent("Marisol Quintero");
+  });
+
+  it("assignee is plain text (no worker link) when workerId is null", async () => {
+    const { getTasks } = await import("@/lib/db/tasks");
+    vi.mocked(getTasks).mockResolvedValueOnce([
+      {
+        id: "t3c",
+        title: "Scout null worker",
+        category: "Pest Control",
+        plotId: null,
+        plotName: null,
+        assignee: "Ana Beltrán",
+        workerId: null,
+        due: "2026-06-25",
+        status: "blocked",
+        priority: "high",
+      },
+    ]);
+
+    const ui = await TaskBoard();
+    render(ui);
+
+    // No worker link should appear for this tile (workerId is null)
+    const links = screen.queryAllByRole("link");
+    const workerLink = links.find((l) => l.getAttribute("href")?.startsWith("/workers/"));
+    expect(workerLink).toBeUndefined();
   });
 });

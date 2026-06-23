@@ -32,7 +32,7 @@ export function LoginForm() {
     });
 
     if (signInError) {
-      setError("That email or password doesn't match. Please try again.");
+      setError("Ese correo o contraseña no coincide. Inténtalo de nuevo.");
       setPending(false);
       return;
     }
@@ -45,7 +45,7 @@ export function LoginForm() {
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       <div className="space-y-1.5">
         <label htmlFor="email" className="text-xs font-medium text-muted-fg">
-          Username or email
+          Usuario o correo
         </label>
         <input
           id="email"
@@ -61,7 +61,7 @@ export function LoginForm() {
 
       <div className="space-y-1.5">
         <label htmlFor="password" className="text-xs font-medium text-muted-fg">
-          Password
+          Contraseña
         </label>
         <input
           id="password"
@@ -82,8 +82,8 @@ export function LoginForm() {
       )}
 
       <Button type="submit" disabled={pending} className="w-full">
-        {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-        {pending ? "Signing in…" : "Sign in"}
+        {pending && <Loader2 className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" />}
+        {pending ? "Iniciando sesión…" : "Iniciar sesión"}
       </Button>
     </form>
   );

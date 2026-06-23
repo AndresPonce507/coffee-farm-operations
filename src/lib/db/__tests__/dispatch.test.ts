@@ -172,6 +172,7 @@ function stubByTable(byTable: Record<string, unknown[]>, error: { message: strin
   const from = vi.fn();
   const order = vi.fn();
   const eq = vi.fn();
+  const inFilter = vi.fn();
   from.mockImplementation((table: string) => {
     const result: QueryResult<unknown[]> = {
       data: byTable[table] ?? [],
@@ -187,6 +188,10 @@ function stubByTable(byTable: Record<string, unknown[]>, error: { message: strin
         eq(table, ...args);
         return builder;
       }),
+      in: vi.fn((...args: unknown[]) => {
+        inFilter(table, ...args);
+        return builder;
+      }),
       then: (
         onFulfilled: (value: QueryResult<unknown[]>) => unknown,
         onRejected?: (reason: unknown) => unknown,
@@ -195,7 +200,7 @@ function stubByTable(byTable: Record<string, unknown[]>, error: { message: strin
     return builder;
   });
   getSupabaseMock.mockReturnValue({ from });
-  return { from, order, eq };
+  return { from, order, eq, in: inFilter };
 }
 
 afterEach(() => {
@@ -350,5 +355,151 @@ describe("getDispatchToday — reads the active cards + groups their plot lines"
     const expectedToday = new Date().toISOString().slice(0, 10);
     await getDispatchToday();
     expect(eq).toHaveBeenCalledWith("v_dispatch_card", "dispatch_date", expectedToday);
+  });
+
+  // ── REGRESSION (board scale): v_dispatch_card_plots carries no dispatch_date
+  //    (it joins assignment→plot, not the run), so an unfiltered plot select loads
+  //    EVERY historical run's plot lines on each board render. The plot read MUST be
+  //    narrowed to ONLY the run ids this morning's cards reference — consistent with
+  //    the card query's date scope — so the read stays bounded as history grows.
+  it("scopes the plot read to only the run ids today's cards reference", async () => {
+    const { getDispatchToday } = await import("@/lib/db/dispatch");
+    const { in: inFilter } = stubByTable({
+      v_dispatch_card: cardRows,
+      v_dispatch_card_plots: plotRows,
+    });
+    await getDispatchToday("2026-06-21");
+    // the two card rows are runs 3 and 4 — the plot query must filter to exactly those.
+    expect(inFilter).toHaveBeenCalledWith(
+      "v_dispatch_card_plots",
+      "dispatch_run_id",
+      [3, 4],
+    );
+  });
+
+  it("skips the plot read entirely when no cards match the date (no all-history scan)", async () => {
+    const { getDispatchToday } = await import("@/lib/db/dispatch");
+    const { from, in: inFilter } = stubByTable({
+      v_dispatch_card: [],
+      v_dispatch_card_plots: plotRows,
+    });
+    const cards = await getDispatchToday("2026-06-21");
+    expect(cards).toEqual([]);
+    // with no cards there is nothing to join — the plots view is never queried.
+    expect(from).not.toHaveBeenCalledWith("v_dispatch_card_plots");
+    expect(inFilter).not.toHaveBeenCalled();
+  });
+});
+
+// ── getDispatchRunById: the /dispatch/[id] dossier anchor (Phase 5 L2) ────────
+describe("getDispatchRunById — one run by its numeric id (no date pin)", () => {
+  const cardRow: DispatchCardRow = {
+    id: 3,
+    crew_id: "crew-norte",
+    crew_name: "Crew Norte",
+    dispatch_date: "2026-06-21",
+    season: "2026",
+    status: "draft",
+    sent_channel: null,
+    readiness_threshold: "0.5",
+    idempotency_key: "idem-abc",
+    plot_count: "2",
+  };
+
+  const plotRows: DispatchCardPlotRow[] = [
+    {
+      id: 21,
+      dispatch_run_id: 3,
+      plot_id: "p-norte-alto",
+      plot_name: "Norte Alto",
+      variety: "Geisha",
+      altitude_masl: "1700",
+      task_kind: "picking",
+      target_kg: null,
+      ripeness_target: "medium",
+      readiness: "0.6",
+      ord: "2",
+    },
+    {
+      id: 20,
+      dispatch_run_id: 3,
+      plot_id: "p-norte-bajo",
+      plot_name: "Norte Bajo",
+      variety: "Catuaí",
+      altitude_masl: "1400",
+      task_kind: "picking",
+      target_kg: "120",
+      ripeness_target: "high",
+      readiness: "0.92",
+      ord: "1",
+    },
+    {
+      // a plot line for a DIFFERENT run — must not leak into run 3's card.
+      id: 30,
+      dispatch_run_id: 4,
+      plot_id: "p-sur-bajo",
+      plot_name: "Sur Bajo",
+      variety: "Caturra",
+      altitude_masl: "1300",
+      task_kind: "picking",
+      target_kg: "80",
+      ripeness_target: "high",
+      readiness: "0.88",
+      ord: "1",
+    },
+  ];
+
+  it("reads the run by id (NO date pin) and assembles its card in display order", async () => {
+    const { getDispatchRunById } = await import("@/lib/db/dispatch");
+    const { from, eq } = stubByTable({
+      v_dispatch_card: [cardRow],
+      v_dispatch_card_plots: plotRows,
+    });
+
+    const card = await getDispatchRunById(3);
+
+    expect(from).toHaveBeenCalledWith("v_dispatch_card");
+    expect(from).toHaveBeenCalledWith("v_dispatch_card_plots");
+    // Filters by id, NOT by dispatch_date (a dossier can open any day's run).
+    expect(eq).toHaveBeenCalledWith("v_dispatch_card", "id", 3);
+    const eqCols = eq.mock.calls.map((c) => c[1]);
+    expect(eqCols).not.toContain("dispatch_date");
+
+    expect(card).not.toBeNull();
+    expect(card!.id).toBe(3);
+    expect(card!.crewId).toBe("crew-norte");
+    // only this run's plot lines, in pasada/readiness order.
+    expect(card!.plots.map((p) => p.plotId)).toEqual([
+      "p-norte-bajo",
+      "p-norte-alto",
+    ]);
+  });
+
+  it("coerces a string id to a number before querying (route params are strings)", async () => {
+    const { getDispatchRunById } = await import("@/lib/db/dispatch");
+    const { eq } = stubByTable({
+      v_dispatch_card: [cardRow],
+      v_dispatch_card_plots: plotRows,
+    });
+    await getDispatchRunById("3");
+    expect(eq).toHaveBeenCalledWith("v_dispatch_card", "id", 3);
+  });
+
+  it("returns null for an unknown run id (dossier → notFound)", async () => {
+    const { getDispatchRunById } = await import("@/lib/db/dispatch");
+    stubByTable({ v_dispatch_card: [], v_dispatch_card_plots: [] });
+    expect(await getDispatchRunById(999)).toBeNull();
+  });
+
+  it("returns null for a non-numeric id (no fabricated run)", async () => {
+    const { getDispatchRunById } = await import("@/lib/db/dispatch");
+    stubByTable({ v_dispatch_card: [cardRow], v_dispatch_card_plots: plotRows });
+    expect(await getDispatchRunById("not-a-number")).toBeNull();
+  });
+
+  it("throws a labelled error when the card query errors", async () => {
+    const { getDispatchRunById } = await import("@/lib/db/dispatch");
+    stubByTable({}, { message: "boom" });
+    await expect(getDispatchRunById(3)).rejects.toThrow(/getDispatchRunById/);
   });
 });

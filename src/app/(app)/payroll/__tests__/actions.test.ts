@@ -121,6 +121,10 @@ describe("recordDisbursementAction", () => {
 
     expect(state.status).toBe("success");
     expect(rpc.mock.calls[0][0]).toBe("record_disbursement");
+    // Regression (round-A CRIT): a disbursement books a farm-level direct-labor
+    // cost_entry, so the action MUST refresh mv_lot_cost or /costing cost-per-kg-green
+    // ships stale. Fails on the pre-fix code (refresh_lot_cost was never called).
+    expect(rpc.mock.calls[1][0]).toBe("refresh_lot_cost");
     expect(revalidatePathMock).toHaveBeenCalledWith("/payroll");
     expect(revalidatePathMock).toHaveBeenCalledWith("/costing");
   });

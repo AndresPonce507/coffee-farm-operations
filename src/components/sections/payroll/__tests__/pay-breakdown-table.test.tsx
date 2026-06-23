@@ -53,13 +53,33 @@ const withMakeWhole: WorkerPay[] = [
 ];
 
 describe("PayBreakdownTable", () => {
+  it("links worker names to /workers/[id] in both desktop and mobile views", () => {
+    render(<PayBreakdownTable rows={aboveFloor} />);
+    const table = screen.getByTestId("pay-breakdown-table");
+    // Each worker name should be wrapped in an anchor pointing to the worker dossier.
+    // WCAG 2.5.3: aria-label must contain the visible text (human name, not slug).
+    // EntityLink renders aria-label="Abrir trabajador <name>" — name is workerName.
+    // Both desktop and mobile render the name, so getAllByRole returns >=2 per worker.
+    const miguelLinks = within(table).getAllByRole("link", {
+      name: /abrir trabajador Miguel Santos/i,
+    });
+    expect(miguelLinks.length).toBeGreaterThan(0);
+    expect(miguelLinks[0]).toHaveAttribute("href", "/workers/w-1");
+
+    const luciaLinks = within(table).getAllByRole("link", {
+      name: /abrir trabajador Lucía Vega/i,
+    });
+    expect(luciaLinks.length).toBeGreaterThan(0);
+    expect(luciaLinks[0]).toHaveAttribute("href", "/workers/w-2");
+  });
+
   it("renders the per-worker rows and totals without throwing", () => {
     render(<PayBreakdownTable rows={aboveFloor} />);
     const table = screen.getByTestId("pay-breakdown-table");
     expect(within(table).getAllByText("Miguel Santos").length).toBeGreaterThan(0);
     expect(within(table).getAllByText("Lucía Vega").length).toBeGreaterThan(0);
     // footer totals row label
-    expect(within(table).getAllByText("Totals").length).toBeGreaterThan(0);
+    expect(within(table).getAllByText("Totales").length).toBeGreaterThan(0);
     // gross total = 310 + 295.50 = 605.50, USD 2-decimal
     expect(within(table).getAllByText("$605.50").length).toBeGreaterThan(0);
   });
@@ -76,7 +96,7 @@ describe("PayBreakdownTable", () => {
     expect(within(table).getAllByText("$60.00").length).toBeGreaterThan(0);
     // the dignified legal label is present (sr-only + title)
     expect(
-      within(table).getAllByText(/topped up to the legal minimum/i).length,
+      within(table).getAllByText(/ajustado al mínimo legal/i).length,
     ).toBeGreaterThan(0);
 
     // the protected row is flagged for the honey accent
@@ -88,7 +108,7 @@ describe("PayBreakdownTable", () => {
   it("does NOT show the make-whole highlight when every row is above the floor", () => {
     render(<PayBreakdownTable rows={aboveFloor} />);
     expect(
-      screen.queryByText(/topped up to the legal minimum/i),
+      screen.queryByText(/ajustado al mínimo legal/i),
     ).not.toBeInTheDocument();
     const desktop = screen.getByTestId("pay-breakdown-desktop");
     expect(
@@ -108,7 +128,7 @@ describe("PayBreakdownTable", () => {
     render(<PayBreakdownTable rows={[]} />);
     expect(screen.getByTestId("pay-breakdown-table")).toBeInTheDocument();
     expect(
-      screen.getByText(/no pay lines for this period/i),
+      screen.getByText(/sin líneas de pago para este periodo/i),
     ).toBeInTheDocument();
   });
 });

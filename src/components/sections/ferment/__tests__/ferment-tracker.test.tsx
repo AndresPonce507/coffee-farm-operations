@@ -67,6 +67,22 @@ describe("FermentTracker (smoke)", () => {
     expect(screen.getByText(/Anaerobic/)).toBeInTheDocument();
   });
 
+  it("links the batch's lot code to its lot dossier (cross-entity coherence)", () => {
+    const { container } = render(
+      <FermentTracker
+        batch={batch}
+        curve={curve}
+        cutpoint={cutpoint}
+        water={water}
+      />,
+    );
+    // The batch.lotCode is an <EntityLink> to /lots/<code> — from a ferment
+    // batch you hop straight to the lot it belongs to (design §5 link map).
+    const lotLink = container.querySelector('a[href="/lots/JC-800"]');
+    expect(lotLink).not.toBeNull();
+    expect(lotLink).toHaveTextContent("JC-800");
+  });
+
   it("renders the live curve, the cut-point signal, and the water chip", () => {
     render(
       <FermentTracker
@@ -100,6 +116,33 @@ describe("FermentTracker (smoke)", () => {
       "input[name='batchId']",
     ) as HTMLInputElement;
     expect(batchInput.value).toBe("b1");
+  });
+
+  it("hosts the mill-water control (logMillWaterAction is wired, not dead) bound to the batch", () => {
+    const { container } = render(
+      <FermentTracker
+        batch={batch}
+        curve={curve}
+        cutpoint={cutpoint}
+        water={water}
+      />,
+    );
+    // The eco-mill water draw affordance — es-PA "Registrar agua de molino" —
+    // drives logMillWaterAction so the water-per-kg ledger is no longer a dead
+    // server capability with no UI to invoke it.
+    expect(
+      screen.getByRole("button", { name: /registrar agua de molino/i }),
+    ).toBeInTheDocument();
+    const litersInput = container.querySelector(
+      "input[name='liters']",
+    ) as HTMLInputElement;
+    expect(litersInput).not.toBeNull();
+    // both forms are bound to the same live batch id
+    const batchInputs = container.querySelectorAll("input[name='batchId']");
+    expect(batchInputs.length).toBeGreaterThanOrEqual(2);
+    batchInputs.forEach((el) =>
+      expect((el as HTMLInputElement).value).toBe("b1"),
+    );
   });
 
   it("echoes the latest reading value beside each curve title (temp + Brix, not just pH)", () => {

@@ -18,7 +18,7 @@ export default async function TasksPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Tasks" subtitle="Agronomy work across the farm">
+      <PageHeader title="Tareas" subtitle="Labores agronómicas en toda la finca">
         <AddTaskButton plots={plots} workers={workers} />
       </PageHeader>
 

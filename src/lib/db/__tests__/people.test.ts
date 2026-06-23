@@ -223,6 +223,192 @@ describe("getCrewRoster", () => {
   });
 });
 
+// ----- getCrews (Phase 5 L2 — derive crews from the live roster) -------------
+
+describe("getCrews", () => {
+  // Replaces the hardcoded CREWS mock (src/lib/data/workers.ts): groups the live
+  // v_crew_roster by crew_id/crew_name into one row per crew with member counts.
+  const roster = [
+    {
+      worker_id: "w-03",
+      name: "Eduardo Pérez",
+      role: "Picker",
+      crew_name: "Crew Norte",
+      crew_id: "C-norte",
+      attendance: "present",
+      preferred_name: null,
+      comarca_origin: null,
+      languages: ["es"],
+      rehire_eligible: true,
+    },
+    {
+      worker_id: "w-07",
+      name: "Carlos Beker",
+      role: "Picker",
+      crew_name: "Crew Norte",
+      crew_id: "C-norte",
+      attendance: "rest-day",
+      preferred_name: null,
+      comarca_origin: null,
+      languages: ["es"],
+      rehire_eligible: true,
+    },
+    {
+      worker_id: "w-10",
+      name: "Néstor Gómez",
+      role: "Mill Operator",
+      crew_name: "Crew Mill",
+      crew_id: "C-mill",
+      attendance: "present",
+      preferred_name: null,
+      comarca_origin: null,
+      languages: ["es"],
+      rehire_eligible: true,
+    },
+  ];
+
+  it("groups the live roster into one crew per crew_id with member + present counts", async () => {
+    const { client, calls } = makeClient({ data: roster, error: null });
+    getSupabaseMock.mockReturnValue(client);
+
+    const { getCrews } = await import("@/lib/db/people");
+    const crews = await getCrews();
+
+    // Reads the SAME live view — no @/lib/data mock leak.
+    expect(calls.from).toBe("v_crew_roster");
+
+    // Ordered by crew name (deterministic board order): Mill < Norte.
+    expect(crews).toEqual([
+      {
+        crewId: "C-mill",
+        crewName: "Crew Mill",
+        memberCount: 1,
+        presentCount: 1,
+      },
+      {
+        crewId: "C-norte",
+        crewName: "Crew Norte",
+        memberCount: 2,
+        presentCount: 1,
+      },
+    ]);
+  });
+
+  it("orders crews by crew name (stable, deterministic board order)", async () => {
+    const { client } = makeClient({ data: roster, error: null });
+    getSupabaseMock.mockReturnValue(client);
+
+    const { getCrews } = await import("@/lib/db/people");
+    const crews = await getCrews();
+    expect(crews.map((c) => c.crewName)).toEqual(["Crew Mill", "Crew Norte"]);
+  });
+
+  it("buckets workers with a null crew_id under their crew_name", async () => {
+    const { client } = makeClient({
+      data: [
+        { ...roster[0], crew_id: null, crew_name: "Unassigned" },
+        { ...roster[1], crew_id: null, crew_name: "Unassigned" },
+      ],
+      error: null,
+    });
+    getSupabaseMock.mockReturnValue(client);
+
+    const { getCrews } = await import("@/lib/db/people");
+    const crews = await getCrews();
+    expect(crews).toHaveLength(1);
+    expect(crews[0]).toMatchObject({
+      crewId: null,
+      crewName: "Unassigned",
+      memberCount: 2,
+    });
+  });
+
+  it("throws a labelled error when the query fails", async () => {
+    getSupabaseMock.mockReturnValue(makeClientWithError("boom").client);
+    const { getCrews } = await import("@/lib/db/people");
+    await expect(getCrews()).rejects.toThrow("getCrews: boom");
+  });
+});
+
+// ----- getCrewById (Phase 5 L2 — crew dossier anchor + members) --------------
+
+describe("getCrewById", () => {
+  const roster = [
+    {
+      worker_id: "w-03",
+      name: "Eduardo Pérez",
+      role: "Picker",
+      crew_name: "Crew Norte",
+      crew_id: "C-norte",
+      attendance: "present",
+      preferred_name: null,
+      comarca_origin: null,
+      languages: ["es"],
+      rehire_eligible: true,
+    },
+    {
+      worker_id: "w-07",
+      name: "Carlos Beker",
+      role: "Picker",
+      crew_name: "Crew Norte",
+      crew_id: "C-norte",
+      attendance: "rest-day",
+      preferred_name: null,
+      comarca_origin: null,
+      languages: ["es"],
+      rehire_eligible: true,
+    },
+    {
+      worker_id: "w-10",
+      name: "Néstor Gómez",
+      role: "Mill Operator",
+      crew_name: "Crew Mill",
+      crew_id: "C-mill",
+      attendance: "present",
+      preferred_name: null,
+      comarca_origin: null,
+      languages: ["es"],
+      rehire_eligible: true,
+    },
+  ];
+
+  it("returns the crew header + only its members (the dossier anchor)", async () => {
+    const { client, calls } = makeClient({ data: roster, error: null });
+    getSupabaseMock.mockReturnValue(client);
+
+    const { getCrewById } = await import("@/lib/db/people");
+    const crew = await getCrewById("C-norte");
+
+    expect(calls.from).toBe("v_crew_roster");
+    expect(crew).not.toBeNull();
+    expect(crew!.crewId).toBe("C-norte");
+    expect(crew!.crewName).toBe("Crew Norte");
+    expect(crew!.memberCount).toBe(2);
+    expect(crew!.presentCount).toBe(1);
+    expect(crew!.members.map((m) => m.workerId)).toEqual(["w-03", "w-07"]);
+    // Members are full roster members (so the dossier can link each → /workers/[id]).
+    expect(crew!.members[0]).toMatchObject({
+      workerId: "w-03",
+      name: "Eduardo Pérez",
+      crewId: "C-norte",
+    });
+  });
+
+  it("returns null for an unknown crew id (dossier → notFound, no fabricated crew)", async () => {
+    const { client } = makeClient({ data: roster, error: null });
+    getSupabaseMock.mockReturnValue(client);
+
+    const { getCrewById } = await import("@/lib/db/people");
+    expect(await getCrewById("C-does-not-exist")).toBeNull();
+  });
+
+  it("throws a labelled error when the query fails", async () => {
+    getSupabaseMock.mockReturnValue(makeClientWithError("boom").client);
+    const { getCrewById } = await import("@/lib/db/people");
+    await expect(getCrewById("C-norte")).rejects.toThrow("getCrewById: boom");
+  });
+});
+
 // ----- getAttendanceToday ---------------------------------------------------
 
 describe("getAttendanceToday", () => {

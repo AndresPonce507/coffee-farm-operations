@@ -1,0 +1,170 @@
+schema_version: 1
+
+journey:
+  name: "The Connected Estate"
+  goal: >
+    Enter one field fact once and have it ripple trustably to every downstream number,
+    open any named entity's whole story in one place, and ensure every control on every
+    tab is tied to real data or a real action.
+  persona: "owner (Don Ricardo) + crew-lead (Marcelino) + agronomist (Inés)"
+  jobs: [J1, J2, J3, J4]
+
+  emotional_arc:
+    start: "Skeptical / re-keying-weary — 'do the numbers even agree?'"
+    middle: "Focused — 'I entered it once and I can see it landing.'"
+    end: "Confident / proud — 'every screen agrees and I can show a buyer the whole story.'"
+
+steps:
+  - id: 1
+    name: "Capture the genesis weigh-in"
+    command: "Weigh tab → badge picker → confirm plot → enter kg → tap ripeness → Capture"
+    tui_mockup: |
+      +-- Pesaje · ${plot_name} (GPS ✓) -----------------+
+      | Picker: ${picker_name}   Peso: [ 18.4 ] kg       |
+      | Madurez: ( verde ) [ MADURO ] ( sobremaduro )    |
+      |            [ CAPTURAR ]  · sin señal: se guarda   |
+      +--------------------------------------------------+
+    shared_artifacts:
+      - name: lot_code
+        source: "lot_code_seq via record_cherry_intake (20260621093000)"
+        displayed_as: "${lot_code}"
+        consumers: ["Weigh", "Harvests", "lot dossier", "Costing", "activity feed"]
+      - name: weigh_event_kg
+        source: "weigh_event (20260622102000_weigh_capture)"
+        displayed_as: "${kg_today}"
+        consumers: ["Weigh tally", "worker dossier", "payroll", "v_weigh_by_lot"]
+    emotional_state:
+      entry: "weary — about to do the thing he hates (re-keying)"
+      exit: "expectant — 'now let's see if it ripples'"
+    integration_checkpoint: |
+      record_weigh_in must, in ONE txn: mint/find the plot-day lot, write the harvests
+      row, stamp attendance, append the immutable weigh_event, bump workers.today_kg —
+      exactly-once on idempotency_key, offline-replayable.
+    failure_modes:
+      - "Offline — the tap must queue to the S0 outbox and replay exactly-once."
+      - "Picker not on an active crew — friendly refusal, nothing written."
+      - "kg = 0 / NaN — rejected with a friendly message before the round-trip."
+    gherkin: |
+      Scenario: A weigh-in is captured offline and survives
+        Given Marcelino has badged Lupita on crew "Norte" at plot "Tizingal-Alto"
+        And the device has no signal at 1,700 masl
+        When he taps 18.4 kg, taps "ripe", and hits Capturar
+        Then the weigh-in is queued in the offline outbox
+        And when signal returns it is recorded exactly once
+        And lot "JC-7NN" is minted with 18.4 kg of cherry
+
+  - id: 2
+    name: "The ripple lands without re-entry (J1)"
+    command: "(no action — the same screen + Dashboard + Costing + lot dossier auto-update)"
+    tui_mockup: |
+      +-- Hoy ------------------------------------------+
+      | Lupita 18.4 kg · 1 lata   (v_weigh_today_by_picker)
+      | Esto también actualizó:                          |
+      |  • Tablero "Hoy" +18.4 kg  → / (season_summary_view)
+      |  • Lote ${lot_code} creado → /lots/${lot_code} ▸ |
+      |  • Costeo rastrea ${lot_code} → /costing ▸        |
+      +-------------------------------------------------+
+    shared_artifacts:
+      - name: season_today_kg
+        source: "harvests → season_summary_view (20260621093000)"
+        displayed_as: "${season_today_kg}"
+        consumers: ["Dashboard headline", "Dashboard KPI row"]
+      - name: lot_cost_per_kg
+        source: "cost_entry → mv_lot_cost (20260621094000)"
+        displayed_as: "${lot_cost_per_kg}"
+        consumers: ["Costing", "lot dossier", "Inventory"]
+    emotional_state:
+      entry: "expectant"
+      exit: "relieved — 'I entered it once and three screens already agree'"
+    integration_checkpoint: |
+      The Dashboard "Today"/season headline and the Weigh tally must derive from the SAME
+      harvests/weigh_event truth (no parallel hand-authored aggregate). The reactive proof
+      panel must name the downstream consumers it updated and link to each.
+    failure_modes:
+      - "A downstream number reads a stale hand-authored aggregate instead of the view (silent disagreement)."
+      - "The proof panel claims an update that didn't happen (over-promising)."
+    gherkin: |
+      Scenario: Dashboard headline reflects this morning's picking without re-entry
+        Given Lupita's 18.4 kg weigh-in was recorded for today
+        When Don Ricardo opens the Dashboard
+        Then the "Today" figure includes Lupita's 18.4 kg
+        And the season headline is derived from harvests, not a hand-authored total
+        And he made zero additional entries to make this true
+
+  - id: 3
+    name: "Open the whole story (J2)"
+    command: "Click any Lot / Plot / Worker / Crew anywhere → its dossier"
+    tui_mockup: |
+      +-- Lote ${lot_code} · de la cereza a la bolsa ----+
+      | cherry 18.4kg ─► Washed ─► … ─► Green 3.2kg       |
+      | EUDR ✓ · Costo ${lot_cost_per_kg}/kg · Cup 86.5   |
+      | [ abrir parcela ▸ ] [ ver costos ▸ ] [ dossier ▸ ]|
+      +--------------------------------------------------+
+    shared_artifacts:
+      - name: lot_code
+        source: "lot_code_seq"
+        displayed_as: "${lot_code}"
+        consumers: ["every tab that names a lot", "lot dossier", "⌘K entity jump"]
+    emotional_state:
+      entry: "curious — 'what's the whole story on this lot?'"
+      exit: "satisfied — 'one click, the entire life, nothing scattered'"
+    integration_checkpoint: |
+      Every entity-bearing row/card across all 17 tabs links to a dossier; the existing
+      orphan dossiers (/lots/[code], /ferment/[batch], /qc/cup/[lot]) are reachable from
+      nav + a ⌘K jump; new /plots/[id], /workers/[id], /crew/[id] dossiers exist.
+    failure_modes:
+      - "A dossier link 404s or shows a fabricated/empty story (worse than no link)."
+      - "An entity row still has a pointer cursor but no destination (the Map dead-click pattern)."
+    gherkin: |
+      Scenario: Any named entity opens its whole story in one place
+        Given the activity feed shows "lot JC-7NN cherry intake"
+        When Don Ricardo clicks the lot
+        Then he lands on /lots/JC-7NN
+        And he sees its genealogy, EUDR status, cost/kg, and cup score in one view
+        And every control there ties to real data or opens a connected entity
+
+  - id: 4
+    name: "A mistake can't slip through (J3)"
+    command: "Plan tab → schedule a pick on a plot inside an active PHI window"
+    tui_mockup: |
+      +-- Plan · ${plot_name} ---------------------------+
+      | ⚠ No se puede programar: ventana PHI activa hasta |
+      |    ${phi_clears_on}. Espera o registra otra parcela.
+      +--------------------------------------------------+
+    shared_artifacts:
+      - name: phi_clears_on
+        source: "spray_application → v_plot_phi_status (20260622106000)"
+        displayed_as: "${phi_clears_on}"
+        consumers: ["Plan (gate)", "Map", "Satellite", "Scouting", "plot dossier"]
+    emotional_state:
+      entry: "focused — scheduling tomorrow's passes"
+      exit: "reassured — 'the system caught what I'd have missed'"
+    integration_checkpoint: |
+      schedule_pasada / replan_pasada consult v_plot_phi_status and fail closed; the same
+      phi_clears_on surfaces on Map / Satellite / Scouting / plot dossier (one source).
+    failure_modes:
+      - "The gate over-blocks a plot with no spray (must not — view inner-joins spray)."
+      - "PHI shows on Plan but not on Map/plot dossier (single-source violation)."
+    gherkin: |
+      Scenario: The planner refuses a pick inside an active pre-harvest interval
+        Given plot "Tizingal-Alto" was sprayed and its PHI clears on 2026-07-02
+        When Inés tries to schedule a pick for 2026-06-29
+        Then the planner refuses with a human-readable Spanish sentence
+        And the same PHI-until date is visible on the Map and the plot dossier
+
+integration_validation:
+  shared_artifact_consistency:
+    - artifact: "lot_code"
+      must_match_across: [1, 2, 3]
+      failure_message: "A lot shown on one tab must be the same JC-NNN minted by record_weigh_in/record_cherry_intake everywhere."
+    - artifact: "season_today_kg"
+      must_match_across: [1, 2]
+      failure_message: "The Dashboard 'Today' must equal Σ today's harvests — never a hand-authored aggregate."
+    - artifact: "phi_clears_on"
+      must_match_across: [4]
+      failure_message: "PHI-until must come from v_plot_phi_status on every surface that shows it."
+
+changelog:
+  - date: "2026-06-22"
+    feature: "phase-5-connected-estate"
+    change: "Initial DISCUSS journey — J1 reactive walking skeleton + J2/J4 connectivity + J3 PHI gate, grounded in the live weigh/spine/views."

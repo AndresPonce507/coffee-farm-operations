@@ -19,10 +19,10 @@ import { LoginForm } from "@/components/auth/login-form";
 describe("LoginForm", () => {
   it("renders email + password fields and a submit button", () => {
     render(<LoginForm />);
-    expect(screen.getByLabelText("Username or email")).toBeInTheDocument();
-    expect(screen.getByLabelText("Password")).toBeInTheDocument();
+    expect(screen.getByLabelText("Usuario o correo")).toBeInTheDocument();
+    expect(screen.getByLabelText("Contraseña")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /sign in/i }),
+      screen.getByRole("button", { name: /iniciar sesión/i }),
     ).toBeInTheDocument();
   });
 
@@ -31,13 +31,13 @@ describe("LoginForm", () => {
       error: { message: "Invalid login credentials" },
     });
     render(<LoginForm />);
-    fireEvent.change(screen.getByLabelText("Username or email"), {
+    fireEvent.change(screen.getByLabelText("Usuario o correo"), {
       target: { value: "x@y.com" },
     });
-    fireEvent.change(screen.getByLabelText("Password"), {
+    fireEvent.change(screen.getByLabelText("Contraseña"), {
       target: { value: "wrong" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+    fireEvent.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
     expect(await screen.findByRole("alert")).toBeInTheDocument();
     expect(replace).not.toHaveBeenCalled();
@@ -46,13 +46,13 @@ describe("LoginForm", () => {
   it("navigates to the dashboard on successful sign-in", async () => {
     signInWithPassword.mockResolvedValueOnce({ error: null });
     render(<LoginForm />);
-    fireEvent.change(screen.getByLabelText("Username or email"), {
+    fireEvent.change(screen.getByLabelText("Usuario o correo"), {
       target: { value: "owner@example.com" },
     });
-    fireEvent.change(screen.getByLabelText("Password"), {
+    fireEvent.change(screen.getByLabelText("Contraseña"), {
       target: { value: "correct" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+    fireEvent.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
   });
@@ -60,13 +60,13 @@ describe("LoginForm", () => {
   it("appends the default domain when a bare username is entered", async () => {
     signInWithPassword.mockResolvedValueOnce({ error: null });
     render(<LoginForm />);
-    fireEvent.change(screen.getByLabelText("Username or email"), {
+    fireEvent.change(screen.getByLabelText("Usuario o correo"), {
       target: { value: "ponce507" },
     });
-    fireEvent.change(screen.getByLabelText("Password"), {
+    fireEvent.change(screen.getByLabelText("Contraseña"), {
       target: { value: "demo" },
     });
-    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+    fireEvent.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
     await waitFor(() =>
       expect(signInWithPassword).toHaveBeenCalledWith({

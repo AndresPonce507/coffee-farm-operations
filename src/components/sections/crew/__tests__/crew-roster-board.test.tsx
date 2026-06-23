@@ -175,4 +175,38 @@ describe("CrewRosterBoard", () => {
     render(<CrewRosterBoard members={[]} />);
     expect(screen.getByText("No crews on the roster")).toBeInTheDocument();
   });
+
+  it("worker name/avatar block is wrapped in an EntityLink to /workers/[workerId]", () => {
+    render(<CrewRosterBoard members={[member()]} />);
+    const card = screen.getByTestId("worker-card-w-1");
+    // WCAG 2.5.3: aria-label must contain the visible name (not slug).
+    // EntityLink renders aria-label="Abrir trabajador <name>" — name is member.preferredName or member.name.
+    const link = within(card).getByRole("link", { name: /abrir trabajador Rosa Quintero/i });
+    expect(link).toHaveAttribute("href", "/workers/w-1");
+  });
+
+  it("worker EntityLink uses preferredName when set", () => {
+    render(<CrewRosterBoard members={[member({ preferredName: "Rosita" })]} />);
+    const card = screen.getByTestId("worker-card-w-1");
+    // preferredName takes precedence in both the aria-label and visible text.
+    const link = within(card).getByRole("link", { name: /abrir trabajador Rosita/i });
+    expect(link).toHaveAttribute("href", "/workers/w-1");
+  });
+
+  it("crew column header h3 is wrapped in an EntityLink to /crew/[crewId]", () => {
+    render(<CrewRosterBoard members={[member({ crewId: "c-1" })]} />);
+    // WCAG 2.5.3: aria-label must contain the visible crew name (not slug).
+    // EntityLink renders aria-label="Abrir cuadrilla <crewName>".
+    const link = screen.getByRole("link", { name: /abrir cuadrilla Cuadrilla Volcán/i });
+    expect(link).toHaveAttribute("href", "/crew/c-1");
+    expect(within(link).getByRole("heading", { name: "Cuadrilla Volcán" })).toBeInTheDocument();
+  });
+
+  it("crew column header skips the EntityLink when crewId is null (legacy unassigned)", () => {
+    render(<CrewRosterBoard members={[member({ crewId: null })]} />);
+    // The heading still renders but without a link.
+    expect(screen.getByRole("heading", { name: "Cuadrilla Volcán" })).toBeInTheDocument();
+    // No crew link should be present.
+    expect(screen.queryByRole("link", { name: /abrir crew/i })).toBeNull();
+  });
 });

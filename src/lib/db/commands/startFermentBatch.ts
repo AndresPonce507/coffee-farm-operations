@@ -19,8 +19,8 @@ import {
 
 export interface StartFermentBatchInput {
   lotCode: string;
-  /** The recipe VERSION the batch runs against (null = start before choosing one). */
-  recipeId: string | null;
+  /** The recipe VERSION the batch runs against (required — the UI enforces a pick). */
+  recipeId: string;
   method: ProcessMethod;
   occurredAt: string;
   deviceId: string;
@@ -46,9 +46,9 @@ export function validateStartFermentBatch(
   const lotCode = trimmed(raw.lotCode);
   if (!lotCode) errors.lotCode = "Choose a lot to ferment.";
 
-  // recipe is OPTIONAL — a batch may start before a recipe is chosen (apply later).
-  const recipeRaw = trimmed(raw.recipeId);
-  const recipeId = recipeRaw === "" ? null : recipeRaw;
+  // recipe is REQUIRED at start — the UI enforces a pick before opening a batch.
+  const recipeId = trimmed(raw.recipeId);
+  if (!recipeId) errors.recipeId = "Choose a recipe version to ferment against.";
 
   const methodRaw = trimmed(raw.method);
   if (!isMethod(methodRaw)) {

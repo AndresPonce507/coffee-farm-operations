@@ -82,4 +82,49 @@ describe("ReadinessList (render/smoke)", () => {
     render(<ReadinessList rows={[]} />);
     expect(screen.getByTestId("readiness-empty")).toBeInTheDocument();
   });
+
+  it("wires each plot card to its plot dossier (no dead UI) — card wraps an EntityLink", () => {
+    render(<ReadinessList rows={[ready, early]} />);
+    const links = screen.getAllByRole("link");
+    const hrefs = links.map((a) => a.getAttribute("href"));
+    expect(hrefs).toContain("/plots/p-cuesta-piedra");
+    expect(hrefs).toContain("/plots/p-las-lagunas");
+  });
+
+  it("plot name heading is navigable — rendered inside the EntityLink anchor", () => {
+    render(<ReadinessList rows={[ready]} />);
+    // EntityLink sets aria-label="Abrir parcela <name>" — human plotName, not slug.
+    // WCAG 2.5.3: the accessible name must contain the visible label.
+    const link = screen.getByRole("link", { name: /abrir parcela Cuesta de Piedra/i });
+    expect(link).toHaveAttribute("href", "/plots/p-cuesta-piedra");
+    // the card is nested inside the link
+    expect(within(link).getByTestId("readiness-p-cuesta-piedra")).toBeInTheDocument();
+  });
+
+  it("links every card — each row has its own plot href", () => {
+    render(<ReadinessList rows={[ready, early]} />);
+    const links = screen.getAllByRole("link");
+    const hrefs = links.map((a) => a.getAttribute("href"));
+    expect(hrefs).toContain("/plots/p-cuesta-piedra");
+    expect(hrefs).toContain("/plots/p-las-lagunas");
+  });
+
+  it("does not re-declare its own focus-ring — defers to EntityLink's centralized FOCUS_RING", () => {
+    // cn() has no tailwind-merge, so a caller-supplied focus-visible:ring-* would apply
+    // ALONGSIDE EntityLink's FOCUS_RING (ring-forest/40), with an order-dependent winner.
+    // The call site must keep only layout/shape tokens and let FOCUS_RING own the ring.
+    render(<ReadinessList rows={[ready]} />);
+    const link = screen.getByRole("link", { name: /abrir parcela Cuesta de Piedra/i });
+    const cls = link.getAttribute("class") ?? "";
+    // layout/shape tokens stay
+    expect(cls).toContain("group");
+    expect(cls).toContain("block");
+    expect(cls).toContain("rounded-2xl");
+    // no conflicting caller override of the ring color — the /60 that used to fight
+    // FOCUS_RING's /40 (cn keeps both; the winner is order-dependent) must be gone.
+    expect(cls).not.toContain("ring-forest/60");
+    // exactly one ring color in force, and it's the centralized one (from FOCUS_RING)
+    expect(cls).toContain("focus-visible:ring-forest/40");
+    expect(cls.match(/focus-visible:ring-forest\//g)).toHaveLength(1);
+  });
 });

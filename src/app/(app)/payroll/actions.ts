@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import {
   computePayPeriod,
@@ -68,8 +68,7 @@ export async function computePayPeriodAction(
     hourlyRateSource: str(raw, "hourlyRateSource") ?? "daily",
   });
   if (result.ok) {
-    revalidatePath("/payroll");
-    revalidatePath("/costing");
+    reactiveRefresh("disbursement");
   }
   return toState(result, "Pay period calculated.");
 }
@@ -81,7 +80,7 @@ export async function approvePayLineAction(
   const raw = formToRecord(formData);
   const sb = await getSupabase();
   const result = await approvePayLine(sb as unknown as ApprovePayLineStore, raw);
-  if (result.ok) revalidatePath("/payroll");
+  if (result.ok) reactiveRefresh("disbursement");
   return toState(result, "Pay line approved.");
 }
 
@@ -100,8 +99,13 @@ export async function recordDisbursementAction(
     { ...raw, idempotencyKey: idempotencyKeyOrNew(raw) },
   );
   if (result.ok) {
-    revalidatePath("/payroll");
-    revalidatePath("/costing");
+    // record_disbursement books a farm-level direct-labor cost_entry — the matview
+    // input mv_lot_cost allocates across every green lot — so refresh the lot-cost
+    // matview before busting routes, or /costing cost-per-kg-green ships stale until
+    // an unrelated cost write refreshes it. Mirrors costing/actions.ts; best-effort
+    // (the append is the source of truth, the next read recovers a refresh hiccup).
+    await sb.rpc("refresh_lot_cost");
+    reactiveRefresh("disbursement");
   }
   return toState(result, "Disbursement recorded.");
 }

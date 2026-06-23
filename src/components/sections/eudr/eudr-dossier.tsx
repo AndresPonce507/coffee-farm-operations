@@ -1,6 +1,7 @@
 import { Check, X, MapPin, FileText } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { EntityLink } from "@/components/ui/entity-link";
 import { EUDR_CUTOFF, type LotEudrDossier } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -90,9 +91,13 @@ export function EudrDossier({
                 className="rounded-lg bg-card px-3 py-2 ring-1 ring-black/5"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="truncate text-sm font-medium text-ink">
+                  <EntityLink
+                    kind="plot"
+                    id={p.plotId}
+                    className="truncate text-sm font-medium text-ink underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-forest/30"
+                  >
                     {p.plotName}
-                  </span>
+                  </EntityLink>
                   <span className="shrink-0 text-[11px] text-muted-fg">
                     est. {p.establishedYear}
                   </span>

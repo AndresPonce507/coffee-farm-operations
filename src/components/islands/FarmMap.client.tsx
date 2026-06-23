@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { FeatureCollection, Polygon } from "geojson";
 
 import type { PlotFeatureProps, ReserveFeatureProps } from "@/lib/db/geo";
 import { PALETTE } from "@/lib/brand";
+import { entityHref } from "@/lib/dossier/entity-href";
+import { EntityLink } from "@/components/ui/entity-link";
 
 /**
  * FarmMap — vanilla MapLibre island (no react-map-gl, per UA-7).
@@ -76,6 +79,7 @@ function bboxOf(
 export function FarmMap({ plots, reserve }: FarmMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrimRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -181,6 +185,12 @@ export function FarmMap({ plots, reserve }: FarmMapProps) {
         hovered = undefined;
       });
 
+      // Navigate to the plot dossier on click (PRINCIPLE: no dead UI).
+      map.on("click", "plots-fill", (e) => {
+        const id = e.features?.[0]?.properties?.id;
+        if (id) router.push(entityHref.plot(String(id)));
+      });
+
       // Frame the farm.
       const bbox = bboxOf(plots, reserve);
       if (bbox) {
@@ -191,10 +201,14 @@ export function FarmMap({ plots, reserve }: FarmMapProps) {
     return () => map.remove();
     // plots/reserve are fetched once server-side and passed as a stable prop set;
     // re-running on identity change is the intended (and only) reset path.
-  }, [plots, reserve]);
+  }, [plots, reserve, router]);
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-2xl">
+    <div
+      className="relative h-full w-full overflow-hidden rounded-2xl"
+      role="application"
+      aria-label="Mapa de parcelas de la finca"
+    >
       {/* GL canvas mounts here */}
       <div ref={containerRef} className="absolute inset-0" />
       {/* AD-2 veil — opaque enough (≥0.6) that chrome never samples live canvas. */}
@@ -203,6 +217,26 @@ export function FarmMap({ plots, reserve }: FarmMapProps) {
         aria-hidden
         className="glass-scrim pointer-events-none absolute inset-0"
       />
+      {/*
+       * WCAG 2.1.1 — equivalent keyboard path: the GL canvas is pointer-only by
+       * design (MapLibre manages its own focus), so we render a visually-hidden
+       * nav listing every plot as a real EntityLink. AT users and keyboard users
+       * can tab through all plot dossiers without ever touching the canvas.
+       */}
+      <nav
+        aria-label="Lista de parcelas"
+        className="sr-only"
+      >
+        <ul>
+          {plots.features.map((f) => (
+            <li key={f.properties.id}>
+              <EntityLink kind="plot" id={f.properties.id}>
+                {f.properties.name}
+              </EntityLink>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </div>
   );
 }

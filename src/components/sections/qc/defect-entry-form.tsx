@@ -39,7 +39,7 @@ import { Segmented } from "@/components/ui/segmented";
  */
 
 const FIELD =
-  "h-10 w-full rounded-xl border border-line bg-white/70 px-3 text-sm text-ink outline-none transition focus:border-forest-300 focus:ring-2 focus:ring-forest-100";
+  "h-10 w-full rounded-xl border border-line bg-white/70 px-3 text-sm text-ink outline-none transition focus:border-forest-300 focus:ring-2 focus:ring-forest-100 aria-[invalid=true]:border-cherry aria-[invalid=true]:ring-cherry-100";
 
 const BAND_OPTIONS = [
   { id: "primary", label: "Primary" },
@@ -73,6 +73,11 @@ export function DefectEntryForm({
         Object.values(state.errors ?? {})[0] ??
         "Could not record the defect.")
       : undefined;
+  // Per-field error wiring (mirrors grade-green-form): drive aria-invalid + an
+  // inline message off the action's per-field error map.
+  const fieldError = (key: string) =>
+    state.status === "error" ? state.errors?.[key] : undefined;
+  const invalid = (key: string) => (fieldError(key) ? true : undefined);
 
   return (
     <Card className="animate-rise">
@@ -108,7 +113,11 @@ export function DefectEntryForm({
                 name="defectKind"
                 placeholder="e.g. full black, quaker, sour"
                 className={FIELD}
+                aria-invalid={invalid("defectKind")}
               />
+              {fieldError("defectKind") && (
+                <p className="text-xs text-cherry">{fieldError("defectKind")}</p>
+              )}
             </div>
             <div className="space-y-1">
               <label
@@ -126,7 +135,11 @@ export function DefectEntryForm({
                 inputMode="numeric"
                 defaultValue={1}
                 className={`${FIELD} tabular-nums`}
+                aria-invalid={invalid("count")}
               />
+              {fieldError("count") && (
+                <p className="text-xs text-cherry">{fieldError("count")}</p>
+              )}
             </div>
           </div>
 
@@ -136,6 +149,7 @@ export function DefectEntryForm({
               options={BAND_OPTIONS}
               value={category}
               onChange={(id) => setCategory(id as DefectCategory)}
+              ariaLabel="Defect band"
             />
           </div>
 

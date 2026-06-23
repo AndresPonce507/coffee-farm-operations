@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn, num } from "@/lib/utils";
 import type { PlotVegetation } from "@/lib/types";
+import { EntityLink } from "@/components/ui/entity-link";
 
 import { confidenceLabel, confidenceNote, confidenceTone } from "./confidence";
 
@@ -43,10 +44,16 @@ export function VegetationGrid({ rows }: { rows: PlotVegetation[] }) {
         const pct = hasValue ? Math.round(Math.min(1, Math.max(0, r.value as number)) * 100) : 0;
         const Icon = r.confidence === "low" ? CloudOff : r.basis === "sar" ? Radar : Satellite;
         return (
-          <Card
+          <EntityLink
             key={r.plotId}
+            kind="plot"
+            id={r.plotId}
+            anchor="vegetation"
+            className="group block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60"
+          >
+          <Card
             data-testid={`veg-${r.plotId}`}
-            className="glass-hover animate-rise overflow-hidden"
+            className="glass-hover animate-rise overflow-hidden transition group-hover:ring-1 group-hover:ring-forest/30"
           >
             <CardContent className="space-y-3">
               <div className="flex items-start justify-between gap-3">
@@ -111,6 +118,7 @@ export function VegetationGrid({ rows }: { rows: PlotVegetation[] }) {
               ) : null}
             </CardContent>
           </Card>
+          </EntityLink>
         );
       })}
     </div>

@@ -5,6 +5,7 @@ import { MapPin, Sprout } from "lucide-react";
 
 import type { CoffeeVariety, Plot, PlotStatus } from "@/lib/types";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { EntityLink } from "@/components/ui/entity-link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -89,7 +90,14 @@ function PlotCard({ plot }: PlotCardProps) {
             <span className="truncate">{plot.block}</span>
           </div>
           <h3 className="mt-1 truncate font-display text-lg font-semibold text-ink">
-            {plot.name}
+            <EntityLink
+              kind="plot"
+              id={plot.id}
+              name={plot.name}
+              className="rounded-md outline-none transition-colors hover:text-forest focus-visible:ring-2 focus-visible:ring-forest/40"
+            >
+              {plot.name}
+            </EntityLink>
           </h3>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <Badge tone="forest">{plot.variety}</Badge>
@@ -148,7 +156,14 @@ function PlotRow({ plot }: PlotRowProps) {
         </span>
         <div className="min-w-0">
           <p className="truncate font-display text-sm font-semibold text-ink">
-            {plot.name}
+            <EntityLink
+              kind="plot"
+              id={plot.id}
+              name={plot.name}
+              className="rounded-md outline-none transition-colors hover:text-forest focus-visible:ring-2 focus-visible:ring-forest/40"
+            >
+              {plot.name}
+            </EntityLink>
           </p>
           <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-fg">
             <MapPin className="h-3 w-3" aria-hidden="true" />

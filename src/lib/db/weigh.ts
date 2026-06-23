@@ -65,6 +65,26 @@ export const getWeighTodayByPicker = cache(
   },
 );
 
+/**
+ * ONE picker's today weigh tally — the /workers/[id] dossier's Kg/weigh section
+ * (Phase 5 L2, facet-02 §7). Reads the SAME `v_weigh_today_by_picker` view
+ * getWeighTodayByPicker() reads, narrowed to a single worker (the worker id is the
+ * same handle entityHref.worker links with). Returns null when the worker has not
+ * weighed in today (honest empty — the section shows its zero state, never a
+ * fabricated tally). Read-only.
+ */
+export const getWorkerWeighSummary = cache(
+  async (workerId: string): Promise<WeighByPicker | null> => {
+    const { data, error } = await (await getSupabase())
+      .from("v_weigh_today_by_picker")
+      .select("*")
+      .eq("worker_id", workerId)
+      .maybeSingle();
+    if (error) throw new Error(`getWorkerWeighSummary: ${error.message}`);
+    return data ? mapWeighByPicker(data as WeighByPickerRow) : null;
+  },
+);
+
 /* ---------------------------------------------------------------------- */
 /* Today by plot — v_weigh_today_by_plot                                  */
 /* ---------------------------------------------------------------------- */

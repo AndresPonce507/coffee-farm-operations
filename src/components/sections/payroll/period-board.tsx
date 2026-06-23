@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HeartHandshake, Users, Wallet } from "lucide-react";
 
 import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { entityHref } from "@/lib/dossier/entity-href";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import type { PayPeriodSummary } from "@/lib/db/payroll";
@@ -17,8 +18,9 @@ import { cn, longDate } from "@/lib/utils";
  *
  * The active period (the one being viewed) gets a forest ring so the board reads as
  * "you are here". Server Component — the route hands in the periods (newest first
- * from `getPayPeriods`). Each card is a Next <Link href={`/payroll/${id}`}>. The
- * only motion is the shared card rise (reduced-motion-safe in globals.css).
+ * from `getPayPeriods`). Each card is a Next <Link> into the pay-period dossier via
+ * `entityHref["pay-period"](id)` (→ /pay-period/[id]). The only motion is the shared
+ * card rise (reduced-motion-safe in globals.css).
  */
 export interface PeriodBoardProps {
   periods: PayPeriodSummary[];
@@ -85,7 +87,7 @@ export function PeriodBoard({
         return (
           <Link
             key={p.id}
-            href={`/payroll?period=${p.id}`}
+            href={entityHref["pay-period"](p.id)}
             data-testid={`period-card-${p.id}`}
             aria-current={active ? "page" : undefined}
             className={cn(

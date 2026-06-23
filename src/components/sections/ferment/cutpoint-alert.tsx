@@ -26,7 +26,7 @@ export function CutpointAlert({ cutpoint }: { cutpoint: FermentCutpoint }) {
         className="flex items-center gap-2 rounded-xl border border-white/60 bg-white/50 px-4 py-3 text-sm text-muted-fg"
       >
         <Beaker className="h-4 w-4 shrink-0 text-muted-fg/70" aria-hidden />
-        <span>No recipe applied — apply a recipe to project the cut-point.</span>
+        <span>Sin receta aplicada — aplica una receta para proyectar el punto de corte.</span>
       </div>
     );
   }
@@ -39,12 +39,12 @@ export function CutpointAlert({ cutpoint }: { cutpoint: FermentCutpoint }) {
         className="flex items-center gap-2 rounded-xl border border-white/60 bg-white/50 px-4 py-3 text-sm text-muted-fg"
       >
         <Hourglass className="h-4 w-4 shrink-0 text-muted-fg/70" aria-hidden />
-        <span>No readings yet — log a pH reading to start tracking the cut.</span>
+        <span>Sin lecturas — registra una lectura de pH para rastrear el corte.</span>
       </div>
     );
   }
 
-  const hours = hoursElapsed !== null ? `${hoursElapsed.toFixed(1)}h in` : "";
+  const hours = hoursElapsed !== null ? `${hoursElapsed.toFixed(1)}h transcurridas` : "";
 
   if (cutReached) {
     return (
@@ -53,17 +53,17 @@ export function CutpointAlert({ cutpoint }: { cutpoint: FermentCutpoint }) {
         data-testid="cutpoint-cut-now"
         className={cn(
           "flex items-center gap-3 rounded-xl border border-cherry-100 bg-cherry-100/90 px-4 py-3",
-          // text-[#7a121e] = dark cherry: 8.57:1 on bg-cherry-100/90 (WCAG-AA, AAA for
-          // the main line) — keeps the red-alert semantic where text-cherry fails at 4.21:1.
-          "text-sm font-semibold text-[#7a121e] shadow-[0_12px_32px_-12px_rgba(122,18,30,0.4)]",
+          // cherry-700 (#8f3522) = dark cherry, strong AA on bg-cherry-100/90 — keeps the
+          // red-alert emphasis via the shared token instead of a one-off hex (mirrors honey-700).
+          "text-sm font-semibold text-cherry-700 shadow-[0_12px_32px_-12px_rgba(122,18,30,0.4)]",
           "motion-safe:animate-pulse",
         )}
       >
         <AlertTriangle className="h-5 w-5 shrink-0" aria-hidden />
         <div>
-          <p>Cut now — pH {latestPh} has reached the {targetPh} target.</p>
-          <p className="mt-0.5 text-xs font-normal text-[#7a121e]">
-            {hours} · the ferment window is closing.
+          <p>Corta ahora — el pH {latestPh} alcanzó el objetivo de {targetPh}.</p>
+          <p className="mt-0.5 text-xs font-normal text-cherry-700">
+            {hours} · la ventana de fermentación se está cerrando.
           </p>
         </div>
       </div>
@@ -77,9 +77,9 @@ export function CutpointAlert({ cutpoint }: { cutpoint: FermentCutpoint }) {
     >
       <Sparkles className="h-4 w-4 shrink-0 text-forest" aria-hidden />
       <div>
-        <p className="font-medium">Tracking — pH {latestPh}, target {targetPh}.</p>
+        <p className="font-medium">Rastreando — pH {latestPh}, objetivo {targetPh}.</p>
         <p className="mt-0.5 text-xs text-forest-700/80">
-          {hours} · cut alert fires when pH reaches the target band.
+          {hours} · la alerta de corte se activa cuando el pH alcanza la banda objetivo.
         </p>
       </div>
     </div>

@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { Bug, CheckCircle2, ListTodo, ShieldAlert } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import { num } from "@/lib/utils";
 import type { IpmThresholdStatus } from "@/lib/types";
 
@@ -47,7 +49,14 @@ export function ScoutingBoard({ rows }: { rows: IpmThresholdStatus[] }) {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h3 className="truncate font-display text-base font-semibold text-ink">
-                    {r.plotName}
+                    <EntityLink
+                      kind="plot"
+                      id={r.plotId}
+                      name={r.plotName}
+                      className="rounded outline-none transition-colors hover:text-forest-700 focus-visible:ring-2 focus-visible:ring-forest-200"
+                    >
+                      {r.plotName}
+                    </EntityLink>
                   </h3>
                   <p className="mt-0.5 inline-flex items-center gap-1 text-xs capitalize text-muted-fg">
                     <Bug className="h-3.5 w-3.5" aria-hidden /> {r.pestKind}
@@ -82,9 +91,13 @@ export function ScoutingBoard({ rows }: { rows: IpmThresholdStatus[] }) {
               </div>
 
               {r.firedTaskId ? (
-                <p className="inline-flex items-center gap-1.5 text-xs font-medium text-cherry">
+                <Link
+                  href="/tasks"
+                  prefetch={false}
+                  className="inline-flex items-center gap-1.5 rounded text-xs font-medium text-cherry outline-none transition-colors hover:text-cherry/80 hover:underline focus-visible:ring-2 focus-visible:ring-forest-200"
+                >
                   <ListTodo className="h-3.5 w-3.5" aria-hidden /> Control task fired to the board
-                </p>
+                </Link>
               ) : (
                 <p className="text-xs italic text-muted-fg">
                   Below threshold — monitoring, no intervention warranted.

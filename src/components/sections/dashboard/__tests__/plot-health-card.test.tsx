@@ -56,4 +56,17 @@ describe("PlotHealthCard (smoke)", () => {
     // Paso Ancho progress = round(4100 / 12600 * 100) = 33% → "33%".
     expect(screen.getByText("33%")).toBeInTheDocument();
   });
+
+  it("wires each plot row to its plot dossier (no dead UI)", async () => {
+    const ui = await PlotHealthCard();
+    render(ui);
+
+    // Each entity-bearing row is now a real <a href> to /plots/[id].
+    const tizingal = screen.getByText("Tizingal Alto").closest("a");
+    expect(tizingal).not.toBeNull();
+    expect(tizingal).toHaveAttribute("href", "/plots/p1");
+
+    const pasoAncho = screen.getByText("Paso Ancho").closest("a");
+    expect(pasoAncho).toHaveAttribute("href", "/plots/p2");
+  });
 });

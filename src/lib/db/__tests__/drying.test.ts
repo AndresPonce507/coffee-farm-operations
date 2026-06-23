@@ -36,6 +36,10 @@ function makeClient(results: TableResults) {
         select: vi.fn(() => builder),
         order: vi.fn(() => builder),
         eq: vi.fn(() => builder),
+        limit: vi.fn(() => builder),
+        // maybeSingle() resolves to the stubbed result directly (its `data` is the
+        // single row, mirroring PostgREST's single-object response shape).
+        maybeSingle: vi.fn(() => Promise.resolve(result)),
         then: (
           onFulfilled: (value: QueryResult<unknown>) => unknown,
           onRejected?: (reason: unknown) => unknown,
@@ -216,6 +220,32 @@ describe("getDryingWeatherRisk", () => {
     const { getDryingWeatherRisk } = await import("@/lib/db/drying");
     const rows = await getDryingWeatherRisk();
     expect(rows[0].coverRisk).toBe(true);
+  });
+});
+
+describe("getReposoBand", () => {
+  it("reads the tuned reposo band from farm_season_config and coerces numeric strings", async () => {
+    stubTables({
+      farm_season_config: {
+        data: { reposo_moisture_min_pct: "9.8", reposo_moisture_max_pct: "12.2" },
+        error: null,
+      },
+    });
+    const { getReposoBand } = await import("@/lib/db/drying");
+    const band = await getReposoBand();
+    expect(band).toEqual({ min: 9.8, max: 12.2 });
+  });
+
+  it("falls back to the migration's 10.5–11.5% defaults when no config row exists", async () => {
+    stubTables({ farm_season_config: { data: null, error: null } });
+    const { getReposoBand } = await import("@/lib/db/drying");
+    expect(await getReposoBand()).toEqual({ min: 10.5, max: 11.5 });
+  });
+
+  it("throws a labelled error when the query fails", async () => {
+    stubTables({ farm_season_config: { data: null, error: { message: "cfg boom" } } });
+    const { getReposoBand } = await import("@/lib/db/drying");
+    await expect(getReposoBand()).rejects.toThrow("getReposoBand: cfg boom");
   });
 });
 

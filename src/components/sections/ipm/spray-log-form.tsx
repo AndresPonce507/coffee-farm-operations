@@ -4,26 +4,21 @@ import { useCallback, useRef, useState, type FormEvent } from "react";
 import { CheckCircle2, ShieldAlert, ShieldX, SprayCan } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { refreshAfterSpray } from "@/app/(app)/scouting/actions";
 import { logSpray, type SprayStore } from "@/lib/db/commands/logSpray";
+import type {
+  CertifiedApplicator,
+  PlotOption,
+} from "@/lib/db/ipm-applicators";
 import { uuidv7 } from "@/lib/offline/uuidv7";
+
+// Domain types live in the lib read-port (`@/lib/db/ipm-applicators`); re-exported
+// here for the existing consumers/tests that import them from the form.
+export type { CertifiedApplicator, PlotOption };
 
 const FIELD =
   "h-11 w-full rounded-xl border border-line bg-white/70 px-3 text-sm text-ink outline-none transition focus:border-forest-300 focus:ring-2 focus:ring-forest-100 disabled:opacity-50 disabled:pointer-events-none";
 const LABEL = "text-xs font-medium text-muted-fg";
-
-/** A plot the spray can be logged against. */
-export interface PlotOption {
-  id: string;
-  name: string;
-}
-
-/** An applicator + whether they currently hold a VALID pesticide-handling cert.
- *  `certified` is computed server-side from v_worker_certs_valid (S1). */
-export interface CertifiedApplicator {
-  id: string;
-  name: string;
-  certified: boolean;
-}
 
 /** ISO-ish local datetime (yyyy-MM-ddTHH:mm) for the applied-at default = now. */
 function nowLocalDatetime(): string {
@@ -150,6 +145,10 @@ export function SprayLogForm({
           // Mint a fresh exactly-once anchor so the next distinct spray is its own
           // event; a same-render double-submit reused the prior key and deduped.
           idempotencyKey.current = uuidv7();
+          // Best-effort: bust the cross-tab RSC caches (PHI gate on Plan, Scouting,
+          // Map, Satellite, plot listing + dossier) so the new spray shows on the next
+          // navigation. Fire-and-forget — never block or fail the offline-safe write.
+          void refreshAfterSpray().catch(() => {});
         } else {
           const firstFieldError = result.errors
             ? Object.values(result.errors)[0]

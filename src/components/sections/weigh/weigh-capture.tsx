@@ -18,6 +18,7 @@ import { PickerGrid, type PickerOption } from "./picker-grid";
 import { WeighNumericPad } from "./weigh-numeric-pad";
 import { RipenessPad, type RipenessValue } from "./ripeness-pad";
 import { WeighTally } from "./weigh-tally";
+import { RippleProof } from "./ripple-proof";
 
 /**
  * WeighCapture — the <3-second, glove-friendly, OFFLINE-FIRST genesis capture surface
@@ -62,7 +63,17 @@ export interface WeighCaptureDeps {
     occurredAt: string;
     deviceId: string;
     idempotencyKey: string;
-  }) => Promise<{ outcome: "queued" | "sent" | "rejected" | "error"; message?: string }>;
+  }) => Promise<{
+    outcome: "queued" | "sent" | "rejected" | "error";
+    message?: string;
+    /**
+     * The bound lot code (WeighInResult.lotCode) when the write reached the server
+     * online; `undefined` on the offline-queued path (the lot is minted server-side
+     * on drain). Threaded into <RippleProof> so the capture's downstream consumers
+     * become clickable; absent → the panel degrades to the /lots index until sync.
+     */
+    lotCode?: string;
+  }>;
 }
 
 export interface WeighCaptureProps {
@@ -116,6 +127,12 @@ export function WeighCapture({
   );
   const [localFarmKg, setLocalFarmKg] = useState(0);
 
+  // The reactive-proof panel feed: the last successful capture's bound lot code
+  // (null offline, until the outbox drains) and the kg just captured. Derived
+  // entirely from the submit result — no re-fetch, no new getter (facet-01 §2).
+  const [proofLotCode, setProofLotCode] = useState<string | null>(null);
+  const [proofDeltaKg, setProofDeltaKg] = useState<number | null>(null);
+
   const deviceIdRef = useRef(deps.deviceId ?? `weigh-${mintKey()}`);
 
   const selectedPicker = useMemo(
@@ -150,6 +167,7 @@ export function WeighCapture({
         });
       });
     setGpsBusy(true);
+    setError(null); // clear any stale error so a successful retry isn't contradicted.
     try {
       const pos = await getPos();
       if (!pos) {
@@ -174,6 +192,7 @@ export function WeighCapture({
 
   const tryScale = useCallback(async () => {
     setScaleBusy(true);
+    setError(null); // clear any stale error so a successful retry isn't contradicted.
     try {
       const r = await readScale();
       if (r.ok) {
@@ -257,6 +276,13 @@ export function WeighCapture({
         ...Object.fromEntries(Object.entries(b).filter(([k]) => k !== pickerId)),
       }));
       setLocalFarmKg((f) => f + kgNum);
+      // Surface the ripple: the bound lot code (when an online send resolved one)
+      // and the captured Δ feed the proof panel below the tally. The default
+      // offline path (EnqueueResult) carries no lot code — the lot is minted
+      // server-side on drain — so the panel degrades to the /lots index until sync.
+      const lotCode = "lotCode" in res ? res.lotCode ?? null : null;
+      setProofLotCode(lotCode);
+      setProofDeltaKg(kgNum);
       setPhase("captured");
     } catch (e) {
       setPhase("error");
@@ -272,6 +298,10 @@ export function WeighCapture({
         pickerLatas={pickerLatas}
         farmKgToday={farmKgToday + localFarmKg}
       />
+
+      {/* Reactive proof: the downstream consumers the last capture just moved,
+          each a real link. Renders null until the first capture lands. */}
+      <RippleProof lotCode={proofLotCode} lastDeltaKg={proofDeltaKg} />
 
       {/* (1) badge the picker */}
       <section aria-labelledby="weigh-picker-h" className="space-y-2.5">

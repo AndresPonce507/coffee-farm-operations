@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { EntityLink } from "@/components/ui/entity-link";
 import {
   Card,
   CardContent,
@@ -405,6 +406,11 @@ export function DisbursementForm({
   const [method, setMethod] =
     useState<(typeof DISBURSEMENT_METHODS)[number]>("yappy");
   const [signature, setSignature] = useState<string | null>(null);
+  // Mint the exactly-once anchor ONCE per mount so a double-submit reuses the same
+  // key — the RPC dedupes on it (UNIQUE idempotency_key), so two clicks book one
+  // payment. Without this the action falls back to a fresh uuid each submit, and a
+  // double-tap would create two records.
+  const [idem] = useState(() => crypto.randomUUID());
 
   const cashSigned = method === "cash-signed";
   // a cash-signed payment cannot be submitted until a signature is captured (the
@@ -441,6 +447,8 @@ export function DisbursementForm({
     >
       <input type="hidden" name="payPeriodId" value={payPeriodId} />
       <input type="hidden" name="workerId" value={worker.workerId} />
+      {/* exactly-once anchor — stable per mount, so a double-submit dedupes to one. */}
+      <input type="hidden" name="idempotencyKey" value={idem} />
       {/* the captured signature data-URL rides up as the signatureRef field. */}
       <input type="hidden" name="signatureRef" value={signature ?? ""} />
 
@@ -598,7 +606,9 @@ export function DisbursementLedger({
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-ink">
-                    {workerNames[d.workerId] ?? d.workerId}
+                    <EntityLink kind="worker" id={d.workerId} name={workerNames[d.workerId] ?? d.workerId}>
+                      {workerNames[d.workerId] ?? d.workerId}
+                    </EntityLink>
                   </p>
                   <p className="flex items-center gap-1.5 text-xs text-muted-fg">
                     <span>{METHOD_LABEL[d.method as keyof typeof METHOD_LABEL] ?? d.method}</span>

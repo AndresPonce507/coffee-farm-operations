@@ -28,7 +28,8 @@ import { renderDispatchCardText, renderDispatchCardTitle } from "./dispatch-card
  *
  * Glass discipline: the only motion is the Button's GPU transform (already
  * neutralised by prefers-reduced-motion); the shared state is conveyed by an icon +
- * text, never colour alone; `aria-live` announces the result.
+ * text, never colour alone; a single ALWAYS-MOUNTED `aria-live` region announces
+ * the result (a live region that only mounts on success is never announced by AT).
  */
 export interface DispatchShareButtonProps {
   card: DispatchCard;
@@ -41,6 +42,20 @@ export interface DispatchShareButtonProps {
   className?: string;
 }
 
+/**
+ * An owner-initiated mark-sent that returned `{ status: "error" }` (the route
+ * surfaced a failure WITHOUT throwing) must NOT count as a send. We inspect the
+ * shape defensively because the prop is accepted by SHAPE (`Promise<unknown>`).
+ */
+function markSentFailed(result: unknown): boolean {
+  return (
+    typeof result === "object" &&
+    result !== null &&
+    "status" in result &&
+    (result as { status?: unknown }).status === "error"
+  );
+}
+
 export function DispatchShareButton({
   card,
   languages = [],
@@ -51,6 +66,9 @@ export function DispatchShareButton({
   const [pending, startTransition] = useTransition();
   const [sent, setSent] = useState(card.status === "sent" || card.status === "acknowledged");
   const [error, setError] = useState<string | null>(null);
+  // The accessible status line — always-mounted (see below) so AT actually
+  // announces the transition into "Compartido".
+  const [statusMsg, setStatusMsg] = useState("");
 
   const share =
     deliver ?? ((input: DispatchDeliveryInput) => resolveAdapter(defaultDispatchChannel).deliver(input));
@@ -74,45 +92,59 @@ export function DispatchShareButton({
         const fd = new FormData();
         fd.set("runId", String(card.id));
         fd.set("channel", defaultDispatchChannel);
+        let actionResult: unknown;
         try {
-          await markSentAction(fd);
+          actionResult = await markSentAction(fd);
         } catch {
-          // the route surfaces the error; keep the button actionable for a retry.
+          // the action THREW — the send was not recorded. Keep the button
+          // un-sent and actionable so the manager can retry; never lie "sent".
+          setError("No se pudo marcar como enviado. Vuelve a intentarlo.");
+          return;
+        }
+        if (markSentFailed(actionResult)) {
+          // the action returned an error state — same: do NOT mark sent.
+          setError("No se pudo marcar como enviado. Vuelve a intentarlo.");
+          return;
         }
       }
+      // confirmed sent: write the live-region message, THEN flip the visual state.
+      setStatusMsg("Despacho compartido con la cuadrilla.");
       setSent(true);
     });
   }
 
-  if (sent) {
-    return (
-      <Button
-        type="button"
-        variant="outline"
-        disabled
-        aria-live="polite"
-        className={cn("text-forest", className)}
-      >
-        <Check className="h-4 w-4" aria-hidden="true" />
-        Shared
-      </Button>
-    );
-  }
-
   return (
     <div className="flex flex-col items-end gap-1">
-      <Button
-        type="button"
-        variant="primary"
-        onClick={onClick}
-        disabled={pending}
-        aria-label={`Share dispatch for ${card.crewName}`}
-        title="Compartir · share"
-        className={className}
-      >
-        <Share2 className="h-4 w-4" aria-hidden="true" />
-        {pending ? "Sharing…" : "Share"}
-      </Button>
+      {/* ONE always-mounted live region: it exists before the transition, so AT
+          announces the message we write into it (a freshly-mounted aria-live
+          node is never announced). */}
+      <span className="sr-only" aria-live="polite" aria-atomic="true">
+        {statusMsg}
+      </span>
+      {sent ? (
+        <Button
+          type="button"
+          variant="outline"
+          disabled
+          className={cn("text-forest", className)}
+        >
+          <Check className="h-4 w-4" aria-hidden="true" />
+          Compartido
+        </Button>
+      ) : (
+        <Button
+          type="button"
+          variant="primary"
+          onClick={onClick}
+          disabled={pending}
+          aria-label={`Compartir despacho de ${card.crewName}`}
+          title="Compartir · share"
+          className={className}
+        >
+          <Share2 className="h-4 w-4" aria-hidden="true" />
+          {pending ? "Compartiendo…" : "Compartir"}
+        </Button>
+      )}
       {error && (
         <p role="alert" className="text-xs text-cherry">
           {error}

@@ -1,6 +1,8 @@
 import { getBatches } from "@/lib/db/processing";
+import { getFermentBatches } from "@/lib/db/ferment";
 import { Badge } from "@/components/ui/badge";
 import type { BadgeTone } from "@/components/ui/badge";
+import { EntityLink } from "@/components/ui/entity-link";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { cn, kg, pct } from "@/lib/utils";
 import type { BatchStage, ProcessMethod, ProcessingBatch } from "@/lib/types";
@@ -138,9 +140,12 @@ function heroBatchId(batches: ProcessingBatch[]): string | undefined {
 function BatchTile({
   batch,
   heroId,
+  fermentId,
 }: {
   batch: ProcessingBatch;
   heroId: string | undefined;
+  /** ferment_batches UUID for this lot, or undefined when no ferment run exists. */
+  fermentId: string | undefined;
 }) {
   const accent = STAGE_ACCENT[batch.stage];
   const showMoisture = SHOW_MOISTURE[batch.stage];
@@ -154,9 +159,14 @@ function BatchTile({
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="font-mono text-sm font-semibold tracking-tight text-ink">
+        <EntityLink
+          kind="lot"
+          id={batch.lotCode}
+          name={batch.lotCode}
+          className="font-mono text-sm font-semibold tracking-tight text-ink underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
+        >
           {batch.lotCode}
-        </span>
+        </EntityLink>
         <span className="shrink-0 text-xs text-muted-fg">{batch.patio}</span>
       </div>
 
@@ -197,6 +207,18 @@ function BatchTile({
           className="h-1.5"
         />
       </div>
+
+      {fermentId !== undefined && (
+        <div className="mt-2.5 flex justify-end">
+          <EntityLink
+            kind="batch"
+            id={fermentId}
+            className="rounded-md px-2 py-0.5 text-[0.68rem] font-medium text-muted-fg ring-1 ring-inset ring-white/40 transition-colors hover:bg-white/30 hover:text-ink focus-visible:text-ink focus-visible:ring-forest/60"
+          >
+            Ver lote →
+          </EntityLink>
+        </div>
+      )}
     </article>
   );
 }
@@ -205,10 +227,13 @@ function StageColumn({
   stage,
   batches,
   heroId,
+  fermentMap,
 }: {
   stage: BatchStage;
   batches: ProcessingBatch[];
   heroId: string | undefined;
+  /** lotCode → ferment_batches UUID. Used to resolve the "Ver lote →" href. */
+  fermentMap: ReadonlyMap<string, string>;
 }) {
   const accent = STAGE_ACCENT[stage];
   const items = batches.filter((b) => b.stage === stage);
@@ -242,7 +267,14 @@ function StageColumn({
 
       <div className="cv-auto flex flex-col gap-2.5">
         {items.length > 0 ? (
-          items.map((b) => <BatchTile key={b.id} batch={b} heroId={heroId} />)
+          items.map((b) => (
+            <BatchTile
+              key={b.id}
+              batch={b}
+              heroId={heroId}
+              fermentId={fermentMap.get(b.lotCode)}
+            />
+          ))
         ) : (
           <p className="rounded-xl border border-dashed border-white/60 bg-white/40 px-3 py-6 text-center text-xs text-muted-fg">
             No lots in this stage
@@ -254,7 +286,15 @@ function StageColumn({
 }
 
 export async function StagePipeline() {
-  const batches = await getBatches();
+  const [batches, fermentBatches] = await Promise.all([
+    getBatches(),
+    getFermentBatches(),
+  ]);
+
+  // Map lotCode → ferment_batches UUID so each BatchTile can link to the correct
+  // /ferment/[uuid] route. processing_batches.id is a slug, NOT the ferment UUID.
+  const fermentMap = new Map(fermentBatches.map((fb) => [fb.lotCode, fb.id]));
+
   const heroId = heroBatchId(batches);
 
   return (
@@ -281,6 +321,7 @@ export async function StagePipeline() {
               stage={stage}
               batches={batches}
               heroId={heroId}
+              fermentMap={fermentMap}
             />
           ))}
         </div>

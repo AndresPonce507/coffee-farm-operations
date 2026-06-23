@@ -2,6 +2,7 @@ import { Coins, Layers, TrendingDown, Scale } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Tile } from "@/components/ui/tile";
+import { EntityLink } from "@/components/ui/entity-link";
 import { getLotCost } from "@/lib/db/cogs";
 import { getGreenLotAtp } from "@/lib/db/greenlots";
 import { kg, num, usd } from "@/lib/utils";
@@ -78,14 +79,31 @@ export async function CostingSummary() {
             icon={Coins}
             className="glass-hover border-r border-white/50 lg:border-r-0"
           />
-          <Tile
-            label="Cheapest lot"
-            value={cheapest ? cheapest.code : "—"}
-            sub={cheapest ? `${usd(cheapest.cost, 2)}/kg` : "no costed lots"}
-            accent="sky"
-            icon={TrendingDown}
-            className="glass-hover"
-          />
+          {cheapest ? (
+            <EntityLink
+              kind="lot"
+              id={cheapest.code}
+              className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky/60 rounded-none"
+            >
+              <Tile
+                label="Cheapest lot"
+                value={cheapest.code}
+                sub={`${usd(cheapest.cost, 2)}/kg`}
+                accent="sky"
+                icon={TrendingDown}
+                className="glass-hover"
+              />
+            </EntityLink>
+          ) : (
+            <Tile
+              label="Cheapest lot"
+              value="—"
+              sub="no costed lots"
+              accent="sky"
+              icon={TrendingDown}
+              className="glass-hover"
+            />
+          )}
         </div>
       </CardContent>
     </Card>

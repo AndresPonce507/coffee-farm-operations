@@ -2,6 +2,7 @@ import { CalendarDays, CloudRain, ListTodo, Mountain } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import { cn, num } from "@/lib/utils";
 import type { PasadaPlan, RipenessTarget } from "@/lib/types";
 
@@ -70,7 +71,9 @@ export function PasadaTimeline({ plans }: { plans: PasadaPlan[] }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <h3 className="truncate font-display text-sm font-semibold text-ink">
-                      {p.plotName}
+                      <EntityLink kind="plot" id={p.plotId} name={p.plotName}>
+                        {p.plotName}
+                      </EntityLink>
                     </h3>
                     <span className="rounded-full bg-ink/5 px-1.5 py-0.5 text-[10px] font-medium text-muted-fg">
                       Pasada {p.pasadaNumber}

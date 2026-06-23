@@ -80,28 +80,28 @@ describe("SyncStatusPill", () => {
   it("'syncing' badge uses an AA-clearing dark text tone, not the failing text-sky", () => {
     render(<SyncStatusPill state={state({ status: "syncing", syncing: true, pending: 3 })} />);
     const badge = within(screen.getByTestId("sync-pill")).getByText("3");
-    expect(badge.className).toContain("text-[#2a527d]");
+    expect(badge.className).toContain("text-sky-700");
     expect(badge.className).not.toMatch(/(^|\s)text-sky(\s|$)/);
   });
 
   it("'failed' badge uses an AA-clearing dark text tone, not the failing text-cherry", () => {
     render(<SyncStatusPill state={state({ status: "failed", dead: 2 })} />);
     const badge = within(screen.getByTestId("sync-pill")).getByText("2");
-    expect(badge.className).toContain("text-[#9e3a22]");
+    expect(badge.className).toContain("text-cherry-700");
     expect(badge.className).not.toMatch(/(^|\s)text-cherry(\s|$)/);
   });
 
   it("'syncing' pill body also carries the AA-clearing dark sky text tone", () => {
     render(<SyncStatusPill state={state({ status: "syncing", syncing: true, pending: 1 })} />);
     const pill = screen.getByTestId("sync-pill");
-    expect(pill.className).toContain("text-[#2a527d]");
+    expect(pill.className).toContain("text-sky-700");
     expect(pill.className).not.toMatch(/(^|\s)text-sky(\s|$)/);
   });
 
   it("'failed' pill body also carries the AA-clearing dark cherry text tone", () => {
     render(<SyncStatusPill state={state({ status: "failed", dead: 1 })} />);
     const pill = screen.getByTestId("sync-pill");
-    expect(pill.className).toContain("text-[#9e3a22]");
+    expect(pill.className).toContain("text-cherry-700");
     expect(pill.className).not.toMatch(/(^|\s)text-cherry(\s|$)/);
   });
 });

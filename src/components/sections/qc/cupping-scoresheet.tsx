@@ -149,6 +149,7 @@ export function CuppingScoresheet({
           ]}
           value={protocol}
           onChange={onProtocol}
+          ariaLabel="Cupping protocol"
         />
       </CardHeader>
 

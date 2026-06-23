@@ -293,7 +293,6 @@ function HoldPanel({
         >
           {state.status === "success" && (
             <div
-              role="status"
               className={cn(
                 "flex items-center gap-2 rounded-xl border border-cherry-100 bg-cherry-100/95 px-4 py-3",
                 "text-sm font-medium text-cherry shadow-[0_12px_32px_-12px_rgba(122,18,30,0.4)] backdrop-blur-md",

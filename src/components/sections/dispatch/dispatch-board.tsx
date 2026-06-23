@@ -1,6 +1,7 @@
 import { CheckCircle2, Send, Sparkles, Users } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { EntityLink } from "@/components/ui/entity-link";
 import { Tile } from "@/components/ui/tile";
 import { getDispatchToday } from "@/lib/db/dispatch";
 import { getCrewRoster } from "@/lib/db/people";
@@ -191,9 +192,14 @@ export async function DispatchBoard() {
               className="space-y-3"
             >
               <header className="flex items-center justify-between gap-3">
-                <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-muted-fg">
+                <EntityLink
+                  kind="crew"
+                  id={col.crewId}
+                  name={col.crewName}
+                  className="font-display text-sm font-semibold uppercase tracking-wide text-muted-fg underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
+                >
                   {col.crewName}
-                </h2>
+                </EntityLink>
                 <GenerateDispatchButton
                   crewId={col.crewId}
                   crewName={col.crewName}
@@ -207,7 +213,13 @@ export async function DispatchBoard() {
 
               {col.card ? (
                 <div className="space-y-3">
-                  <DispatchCardPreview card={col.card} languages={col.languages} />
+                  <EntityLink
+                    kind="dispatch"
+                    id={String(col.card.id)}
+                    className="block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-forest/60"
+                  >
+                    <DispatchCardPreview card={col.card} languages={col.languages} />
+                  </EntityLink>
                   <div className="flex justify-end">
                     <DispatchShareButton
                       card={col.card}

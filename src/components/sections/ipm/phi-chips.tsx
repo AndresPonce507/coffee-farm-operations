@@ -3,6 +3,7 @@ import { Clock, ShieldCheck, TimerReset } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import type { PlotPhiStatus } from "@/lib/types";
 
 /**
@@ -41,7 +42,14 @@ export function PhiChips({ rows }: { rows: PlotPhiStatus[] }) {
           <CardContent className="flex items-center gap-3 py-3">
             <div className="min-w-0">
               <p className="truncate font-display text-sm font-semibold text-ink">
-                {r.plotName}
+                <EntityLink
+                  kind="plot"
+                  id={r.plotId}
+                  anchor="sprays"
+                  className="transition-colors hover:text-forest-700"
+                >
+                  {r.plotName}
+                </EntityLink>
               </p>
               <p className="truncate text-[11px] text-muted-fg">{r.product}</p>
             </div>

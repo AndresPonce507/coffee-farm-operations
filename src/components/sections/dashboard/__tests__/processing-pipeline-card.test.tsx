@@ -57,4 +57,17 @@ describe("ProcessingPipelineCard (smoke)", () => {
     expect(screen.getByText("JC-103")).toBeInTheDocument();
     expect(screen.getByText("JC-101")).toBeInTheDocument();
   });
+
+  it("wires each closest-to-green lot to its lot dossier (no dead UI)", async () => {
+    const ui = await ProcessingPipelineCard();
+    render(ui);
+
+    // The lot code in each "Closest to green" row is now a real <a href> to /lots/[code].
+    const jc103 = screen.getByText("JC-103").closest("a");
+    expect(jc103).not.toBeNull();
+    expect(jc103).toHaveAttribute("href", "/lots/JC-103");
+
+    const jc101 = screen.getByText("JC-101").closest("a");
+    expect(jc101).toHaveAttribute("href", "/lots/JC-101");
+  });
 });

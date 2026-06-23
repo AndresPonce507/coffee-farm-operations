@@ -192,8 +192,11 @@ describe("GradeGreenForm (grade & materialize green lot)", () => {
     expect(await screen.findByText("JC-572")).toBeInTheDocument();
     // ...its banded SCA grade (88.5 -> Specialty)...
     expect(screen.getByText("Specialty")).toBeInTheDocument();
-    // ...and a link to the lot's traceability page.
-    const link = screen.getByRole("link", { name: /view|trace|JC-572/i });
+    // ...and an EntityLink to the lot's traceability page. The CTA routes through
+    // the entityHref SSOT (/lots/[code]) and carries an es-PA aria-label naming the
+    // minted lot (WCAG 2.5.3) — the visible "View lot traceability" text doesn't name
+    // the entity, so the human-readable green code is passed as the name.
+    const link = screen.getByRole("link", { name: /abrir lote JC-572/i });
     expect(link).toHaveAttribute("href", "/lots/JC-572");
   });
 

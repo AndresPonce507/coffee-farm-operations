@@ -8,6 +8,7 @@ import type {
   WaterPerKg,
 } from "@/lib/db/ferment";
 import { Badge } from "@/components/ui/badge";
+import { EntityLink } from "@/components/ui/entity-link";
 import {
   Card,
   CardContent,
@@ -20,6 +21,7 @@ import { longDate } from "@/lib/utils";
 import { CutpointAlert } from "./cutpoint-alert";
 import { FermentCurve } from "./ferment-curve";
 import { LogReadingForm } from "./log-reading-form";
+import { LogWaterForm } from "./log-water-form";
 import { WaterChip } from "./water-chip";
 
 /**
@@ -100,7 +102,14 @@ export function FermentTracker({
         <CardHeader>
           <div>
             <CardTitle>
-              <span className="font-mono">{batch.lotCode}</span> ferment
+              <EntityLink
+                kind="lot"
+                id={batch.lotCode}
+                className="font-mono underline-offset-4 transition-colors hover:text-forest hover:underline"
+              >
+                {batch.lotCode}
+              </EntityLink>{" "}
+              ferment
             </CardTitle>
             <CardDescription>
               <span className="inline-flex items-center gap-1">
@@ -183,8 +192,22 @@ export function FermentTracker({
           </CardContent>
         </Card>
 
-        <div className="flex items-stretch">
+        <div className="flex flex-col gap-4">
           <WaterChip water={water} />
+          <Card className="animate-rise">
+            <CardHeader>
+              <div>
+                <CardTitle>Agua de molino</CardTitle>
+                <CardDescription>
+                  Registra cada toma de agua del beneficio — alimenta el
+                  consumo por kilo
+                </CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <LogWaterForm batchId={batch.id} />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

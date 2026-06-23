@@ -19,7 +19,7 @@ export default function EudrPage() {
     <div className="space-y-6">
       <PageHeader
         title="EUDR"
-        subtitle="Deforestation-free due diligence — geolocated origin per green lot"
+        subtitle="Debida diligencia libre de deforestación — origen geolocalizado por lote verde"
       />
 
       <EudrSummary />
