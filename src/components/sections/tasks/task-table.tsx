@@ -19,10 +19,7 @@ import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/data-table";
 import { EntityLink } from "@/components/ui/entity-link";
-import { longDate, relativeDay } from "@/lib/utils";
-
-/** Fixed "today" the mock data is anchored to (matches relativeDay default). */
-const TODAY = "2026-06-20";
+import { longDate, relativeDay, today } from "@/lib/utils";
 
 /** Category pills — each TaskCategory maps to a full, literal Badge tone. */
 const CATEGORY_TONE: Record<TaskCategory, BadgeTone> = {
@@ -69,7 +66,7 @@ function isOverdue(task: FarmTask): boolean {
   if (task.status === "done") return false;
   return (
     new Date(task.due + "T00:00:00").getTime() <
-    new Date(TODAY + "T00:00:00").getTime()
+    new Date(today() + "T00:00:00").getTime()
   );
 }
 

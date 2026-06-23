@@ -146,6 +146,26 @@ describe("BatchTable (smoke)", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("shows the LOT's authoritative stage in the Badge, not the stale batch.stage", async () => {
+    // Round-A CRIT: an advance moves lots.stage but not the denormalized
+    // processing_batches.stage. The Stage Badge must render the lot's stage so the
+    // operator never sees a row that already advanced still labelled its old stage.
+    getBatchesMock.mockResolvedValue([
+      batch({ id: "b1", lotCode: "JC-561", stage: "fermentation" }),
+    ]);
+    getLotStagesMock.mockResolvedValue(stageMap({ "JC-561": "drying" }));
+    getFermentBatchesMock.mockResolvedValue([
+      fermentBatch({ id: "fb-uuid-561", lotCode: "JC-561" }),
+    ]);
+
+    const ui = await BatchTable({ lots: ["JC-561"] });
+    render(ui);
+
+    // The Badge reflects lots.stage ("Drying"), never the stale batch.stage label.
+    expect(screen.getByText("Drying")).toBeInTheDocument();
+    expect(screen.queryByText("Fermentation")).not.toBeInTheDocument();
+  });
+
   it("wraps each lot-code cell in an EntityLink navigating to /lots/[code]", async () => {
     getBatchesMock.mockResolvedValue([
       batch({ id: "b1", lotCode: "JC-564" }),

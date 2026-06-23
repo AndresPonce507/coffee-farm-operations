@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActivityItem } from "@/lib/types";
 
 // ActivityFeedCard is an async Server Component that awaits getActivity.
@@ -19,6 +19,12 @@ import { ActivityFeedCard } from "@/components/sections/dashboard/activity-feed-
 // vitest config has no globals, so RTL's auto afterEach(cleanup) isn't registered;
 // register it explicitly so each test renders into a fresh document body.
 afterEach(cleanup);
+
+// relativeDay() now defaults to the REAL local date, so pin the clock to the date the
+// fixtures are anchored to (2026-06-20) — the first item (at "2026-06-20") then labels
+// "Today" deterministically regardless of when the suite runs.
+beforeEach(() => vi.setSystemTime(new Date("2026-06-20T12:00:00")));
+afterEach(() => vi.useRealTimers());
 
 describe("ActivityFeedCard (smoke)", () => {
   it("renders the card title without throwing", async () => {

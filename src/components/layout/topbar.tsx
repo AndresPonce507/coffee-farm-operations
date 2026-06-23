@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Bell, CloudSun } from "lucide-react";
 
 import { getSupabase } from "@/lib/supabase/server";
@@ -39,13 +40,15 @@ export async function Topbar() {
           22° · Volcán
         </div>
 
-        <button
-          aria-label="Notifications"
-          className="relative grid h-9 w-9 place-items-center rounded-xl border border-line bg-card text-muted-fg transition hover:text-ink"
+        {/* Recent activity — the estate's "what just happened" feed lives on the
+            dashboard. A real navigation (no fake unread dot, no inert button). */}
+        <Link
+          href="/"
+          aria-label="Ver actividad reciente"
+          className="grid h-9 w-9 place-items-center rounded-xl border border-line bg-card text-muted-fg outline-none transition hover:text-ink focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
         >
           <Bell className="h-[18px] w-[18px]" />
-          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-cherry" />
-        </button>
+        </Link>
 
         <div className="flex items-center gap-2.5 rounded-xl border border-line bg-card py-1 pl-1 pr-3">
           <div className="grid h-7 w-7 place-items-center rounded-lg bg-forest text-[11px] font-semibold text-paper">

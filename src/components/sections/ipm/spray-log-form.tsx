@@ -4,6 +4,7 @@ import { useCallback, useRef, useState, type FormEvent } from "react";
 import { CheckCircle2, ShieldAlert, ShieldX, SprayCan } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { refreshAfterSpray } from "@/app/(app)/scouting/actions";
 import { logSpray, type SprayStore } from "@/lib/db/commands/logSpray";
 import { uuidv7 } from "@/lib/offline/uuidv7";
 
@@ -150,6 +151,10 @@ export function SprayLogForm({
           // Mint a fresh exactly-once anchor so the next distinct spray is its own
           // event; a same-render double-submit reused the prior key and deduped.
           idempotencyKey.current = uuidv7();
+          // Best-effort: bust the cross-tab RSC caches (PHI gate on Plan, Scouting,
+          // Map, Satellite, plot listing + dossier) so the new spray shows on the next
+          // navigation. Fire-and-forget — never block or fail the offline-safe write.
+          void refreshAfterSpray().catch(() => {});
         } else {
           const firstFieldError = result.errors
             ? Object.values(result.errors)[0]

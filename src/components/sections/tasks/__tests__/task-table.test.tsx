@@ -1,6 +1,12 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { FarmTask } from "@/lib/types";
+
+// Overdue keys off the REAL local date now; pin the clock to the date the fixtures
+// are anchored to (2026-06-20) so t1 (due 2026-06-18) is overdue and the future rows
+// are not, deterministically.
+beforeEach(() => vi.setSystemTime(new Date("2026-06-20T12:00:00")));
+afterEach(() => vi.useRealTimers());
 
 /**
  * TaskTable is an async Server Component that awaits getTasks() and renders one

@@ -16,7 +16,7 @@ import type { BadgeTone } from "@/components/ui/badge";
 import { EntityLink } from "@/components/ui/entity-link";
 import { getTasks } from "@/lib/db/tasks";
 import type { FarmTask, Priority, TaskCategory, TaskStatus } from "@/lib/types";
-import { cn, relativeDay } from "@/lib/utils";
+import { cn, relativeDay, today } from "@/lib/utils";
 
 /* ---- Column definitions (status → display title), rendered left→right ---- */
 const COLUMNS: ReadonlyArray<{ status: TaskStatus; title: string }> = [
@@ -64,9 +64,9 @@ const PRIORITY_LABEL: Record<Priority, string> = {
   low: "Low priority",
 };
 
-/** Overdue = due before the fixed "today" (2026-06-20) AND not yet done. */
+/** Overdue = due before today's real local date AND not yet done. */
 function isOverdue(task: FarmTask): boolean {
-  return task.status !== "done" && task.due < "2026-06-20";
+  return task.status !== "done" && task.due < today();
 }
 
 /* ---- A single task tile ---- */

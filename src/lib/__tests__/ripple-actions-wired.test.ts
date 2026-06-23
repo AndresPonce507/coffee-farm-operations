@@ -68,9 +68,9 @@ const REVALIDATE_SSOT = join(HERE, "..", "revalidate.ts");
  * Removing an entry here (once the action ships) will be enforced by check D.
  */
 const RIPPLE_KEYS_WITHOUT_WRITE_PATH: ReadonlySet<string> = new Set([
-  // "spray" -- the PHI spray Server Action is not yet built; the scouting surface
-  // reads v_plot_phi_status but the write path (log a spray event) is deferred.
-  "spray",
+  // (empty) -- every RIPPLE EventKind now has a wired caller. "spray" graduated:
+  // SprayLogForm writes client-side and fires app/scouting/actions.ts:refreshAfterSpray
+  // (which calls reactiveRefresh("spray")) on success, so its cross-tab caches bust.
 ]);
 
 /**
@@ -92,6 +92,9 @@ const KIND_TO_ACTION_FILES: Record<string, string[]> = {
   "weigh-in": ["app/weigh/actions.ts"],
   "cost-entry": ["app/costing/actions.ts"],
   "qc-hold": ["app/qc/actions.ts"],
+  // spray write is client-side (offline-safe); refreshAfterSpray() is the server seam
+  // that busts the cross-tab PHI caches via reactiveRefresh("spray").
+  spray: ["app/scouting/actions.ts"],
   disbursement: ["app/payroll/actions.ts"],
   ferment: ["app/ferment/actions.ts"],
   drying: ["app/drying/actions.ts"],

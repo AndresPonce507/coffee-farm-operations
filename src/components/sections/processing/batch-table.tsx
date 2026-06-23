@@ -173,8 +173,8 @@ export async function BatchTable({ lots }: { lots: string[] }) {
                 </TD>
 
                 <TD>
-                  <Badge tone={STAGE_TONE[batch.stage]} dot>
-                    {STAGE_LABEL[batch.stage]}
+                  <Badge tone={STAGE_TONE[lotStage]} dot>
+                    {STAGE_LABEL[lotStage]}
                   </Badge>
                 </TD>
 
@@ -200,7 +200,7 @@ export async function BatchTable({ lots }: { lots: string[] }) {
                   <div className="flex items-center gap-3">
                     <ProgressBar
                       value={batch.progressPct}
-                      tone={STAGE_FILL[batch.stage]}
+                      tone={STAGE_FILL[lotStage]}
                       className="h-1.5 flex-1"
                     />
                     <span className="w-9 shrink-0 text-right text-xs font-medium tabular-nums text-muted-fg">
