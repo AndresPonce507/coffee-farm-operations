@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Quicksand } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale } from "next-intl/server";
 import "./globals.css";
 import { ServiceWorkerRegistrar } from "@/components/layout/sw-register";
 
@@ -41,14 +43,19 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Locale from the NEXT_LOCALE cookie (resolved in src/i18n/request.ts). Stamping it
+  // on <html lang> keeps the document language correct for the active toggle state.
+  const locale = await getLocale();
   return (
-    <html lang="en" className={`${inter.variable} ${quicksand.variable}`}>
+    <html lang={locale} className={`${inter.variable} ${quicksand.variable}`}>
       <body>
-        <ServiceWorkerRegistrar />
-        {children}
+        <NextIntlClientProvider>
+          <ServiceWorkerRegistrar />
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

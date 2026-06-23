@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { Bell, CloudSun } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { getSupabase } from "@/lib/supabase/server";
 import { MobileNav } from "./mobile-nav";
 import { CommandPalette } from "./command-palette";
 import { SyncStatus } from "./sync-status-island";
+import { LanguageToggle } from "./language-toggle";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
 /**
@@ -13,6 +15,7 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
  * reads the session.
  */
 export async function Topbar() {
+  const t = await getTranslations("layout");
   const {
     data: { user },
   } = await (await getSupabase()).auth.getUser();
@@ -32,7 +35,7 @@ export async function Topbar() {
         <SyncStatus />
 
         <span className="hidden items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1.5 text-xs font-medium text-coffee sm:inline-flex">
-          Harvest season · 2026
+          {t("harvestSeason")}
         </span>
 
         <div className="hidden items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1.5 text-xs font-medium text-ink lg:inline-flex">
@@ -44,7 +47,7 @@ export async function Topbar() {
             dashboard. A real navigation (no fake unread dot, no inert button). */}
         <Link
           href="/"
-          aria-label="Ver actividad reciente"
+          aria-label={t("viewRecentActivity")}
           className="grid h-9 w-9 place-items-center rounded-xl border border-line bg-card text-muted-fg outline-none transition hover:text-ink focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
         >
           <Bell className="h-[18px] w-[18px]" />
@@ -58,9 +61,11 @@ export async function Topbar() {
             <div className="max-w-[160px] truncate text-xs font-semibold text-ink">
               {email}
             </div>
-            <div className="text-[10px] text-muted-fg">Owner</div>
+            <div className="text-[10px] text-muted-fg">{t("ownerRole")}</div>
           </div>
         </div>
+
+        <LanguageToggle />
 
         <SignOutButton />
       </div>
