@@ -1,1 +1,66 @@
-{}
+{
+  "page": {
+    "title": "Inventario",
+    "subtitle": "Café verde, clasificado y disponible para comprometer"
+  },
+  "atpTable": {
+    "title": "Green inventory",
+    "description": "Graded, located lots — available-to-promise is derived live from the reservation & shipment ledgers",
+    "sellable": "{count} sellable",
+    "emptyTitle": "No green inventory yet",
+    "emptyDescription": "Grade a finished lot in Processing to mint a located, available-to-promise green lot you can reserve against.",
+    "lot": "Lot",
+    "grade": "Grade",
+    "location": "Location",
+    "onHand": "On hand",
+    "availableToPromise": "Available to promise",
+    "reserve": "Reserve",
+    "onHandLabel": "on hand"
+  },
+  "gradeForm": {
+    "triggerDisabledLabel": "Grade green lot — no milled lots to grade",
+    "triggerLabel": "Grade green lot",
+    "triggerDisabledTitle": "No milled lots ready to grade",
+    "trigger": "Grade green lot",
+    "dialogTitle": "Grade green lot",
+    "lead": "Promote a milled lot into located, sellable green coffee",
+    "sourceLabel": "Source lot",
+    "sourcePlaceholder": "Choose a milled lot…",
+    "kgLabel": "Green kilograms",
+    "kgPlaceholder": "e.g. 240",
+    "cuppingLabel": "Cupping score",
+    "cuppingPlaceholder": "0–100",
+    "gradesAs": "Grades as",
+    "previewHint": "Enter a score to preview the SCA grade",
+    "locationLabel": "Warehouse location",
+    "locationPlaceholder": "e.g. Warehouse A · Bay 3",
+    "cancel": "Cancel",
+    "grading": "Grading…",
+    "submit": "Grade & materialize",
+    "successEyebrow": "Green lot materialized",
+    "successBody": "It’s now located, graded, and available to promise on the table.",
+    "viewTraceability": "View lot traceability",
+    "done": "Done"
+  },
+  "reservation": {
+    "soldOutLabel": "{code} sold out",
+    "reserveLabel": "Reserve {code}",
+    "soldOut": "Sold out",
+    "reserve": "Reserve",
+    "dialogLabel": "Reserve green lot {code}",
+    "title": "Reserve green lot",
+    "closeScrim": "Close",
+    "closeDrawer": "Close drawer",
+    "availableToPromise": "Available to promise",
+    "onHand": "on hand",
+    "committed": "committed",
+    "buyerLabel": "Buyer",
+    "buyerPlaceholder": "e.g. Onyx Coffee Lab",
+    "kgLabel": "Kilograms to reserve",
+    "kgPlaceholder": "up to {max}",
+    "cancel": "Cancel",
+    "holding": "Holding…",
+    "submit": "Hold reservation",
+    "heldFallback": "Reservation held."
+  }
+}

@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { CheckCircle2, Droplets } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import {
   FERMENT_IDLE,
@@ -26,6 +27,7 @@ const FIELD =
 const LABEL = "text-xs font-medium text-muted-fg";
 
 export function LogWaterForm({ batchId }: { batchId: string }) {
+  const t = useTranslations("ferment");
   const [state, formAction, pending] = useActionState<
     FermentActionState,
     FormData
@@ -58,7 +60,7 @@ export function LogWaterForm({ batchId }: { batchId: string }) {
 
       <div className="space-y-1">
         <label className={LABEL} htmlFor="water-liters">
-          Litros de agua
+          {t("logWaterForm.litersLabel")}
         </label>
         <input
           id="water-liters"
@@ -67,7 +69,7 @@ export function LogWaterForm({ batchId }: { batchId: string }) {
           step="any"
           min="0"
           inputMode="decimal"
-          placeholder="p. ej. 45"
+          placeholder={t("logWaterForm.litersPlaceholder")}
           required
           disabled={pending}
           className={FIELD}
@@ -98,7 +100,7 @@ export function LogWaterForm({ batchId }: { batchId: string }) {
         )}
         <Button type="submit" disabled={pending}>
           <Droplets className="h-4 w-4" aria-hidden />
-          {pending ? "Registrando…" : "Registrar agua de molino"}
+          {pending ? t("logWaterForm.recording") : t("logWaterForm.recordWater")}
         </Button>
       </div>
     </form>

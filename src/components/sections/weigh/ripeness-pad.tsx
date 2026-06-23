@@ -3,6 +3,7 @@
 import { useRef } from "react";
 
 import { Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import { RIPENESS_LABELS, bothLangs } from "./labels";
@@ -39,6 +40,7 @@ export interface RipenessPadProps {
 }
 
 export function RipenessPad({ value, onChange, className }: RipenessPadProps) {
+  const t = useTranslations("weigh");
   // Roving tabindex: only one radio is in the Tab order at a time (the selected
   // one, or the first when nothing is chosen). Arrow keys move the selection AND
   // DOM focus across the group, wrapping at the ends. Tap/click is untouched
@@ -71,7 +73,7 @@ export function RipenessPad({ value, onChange, className }: RipenessPadProps) {
   return (
     <div
       role="radiogroup"
-      aria-label="Ripeness"
+      aria-label={t("ripenessPad.ariaLabel")}
       onKeyDown={handleKeyDown}
       className={cn("grid grid-cols-3 gap-2.5", className)}
     >

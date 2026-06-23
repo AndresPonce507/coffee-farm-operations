@@ -2,6 +2,7 @@
 
 import { useActionState, useId, useMemo, useState } from "react";
 import { ArrowRight, CheckCircle2, Coffee, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { ScaGrade } from "@/lib/types";
 import {
@@ -72,6 +73,7 @@ export function bandScaGrade(score: number | null): ScaGrade | null {
 }
 
 export function GradeGreenForm({ sources }: { sources: string[] }) {
+  const t = useTranslations("inventory");
   const [open, setOpen] = useState(false);
   const empty = sources.length === 0;
 
@@ -82,18 +84,24 @@ export function GradeGreenForm({ sources }: { sources: string[] }) {
         disabled={empty}
         onClick={() => setOpen(true)}
         aria-label={
-          empty ? "Grade green lot — no milled lots to grade" : "Grade green lot"
+          empty
+            ? t("gradeForm.triggerDisabledLabel")
+            : t("gradeForm.triggerLabel")
         }
-        title={empty ? "No milled lots ready to grade" : undefined}
+        title={empty ? t("gradeForm.triggerDisabledTitle") : undefined}
       >
         <Sparkles className="h-4 w-4" />
-        Grade green lot
+        {t("gradeForm.trigger")}
       </Button>
 
       {/* Dialog renders its children only while open and unmounts them on close,
           so GradeBody (and its stable idempotency token + cupping-preview state)
           is fresh each time the drawer is opened. */}
-      <Dialog open={open} onClose={() => setOpen(false)} title="Grade green lot">
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        title={t("gradeForm.dialogTitle")}
+      >
         <GradeBody sources={sources} onClose={() => setOpen(false)} />
       </Dialog>
     </>
@@ -107,6 +115,7 @@ function GradeBody({
   sources: string[];
   onClose: () => void;
 }) {
+  const t = useTranslations("inventory");
   const [state, formAction, pending] = useActionState<
     InventoryActionState,
     FormData
@@ -146,9 +155,7 @@ function GradeBody({
 
   return (
     <div className="flex flex-col">
-      <p className="-mt-2 mb-3 text-sm text-muted-fg">
-        Promote a milled lot into located, sellable green coffee
-      </p>
+      <p className="-mt-2 mb-3 text-sm text-muted-fg">{t("gradeForm.lead")}</p>
 
       <form action={formAction} className="flex flex-col gap-3">
         {/* The green code is system identity — minted server-side and shown back
@@ -159,7 +166,7 @@ function GradeBody({
         {/* ── Source (milled) lot ── */}
         <div className="space-y-1">
           <label className={LABEL} htmlFor="grade-source">
-            Source lot
+            {t("gradeForm.sourceLabel")}
           </label>
           <select
             id="grade-source"
@@ -169,7 +176,7 @@ function GradeBody({
             aria-invalid={invalid("sourceCode")}
           >
             <option value="" disabled>
-              Choose a milled lot…
+              {t("gradeForm.sourcePlaceholder")}
             </option>
             {sources.map((code) => (
               <option key={code} value={code}>
@@ -185,7 +192,7 @@ function GradeBody({
         {/* ── Green kilograms ── */}
         <div className="space-y-1">
           <label className={LABEL} htmlFor="grade-kg">
-            Green kilograms
+            {t("gradeForm.kgLabel")}
           </label>
           <input
             id="grade-kg"
@@ -194,7 +201,7 @@ function GradeBody({
             min="0"
             step="any"
             inputMode="decimal"
-            placeholder="e.g. 240"
+            placeholder={t("gradeForm.kgPlaceholder")}
             className={FIELD}
             aria-invalid={invalid("kg")}
           />
@@ -206,7 +213,7 @@ function GradeBody({
         {/* ── Cupping score + live SCA grade preview ── */}
         <div className="space-y-1">
           <label className={LABEL} htmlFor="grade-cupping">
-            Cupping score
+            {t("gradeForm.cuppingLabel")}
           </label>
           <input
             id="grade-cupping"
@@ -215,7 +222,7 @@ function GradeBody({
             min="0"
             max="100"
             step="0.25"
-            placeholder="0–100"
+            placeholder={t("gradeForm.cuppingPlaceholder")}
             value={score}
             onChange={(e) => setScore(e.target.value)}
             className={FIELD}
@@ -233,14 +240,14 @@ function GradeBody({
           >
             {previewGrade ? (
               <>
-                <span>Grades as</span>
+                <span>{t("gradeForm.gradesAs")}</span>
                 <Badge tone={GRADE_TONE[previewGrade]} dot>
                   {previewGrade}
                 </Badge>
               </>
             ) : (
               <span className="text-muted-fg/70">
-                Enter a score to preview the SCA grade
+                {t("gradeForm.previewHint")}
               </span>
             )}
           </div>
@@ -249,12 +256,12 @@ function GradeBody({
         {/* ── Warehouse location ── */}
         <div className="space-y-1">
           <label className={LABEL} htmlFor="grade-location">
-            Warehouse location
+            {t("gradeForm.locationLabel")}
           </label>
           <input
             id="grade-location"
             name="location"
-            placeholder="e.g. Warehouse A · Bay 3"
+            placeholder={t("gradeForm.locationPlaceholder")}
             className={FIELD}
             aria-invalid={invalid("location")}
           />
@@ -283,10 +290,10 @@ function GradeBody({
 
         <div className="mt-2 flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onClose}>
-            Cancel
+            {t("gradeForm.cancel")}
           </Button>
           <Button type="submit" disabled={pending}>
-            {pending ? "Grading…" : "Grade & materialize"}
+            {pending ? t("gradeForm.grading") : t("gradeForm.submit")}
           </Button>
         </div>
       </form>
@@ -304,6 +311,7 @@ function GradeSuccess({
   grade: ScaGrade | null;
   onClose: () => void;
 }) {
+  const t = useTranslations("inventory");
   return (
     <div role="status" className="flex flex-col">
       <div className="rounded-2xl border border-forest-300 bg-forest-100/70 p-5 text-center shadow-[0_12px_32px_-16px_rgba(0,41,29,0.4)]">
@@ -311,7 +319,7 @@ function GradeSuccess({
           <CheckCircle2 className="h-6 w-6" aria-hidden />
         </div>
         <p className="mt-3 text-xs font-medium uppercase tracking-wide text-forest-600">
-          Green lot materialized
+          {t("gradeForm.successEyebrow")}
         </p>
         <p className="mt-1 font-mono text-xl font-semibold text-ink">
           {greenCode}
@@ -323,9 +331,7 @@ function GradeSuccess({
             </Badge>
           </div>
         )}
-        <p className="mt-3 text-xs text-muted-fg">
-          It&rsquo;s now located, graded, and available to promise on the table.
-        </p>
+        <p className="mt-3 text-xs text-muted-fg">{t("gradeForm.successBody")}</p>
       </div>
 
       <div className="mt-5 flex flex-col gap-2">
@@ -335,11 +341,11 @@ function GradeSuccess({
           name={greenCode}
           className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-forest px-4 text-sm font-medium text-paper shadow-[inset_0_1px_0_0_rgba(255,255,255,0.18),0_1px_2px_0_rgba(0,41,29,0.25)] transition-all duration-200 ease-out hover:bg-forest-700 hover:-translate-y-px"
         >
-          View lot traceability
+          {t("gradeForm.viewTraceability")}
           <ArrowRight className="h-4 w-4" aria-hidden />
         </EntityLink>
         <Button type="button" variant="ghost" onClick={onClose}>
-          Done
+          {t("gradeForm.done")}
         </Button>
       </div>
     </div>

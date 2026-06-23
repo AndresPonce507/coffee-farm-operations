@@ -1,4 +1,5 @@
 import { Clock, Droplets, SprayCan, TimerReset, User } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -15,14 +16,15 @@ import type { SprayLogEntry } from "@/lib/types";
  * every spray that ever happened is here, immutably, with its safety intervals.
  */
 export function SprayHistory({ rows }: { rows: SprayLogEntry[] }) {
+  const t = useTranslations("ipm");
   if (rows.length === 0) {
     return (
       <Card data-testid="spray-empty" className="animate-rise">
         <CardContent>
           <EmptyState
             icon={SprayCan}
-            title="No sprays logged yet"
-            description="A spray can only be logged by a certified applicator — once one is, it appears here immutably with its PHI/REI windows."
+            title={t("sprayHistory.emptyTitle")}
+            description={t("sprayHistory.emptyDescription")}
           />
         </CardContent>
       </Card>
@@ -71,10 +73,10 @@ export function SprayHistory({ rows }: { rows: SprayLogEntry[] }) {
             </div>
             <div className="flex flex-wrap gap-2 text-[11px]">
               <span className="inline-flex items-center gap-1 rounded-full border border-white/60 bg-white/55 px-2 py-0.5 font-medium text-muted-fg">
-                <Clock className="h-3 w-3" aria-hidden /> PHI {num(r.phiDays)}d
+                <Clock className="h-3 w-3" aria-hidden /> {t("sprayHistory.phiDays", { days: num(r.phiDays) })}
               </span>
               <span className="inline-flex items-center gap-1 rounded-full border border-white/60 bg-white/55 px-2 py-0.5 font-medium text-muted-fg">
-                <TimerReset className="h-3 w-3" aria-hidden /> REI {num(r.reiHours)}h
+                <TimerReset className="h-3 w-3" aria-hidden /> {t("sprayHistory.reiHours", { hours: num(r.reiHours) })}
               </span>
             </div>
           </CardContent>

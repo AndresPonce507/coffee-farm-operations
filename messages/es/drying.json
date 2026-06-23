@@ -1,1 +1,81 @@
-{}
+{
+  "page": {
+    "title": "Secado y reposo",
+    "subtitle": "El reposo que define la taza — humedad, estaciones y la compuerta de reposo"
+  },
+  "writeActions": {
+    "assignStation": "Asignar estación",
+    "recordReading": "Registrar lectura",
+    "recordDialogTitle": "Registrar lectura de humedad",
+    "assignDialogTitle": "Asignar un lote a una estación"
+  },
+  "board": {
+    "title": "Lotes en reposo · la compuerta de reposo",
+    "clearToMill": "{count} listos para trillar",
+    "resting": "{count} en reposo",
+    "emptyTitle": "Aún no hay lotes en reposo",
+    "emptyDescription": "Los lotes aparecen aquí una vez que llegan a la etapa de secado y comienzan su reposo.",
+    "advanceLink": "Avanzar a trilla →",
+    "advanceTitle": "Avanzar este lote a la trilla en la pantalla de Procesamiento",
+    "advanceAriaLabel": "Avanzar a trilla — lote {code}",
+    "millLocked": "Trilla — bloqueada",
+    "millLockedTitle": "Bloqueado por la compuerta de reposo: {reason}"
+  },
+  "reposoChip": {
+    "gateOpen": "Compuerta de reposo abierta: {reason}",
+    "gateClosed": "Compuerta de reposo cerrada: {reason}",
+    "restStable": "Reposo estable",
+    "resting": "En reposo",
+    "daySingular": "día",
+    "dayPlural": "días",
+    "clearToMill": "lista para trillar",
+    "blocked": "bloqueado"
+  },
+  "moistureCurve": {
+    "ariaSummary": "Curva de humedad del secado, {count} lecturas, última {latest}%, banda objetivo {min}–{max}%.",
+    "ariaSummaryEmpty": "Curva de humedad del secado sin lecturas todavía.",
+    "targetChip": "objetivo {min}–{max}%",
+    "noReadings": "Aún no hay lecturas de humedad",
+    "readingsCount": "{count} lecturas",
+    "latest": "última {latest}%"
+  },
+  "stations": {
+    "title": "Estaciones de secado",
+    "count": "{count} estaciones",
+    "emptyTitle": "No hay estaciones de secado",
+    "emptyDescription": "Las estaciones aparecen una vez configuradas.",
+    "kindPatio": "Patio",
+    "kindRaisedBed": "Cama elevada",
+    "kindGuardiola": "Guardiola",
+    "kindParabolic": "Parabólica",
+    "capacity": "{kind} · {cap} cap",
+    "cover": "Cubrir {day}",
+    "clear": "Despejado",
+    "overCapacity": "sobre capacidad",
+    "full": "{pct}% lleno"
+  },
+  "recordForm": {
+    "hint": "Cada lectura alimenta la curva de humedad del lote — la compuerta deja un lote listo para trillar una vez que sus lecturas reposan estables dentro de la banda 10.5–11.5%.",
+    "successTitle": "Lectura registrada",
+    "done": "Listo",
+    "lotLabel": "Lote",
+    "choose": "Elegir…",
+    "moistureLabel": "Humedad (%)",
+    "moisturePlaceholder": "ej. 11.2",
+    "cancel": "Cancelar",
+    "submit": "Registrar lectura",
+    "submitting": "Registrando…"
+  },
+  "assignForm": {
+    "hint": "Asigna el lote a una cama — una cama llena se rechaza, así que el peso comprometido nunca puede exceder la capacidad de una estación.",
+    "successTitle": "Lote asignado",
+    "done": "Listo",
+    "lotLabel": "Lote",
+    "stationLabel": "Estación",
+    "choose": "Elegir…",
+    "stationOption": "{name} · {available} libres",
+    "cancel": "Cancelar",
+    "submit": "Asignar a estación",
+    "submitting": "Asignando…"
+  }
+}

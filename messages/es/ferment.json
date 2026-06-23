@@ -1,1 +1,87 @@
-{}
+{
+  "page": {
+    "title": "Fermentación",
+    "subtitle": "Fermentación en beneficio húmedo — curvas en vivo, alertas de punto de corte, agua del eco-beneficio"
+  },
+  "board": {
+    "emptyTitle": "Aún no hay fermentaciones",
+    "emptyDescription": "Inicia una fermentación en un lote ya trillado para abrir el ciclo de calidad — curvas en vivo de pH/temp/Brix y una alerta de punto de corte antes de que se cierre la ventana.",
+    "live": "En vivo",
+    "finished": "Terminada",
+    "recipeApplied": " · receta aplicada",
+    "noRecipe": " · sin receta",
+    "started": "Iniciada {date}"
+  },
+  "cutpoint": {
+    "noRecipe": "Sin receta aplicada — aplica una receta para proyectar el punto de corte.",
+    "noReadings": "Sin lecturas — registra una lectura de pH para rastrear el corte.",
+    "hoursElapsed": "{hours}h transcurridas",
+    "cutNowTitle": "Corta ahora — el pH {latest} alcanzó el objetivo de {target}.",
+    "cutNowSub": "{hours} · la ventana de fermentación se está cerrando.",
+    "trackingTitle": "Rastreando — pH {latest}, objetivo {target}.",
+    "trackingSub": "{hours} · la alerta de corte se activa cuando el pH alcanza la banda objetivo."
+  },
+  "curve": {
+    "empty": "Aún no hay lecturas de {label}",
+    "emptySub": "Registra una lectura para iniciar la curva en vivo.",
+    "ariaSummary": "Curva de fermentación de {label}, {count} lecturas en {hours} horas, de {min} a {max}.",
+    "target": "objetivo {target}"
+  },
+  "tracker": {
+    "ferment": "fermentación",
+    "started": "Iniciada {date}",
+    "live": "En vivo",
+    "finished": "Terminada",
+    "phTitle": "pH",
+    "phDescription": "Acidez en vivo vs la banda objetivo de la receta — la curva sobre la que se hace el corte",
+    "temperatureTitle": "Temperatura",
+    "brixTitle": "Brix",
+    "logReadingTitle": "Registrar una lectura",
+    "logReadingDescription": "Toma manual ahora — una sonda BLE de pH/temp se conecta luego por la misma puerta",
+    "millWaterTitle": "Agua de molino",
+    "millWaterDescription": "Registra cada toma de agua del beneficio — alimenta el consumo por kilo"
+  },
+  "readout": {
+    "ph": "pH {value}",
+    "temp": "{value} °C",
+    "brix": "{value} °Bx"
+  },
+  "logReadingForm": {
+    "kindLabel": "Tipo",
+    "kindPh": "pH",
+    "kindTemp": "Temp °C",
+    "kindBrix": "Brix °Bx",
+    "valueLabel": "Valor de la lectura",
+    "valuePlaceholder": "p. ej. 4.8",
+    "logging": "Registrando…",
+    "logReading": "Registrar lectura"
+  },
+  "logWaterForm": {
+    "litersLabel": "Litros de agua",
+    "litersPlaceholder": "p. ej. 45",
+    "recording": "Registrando…",
+    "recordWater": "Registrar agua de molino"
+  },
+  "startButton": {
+    "startFerment": "Iniciar fermentación",
+    "dialogTitle": "Iniciar una fermentación"
+  },
+  "startForm": {
+    "lotLabel": "Lote",
+    "lotPlaceholder": "Elegir un lote…",
+    "recipeLabel": "Receta",
+    "recipePlaceholder": "Elegir una receta…",
+    "recipeOption": "{name} · v{version}",
+    "methodLabel": "Método",
+    "cancel": "Cancelar",
+    "starting": "Iniciando…",
+    "startFerment": "Iniciar fermentación",
+    "done": "Listo"
+  },
+  "waterChip": {
+    "waterUse": "Consumo de agua",
+    "noWater": "aún no hay agua registrada",
+    "perKg": "{value} L/kg",
+    "totalOver": "{liters} L sobre {kg} kg"
+  }
+}

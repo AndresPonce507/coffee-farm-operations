@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
@@ -33,17 +34,18 @@ export function PickerGrid({
   onSelect,
   className,
 }: PickerGridProps) {
+  const t = useTranslations("weigh");
   if (pickers.length === 0) {
     return (
       <p className="rounded-2xl border border-line bg-white/50 px-4 py-6 text-center text-sm text-muted-fg">
-        No active pickers on a crew yet.
+        {t("pickerGrid.empty")}
       </p>
     );
   }
   return (
     <div
       role="radiogroup"
-      aria-label="Picker"
+      aria-label={t("pickerGrid.ariaLabel")}
       className={cn(
         "grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4",
         className,

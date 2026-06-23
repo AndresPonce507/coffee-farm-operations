@@ -1,1 +1,75 @@
-{}
+{
+  "page": {
+    "title": "Plan de Cosecha",
+    "subtitle": "Parcelas ordenadas por madurez y un calendario de pasadas escalonado según el gradiente de altitud"
+  },
+  "harvestPlanner": {
+    "readyToPick": "Lista para cosechar",
+    "ofPlots": "de {count} parcelas",
+    "passesScheduled": "Pasadas programadas",
+    "passesScheduledSub": "escalonadas según el gradiente",
+    "altitudeSpan": "Rango de altitud",
+    "altitudeSpanSub": "msnm — las más bajas maduran primero",
+    "lead": "Planifica la mañana del cosechero: programa una pasada, replanifica ante un frente de lluvia o registra una señal de floración / GDD / NDVI.",
+    "readinessRankingLabel": "Ranking de madurez de parcelas",
+    "readinessHeading": "Madurez — las más listas primero",
+    "pasadaCalendarLabel": "Calendario de pasadas",
+    "pasadaCalendarHeading": "Calendario de pasadas"
+  },
+  "readinessList": {
+    "emptyTitle": "Aún no hay parcelas para planificar",
+    "emptyDescription": "Registra una floración y el flujo de GDD de una parcela y su madurez aparecerá aquí, ordenada y escalonada según el gradiente de altitud.",
+    "masl": "{altitude} msnm",
+    "readinessAria": "Madurez de {plotName}",
+    "readyOn": "Lista ~ {date}",
+    "dateUnknown": "Sin floración registrada — fecha desconocida"
+  },
+  "pasadaTimeline": {
+    "emptyTitle": "Aún no hay pasadas programadas",
+    "emptyDescription": "Programa una pasada desde una parcela lista y aparecerá aquí — escalonada según el gradiente de altitud — y genera una tarea en el tablero.",
+    "pasadaNumber": "Pasada {number}",
+    "masl": "{altitude} msnm",
+    "replanned": "replanificada · {reason}",
+    "onTheBoard": "En el tablero",
+    "ripeHigh": "madurez plena",
+    "ripeMedium": "madura",
+    "ripeLow": "pasada temprana"
+  },
+  "planActions": {
+    "schedulePasada": "Programar pasada",
+    "replanAroundRain": "Replanificar por lluvia",
+    "logMaturationSignal": "Registrar señal de madurez",
+    "scheduleDialogTitle": "Programar una pasada",
+    "replanDialogTitle": "Replanificar por lluvia",
+    "signalDialogTitle": "Registrar una señal de madurez",
+    "cancel": "Cancelar",
+    "ripenessLow": "Baja — pasada temprana",
+    "ripenessMedium": "Media — madura",
+    "ripenessHigh": "Alta — madurez plena",
+    "scheduleHint": "Programar una pasada genera una tarea en el tablero de Tareas para la cuadrilla de cosecha.",
+    "plot": "Parcela",
+    "choose": "Elegir…",
+    "season": "Temporada",
+    "pasadaHash": "Pasada #",
+    "predictedReady": "Lista prevista",
+    "ripenessTarget": "Madurez objetivo",
+    "scheduleSubmit": "Programar pasada",
+    "schedulePending": "Programando…",
+    "replanHint": "Replanificar reemplaza la pasada actual y agrega una nueva versión — el plan anterior se conserva como historial.",
+    "scheduledPass": "Pasada programada",
+    "scheduledPassOption": "{plotName} — Pasada {pasadaNumber} ({season})",
+    "newReadyDate": "Nueva fecha de lista",
+    "reason": "Motivo",
+    "reasonPlaceholder": "p. ej. frente de lluvia",
+    "replanSubmit": "Replanificar pasada",
+    "replanPending": "Replanificando…",
+    "signalHint": "Registra una floración, una actualización de GDD o una observación de NDVI — el modelo de madurez se vuelve a derivar de estos datos (deja un campo en blanco para conservar su valor anterior).",
+    "bloomDate": "Fecha de floración",
+    "gddAccumulated": "GDD acumulado",
+    "gddPlaceholder": "p. ej. 1200",
+    "ndvi": "NDVI (0–1)",
+    "ndviPlaceholder": "p. ej. 0.7",
+    "signalSubmit": "Registrar señal",
+    "signalPending": "Registrando…"
+  }
+}

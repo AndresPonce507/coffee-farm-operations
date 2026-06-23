@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { IpmBoard } from "@/components/sections/ipm/ipm-board";
 
@@ -15,12 +17,10 @@ import { IpmBoard } from "@/components/sections/ipm/ipm-board";
  * Data flows from the remote-sensing + applicator read ports.
  */
 export default function ScoutingPage() {
+  const t = useTranslations("ipm");
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Monitoreo"
-        subtitle="Monitoreo MIP por umbral económico + un registro de aplicaciones certificado y seguro según PHI/REI"
-      />
+      <PageHeader title={t("page.title")} subtitle={t("page.subtitle")} />
       <IpmBoard />
     </div>
   );

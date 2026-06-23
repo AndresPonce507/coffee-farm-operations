@@ -1,4 +1,5 @@
 import { Activity } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { FermentCurvePoint, FermentReadingKind } from "@/lib/db/ferment";
 import { cn } from "@/lib/utils";
@@ -46,6 +47,7 @@ export function FermentCurve({
   targetPh: number | null;
   kind: FermentReadingKind;
 }) {
+  const t = useTranslations("ferment");
   const series = points.filter((p) => p.readingKind === kind);
   const color = KIND_COLOR[kind];
   const label = KIND_LABEL[kind];
@@ -57,9 +59,9 @@ export function FermentCurve({
         className="flex h-[200px] flex-col items-center justify-center rounded-2xl border border-white/60 bg-white/45 text-center"
       >
         <Activity className="h-6 w-6 text-muted-fg/60" aria-hidden />
-        <p className="mt-2 text-sm text-muted-fg">No {label} readings yet</p>
+        <p className="mt-2 text-sm text-muted-fg">{t("curve.empty", { label })}</p>
         <p className="mt-0.5 text-xs text-muted-fg/70">
-          Log a reading to start the live curve.
+          {t("curve.emptySub")}
         </p>
       </div>
     );
@@ -98,7 +100,13 @@ export function FermentCurve({
   const bandY = showBand ? yAt(targetPh!) : 0;
 
   const gradId = `ferment-grad-${kind}`;
-  const ariaSummary = `${label} ferment curve, ${series.length} readings over ${xMax.toFixed(0)} hours, from ${Math.min(...values)} to ${Math.max(...values)}.`;
+  const ariaSummary = t("curve.ariaSummary", {
+    label,
+    count: series.length,
+    hours: xMax.toFixed(0),
+    min: Math.min(...values),
+    max: Math.max(...values),
+  });
 
   return (
     <div className="w-full">
@@ -207,7 +215,7 @@ export function FermentCurve({
             )}
             style={{ top: `${((bandY / VB_H) * 100).toFixed(2)}%` }}
           >
-            target {targetPh}
+            {t("curve.target", { target: targetPh })}
           </span>
         )}
       </div>

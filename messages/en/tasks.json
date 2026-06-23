@@ -1,1 +1,70 @@
-{}
+{
+  "page": {
+    "title": "Tareas",
+    "subtitle": "Labores agronómicas en toda la finca"
+  },
+  "summary": {
+    "open": "Open",
+    "openSub": "Awaiting a start",
+    "inProgress": "In progress",
+    "inProgressSub": "Underway in the field",
+    "overdue": "Overdue",
+    "overdueSub": "Past due, not done",
+    "highPriority": "High priority",
+    "highPrioritySub": "Needs attention first"
+  },
+  "board": {
+    "ariaLabel": "Task board by status",
+    "todo": "To do",
+    "inProgress": "In progress",
+    "blocked": "Blocked",
+    "done": "Done",
+    "noTasks": "No tasks",
+    "priorityHigh": "High priority",
+    "priorityMedium": "Medium priority",
+    "priorityLow": "Low priority"
+  },
+  "table": {
+    "title": "All tasks",
+    "description": "{count} agronomy tasks across the farm — pruning, picking prep, soil & pest work.",
+    "task": "Task",
+    "category": "Category",
+    "plot": "Plot",
+    "assignee": "Assignee",
+    "due": "Due",
+    "priority": "Priority",
+    "status": "Status",
+    "actions": "Actions",
+    "noTasks": "No tasks.",
+    "priorityHigh": "High",
+    "priorityMedium": "Medium",
+    "priorityLow": "Low",
+    "statusDone": "Done",
+    "statusInProgress": "In progress",
+    "statusBlocked": "Blocked",
+    "statusTodo": "To do"
+  },
+  "form": {
+    "title": "Title",
+    "titlePlaceholder": "e.g. Scout for berry borer",
+    "category": "Category",
+    "choose": "Choose…",
+    "priority": "Priority",
+    "assignee": "Assignee",
+    "plot": "Plot",
+    "farmWide": "Farm-wide",
+    "due": "Due",
+    "status": "Status",
+    "cancel": "Cancel",
+    "saving": "Saving…"
+  },
+  "actions": {
+    "newTask": "New task",
+    "addTask": "Add task",
+    "editTask": "Edit task",
+    "saveChanges": "Save changes",
+    "editLabel": "Edit {title}",
+    "deleteLabel": "Delete {title}",
+    "deleteConfirm": "Delete \"{title}\"?"
+  }
+}

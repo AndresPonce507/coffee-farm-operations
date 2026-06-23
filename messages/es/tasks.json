@@ -1,1 +1,70 @@
-{}
+{
+  "page": {
+    "title": "Tareas",
+    "subtitle": "Labores agronómicas en toda la finca"
+  },
+  "summary": {
+    "open": "Abierto",
+    "openSub": "En espera de iniciar",
+    "inProgress": "En progreso",
+    "inProgressSub": "En marcha en el campo",
+    "overdue": "Atrasado",
+    "overdueSub": "Vencido, sin terminar",
+    "highPriority": "Prioridad alta",
+    "highPrioritySub": "Requiere atención primero"
+  },
+  "board": {
+    "ariaLabel": "Tablero de tareas por estado",
+    "todo": "Por hacer",
+    "inProgress": "En progreso",
+    "blocked": "Bloqueado",
+    "done": "Listo",
+    "noTasks": "Aún no hay tareas",
+    "priorityHigh": "Prioridad alta",
+    "priorityMedium": "Prioridad media",
+    "priorityLow": "Prioridad baja"
+  },
+  "table": {
+    "title": "Todas las tareas",
+    "description": "{count} labores agronómicas en toda la finca — poda, preparación de cosecha, trabajo de suelo y plagas.",
+    "task": "Tarea",
+    "category": "Categoría",
+    "plot": "Parcela",
+    "assignee": "Responsable",
+    "due": "Vence",
+    "priority": "Prioridad",
+    "status": "Estado",
+    "actions": "Acciones",
+    "noTasks": "Aún no hay tareas.",
+    "priorityHigh": "Alta",
+    "priorityMedium": "Media",
+    "priorityLow": "Baja",
+    "statusDone": "Listo",
+    "statusInProgress": "En progreso",
+    "statusBlocked": "Bloqueado",
+    "statusTodo": "Por hacer"
+  },
+  "form": {
+    "title": "Título",
+    "titlePlaceholder": "p. ej. Monitorear broca del café",
+    "category": "Categoría",
+    "choose": "Elegir…",
+    "priority": "Prioridad",
+    "assignee": "Responsable",
+    "plot": "Parcela",
+    "farmWide": "Toda la finca",
+    "due": "Vence",
+    "status": "Estado",
+    "cancel": "Cancelar",
+    "saving": "Guardando…"
+  },
+  "actions": {
+    "newTask": "Nueva tarea",
+    "addTask": "Agregar tarea",
+    "editTask": "Editar tarea",
+    "saveChanges": "Guardar cambios",
+    "editLabel": "Editar {title}",
+    "deleteLabel": "Eliminar {title}",
+    "deleteConfirm": "¿Eliminar \"{title}\"?"
+  }
+}

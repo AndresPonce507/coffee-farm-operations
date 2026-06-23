@@ -1,24 +1,30 @@
 import { Send } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { DossierSection } from "@/components/dossier/dossier-section";
 import { EntityLink } from "@/components/ui/entity-link";
 import { Badge } from "@/components/ui/badge";
 import type { DispatchCard, DispatchStatus } from "@/lib/types";
 
+type Translator = ReturnType<typeof useTranslations>;
+
 /** Dispatch status → es-PA label + badge tone (state survives mono via text). */
-function statusMeta(status: DispatchStatus): {
+function statusMeta(
+  status: DispatchStatus,
+  t: Translator,
+): {
   label: string;
   tone: "ok" | "warn" | "neutral";
 } {
   switch (status) {
     case "acknowledged":
-      return { label: "Confirmado", tone: "ok" };
+      return { label: t("dispatchSection.statusAcknowledged"), tone: "ok" };
     case "sent":
-      return { label: "Enviado", tone: "ok" };
+      return { label: t("dispatchSection.statusSent"), tone: "ok" };
     case "draft":
-      return { label: "Borrador", tone: "warn" };
+      return { label: t("dispatchSection.statusDraft"), tone: "warn" };
     default:
-      return { label: "Reemplazado", tone: "neutral" };
+      return { label: t("dispatchSection.statusSuperseded"), tone: "neutral" };
   }
 }
 
@@ -37,17 +43,18 @@ export function CrewDispatchSection({
 }: {
   history: DispatchCard[];
 }) {
+  const t = useTranslations("crew");
   return (
     <DossierSection
       id="dispatch"
-      title="Historial de despachos"
+      title={t("dispatchSection.title")}
       count={history.length}
       empty={history.length === 0}
-      emptyLabel="Sin despachos registrados para esta cuadrilla"
+      emptyLabel={t("dispatchSection.empty")}
     >
       <ul role="list" className="space-y-3">
         {history.map((run) => {
-          const meta = statusMeta(run.status);
+          const meta = statusMeta(run.status, t);
           return (
             <li
               key={run.id}
@@ -61,14 +68,16 @@ export function CrewDispatchSection({
                   className="inline-flex items-center gap-2 font-display text-sm font-semibold text-ink transition hover:text-forest rounded-lg"
                 >
                   <Send className="h-4 w-4 text-forest" aria-hidden />
-                  Despacho del {run.dispatchDate}
+                  {t("dispatchSection.dispatchOn", { date: run.dispatchDate })}
                 </EntityLink>
                 <Badge tone={meta.tone} dot>
                   {meta.label}
                 </Badge>
               </div>
               <p className="mt-1 text-xs text-muted-fg">
-                {run.plotCount} {run.plotCount === 1 ? "parcela" : "parcelas"}
+                {run.plotCount === 1
+                  ? t("dispatchSection.plotCountOne", { count: run.plotCount })
+                  : t("dispatchSection.plotCountOther", { count: run.plotCount })}
               </p>
               {run.plots.length > 0 ? (
                 <ul className="mt-2 flex flex-wrap gap-1.5">

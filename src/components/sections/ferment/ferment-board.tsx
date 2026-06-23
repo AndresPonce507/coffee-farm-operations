@@ -1,4 +1,5 @@
 import { FlaskConical } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { FermentBatch, FermentRecipe } from "@/lib/db/ferment";
 import { Badge } from "@/components/ui/badge";
@@ -24,14 +25,15 @@ export function FermentBoard({
   lots: string[];
   recipes: FermentRecipe[];
 }) {
+  const t = useTranslations("ferment");
   if (batches.length === 0) {
     return (
       <Card className="animate-rise">
         <CardContent className="py-4">
           <EmptyState
             icon={FlaskConical}
-            title="Nothing fermenting yet"
-            description="Start a ferment on a milled-in lot to open the make-quality loop — live pH/temp/Brix curves and a cut-point alert before the window closes."
+            title={t("board.emptyTitle")}
+            description={t("board.emptyDescription")}
           />
           <div className="mt-4 flex justify-center">
             <StartFermentButton lots={lots} recipes={recipes} />
@@ -74,11 +76,11 @@ export function FermentBoard({
                   </EntityLink>
                   {live ? (
                     <Badge tone="forest" dot>
-                      Live
+                      {t("board.live")}
                     </Badge>
                   ) : (
                     <Badge tone="neutral" dot>
-                      Finished
+                      {t("board.finished")}
                     </Badge>
                   )}
                 </div>
@@ -92,10 +94,12 @@ export function FermentBoard({
                 >
                   <p className="text-xs text-muted-fg">
                     {b.method}
-                    {b.recipeId ? " · recipe applied" : " · no recipe"}
+                    {b.recipeId
+                      ? t("board.recipeApplied")
+                      : t("board.noRecipe")}
                   </p>
                   <p className="mt-1 text-[11px] text-muted-fg/70">
-                    Started {longDate(b.startedAt)}
+                    {t("board.started", { date: longDate(b.startedAt) })}
                   </p>
                 </EntityLink>
               </CardContent>

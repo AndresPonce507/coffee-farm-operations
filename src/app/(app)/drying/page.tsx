@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { DryingBoard } from "@/components/sections/drying/drying-board";
 import { StationOccupancyBoard } from "@/components/sections/drying/station-occupancy-board";
@@ -39,6 +41,7 @@ import {
  * from (app)/layout.tsx.
  */
 export default async function DryingPage() {
+  const t = await getTranslations("drying");
   const [lots, stations, weatherRisk, band] = await Promise.all([
     getDryingLots(),
     getStationOccupancy(),
@@ -53,8 +56,8 @@ export default async function DryingPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Secado y reposo"
-        subtitle="El reposo que define la taza — humedad, estaciones y la compuerta de reposo"
+        title={t("page.title")}
+        subtitle={t("page.subtitle")}
       >
         <DryingWriteActions lots={lotCodes} stations={stations} />
       </PageHeader>

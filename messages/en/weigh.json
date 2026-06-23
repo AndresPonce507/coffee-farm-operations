@@ -1,1 +1,54 @@
-{}
+{
+  "page": {
+    "title": "Pesaje",
+    "subtitle": "El evento de campo de origen — registrar, pesar, madurez · funciona sin conexión"
+  },
+  "capture": {
+    "gpsFailed": "No se pudo ubicar con GPS — confirma la parcela a mano.",
+    "scaleFailed": "Scale didn’t connect — enter the weight by hand.",
+    "checkEntry": "Check the entry.",
+    "saveFailed": "Could not save this weigh-in.",
+    "stepPicker": "1 · Badge the picker",
+    "stepPlot": "2 · Confirm the plot",
+    "stepWeigh": "3 · Weigh the lata",
+    "stepRipeness": "4 · Ripeness",
+    "plotLabel": "Plot",
+    "gpsLocating": "Buscando GPS…",
+    "gpsSet": "GPS set",
+    "gpsUse": "Use GPS",
+    "captured": "Weight captured — safe on this device",
+    "nextLata": "Next lata",
+    "captureLabel": "Capture weigh-in",
+    "saving": "Saving…",
+    "capture": "Capture"
+  },
+  "tally": {
+    "thisPicker": "This picker",
+    "todaySuffix": "{name} · today",
+    "lataOne": "{count} lata",
+    "lataMany": "{count} latas",
+    "farmToday": "Farm · today"
+  },
+  "pickerGrid": {
+    "empty": "No active pickers on a crew yet.",
+    "ariaLabel": "Picker"
+  },
+  "numericPad": {
+    "deleteLabel": "Delete last digit",
+    "decimalLabel": "Decimal point",
+    "digitLabel": "Digit {digit}",
+    "scaleConnecting": "Connecting scale…",
+    "scaleTry": "Try a Bluetooth scale"
+  },
+  "ripenessPad": {
+    "ariaLabel": "Ripeness"
+  },
+  "rippleProof": {
+    "headline": "Tu peso se reflejó en…",
+    "subhead": "Sin volver a escribir nada — toca para ver el dato ya actualizado.",
+    "dashboard": "Tablero · hoy",
+    "lot": "Lote {code}",
+    "lotPending": "Tu lote · se confirma al sincronizar",
+    "consumerLabel": "{label} {delta}"
+  }
+}

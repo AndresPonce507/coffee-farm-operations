@@ -1,4 +1,5 @@
 import { Languages, ShieldCheck, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -41,18 +42,23 @@ export interface CrewRosterBoardProps {
   className?: string;
 }
 
+type Translator = ReturnType<typeof useTranslations>;
+
 /** Attendance → badge tone + a colour-independent label. */
-function attendanceMeta(attendance: string): {
+function attendanceMeta(
+  attendance: string,
+  t: Translator,
+): {
   tone: "ok" | "warn" | "neutral";
   short: string;
 } {
   switch (attendance) {
     case "present":
-      return { tone: "ok", short: "Present" };
+      return { tone: "ok", short: t("rosterBoard.attendancePresent") };
     case "rest-day":
-      return { tone: "warn", short: "Rest day" };
+      return { tone: "warn", short: t("rosterBoard.attendanceRestDay") };
     default:
-      return { tone: "neutral", short: "Absent" };
+      return { tone: "neutral", short: t("rosterBoard.attendanceAbsent") };
   }
 }
 
@@ -80,11 +86,13 @@ function groupByCrew(
 function WorkerCard({
   member,
   certs,
+  t,
 }: {
   member: CrewRosterMember;
   certs: WorkerCert[];
+  t: Translator;
 }) {
-  const att = attendanceMeta(member.attendance);
+  const att = attendanceMeta(member.attendance, t);
   const ngabere = speaksNgabere(member.languages);
   const attendanceText = bilingual(
     ATTENDANCE_LABELS[member.attendance],
@@ -150,7 +158,9 @@ function WorkerCard({
         {validCerts > 0 ? (
           <Badge tone="forest" className="gap-1">
             <ShieldCheck className="h-3 w-3" aria-hidden="true" />
-            {validCerts} {validCerts === 1 ? "cert" : "certs"}
+            {validCerts === 1
+              ? t("rosterBoard.certCountOne", { count: validCerts })
+              : t("rosterBoard.certCountOther", { count: validCerts })}
           </Badge>
         ) : null}
       </div>
@@ -163,6 +173,7 @@ export function CrewRosterBoard({
   certsByWorker = {},
   className,
 }: CrewRosterBoardProps) {
+  const t = useTranslations("crew");
   const columns = groupByCrew(members);
   const totalPresent = members.filter((m) => m.attendance === "present").length;
 
@@ -170,13 +181,18 @@ export function CrewRosterBoard({
     <Card className={cn("animate-rise overflow-hidden", className)}>
       <CardHeader>
         <div>
-          <CardTitle>Crew roster</CardTitle>
+          <CardTitle>{t("rosterBoard.title")}</CardTitle>
           <CardDescription>
-            Field teams today · {totalPresent} of {members.length} present
+            {t("rosterBoard.description", {
+              present: totalPresent,
+              total: members.length,
+            })}
           </CardDescription>
         </div>
         <Badge tone="forest" dot>
-          {columns.length} {columns.length === 1 ? "crew" : "crews"}
+          {columns.length === 1
+            ? t("rosterBoard.crewCountOne", { count: columns.length })
+            : t("rosterBoard.crewCountOther", { count: columns.length })}
         </Badge>
       </CardHeader>
 
@@ -184,8 +200,8 @@ export function CrewRosterBoard({
         {columns.length === 0 ? (
           <EmptyState
             icon={Users}
-            title="No crews on the roster"
-            description="Once workers are assigned to a crew they appear here, grouped by team."
+            title={t("rosterBoard.emptyTitle")}
+            description={t("rosterBoard.emptyDescription")}
           />
         ) : (
           <div
@@ -201,7 +217,7 @@ export function CrewRosterBoard({
                 <section
                   key={column.crewName}
                   role="listitem"
-                  aria-label={`${column.crewName} crew`}
+                  aria-label={t("rosterBoard.crewLabel", { crew: column.crewName })}
                   className="glass-card flex flex-col gap-3 rounded-2xl p-3"
                 >
                   <header className="flex items-center justify-between gap-2 px-1">
@@ -217,7 +233,7 @@ export function CrewRosterBoard({
                       </h3>
                     )}
                     <Badge tone={present === total ? "ok" : "warn"} dot>
-                      {present}/{total} present
+                      {t("rosterBoard.presentOfTotal", { present, total })}
                     </Badge>
                   </header>
 
@@ -227,6 +243,7 @@ export function CrewRosterBoard({
                         key={member.workerId}
                         member={member}
                         certs={certsByWorker[member.workerId] ?? []}
+                        t={t}
                       />
                     ))}
                   </div>

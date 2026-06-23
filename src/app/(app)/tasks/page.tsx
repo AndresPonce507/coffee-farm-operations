@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { getPlots } from "@/lib/db/plots";
 import { getWorkers } from "@/lib/db/workers";
@@ -14,11 +16,12 @@ import { AddTaskButton } from "@/components/sections/tasks/task-actions";
  * tiles, kanban board, and the editable task table.
  */
 export default async function TasksPage() {
+  const t = await getTranslations("tasks");
   const [plots, workers] = await Promise.all([getPlots(), getWorkers()]);
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Tareas" subtitle="Labores agronómicas en toda la finca">
+      <PageHeader title={t("page.title")} subtitle={t("page.subtitle")}>
         <AddTaskButton plots={plots} workers={workers} />
       </PageHeader>
 

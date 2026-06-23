@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { EntityLink } from "@/components/ui/entity-link";
 import { entityHref } from "@/lib/dossier/entity-href";
@@ -70,20 +71,25 @@ function fmtDelta(kg: number): string {
  * Dashboard + a generic "Tu lote" pointing at the live `/harvests` tab until sync confirms
  * the code.
  */
-function deriveConsumers(lotCode: string | null, deltaKg: number): RippleConsumer[] {
+function deriveConsumers(
+  lotCode: string | null,
+  deltaKg: number,
+  t: (key: string, vars?: Record<string, string>) => string,
+): RippleConsumer[] {
   const delta = fmtDelta(deltaKg);
-  const dashboard: RippleConsumer = { label: "Tablero · hoy", href: "/", delta };
+  const dashboard: RippleConsumer = { label: t("rippleProof.dashboard"), href: "/", delta };
   const lot: RippleConsumer = lotCode
-    ? { label: `Lote ${lotCode}`, href: entityHref.lot(lotCode), delta, lotCode }
-    : { label: "Tu lote · se confirma al sincronizar", href: "/harvests", delta };
+    ? { label: t("rippleProof.lot", { code: lotCode }), href: entityHref.lot(lotCode), delta, lotCode }
+    : { label: t("rippleProof.lotPending"), href: "/harvests", delta };
   return [dashboard, lot];
 }
 
 export function RippleProof({ lotCode, lastDeltaKg, className }: RippleProofProps) {
+  const t = useTranslations("weigh");
   // Idle: no capture yet → nothing to prove. Render empty (no dead UI, no links).
   if (lastDeltaKg == null) return null;
 
-  const consumers = deriveConsumers(lotCode, lastDeltaKg);
+  const consumers = deriveConsumers(lotCode, lastDeltaKg, t);
 
   return (
     <section
@@ -98,10 +104,10 @@ export function RippleProof({ lotCode, lastDeltaKg, className }: RippleProofProp
         className="flex items-center gap-1.5 text-sm font-semibold text-forest"
       >
         <Sparkles className="h-4 w-4" aria-hidden="true" />
-        Tu peso se reflejó en…
+        {t("rippleProof.headline")}
       </h2>
       <p className="mt-0.5 text-[11px] text-muted-fg">
-        Sin volver a escribir nada — toca para ver el dato ya actualizado.
+        {t("rippleProof.subhead")}
       </p>
 
       <ul className="mt-2.5 space-y-1.5">
@@ -139,7 +145,7 @@ export function RippleProof({ lotCode, lastDeltaKg, className }: RippleProofProp
                 // links with an explicit es-PA aria-label and their own focus ring.
                 <Link
                   href={c.href}
-                  aria-label={`${c.label} ${c.delta}`}
+                  aria-label={t("rippleProof.consumerLabel", { label: c.label, delta: c.delta })}
                   className={cn(
                     rowClass,
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-100",
