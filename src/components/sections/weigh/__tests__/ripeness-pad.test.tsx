@@ -35,8 +35,8 @@ describe("RipenessPad", () => {
     const selected = screen
       .getAllByRole("radio")
       .find((r) => r.getAttribute("aria-checked") === "true")!;
-    expect(selected.className).toContain("text-[#8a2f1c]");
-    expect(selected.className).not.toMatch(/\btext-cherry\b/);
+    // overripe uses the AA dark-cherry token (cherry-700), not the lighter base accent.
+    expect(selected.className).toContain("text-cherry-700");
   });
 
   it("does not dim the bilingual sublabel with opacity-70 (it would fail AA on the selected tints)", () => {

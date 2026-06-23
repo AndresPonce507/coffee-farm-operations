@@ -178,11 +178,13 @@ describe("ripple-actions-wired -- RIPPLE is live code, not dead abstraction", ()
             "hand-rolling revalidatePath is the dead-SSOT smell flagged in the review",
         ).toContain(`reactiveRefresh("${kind}")`);
 
+        // Whitespace- and alias-tolerant: catches `revalidatePath(`, `revalidatePath (`,
+        // and an aliased import `revalidatePath as rp` (a bare substring missed both).
         expect(
-          src,
+          /\brevalidatePath\b\s*(?:\(|as\s)/.test(src),
           `${rel} must NOT import or call revalidatePath() directly -- ` +
             "all route busting must go through reactiveRefresh() so RIPPLE stays the SSOT",
-        ).not.toContain("revalidatePath(");
+        ).toBe(false);
       }
     },
   );
@@ -196,7 +198,7 @@ describe("ripple-actions-wired -- RIPPLE is live code, not dead abstraction", ()
     for (const abs of allFiles) {
       if (abs === REVALIDATE_SSOT) continue; // the SSOT itself calls revalidatePath()
       const src = readFileSync(abs, "utf-8");
-      if (src.includes("revalidatePath(")) {
+      if (/\brevalidatePath\b\s*(?:\(|as\s)/.test(src)) {
         violations.push(abs);
       }
     }

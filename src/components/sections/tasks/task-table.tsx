@@ -177,7 +177,7 @@ export async function TaskTable({
                     <span
                       className={
                         overdue
-                          ? "ml-2 text-xs text-cherry/80"
+                          ? "ml-2 text-xs text-cherry"
                           : "ml-2 text-xs text-muted-fg"
                       }
                     >

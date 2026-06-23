@@ -82,7 +82,7 @@ export function LoginForm() {
       )}
 
       <Button type="submit" disabled={pending} className="w-full">
-        {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+        {pending && <Loader2 className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" />}
         {pending ? "Iniciando sesión…" : "Iniciar sesión"}
       </Button>
     </form>

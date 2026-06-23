@@ -34,7 +34,8 @@ describe("QcStatusTable — lot code is a dossier link (L3 wire-up)", () => {
   it("links the green-lot code to its lot dossier in the mobile card list", () => {
     render(<QcStatusTable rows={ROWS} />);
     const mobile = screen.getByTestId("qc-cards-mobile");
-    const link = within(mobile).getByRole("link", { name: /JC-101/i });
+    // Query the dossier link specifically (the row also has a "Cup <code>" link).
+    const link = within(mobile).getByRole("link", { name: /abrir lote JC-101/i });
     expect(link).toHaveAttribute("href", "/lots/JC-101");
   });
 });

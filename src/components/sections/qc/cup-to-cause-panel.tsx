@@ -135,7 +135,6 @@ export function CupToCausePanel({
                     <EntityLink
                       kind="plot"
                       id={plot.id}
-                      name={`${plot.id} ${plot.name}`}
                       className="font-medium text-forest-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
                     >
                       {plot.name}

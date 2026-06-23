@@ -121,7 +121,7 @@ export function DryingBoard({
                     <Link
                       href="/processing"
                       title="Advance this lot to milling on the Processing surface"
-                      aria-label={`Advance lot ${lot.lotCode} to milling`}
+                      aria-label={`Advance to mill — lot ${lot.lotCode}`}
                       className={cn(
                         "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
                         "bg-forest text-paper hover:bg-forest-600",

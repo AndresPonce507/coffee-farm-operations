@@ -80,7 +80,9 @@ describe("CupToCausePanel — plot + lineage codes are dossier links (L3 wire-up
         plot={{ id: "p-tizingal", name: "Tizingal-Alto", altitudeMasl: 1650 }}
       />,
     );
-    const link = screen.getByRole("link", { name: /parcela p-tizingal/i });
+    // No `name` prop on the plot EntityLink → the visible text IS the accessible name
+    // (WCAG 2.5.3 Label-in-Name safe; no raw plot-id slug spoken aloud).
+    const link = screen.getByRole("link", { name: /Tizingal-Alto/i });
     expect(link).toHaveAttribute("href", "/plots/p-tizingal");
     expect(link).toHaveTextContent("Tizingal-Alto");
   });

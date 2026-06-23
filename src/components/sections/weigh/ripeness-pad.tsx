@@ -29,7 +29,7 @@ export type RipenessValue = (typeof RIPENESS_ORDER)[number];
 const ACCENT: Record<RipenessValue, { ring: string; on: string }> = {
   underripe: { ring: "ring-honey-700", on: "bg-honey-100 text-honey-700" },
   ripe: { ring: "ring-forest", on: "bg-forest-100 text-forest" },
-  overripe: { ring: "ring-cherry", on: "bg-cherry-100 text-[#8a2f1c]" },
+  overripe: { ring: "ring-cherry", on: "bg-cherry-100 text-cherry-700" },
 };
 
 export interface RipenessPadProps {

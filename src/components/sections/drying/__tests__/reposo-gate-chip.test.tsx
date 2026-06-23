@@ -60,10 +60,10 @@ describe("ReposoGateChip (smoke)", () => {
 
     // Background stays the cherry tint (red tone preserved)...
     expect(chip.className).toMatch(/bg-cherry-100/);
-    // ...but the text is the darkened, AA-safe shade — NOT the sub-floor `text-cherry`.
-    expect(chip.className).not.toMatch(/text-cherry(\b|[^-])/);
-    const textColor = chip.className.match(/text-\[(#[0-9a-fA-F]{6})\]/)?.[1];
-    expect(textColor, "blocked chip should carry an explicit AA-safe red text hex").toBeTruthy();
+    // ...but the text is the darkened, AA-safe token `text-cherry-700` (#8f3522),
+    // NOT a one-off hex and NOT the lighter base accent on its own.
+    expect(chip.className).toContain("text-cherry-700");
+    const textColor = "#8f3522"; // --color-cherry-700 (globals.css)
 
     // Independently verify the rendered pair clears AA on the real (opaque) background.
     const lin = (c: number) => {

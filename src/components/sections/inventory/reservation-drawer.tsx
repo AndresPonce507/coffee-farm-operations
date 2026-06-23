@@ -290,9 +290,10 @@ function ReservationPanel({
           aria-live="assertive"
           className="pointer-events-none absolute inset-x-4 bottom-4"
         >
+          {/* No inner role=status: the always-present outer aria-live region announces
+              the inserted toast (nesting two live regions double-announces). */}
           {state.status === "success" && (
             <div
-              role="status"
               className={cn(
                 "flex items-center gap-2 rounded-xl border border-forest-300 bg-forest-100/95 px-4 py-3",
                 "text-sm font-medium text-forest-700 shadow-[0_12px_32px_-12px_rgba(0,41,29,0.45)] backdrop-blur-md",

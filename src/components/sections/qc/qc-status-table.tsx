@@ -108,7 +108,7 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
                         <div className="flex flex-col gap-0.5">
                           <HeldBadge held={row.held} />
                           {row.held && row.holdReason && (
-                            <span className="max-w-[16rem] truncate text-xs text-cherry/80">
+                            <span className="max-w-[16rem] truncate text-xs text-cherry">
                               {row.holdReason}
                             </span>
                           )}
@@ -185,6 +185,7 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
                   <div className="mt-3 flex items-center justify-end gap-2">
                     <Link
                       href={`/qc/cup/${encodeURIComponent(row.greenLotCode)}`}
+                      aria-label={`Cup ${row.greenLotCode}`}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white/60 px-3 py-2 text-xs font-medium text-ink transition hover:border-forest-300 hover:text-forest-700"
                     >
                       <Coffee className="h-3.5 w-3.5" />

@@ -152,7 +152,7 @@ export async function BatchTable({ lots }: { lots: string[] }) {
                       <EntityLink
                         kind="batch"
                         id={fermentId}
-                        name={String(fermentId)}
+                        name={batch.lotCode}
                         className="inline-flex min-h-11 min-w-11 items-center justify-center rounded text-muted-fg transition-colors hover:text-forest-700 focus-visible:ring-2 focus-visible:ring-forest/60 outline-none"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3 opacity-50 group-hover:opacity-80">

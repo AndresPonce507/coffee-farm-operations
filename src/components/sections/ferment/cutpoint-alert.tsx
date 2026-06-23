@@ -53,16 +53,16 @@ export function CutpointAlert({ cutpoint }: { cutpoint: FermentCutpoint }) {
         data-testid="cutpoint-cut-now"
         className={cn(
           "flex items-center gap-3 rounded-xl border border-cherry-100 bg-cherry-100/90 px-4 py-3",
-          // text-[#7a121e] = dark cherry: 8.57:1 on bg-cherry-100/90 (WCAG-AA, AAA for
-          // the main line) — keeps the red-alert semantic where text-cherry fails at 4.21:1.
-          "text-sm font-semibold text-[#7a121e] shadow-[0_12px_32px_-12px_rgba(122,18,30,0.4)]",
+          // cherry-700 (#8f3522) = dark cherry, strong AA on bg-cherry-100/90 — keeps the
+          // red-alert emphasis via the shared token instead of a one-off hex (mirrors honey-700).
+          "text-sm font-semibold text-cherry-700 shadow-[0_12px_32px_-12px_rgba(122,18,30,0.4)]",
           "motion-safe:animate-pulse",
         )}
       >
         <AlertTriangle className="h-5 w-5 shrink-0" aria-hidden />
         <div>
           <p>Corta ahora — el pH {latestPh} alcanzó el objetivo de {targetPh}.</p>
-          <p className="mt-0.5 text-xs font-normal text-[#7a121e]">
+          <p className="mt-0.5 text-xs font-normal text-cherry-700">
             {hours} · la ventana de fermentación se está cerrando.
           </p>
         </div>

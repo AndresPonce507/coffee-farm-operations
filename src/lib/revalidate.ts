@@ -64,14 +64,16 @@ export const RIPPLE: Record<EventKind, readonly string[]> = {
   "cherry-intake": ["/harvests", "/", "/plots/[id]"],
   // Cost entry — the only matview edge; the action also refresh_lot_cost()s. The
   // cost-per-kg-green headline + inventory unit econ + the lot dossier cost-entries
-  // provenance (/lots/[code] reads the same allocated cost).
-  "cost-entry": ["/costing", "/inventory", "/lots/[code]"],
+  // provenance (/lots/[code]) + the plot dossier cost section (/plots/[id] reads the
+  // same allocated cost when a booking targets a plot).
+  "cost-entry": ["/costing", "/inventory", "/lots/[code]", "/plots/[id]"],
   // Spray — PHI clears-on per plot. ONE source (v_plot_phi_status) drives the gate
   // AND every display: Plan gate, Scouting, Map, Satellite, plot listing, and the
   // plot dossier's spray/PHI sections (/plots/[id]).
   spray: ["/scouting", "/plan", "/map", "/satellite", "/plots", "/plots/[id]"],
-  // QC hold / release — a held lot is un-sellable everywhere it is sellable.
-  "qc-hold": ["/qc", "/inventory", "/dispatch"],
+  // QC hold / release — a held lot is un-sellable everywhere it is sellable, and the
+  // per-lot cup route (/qc/cup/[lot]) renders the hold/release write components.
+  "qc-hold": ["/qc", "/inventory", "/dispatch", "/qc/cup/[lot]"],
   // Plot edit — plot facts feed the Plots tab, the Map, the Satellite board, and the
   // plot dossier (/plots/[id]).
   plot: ["/plots", "/map", "/satellite", "/plots/[id]"],
@@ -81,8 +83,9 @@ export const RIPPLE: Record<EventKind, readonly string[]> = {
   // and the /lots/[code] cost provenance), on top of the pay-period accrual surfaces.
   disbursement: ["/payroll", "/crew", "/costing", "/inventory", "/lots/[code]"],
   // Worker create/update/delete — worker roster feeds Workers tab, the Crew tab
-  // (crew rosters read worker rows), and the Dashboard.
-  worker: ["/workers", "/crew", "/"],
+  // (crew rosters read worker rows), the Dashboard, and the worker + crew dossiers
+  // (/workers/[id] "kg today"/contracts, /crew/[id] membership) that read the moved rows.
+  worker: ["/workers", "/crew", "/", "/workers/[id]", "/crew/[id]"],
   // Task create/update/delete/status-change — Tasks tab + Dashboard.
   task: ["/tasks", "/"],
   // Processing batch create/update/delete/advance — Processing tab, the Drying board
@@ -93,16 +96,20 @@ export const RIPPLE: Record<EventKind, readonly string[]> = {
   // Drying -- moisture reading + station assignment. Feeds Drying tab, Processing
   // (shared lot-state), and Dashboard.
   drying: ["/drying", "/processing", "/"],
-  // Dispatch -- generate / send / ack.
-  dispatch: ["/dispatch"],
-  // Inventory update -- grade green lot / reserve green lot.
-  "inventory-update": ["/inventory", "/"],
+  // Dispatch -- generate / send / ack. Moves the run dossier (/dispatch/[id]) and the
+  // crew dossier (/crew/[id] shows the crew's dispatch + acknowledgement state).
+  dispatch: ["/dispatch", "/dispatch/[id]", "/crew/[id]"],
+  // Inventory update -- grade green lot / reserve green lot. A grade mints a green lot
+  // and refresh_lot_cost()s, so it moves cost-per-kg-green (/costing), the EUDR green-lot
+  // listing (/eudr), and the lot dossier cost provenance (/lots/[code]).
+  "inventory-update": ["/inventory", "/", "/costing", "/eudr", "/lots/[code]"],
   // Crew event -- attendance, enrol, por-obra signing, certification, rehire.
   "crew-event": ["/crew", "/workers", "/"],
   // Plan event -- schedule/re-plan pasada, maturation signal.
   "plan-event": ["/plan", "/tasks", "/"],
-  // EUDR declaration -- deforestation-free assertion on a lot.
-  "eudr-declaration": ["/eudr", "/lots/[code]"],
+  // EUDR declaration -- deforestation-free assertion on a lot. Also moves the plot
+  // dossier EUDR FactChip (/plots/[id] reads the deforestation_free column the action sets).
+  "eudr-declaration": ["/eudr", "/lots/[code]", "/plots/[id]"],
 };
 
 /**

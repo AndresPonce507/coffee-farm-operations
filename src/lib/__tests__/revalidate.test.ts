@@ -91,7 +91,66 @@ describe("RIPPLE — the per-event downstream route map", () => {
     reactiveRefresh("qc-hold");
     expect(revalidatePath).toHaveBeenCalledTimes(RIPPLE["qc-hold"].length);
     for (const route of RIPPLE["qc-hold"]) {
-      expect(revalidatePath).toHaveBeenCalledWith(route);
+      // dynamic `[segment]` routes carry the "page" type (Next 15); static routes are bare.
+      if (route.includes("[")) {
+        expect(revalidatePath).toHaveBeenCalledWith(route, "page");
+      } else {
+        expect(revalidatePath).toHaveBeenCalledWith(route);
+      }
     }
+  });
+});
+
+/**
+ * Round-B reactive-graph completeness. Round-A wired reactiveRefresh into the P5
+ * Server Actions but several rows omitted a dossier/board that reads a view the write
+ * moves — a stale number on a dossier violates PRINCIPLE Rule 3. Each assertion pins
+ * one confirmed gap; the additive-kinds block gives every P5 EventKind a positive
+ * route-content assertion (previously they were only checked non-empty).
+ */
+describe("RIPPLE — Round-B cross-tab dossier completeness", () => {
+  it("dispatch ripples to the run dossier and the crew dossier it moves", () => {
+    expect(RIPPLE["dispatch"]).toContain("/dispatch/[id]");
+    expect(RIPPLE["dispatch"]).toContain("/crew/[id]");
+  });
+
+  it("worker edit ripples to the worker dossier (and the crew dossier)", () => {
+    expect(RIPPLE["worker"]).toContain("/workers/[id]");
+    expect(RIPPLE["worker"]).toContain("/crew/[id]");
+  });
+
+  it("cost-entry ripples to the plot dossier cost section", () => {
+    expect(RIPPLE["cost-entry"]).toContain("/plots/[id]");
+  });
+
+  it("inventory-update (grade/reserve green) ripples to costing, eudr and the lot dossier", () => {
+    expect(RIPPLE["inventory-update"]).toContain("/costing");
+    expect(RIPPLE["inventory-update"]).toContain("/eudr");
+    expect(RIPPLE["inventory-update"]).toContain("/lots/[code]");
+  });
+
+  it("eudr-declaration ripples to the plot dossier EUDR chip", () => {
+    expect(RIPPLE["eudr-declaration"]).toContain("/plots/[id]");
+  });
+
+  it("qc-hold ripples to the per-lot cup route that renders the QC write components", () => {
+    expect(RIPPLE["qc-hold"]).toContain("/qc/cup/[lot]");
+  });
+
+  it("qc-hold keeps its /qc, /inventory and /dispatch consumers (round-A regression guard)", () => {
+    expect(RIPPLE["qc-hold"]).toContain("/qc");
+    expect(RIPPLE["qc-hold"]).toContain("/inventory");
+    expect(RIPPLE["qc-hold"]).toContain("/dispatch");
+  });
+
+  it("every additive P5 EventKind names concrete downstream routes", () => {
+    expect(RIPPLE["ferment"]).toContain("/ferment");
+    expect(RIPPLE["drying"]).toEqual(expect.arrayContaining(["/drying", "/processing"]));
+    expect(RIPPLE["dispatch"]).toContain("/dispatch");
+    expect(RIPPLE["inventory-update"]).toContain("/inventory");
+    expect(RIPPLE["crew-event"]).toEqual(expect.arrayContaining(["/crew", "/workers"]));
+    expect(RIPPLE["plan-event"]).toEqual(expect.arrayContaining(["/plan", "/tasks"]));
+    expect(RIPPLE["eudr-declaration"]).toContain("/eudr");
+    expect(RIPPLE["task"]).toContain("/tasks");
   });
 });

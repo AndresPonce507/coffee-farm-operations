@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -49,11 +50,57 @@ function deadMarkerCount(): number {
   return out === "" ? 0 : out.split("\n").length;
 }
 
+/**
+ * The heuristic the docstring promises: a `cursor-pointer` affordance on a
+ * NON-interactive element with no handler is dead. Natively-interactive tags
+ * (a/button/label/input/select/textarea/summary/option), capitalized React
+ * components (assumed to wire their own handler), and any element carrying a
+ * handler/href/role are excluded — so the only hits are bare div/span pointers.
+ */
+const INTERACTIVE_TAG = /^(a|button|label|input|select|textarea|summary|option)$/i;
+const HAS_HANDLER =
+  /(onClick|onPointerDown|onKeyDown|href=|htmlFor=|role="(button|link|tab|menuitem|switch|checkbox|radio|option)")/;
+
+function deadCursorOffenders(): string[] {
+  let listed = "";
+  try {
+    listed = execFileSync(
+      "grep",
+      ["-rIl", "--include=*.tsx", "--exclude-dir=__tests__", "cursor-pointer", SRC],
+      { encoding: "utf8" },
+    ).trim();
+  } catch (e) {
+    if ((e as { status?: number }).status === 1) return []; // no matches
+    throw e;
+  }
+  const offenders: string[] = [];
+  for (const file of listed ? listed.split("\n") : []) {
+    const src = readFileSync(file, "utf8");
+    for (let i = src.indexOf("cursor-pointer"); i !== -1; i = src.indexOf("cursor-pointer", i + 1)) {
+      const open = src.lastIndexOf("<", i); // nearest enclosing element start
+      if (open === -1) continue;
+      const close = src.indexOf(">", i);
+      const tagBlock = src.slice(open, close === -1 ? i + 200 : close + 1);
+      const tag = tagBlock.match(/^<\s*([A-Za-z][\w.]*)/)?.[1] ?? "";
+      const interactive =
+        INTERACTIVE_TAG.test(tag) || /^[A-Z]/.test(tag) || HAS_HANDLER.test(tagBlock);
+      if (!interactive) {
+        offenders.push(`${file.replace(SRC, "src")}: <${tag}> has cursor-pointer but no handler`);
+      }
+    }
+  }
+  return offenders;
+}
+
 // UN-SKIPPED (Phase 5 L3): FarmMap polygon click is now wired to
 // `router.push(entityHref.plot(...))` — the last DEAD affordance is gone.
 // This guard is the machine enforcement of KPI 3 (DEAD = 0).
 describe("no-dead-ui static guard", () => {
   it("has zero DEAD-marked affordances across src (KPI 3 = DEAD 0)", () => {
     expect(deadMarkerCount()).toBe(0);
+  });
+
+  it("has zero cursor-pointer affordances on non-interactive elements (the heuristic, not just // DEAD:)", () => {
+    expect(deadCursorOffenders()).toEqual([]);
   });
 });

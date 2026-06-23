@@ -5,13 +5,13 @@ import { EmptyState } from "@/components/ui/empty-state";
  *
  * Server Component (no hooks, no handlers). Gives every section a localized
  * heading, an optional count badge, a deep-linkable #anchor id (so
- * /plots/[id]#satellite scrolls here), and a uniform es-PA empty state. A
+ * /plots/[id]#vegetation scrolls here), and a uniform es-PA empty state. A
  * concrete <XSection data={…}> takes already-fetched domain props (the page
  * owns Promise.all) and wraps its body in this so all 7 dossiers share
  * section chrome. scroll-mt-24 keeps an anchored section clear of the topbar.
  */
 export interface DossierSectionProps {
-  /** Hash anchor, e.g. "satellite" → deep-linkable #satellite. */
+  /** Hash anchor, e.g. "vegetation" → deep-linkable #vegetation. */
   id: string;
   /** Localized section heading. */
   title: string;

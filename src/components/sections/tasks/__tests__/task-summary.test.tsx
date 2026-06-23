@@ -1,17 +1,19 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { FarmTask } from "@/lib/types";
 
 /**
  * TaskSummary is an async Server Component that awaits getTasks() and derives
- * Open / In progress / Overdue / High-priority counts against a hardcoded
- * TODAY = "2026-06-20". The fixtures below pin those counts deterministically:
+ * Open / In progress / Overdue / High-priority counts against the LIVE today()
+ * (same source the board + table use — not a frozen constant). The clock is pinned
+ * to 2026-06-23 below; against that date the fixtures give:
  *  - Open (todo): t1, t5 -> 2
  *  - In progress: t2 -> 1
- *  - Overdue (due < 2026-06-20 AND not done): t1 (2026-06-18) -> 1
- *      (t4 is also before TODAY but status=done, so it is excluded)
+ *  - Overdue (due < 2026-06-23 AND not done): t1 (06-18) + t2 (06-22) + t5 (06-20) -> 3
+ *      (t4 06-19 is before today but status=done → excluded; t3 06-25 is future)
  *  - High priority (high AND not done): t1, t3 -> 2
- * t3 has a null plot; t2/t3/t5 are due on/after TODAY (non-overdue path).
+ * Overdue=3 is unique among the counts, so it proves the live-date wiring: a frozen
+ * TODAY="2026-06-20" would compute 1 and the assertion below would fail.
  */
 const TASKS: FarmTask[] = [
   {
@@ -47,6 +49,11 @@ vi.mock("@/lib/db/tasks", () => ({
 
 import { TaskSummary } from "@/components/sections/tasks/task-summary";
 
+// Pin the clock — deliberately NOT 2026-06-20 (the old frozen anchor) — so the test
+// proves the overdue tile keys off the live today(), matching the board/table.
+beforeEach(() => vi.setSystemTime(new Date("2026-06-23T12:00:00")));
+afterEach(() => vi.useRealTimers());
+
 describe("TaskSummary (smoke)", () => {
   it("renders the four count tiles with derived values without throwing", async () => {
     const ui = await TaskSummary();
@@ -61,11 +68,12 @@ describe("TaskSummary (smoke)", () => {
     // A stable sub-label confirming the overdue tile rendered.
     expect(screen.getByText("Past due, not done")).toBeInTheDocument();
 
-    // Overdue count = exactly 1 (t1 is before TODAY and not done; the done
-    // t4 is excluded). "1" is unique among the derived counts (2,1,1,2 ->
-    // both Overdue and In progress show "1"), so assert at least one "1".
-    expect(screen.getAllByText("1").length).toBeGreaterThanOrEqual(1);
-    // Open count = 2 (t1, t5).
+    // Overdue count = exactly 3 against the live 2026-06-23 (t1, t2, t5; t4 is done,
+    // t3 is future). 3 is unique among the counts, so a frozen-date regression that
+    // computed 1 would make this assertion fail.
+    expect(screen.getByText("3")).toBeInTheDocument();
+    // Open count = 2 (t1, t5); In progress = 1 (t2).
     expect(screen.getAllByText("2").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("1").length).toBeGreaterThanOrEqual(1);
   });
 });

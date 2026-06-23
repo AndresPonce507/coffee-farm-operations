@@ -23,7 +23,7 @@ export function QcHoldBanner({
         <p className="text-sm font-semibold">
           <span className="font-mono">{lotCode}</span> is on QC-HOLD — un-sellable
         </p>
-        <p className="mt-0.5 truncate text-xs text-cherry/80">
+        <p className="mt-0.5 truncate text-xs text-cherry">
           {reason ? reason : "Quarantined pending QC review."}
         </p>
       </div>

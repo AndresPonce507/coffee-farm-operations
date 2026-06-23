@@ -99,8 +99,9 @@ describe("DryingBoard (smoke)", () => {
     // Processing surface where AdvanceStageControl performs the real advance —
     // never an enabled primary CTA with no handler. It carries a per-lot
     // accessible name so multiple advance links on the board are distinguishable.
+    // WCAG 2.5.3 Label in Name: the accessible name contains the visible "Advance to mill".
     const advance = within(card).getByRole("link", {
-      name: /Advance lot JC-572 to milling/i,
+      name: /Advance to mill — lot JC-572/i,
     });
     expect(advance).toHaveAttribute("href", "/processing");
     expect(advance).toHaveTextContent(/Advance to mill/i);
