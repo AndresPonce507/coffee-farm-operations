@@ -13,11 +13,11 @@ import {
  * pure-map unit coverage of all 7 dossier kinds, id encoding, and #anchor appension.
  */
 describe("entityHref", () => {
-  it("covers all 7 dossier kinds and nothing else", () => {
+  it("covers all 8 dossier kinds and nothing else", () => {
     expect(Object.keys(entityHref).sort()).toEqual(
       [...DOSSIER_KINDS].sort(),
     );
-    expect(DOSSIER_KINDS).toHaveLength(7);
+    expect(DOSSIER_KINDS).toHaveLength(8);
   });
 
   // The exact route shapes that facet-02 §3.1 / ARCHITECTURE §3.1 pin. A route
@@ -30,6 +30,7 @@ describe("entityHref", () => {
     ["batch", "B-09", "/ferment/B-09"],
     ["dispatch", "17", "/dispatch/17"],
     ["pay-period", "2026-W12", "/pay-period/2026-W12"],
+    ["drying-station", "st-1", "/drying-station/st-1"],
   ])("maps %s id %s → %s", (kind, id, expected) => {
     expect(entityHref[kind](id)).toBe(expected);
   });

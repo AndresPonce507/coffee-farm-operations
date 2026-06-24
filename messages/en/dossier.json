@@ -11,7 +11,8 @@
       "crew": "crew",
       "batch": "batch",
       "dispatch": "dispatch",
-      "pay-period": "pay period"
+      "pay-period": "pay period",
+      "drying-station": "drying station"
     }
   }
 }

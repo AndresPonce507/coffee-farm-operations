@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { AtpMeter } from "@/components/ui/atp-meter";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import { Badge } from "@/components/ui/badge";
 import { cn, kg } from "@/lib/utils";
 import type { DryingWeatherRisk, StationOccupancy } from "@/lib/types";
@@ -71,14 +72,16 @@ export function StationOccupancyBoard({
                 >
                   <div className="mb-3 flex items-start justify-between gap-2">
                     <div>
-                      {/* TODO(drying-station-dossier): wrap in
-                          <EntityLink kind="drying-station" id={s.stationId}>
-                          once the /drying-station/[id] route exists and
-                          entity-href.ts + DossierKind are extended.
-                          wire-up-audit §10 depth ticket. */}
-                      <p className="font-display text-sm font-semibold text-ink">
+                      {/* The station name drills to its dossier (/drying-station/[id]) —
+                          the 8th connected entity (no cosmetic rows; PRINCIPLE Rule 1/3). */}
+                      <EntityLink
+                        kind="drying-station"
+                        id={s.stationId}
+                        name={s.name}
+                        className="font-display text-sm font-semibold text-ink underline-offset-2 transition-colors hover:text-forest-700 hover:underline focus-visible:text-forest-700 focus-visible:underline"
+                      >
                         {s.name}
-                      </p>
+                      </EntityLink>
                       <p className="text-[11px] text-muted-fg">
                         {t("stations.capacity", {
                           kind: KIND_KEY[s.kind] ? t(KIND_KEY[s.kind]) : s.kind,

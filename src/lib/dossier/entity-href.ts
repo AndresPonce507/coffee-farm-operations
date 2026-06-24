@@ -24,7 +24,8 @@ export type DossierKind =
   | "crew"
   | "batch"
   | "dispatch"
-  | "pay-period";
+  | "pay-period"
+  | "drying-station";
 
 /** Frozen tuple of every kind — the contract surface tests assert exhaustiveness against. */
 export const DOSSIER_KINDS = [
@@ -35,6 +36,7 @@ export const DOSSIER_KINDS = [
   "batch",
   "dispatch",
   "pay-period",
+  "drying-station",
 ] as const satisfies readonly DossierKind[];
 
 /** Optional deep-link target appended as `#anchor` (DRILL to a source section). */
@@ -68,4 +70,5 @@ export const entityHref: Record<
   batch: (id, opts) => build("/ferment", id, opts),
   dispatch: (id, opts) => build("/dispatch", id, opts),
   "pay-period": (id, opts) => build("/pay-period", id, opts),
+  "drying-station": (id, opts) => build("/drying-station", id, opts),
 };
