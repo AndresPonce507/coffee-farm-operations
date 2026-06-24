@@ -1,4 +1,5 @@
 import { Cloud, CloudFog, CloudRain, Droplet, Sun } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getWeather } from "@/lib/db/weather";
@@ -30,24 +31,17 @@ const ICON_COLOR_BY_CONDITION: Record<WeatherIcon, string> = {
   fog: "text-muted-fg",
 };
 
-/** Human-readable condition label for accessibility. */
-const CONDITION_LABEL: Record<WeatherIcon, string> = {
-  sun: "Sunny",
-  cloud: "Cloudy",
-  rain: "Rain",
-  fog: "Fog",
-};
-
 export async function WeatherStripCard() {
+  const t = await getTranslations("dashboard");
   const weather = await getWeather();
 
   return (
     <Card className="animate-rise overflow-hidden">
       <CardHeader>
         <div>
-          <CardTitle>Volcán forecast</CardTitle>
+          <CardTitle>{t("weather.title")}</CardTitle>
           <p className="mt-0.5 text-xs text-muted-fg">
-            Chiriquí highlands · 5-day
+            {t("weather.caption")}
           </p>
         </div>
       </CardHeader>
@@ -66,7 +60,7 @@ export async function WeatherStripCard() {
                   {day.day}
                 </span>
 
-                <span role="img" aria-label={CONDITION_LABEL[day.icon]}>
+                <span role="img" aria-label={t(`weather.condition.${day.icon}`)}>
                   <Icon className={`h-6 w-6 ${iconColor}`} />
                 </span>
 

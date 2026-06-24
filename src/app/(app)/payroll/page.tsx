@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ReceiptText } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -61,6 +62,7 @@ export default async function PayrollPage({
 }: {
   searchParams: Promise<{ period?: string; worker?: string }>;
 }) {
+  const t = await getTranslations("payroll");
   const { period, worker } = await searchParams;
 
   const periods = await getPayPeriods();
@@ -100,8 +102,8 @@ export default async function PayrollPage({
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Nómina"
-        subtitle="Pago mixto por obra + por hora, con el ajuste al mínimo legal garantizado en la capa de datos"
+        title={t("page.title")}
+        subtitle={t("page.subtitle")}
       />
 
       <PayrollSummary periods={periods} />
@@ -118,11 +120,10 @@ export default async function PayrollPage({
             <CardContent className="space-y-3">
               <div>
                 <h2 className="font-display text-sm font-semibold text-ink">
-                  Calcular un período
+                  {t("page.calculateTitle")}
                 </h2>
                 <p className="mt-0.5 text-xs text-muted-fg">
-                  Congela el cálculo: una línea por trabajador, con el ajuste al
-                  mínimo legal aplicado.
+                  {t("page.calculateDescription")}
                 </p>
               </div>
               <ComputePeriodForm
@@ -146,12 +147,11 @@ export default async function PayrollPage({
                     aria-hidden="true"
                   />
                   <h2 className="font-display text-sm font-semibold text-ink">
-                    Comprobantes de pago
+                    {t("page.payslipsTitle")}
                   </h2>
                 </div>
                 <p className="text-xs text-muted-fg">
-                  Toque a un trabajador para ver su comprobante bilingüe (es ·
-                  ngäbere) con código QR.
+                  {t("page.payslipsDescription")}
                 </p>
                 <ul className="flex flex-wrap gap-2 pt-1">
                   {rows.map((r) => {
@@ -160,7 +160,7 @@ export default async function PayrollPage({
                       <li key={r.workerId}>
                         <Link
                           href={`/payroll?period=${activePeriodId}&worker=${r.workerId}`}
-                          aria-label={`Ver el comprobante de pago de ${r.workerName}`}
+                          aria-label={t("page.viewPayslipFor", { name: r.workerName })}
                           aria-current={selected ? "true" : undefined}
                           className={cn(
                             "block rounded-full border border-white/60 bg-white/60 px-3 py-1.5 text-xs font-medium text-ink",
@@ -186,11 +186,10 @@ export default async function PayrollPage({
               <CardContent className="space-y-4">
                 <div>
                   <h2 className="font-display text-sm font-semibold text-ink">
-                    Aprobar y pagar
+                    {t("page.approvePayTitle")}
                   </h2>
                   <p className="mt-0.5 text-xs text-muted-fg">
-                    Apruebe cada línea calculada, luego registre el pago (Yappy /
-                    Nequi / ACH / efectivo firmado).
+                    {t("page.approvePayDescription")}
                   </p>
                 </div>
 
@@ -207,8 +206,8 @@ export default async function PayrollPage({
                             {r.workerName}
                           </p>
                           <p className="text-xs text-muted-fg">
-                            {statusLabel(r.status)}
-                            {isFullyPaid(r) ? " · pagado" : ""}
+                            {statusLabel(t, r.status)}
+                            {isFullyPaid(r) ? t("page.paidSuffix") : ""}
                           </p>
                         </div>
                         {isCalculated(r) ? (
@@ -246,14 +245,17 @@ export default async function PayrollPage({
 }
 
 /** A friendly Spanish label for a pay line's lifecycle status. */
-function statusLabel(status: string): string {
+function statusLabel(
+  t: (key: string) => string,
+  status: string,
+): string {
   switch (status) {
     case "approved":
-      return "aprobado";
+      return t("page.statusApproved");
     case "paid":
-      return "pagado";
+      return t("page.statusPaid");
     case "calculated":
     default:
-      return "calculado";
+      return t("page.statusCalculated");
   }
 }

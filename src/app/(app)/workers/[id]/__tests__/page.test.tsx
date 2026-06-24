@@ -225,7 +225,7 @@ describe("/workers/[id] dossier page", () => {
       params: Promise.resolve({ id: "w-001" }),
     });
     render(ui);
-    const back = screen.getByRole("link", { name: /Todos los trabajadores/i });
+    const back = screen.getByRole("link", { name: /All workers/i });
     expect(back).toHaveAttribute("href", "/workers");
   });
 

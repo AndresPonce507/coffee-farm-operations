@@ -25,9 +25,9 @@ describe("DispatchLifecycleSection", () => {
     render(<DispatchLifecycleSection run={base} />);
 
     expect(screen.getByTestId("section-lifecycle")).toBeInTheDocument();
-    expect(screen.getByText(/borrador/i)).toBeInTheDocument();
-    expect(screen.getByText(/enviad/i)).toBeInTheDocument();
-    expect(screen.getByText(/confirmad/i)).toBeInTheDocument();
+    expect(screen.getByText(/draft/i)).toBeInTheDocument();
+    expect(screen.getByText(/sent/i)).toBeInTheDocument();
+    expect(screen.getByText(/acknowledged/i)).toBeInTheDocument();
   });
 
   it("marks the current stage (sent) as reached via aria-current", () => {

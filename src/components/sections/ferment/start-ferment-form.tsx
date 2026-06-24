@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { FermentRecipe } from "@/lib/db/ferment";
 import { PROCESS_METHODS } from "@/lib/enums";
@@ -33,6 +34,7 @@ export function StartFermentForm({
   recipes: FermentRecipe[];
   onDone?: () => void;
 }) {
+  const t = useTranslations("ferment");
   const [state, formAction, pending] = useActionState<
     FermentActionState,
     FormData
@@ -55,7 +57,7 @@ export function StartFermentForm({
         <p className="text-sm text-muted-fg">{state.message}</p>
         {onDone && (
           <Button type="button" variant="ghost" size="sm" onClick={onDone}>
-            Done
+            {t("startForm.done")}
           </Button>
         )}
       </div>
@@ -68,7 +70,7 @@ export function StartFermentForm({
 
       <div className="space-y-1">
         <label className={LABEL} htmlFor="ferment-lot">
-          Lot
+          {t("startForm.lotLabel")}
         </label>
         <select
           id="ferment-lot"
@@ -80,7 +82,7 @@ export function StartFermentForm({
           aria-invalid={fieldError("lotCode") ? true : undefined}
         >
           <option value="" disabled>
-            Choose a lot…
+            {t("startForm.lotPlaceholder")}
           </option>
           {lots.map((code) => (
             <option key={code} value={code}>
@@ -96,7 +98,7 @@ export function StartFermentForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="ferment-recipe">
-            Recipe
+            {t("startForm.recipeLabel")}
           </label>
           <select
             id="ferment-recipe"
@@ -108,11 +110,11 @@ export function StartFermentForm({
             aria-invalid={fieldError("recipeId") ? true : undefined}
           >
             <option value="" disabled>
-              Choose a recipe…
+              {t("startForm.recipePlaceholder")}
             </option>
             {pickable.map((r) => (
               <option key={r.id} value={r.id}>
-                {r.name} · v{r.version}
+                {t("startForm.recipeOption", { name: r.name, version: r.version })}
               </option>
             ))}
           </select>
@@ -123,7 +125,7 @@ export function StartFermentForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="ferment-method">
-            Method
+            {t("startForm.methodLabel")}
           </label>
           <select
             id="ferment-method"
@@ -155,11 +157,11 @@ export function StartFermentForm({
       <div className="flex justify-end gap-2 pt-1">
         {onDone && (
           <Button type="button" variant="ghost" onClick={onDone}>
-            Cancel
+            {t("startForm.cancel")}
           </Button>
         )}
         <Button type="submit" disabled={pending}>
-          {pending ? "Starting…" : "Start ferment"}
+          {pending ? t("startForm.starting") : t("startForm.startFerment")}
         </Button>
       </div>
     </form>

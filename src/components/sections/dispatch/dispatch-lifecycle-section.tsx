@@ -1,4 +1,5 @@
 import { Check, Hash } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { DossierSection } from "@/components/dossier/dossier-section";
 import { cn } from "@/lib/utils";
@@ -18,11 +19,23 @@ export interface DispatchLifecycleSectionProps {
   run: DispatchCard;
 }
 
-/** The ordered, non-superseded lifecycle stages with es-PA labels. */
-const STAGES: { key: DispatchStatus; label: string; hint: string }[] = [
-  { key: "draft", label: "Borrador", hint: "Generado al amanecer" },
-  { key: "sent", label: "Enviado", hint: "Compartido con la cuadrilla" },
-  { key: "acknowledged", label: "Confirmado", hint: "Recibido por el líder" },
+/** The ordered, non-superseded lifecycle stages with their i18n key roots. */
+const STAGES: { key: DispatchStatus; labelKey: string; hintKey: string }[] = [
+  {
+    key: "draft",
+    labelKey: "lifecycle.stages.draftLabel",
+    hintKey: "lifecycle.stages.draftHint",
+  },
+  {
+    key: "sent",
+    labelKey: "lifecycle.stages.sentLabel",
+    hintKey: "lifecycle.stages.sentHint",
+  },
+  {
+    key: "acknowledged",
+    labelKey: "lifecycle.stages.acknowledgedLabel",
+    hintKey: "lifecycle.stages.acknowledgedHint",
+  },
 ];
 
 /** How far down the rail this status has reached (superseded counts as sent-level
@@ -42,10 +55,11 @@ function reachedIndex(status: DispatchStatus): number {
 export function DispatchLifecycleSection({
   run,
 }: DispatchLifecycleSectionProps) {
+  const t = useTranslations("dispatch");
   const reached = reachedIndex(run.status);
 
   return (
-    <DossierSection id="lifecycle" title="Ciclo de vida">
+    <DossierSection id="lifecycle" title={t("lifecycle.title")}>
       <article className="glass-card rounded-2xl p-5">
         <ol className="space-y-3">
           {STAGES.map((stage, i) => {
@@ -75,14 +89,14 @@ export function DispatchLifecycleSection({
                       current ? "text-forest" : done ? "text-ink" : "text-muted-fg",
                     )}
                   >
-                    {stage.label}
+                    {t(stage.labelKey)}
                     {current && stage.key === "sent" && run.sentChannel && (
                       <span className="ml-1.5 text-xs font-normal text-muted-fg">
-                        vía {run.sentChannel}
+                        {t("lifecycle.via", { channel: run.sentChannel })}
                       </span>
                     )}
                   </p>
-                  <p className="text-xs text-muted-fg">{stage.hint}</p>
+                  <p className="text-xs text-muted-fg">{t(stage.hintKey)}</p>
                 </div>
               </li>
             );
@@ -91,7 +105,7 @@ export function DispatchLifecycleSection({
 
         {run.status === "superseded" && (
           <p className="mt-4 rounded-xl border border-line/60 bg-paper/60 px-3.5 py-2 text-xs text-muted-fg">
-            Este despacho fue reemplazado por uno más reciente (historial).
+            {t("lifecycle.supersededNote")}
           </p>
         )}
 
@@ -99,7 +113,7 @@ export function DispatchLifecycleSection({
         {run.idempotencyKey && (
           <p className="mt-4 flex items-center gap-1.5 border-t border-line/70 pt-3 text-xs text-muted-fg">
             <Hash className="h-3 w-3" aria-hidden />
-            <span className="font-medium">Clave única:</span>
+            <span className="font-medium">{t("lifecycle.idempotencyKey")}</span>
             <code className="font-mono">{run.idempotencyKey}</code>
           </p>
         )}

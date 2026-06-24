@@ -189,9 +189,9 @@ describe("DispatchBoard (async Server Component render)", () => {
 
     render(await DispatchBoard());
 
-    // EntityLink renders an <a> with aria-label "Abrir cuadrilla <crewName>" (human name, not slug).
+    // EntityLink renders an <a> with aria-label "Open crew <crewName>" (human name, not slug).
     // WCAG 2.5.3: the accessible name must contain the visible label.
-    const link = screen.getByRole("link", { name: /abrir cuadrilla Crew Norte/i });
+    const link = screen.getByRole("link", { name: /open crew Crew Norte/i });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute("href", "/crew/crew-norte");
   });

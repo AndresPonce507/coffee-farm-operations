@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { DossierShell } from "@/components/dossier/dossier-shell";
 import { PayPeriodSummarySection } from "@/components/sections/pay-period/pay-period-summary-section";
@@ -41,6 +42,7 @@ export default async function PayPeriodDossierPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const t = await getTranslations("payPeriod");
 
   // P2 — anchor existence gate: resolve the period with ONE getter, 404 if absent.
   const period = await getPayPeriodById(id);
@@ -61,14 +63,16 @@ export default async function PayPeriodDossierPage({
     <DossierShell
       kind="pay-period"
       title={`${period.periodStart} → ${period.periodEnd}`}
-      eyebrow="Período de pago"
+      eyebrow={t("page.eyebrow")}
       subtitle={`${
-        period.season ? `Temporada ${period.season} · ` : ""
+        period.season ? t("page.seasonPrefix", { season: period.season }) : ""
       }${period.workerCount} ${
-        period.workerCount === 1 ? "trabajador" : "trabajadores"
+        period.workerCount === 1
+          ? t("page.subtitleWorkerOne")
+          : t("page.subtitleWorkerOther")
       } · ${statusLabelEs(period.status)}`}
       backHref="/payroll"
-      backLabel="Toda la nómina"
+      backLabel={t("page.backLabel")}
     >
       <PayPeriodSummarySection period={period} />
       <PayPeriodLinesSection lines={lines} />

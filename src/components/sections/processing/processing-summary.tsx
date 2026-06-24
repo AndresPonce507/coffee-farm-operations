@@ -1,4 +1,5 @@
 import { FlaskConical, Sun, Droplets, PackageCheck } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Tile } from "@/components/ui/tile";
@@ -11,6 +12,7 @@ import { kg, num, pct } from "@/lib/utils";
  * whatever is currently moving through the mill.
  */
 export async function ProcessingSummary() {
+  const t = await getTranslations("processing");
   const batches = await getBatches();
 
   const dryingBatches = batches.filter((b) => b.stage === "drying");
@@ -38,35 +40,39 @@ export async function ProcessingSummary() {
       <CardContent className="p-0">
         <div className="stagger grid grid-cols-2 divide-y divide-white/50 lg:grid-cols-4 lg:divide-x lg:divide-y-0">
           <Tile
-            label="Active batches"
+            label={t("summary.activeBatches")}
             value={num(activeCount)}
-            sub="in the pipeline"
+            sub={t("summary.activeBatchesSub")}
             accent="forest"
             icon={FlaskConical}
             className="glass-hover border-r border-white/50 lg:border-r-0"
           />
           <Tile
-            label="On drying beds"
+            label={t("summary.onDryingBeds")}
             value={kg(onDryingKg)}
-            sub={`${num(dryingBatches.length)} bed${
-              dryingBatches.length === 1 ? "" : "s"
-            } resting`}
+            sub={
+              dryingBatches.length === 1
+                ? t("summary.bedsResting", { n: num(dryingBatches.length) })
+                : t("summary.bedsRestingPlural", {
+                    n: num(dryingBatches.length),
+                  })
+            }
             accent="honey"
             icon={Sun}
             className="glass-hover"
           />
           <Tile
-            label="Avg moisture"
+            label={t("summary.avgMoisture")}
             value={pct(avgMoisture)}
-            sub="across drying beds"
+            sub={t("summary.avgMoistureSub")}
             accent="sky"
             icon={Droplets}
             className="glass-hover border-r border-white/50 lg:border-r-0"
           />
           <Tile
-            label="Green ready"
+            label={t("summary.greenReady")}
             value={kg(greenReadyKg)}
-            sub="cleared for export"
+            sub={t("summary.greenReadySub")}
             accent="coffee"
             icon={PackageCheck}
             className="glass-hover"

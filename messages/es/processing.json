@@ -1,0 +1,103 @@
+{
+  "stages": {
+    "cherry": "Cereza",
+    "fermentation": "Fermentación",
+    "drying": "Secado",
+    "parchment": "Pergamino",
+    "milled": "Trillado",
+    "green": "Verde"
+  },
+  "page": {
+    "title": "Beneficio",
+    "subtitle": "Beneficio húmedo, camas de secado y café verde",
+    "dryingLink": "Secado y reposo",
+    "restingRegionLabel": "Lotes en reposo — abrir el detalle de secado de un lote",
+    "restingLots": "Lotes en reposo",
+    "restingHint": "· abra uno para ver su curva de humedad y el control de reposo",
+    "openLotTitle": "Abrir lote {code} — {reason}"
+  },
+  "summary": {
+    "activeBatches": "Tandas activas",
+    "activeBatchesSub": "en el flujo",
+    "onDryingBeds": "En camas de secado",
+    "bedsResting": "{n} cama en reposo",
+    "bedsRestingPlural": "{n} camas en reposo",
+    "avgMoisture": "Humedad prom.",
+    "avgMoistureSub": "en las camas de secado",
+    "greenReady": "Verde listo",
+    "greenReadySub": "liberado para exportación"
+  },
+  "pipeline": {
+    "heading": "Flujo de procesamiento",
+    "subtitle": "Cada lote activo, desde la entrada de cereza hasta el café verde listo para exportación.",
+    "lotsInProcess": "{n} lotes en proceso",
+    "stageRegionLabel": "Etapa {stage}",
+    "emptyStage": "No hay lotes en esta etapa",
+    "weight": "Peso",
+    "moisture": "Humedad",
+    "pipelineProgress": "Flujo",
+    "viewLot": "Ver lote →",
+    "stageSub": {
+      "cherry": "Entrada y selección",
+      "fermentation": "Tanques y camas",
+      "drying": "Camas elevadas / patio",
+      "parchment": "En reposo en pergamino",
+      "milled": "Trillado y clasificado",
+      "green": "Listo para exportación"
+    }
+  },
+  "table": {
+    "cardTitle": "Todas las tandas",
+    "cardDescription": "Cada lote en el beneficio, desde la entrada de cereza hasta el café verde",
+    "activeCount": "{n} activas",
+    "colLot": "Lote",
+    "colVariety": "Variedad",
+    "colMethod": "Método",
+    "colStage": "Etapa",
+    "colPatio": "Patio",
+    "colStarted": "Inicio",
+    "colInput": "Entrada",
+    "colCurrent": "Actual",
+    "colMoisture": "Humedad",
+    "colProgress": "Progreso",
+    "colActions": "Acciones",
+    "empty": "No hay tandas en proceso."
+  },
+  "actions": {
+    "newBatch": "Nueva tanda",
+    "addBatch": "Agregar tanda",
+    "editBatch": "Editar tanda",
+    "editAria": "Editar {code}",
+    "deleteAria": "Eliminar {code}",
+    "deleteConfirm": "¿Eliminar la tanda {code}?"
+  },
+  "form": {
+    "lot": "Lote",
+    "variety": "Variedad",
+    "method": "Método",
+    "stage": "Etapa",
+    "started": "Inicio",
+    "patioBed": "Patio / cama",
+    "patioPlaceholder": "ej. Cama 7",
+    "cherryIntake": "Entrada de cereza (kg)",
+    "currentWeight": "Peso actual (kg)",
+    "moisture": "Humedad (%)",
+    "progress": "Progreso (%)",
+    "choose": "Elegir…",
+    "cancel": "Cancelar",
+    "saving": "Guardando…",
+    "saveChanges": "Guardar cambios"
+  },
+  "advance": {
+    "triggerAria": "Avanzar {code} a la siguiente etapa",
+    "advance": "Avanzar",
+    "dialogTitle": "Avanzar {code}",
+    "moveToStage": "Mover a la etapa",
+    "weightAfter": "Peso después del paso (kg)",
+    "massHint": "Ahora en {weight}. El procesamiento conserva o pierde masa — el nuevo peso debe ser igual o menor.",
+    "lotAdvanced": "Lote avanzado.",
+    "cancel": "Cancelar",
+    "advancing": "Avanzando…",
+    "advanceLot": "Avanzar lote"
+  }
+}

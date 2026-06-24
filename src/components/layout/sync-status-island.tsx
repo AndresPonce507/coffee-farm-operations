@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 import {
   CheckCircle2,
   CloudOff,
@@ -51,16 +52,19 @@ export function SyncStatus() {
   );
 }
 
-function timeAgo(iso: string): string {
+/** Translator shape passed to the relative-time helper (next-intl's `t`). */
+type SyncT = (key: string, vars?: Record<string, string | number>) => string;
+
+function timeAgo(iso: string, t: SyncT): string {
   const then = Date.parse(iso);
   if (!Number.isFinite(then)) return "";
   const secs = Math.max(0, Math.round((Date.now() - then) / 1000));
-  if (secs < 60) return "just now";
+  if (secs < 60) return t("sync.justNow");
   const mins = Math.round(secs / 60);
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 60) return t("sync.minutesAgo", { n: mins });
   const hrs = Math.round(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.round(hrs / 24)}d ago`;
+  if (hrs < 24) return t("sync.hoursAgo", { n: hrs });
+  return t("sync.daysAgo", { n: Math.round(hrs / 24) });
 }
 
 function OutboxDrawer({
@@ -78,6 +82,7 @@ function OutboxDrawer({
   onDismiss: (uuid: string) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations("layout");
   const panelRef = useRef<HTMLElement>(null);
   // The element focused right before the drawer opened, restored on close.
   const restoreRef = useRef<HTMLElement | null>(null);
@@ -156,12 +161,12 @@ function OutboxDrawer({
       className="fixed inset-0 z-50 flex justify-end"
       role="dialog"
       aria-modal="true"
-      aria-label="Sync activity"
+      aria-label={t("sync.dialogLabel")}
       onKeyDown={onKeyDown}
     >
       <button
         type="button"
-        aria-label="Close"
+        aria-label={t("sync.close")}
         tabIndex={-1}
         onClick={onClose}
         className="absolute inset-0 cursor-default bg-forest/40 backdrop-blur-sm motion-safe:animate-fade-in"
@@ -174,18 +179,16 @@ function OutboxDrawer({
         <header className="flex items-center justify-between border-b border-line px-5 py-4">
           <div>
             <h2 className="font-display text-base font-semibold text-ink">
-              Sync activity
+              {t("sync.title")}
             </h2>
             <p className="text-xs text-muted-fg">
-              {online
-                ? "Connected — changes save automatically."
-                : "Offline — changes are safe on this device."}
+              {online ? t("sync.connected") : t("sync.offline")}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close sync activity"
+            aria-label={t("sync.closeActivity")}
             className="grid h-8 w-8 place-items-center rounded-lg text-muted-fg transition hover:bg-white/60 hover:text-ink"
           >
             <X className="h-4 w-4" />
@@ -198,10 +201,11 @@ function OutboxDrawer({
               <span className="grid h-12 w-12 place-items-center rounded-full bg-forest-50 text-forest ring-1 ring-forest-100">
                 <CheckCircle2 className="h-6 w-6" aria-hidden />
               </span>
-              <p className="text-sm font-medium text-ink">All caught up</p>
+              <p className="text-sm font-medium text-ink">
+                {t("sync.allCaughtUpTitle")}
+              </p>
               <p className="max-w-[15rem] text-xs text-muted-fg">
-                Every change is saved to the server. New field captures will
-                queue here if you lose signal.
+                {t("sync.allCaughtUpBody")}
               </p>
             </div>
           )}
@@ -212,7 +216,7 @@ function OutboxDrawer({
                 id="dl-h"
                 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-cherry"
               >
-                Needs attention · {deadLetters.length}
+                {t("sync.needsAttention", { count: deadLetters.length })}
               </h3>
               <ul className="space-y-2">
                 {deadLetters.map((e) => (
@@ -224,7 +228,7 @@ function OutboxDrawer({
                     <p className="mt-0.5 text-xs text-cherry">{e.lastError}</p>
                     <div className="mt-2 flex items-center justify-between">
                       <span className="text-[11px] text-muted-fg">
-                        {timeAgo(e.enqueuedAt)}
+                        {timeAgo(e.enqueuedAt, t)}
                       </span>
                       <div className="flex gap-1.5">
                         <button
@@ -232,15 +236,17 @@ function OutboxDrawer({
                           onClick={() => onRetry(e.uuid)}
                           className="inline-flex items-center gap-1 rounded-lg border border-line bg-white/70 px-2 py-1 text-[11px] font-medium text-ink transition hover:bg-white"
                         >
-                          <RotateCw className="h-3 w-3" aria-hidden /> Retry
+                          <RotateCw className="h-3 w-3" aria-hidden />{" "}
+                          {t("sync.retry")}
                         </button>
                         <button
                           type="button"
                           onClick={() => onDismiss(e.uuid)}
-                          aria-label={`Dismiss failed ${e.rpc}`}
+                          aria-label={t("sync.dismissFailed", { rpc: e.rpc })}
                           className="inline-flex items-center gap-1 rounded-lg border border-line bg-white/70 px-2 py-1 text-[11px] font-medium text-muted-fg transition hover:text-cherry"
                         >
-                          <Trash2 className="h-3 w-3" aria-hidden /> Dismiss
+                          <Trash2 className="h-3 w-3" aria-hidden />{" "}
+                          {t("sync.dismiss")}
                         </button>
                       </div>
                     </div>
@@ -256,8 +262,8 @@ function OutboxDrawer({
                 id="pq-h"
                 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-honey-700"
               >
-                <UploadCloud className="h-3.5 w-3.5" aria-hidden /> Waiting to
-                sync · {pending.length}
+                <UploadCloud className="h-3.5 w-3.5" aria-hidden />{" "}
+                {t("sync.waitingToSync", { count: pending.length })}
               </h3>
               <ul className="space-y-2">
                 {pending.map((e) => (
@@ -268,13 +274,13 @@ function OutboxDrawer({
                     <div>
                       <p className="text-sm font-medium text-ink">{e.rpc}</p>
                       <p className="text-[11px] text-muted-fg">
-                        {timeAgo(e.enqueuedAt)}
+                        {timeAgo(e.enqueuedAt, t)}
                       </p>
                     </div>
                     {!online && (
                       <CloudOff
                         className="h-4 w-4 text-muted-fg"
-                        aria-label="offline"
+                        aria-label={t("sync.offlineBadge")}
                       />
                     )}
                   </li>

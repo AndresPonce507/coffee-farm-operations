@@ -1,4 +1,5 @@
 import { PackageOpen } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { GreenLotAtp, ScaGrade } from "@/lib/types";
 import { AtpMeter } from "@/components/ui/atp-meter";
@@ -50,27 +51,25 @@ function committedOf(row: GreenLotAtp): number {
 }
 
 export function AtpTable({ rows }: { rows: GreenLotAtp[] }) {
+  const t = useTranslations("inventory");
   const sellable = rows.filter((r) => r.atp > 0).length;
 
   return (
     <Card className="animate-rise overflow-hidden">
       <CardHeader>
         <div>
-          <CardTitle>Green inventory</CardTitle>
-          <CardDescription>
-            Graded, located lots — available-to-promise is derived live from the
-            reservation &amp; shipment ledgers
-          </CardDescription>
+          <CardTitle>{t("atpTable.title")}</CardTitle>
+          <CardDescription>{t("atpTable.description")}</CardDescription>
         </div>
-        <Badge tone="forest">{sellable} sellable</Badge>
+        <Badge tone="forest">{t("atpTable.sellable", { count: sellable })}</Badge>
       </CardHeader>
 
       <CardContent className="pt-4">
         {rows.length === 0 ? (
           <EmptyState
             icon={PackageOpen}
-            title="No green inventory yet"
-            description="Grade a finished lot in Processing to mint a located, available-to-promise green lot you can reserve against."
+            title={t("atpTable.emptyTitle")}
+            description={t("atpTable.emptyDescription")}
           />
         ) : (
           <>
@@ -80,12 +79,14 @@ export function AtpTable({ rows }: { rows: GreenLotAtp[] }) {
               <table className="w-full border-separate border-spacing-0 text-sm">
                 <THead>
                   <TR className="hover:bg-transparent">
-                    <TH>Lot</TH>
-                    <TH>Grade</TH>
-                    <TH>Location</TH>
-                    <TH className="text-right">On hand</TH>
-                    <TH className="min-w-[14rem]">Available to promise</TH>
-                    <TH className="text-right">Reserve</TH>
+                    <TH>{t("atpTable.lot")}</TH>
+                    <TH>{t("atpTable.grade")}</TH>
+                    <TH>{t("atpTable.location")}</TH>
+                    <TH className="text-right">{t("atpTable.onHand")}</TH>
+                    <TH className="min-w-[14rem]">
+                      {t("atpTable.availableToPromise")}
+                    </TH>
+                    <TH className="text-right">{t("atpTable.reserve")}</TH>
                   </TR>
                 </THead>
                 <TBody>
@@ -165,7 +166,7 @@ export function AtpTable({ rows }: { rows: GreenLotAtp[] }) {
                       <span className="font-medium text-ink tabular-nums">
                         {kg(row.currentKg)}
                       </span>{" "}
-                      on hand
+                      {t("atpTable.onHandLabel")}
                     </span>
                     <ReservationDrawer lot={row} />
                   </div>

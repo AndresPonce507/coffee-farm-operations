@@ -111,7 +111,7 @@ describe("TaskTable — EntityLink wiring (Phase-5)", () => {
 
     // t1 has plotId="p1", plotName="Tizingal Alto" → link to /plots/p1.
     // WCAG 2.5.3: aria-label names the parcela by its HUMAN name, not the raw id.
-    const plotLink = screen.getByRole("link", { name: /Abrir parcela Tizingal Alto/i });
+    const plotLink = screen.getByRole("link", { name: /Open plot Tizingal Alto/i });
     expect(plotLink).toHaveAttribute("href", "/plots/p1");
     expect(plotLink).toHaveTextContent("Tizingal Alto");
   });
@@ -133,7 +133,7 @@ describe("TaskTable — EntityLink wiring (Phase-5)", () => {
 
     // t1 has workerId="w1", assignee="Marisol Quintero" → link to /workers/w1.
     // WCAG 2.5.3: aria-label names the trabajador by their HUMAN name, not the raw id.
-    const workerLink = screen.getByRole("link", { name: /Abrir trabajador Marisol Quintero/i });
+    const workerLink = screen.getByRole("link", { name: /Open worker Marisol Quintero/i });
     expect(workerLink).toHaveAttribute("href", "/workers/w1");
     expect(workerLink).toHaveTextContent("Marisol Quintero");
   });

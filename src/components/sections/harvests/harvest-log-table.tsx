@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import type { Plot, Worker } from "@/lib/types";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/data-table";
@@ -37,6 +39,7 @@ export async function HarvestLogTable({
   pickers: Worker[];
   lots: string[];
 }) {
+  const t = await getTranslations("harvests");
   const harvests = await getHarvests();
   const rows = [...harvests]
     .sort((a, b) => b.date.localeCompare(a.date))
@@ -46,9 +49,9 @@ export async function HarvestLogTable({
     <Card className="animate-rise overflow-hidden">
       <CardHeader>
         <div>
-          <CardTitle>Registro de cosecha</CardTitle>
+          <CardTitle>{t("logTable.title")}</CardTitle>
           <CardDescription>
-            Los {rows.length} registros de cosecha más recientes, del más nuevo al más antiguo
+            {t("logTable.description", { count: rows.length })}
           </CardDescription>
         </div>
       </CardHeader>
@@ -57,14 +60,14 @@ export async function HarvestLogTable({
         <Table className="border-0 ring-0">
           <THead className="bg-white/70">
             <TR>
-              <TH>Fecha</TH>
-              <TH>Lote</TH>
-              <TH>Parcela</TH>
-              <TH>Cosechero/a</TH>
-              <TH className="text-right">Cerezas</TH>
-              <TH>Madurez</TH>
-              <TH className="text-right">Brix</TH>
-              <TH className="text-right">Acciones</TH>
+              <TH>{t("logTable.date")}</TH>
+              <TH>{t("logTable.lot")}</TH>
+              <TH>{t("logTable.plot")}</TH>
+              <TH>{t("logTable.picker")}</TH>
+              <TH className="text-right">{t("logTable.cherries")}</TH>
+              <TH>{t("logTable.ripeness")}</TH>
+              <TH className="text-right">{t("logTable.brix")}</TH>
+              <TH className="text-right">{t("logTable.actions")}</TH>
             </TR>
           </THead>
           <TBody>

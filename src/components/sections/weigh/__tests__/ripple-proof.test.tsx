@@ -43,19 +43,19 @@ describe("RippleProof — the reactive proof panel", () => {
   it("each consumer line carries the propagated delta next to its link", () => {
     render(<RippleProof lotCode="JC-712" lastDeltaKg={18.4} />);
     // The Dashboard line shows the +Δ that just landed there.
-    const dash = screen.getByRole("link", { name: /Dashboard|Tablero|hoy/i });
+    const dash = screen.getByRole("link", { name: /Dashboard|today/i });
     // the delta text lives within the same consumer row as the dashboard link.
     const row = dash.closest("li") ?? dash.parentElement!;
     expect(within(row as HTMLElement).getByText(/\+18\.4\s*kg/)).toBeInTheDocument();
   });
 
-  it("is es-PA-first (the panel headline reflects the capture landing)", () => {
+  it("the panel headline reflects the capture landing", () => {
     render(<RippleProof lotCode="JC-712" lastDeltaKg={18.4} />);
-    // "Tu peso se reflejó en…" — the es-PA framing required by the spec.
-    expect(screen.getByText(/se reflejó/i)).toBeInTheDocument();
+    // "Your weight showed up in…" — the framing required by the spec.
+    expect(screen.getByText(/showed up in/i)).toBeInTheDocument();
   });
 
-  it("degrades offline: no lot code → generic 'Tu lote' + the /lots index link, still ≥2 consumers", () => {
+  it("degrades offline: no lot code → generic 'Your lot' + the /lots index link, still ≥2 consumers", () => {
     render(<RippleProof lotCode={null} lastDeltaKg={18.4} />);
 
     // The captured kg is still shown (the picker's tally still climbed offline).
@@ -70,9 +70,9 @@ describe("RippleProof — the reactive proof panel", () => {
     expect(hrefs).toContain("/harvests");
     expect(hrefs).not.toContain("/lots"); // never point a link at a non-route
 
-    // a generic "Tu lote" + the "confirms on sync" reassurance (facet-01 §4 offline AC).
-    expect(screen.getByText(/Tu lote/i)).toBeInTheDocument();
-    expect(screen.getByText(/sincroniza/i)).toBeInTheDocument();
+    // a generic "Your lot" + the "confirmed on sync" reassurance (facet-01 §4 offline AC).
+    expect(screen.getByText(/Your lot/i)).toBeInTheDocument();
+    expect(screen.getByText(/on sync/i)).toBeInTheDocument();
   });
 
   it("renders nothing actionable when there is no delta yet (idle, before first capture)", () => {

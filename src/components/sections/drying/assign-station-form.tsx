@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { CheckCircle2, MapPin } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import {
   assignStationAction,
@@ -43,6 +44,7 @@ export function AssignStationForm({
   /** Called after a successful assignment so the host (dialog) can offer to close. */
   onDone?: () => void;
 }) {
+  const t = useTranslations("drying");
   const [state, formAction, pending] = useActionState<
     DryingActionState,
     FormData
@@ -67,13 +69,13 @@ export function AssignStationForm({
         </span>
         <div className="space-y-1">
           <p className="font-display text-base font-semibold text-ink">
-            Lote asignado
+            {t("assignForm.successTitle")}
           </p>
           <p className="text-sm text-muted-fg">{state.message}</p>
         </div>
         {onDone && (
           <Button type="button" variant="ghost" size="sm" onClick={onDone}>
-            Listo
+            {t("assignForm.done")}
           </Button>
         )}
       </div>
@@ -85,15 +87,12 @@ export function AssignStationForm({
       <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
       <p className="flex items-start gap-2 rounded-xl bg-forest-50/70 px-3 py-2 text-xs text-forest-700 ring-1 ring-forest-100">
         <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-        <span>
-          Asigna el lote a una cama — una cama llena se rechaza, así que el peso
-          comprometido nunca puede exceder la capacidad de una estación.
-        </span>
+        <span>{t("assignForm.hint")}</span>
       </p>
 
       <div className="space-y-1">
         <label className={LABEL} htmlFor="assign-lotCode">
-          Lote
+          {t("assignForm.lotLabel")}
         </label>
         <select
           id="assign-lotCode"
@@ -105,7 +104,7 @@ export function AssignStationForm({
           aria-invalid={fieldError("lotCode") ? true : undefined}
         >
           <option value="" disabled>
-            Elegir…
+            {t("assignForm.choose")}
           </option>
           {lots.map((code) => (
             <option key={code} value={code}>
@@ -120,7 +119,7 @@ export function AssignStationForm({
 
       <div className="space-y-1">
         <label className={LABEL} htmlFor="assign-stationId">
-          Estación
+          {t("assignForm.stationLabel")}
         </label>
         <select
           id="assign-stationId"
@@ -132,11 +131,14 @@ export function AssignStationForm({
           aria-invalid={fieldError("stationId") ? true : undefined}
         >
           <option value="" disabled>
-            Elegir…
+            {t("assignForm.choose")}
           </option>
           {stations.map((s) => (
             <option key={s.stationId} value={s.stationId}>
-              {s.name} · {kg(s.availableKg)} libres
+              {t("assignForm.stationOption", {
+                name: s.name,
+                available: kg(s.availableKg),
+              })}
             </option>
           ))}
         </select>
@@ -154,11 +156,11 @@ export function AssignStationForm({
       <div className="flex justify-end gap-2 pt-1">
         {onDone && (
           <Button type="button" variant="ghost" onClick={onDone}>
-            Cancelar
+            {t("assignForm.cancel")}
           </Button>
         )}
         <Button type="submit" disabled={pending}>
-          {pending ? "Asignando…" : "Asignar a estación"}
+          {pending ? t("assignForm.submitting") : t("assignForm.submit")}
         </Button>
       </div>
     </form>

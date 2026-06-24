@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { DossierSection } from "@/components/dossier/dossier-section";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,13 +22,14 @@ export function PlotScoutingSection({
 }: {
   scouting: IpmThresholdStatus[];
 }) {
+  const t = useTranslations("plots");
   return (
     <DossierSection
       id="scouting"
-      title="Monitoreo de plagas"
+      title={t("scouting.title")}
       count={scouting.length}
       empty={scouting.length === 0}
-      emptyLabel="Sin monitoreo registrado todavía"
+      emptyLabel={t("scouting.empty")}
     >
       <Card>
         <CardContent className="px-0 py-1">
@@ -43,17 +46,18 @@ export function PlotScoutingSection({
                   {s.pestKind}
                 </span>
                 <span className="text-sm text-muted-fg">
-                  incidencia {pct(s.incidencePct)}
-                  {s.threshold != null && ` (umbral ${pct(s.threshold)})`}
+                  {t("scouting.incidence", { pct: pct(s.incidencePct) })}
+                  {s.threshold != null &&
+                    ` ${t("scouting.threshold", { pct: pct(s.threshold) })}`}
                 </span>
                 <span className="ml-auto">
                   {s.recommend ? (
                     <Badge tone="danger" dot>
-                      Recomienda control
+                      {t("scouting.recommendControl")}
                     </Badge>
                   ) : (
                     <Badge tone="ok" dot>
-                      Mantener
+                      {t("scouting.hold")}
                     </Badge>
                   )}
                 </span>

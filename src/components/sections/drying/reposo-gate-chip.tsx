@@ -1,4 +1,5 @@
 import { CheckCircle2, Hourglass, Droplets } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 import type { ReposoStatus } from "@/lib/types";
@@ -26,6 +27,7 @@ export function ReposoGateChip({
   reposo: ReposoStatus;
   className?: string;
 }) {
+  const t = useTranslations("drying");
   const ready = reposo.ready;
   // One-decimal moisture readout (pct() rounds to integer, so format directly).
   const moisture =
@@ -41,8 +43,8 @@ export function ReposoGateChip({
       data-ready={ready ? "true" : "false"}
       aria-label={
         ready
-          ? `Reposo gate open: ${reposo.reason}`
-          : `Reposo gate closed: ${reposo.reason}`
+          ? t("reposoChip.gateOpen", { reason: reposo.reason })
+          : t("reposoChip.gateClosed", { reason: reposo.reason })
       }
       className={cn(
         "inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold",
@@ -59,11 +61,14 @@ export function ReposoGateChip({
     >
       <Icon aria-hidden className="h-3.5 w-3.5" />
       <span className="tabular-nums">
-        {ready ? "Rest-stable" : "Resting"}
+        {ready ? t("reposoChip.restStable") : t("reposoChip.resting")}
         {!ready && restDays != null && (
           <>
             {" · "}
-            {restDays} day{restDays === 1 ? "" : "s"}
+            {restDays}{" "}
+            {restDays === 1
+              ? t("reposoChip.daySingular")
+              : t("reposoChip.dayPlural")}
           </>
         )}
         {reposo.latestMoisture != null && (
@@ -74,7 +79,7 @@ export function ReposoGateChip({
         )}
       </span>
       <span className="font-medium opacity-80">
-        {ready ? "clear to mill" : "blocked"}
+        {ready ? t("reposoChip.clearToMill") : t("reposoChip.blocked")}
       </span>
     </span>
   );

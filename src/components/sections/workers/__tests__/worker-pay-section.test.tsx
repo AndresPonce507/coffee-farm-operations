@@ -49,7 +49,7 @@ describe("WorkerPaySection", () => {
 
   it("renders the gross and net figures", () => {
     render(<WorkerPaySection pay={[payLine({})]} />);
-    expect(screen.getByText("Bruto $240.00")).toBeInTheDocument();
+    expect(screen.getByText("Gross $240.00")).toBeInTheDocument();
     expect(screen.getByText("$213.00")).toBeInTheDocument();
   });
 
@@ -60,14 +60,14 @@ describe("WorkerPaySection", () => {
       />,
     );
     expect(screen.getByTestId("made-whole-9")).toHaveTextContent(
-      "Ajuste a salario mínimo",
+      "Minimum-wage adjustment",
     );
   });
 
   it("renders the empty state with no pay history", () => {
     render(<WorkerPaySection pay={[]} />);
     expect(
-      screen.getByText("Sin pagos calculados todavía"),
+      screen.getByText("No payments calculated yet"),
     ).toBeInTheDocument();
   });
 });

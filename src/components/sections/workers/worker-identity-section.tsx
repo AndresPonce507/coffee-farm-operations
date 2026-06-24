@@ -1,4 +1,5 @@
 import { ShieldCheck, ShieldAlert, ShieldX } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,15 +35,20 @@ function daysUntil(expiresAt: string | null, now: Date): number | null {
 
 type CertState = "valid" | "expiring" | "perennial";
 
-/** Cert-validity classification used by the badge + icon. Pure, exported for test. */
+/**
+ * Cert-validity classification used by the badge + icon. Pure, exported for test.
+ * Returns the state, the day count (for the i18n "expiring" interpolation) and a
+ * non-localized label fallback — the rendered badge copy is resolved via t() in
+ * the component from `state` + `days`, so this stays a pure, hook-free function.
+ */
 export function certValidity(
   expiresAt: string | null,
   now: Date,
-): { state: CertState; label: string } {
+): { state: CertState; days: number | null; label: string } {
   const d = daysUntil(expiresAt, now);
-  if (d === null) return { state: "perennial", label: "Sin vencimiento" };
-  if (d <= 30) return { state: "expiring", label: `Vence en ${d} d` };
-  return { state: "valid", label: "Vigente" };
+  if (d === null) return { state: "perennial", days: null, label: "Sin vencimiento" };
+  if (d <= 30) return { state: "expiring", days: d, label: `Vence en ${d} d` };
+  return { state: "valid", days: d, label: "Vigente" };
 }
 
 const CERT_ICON = {
@@ -62,22 +68,31 @@ export function WorkerIdentitySection({
   certs,
   now = new Date(),
 }: WorkerIdentitySectionProps) {
+  const t = useTranslations("workers");
+
+  /** Resolve the localized cert badge label from the pure validity classification. */
+  const certLabel = (v: ReturnType<typeof certValidity>) => {
+    if (v.state === "perennial") return t("identity.certNoExpiry");
+    if (v.state === "expiring") return t("identity.certExpiresIn", { n: v.days ?? 0 });
+    return t("identity.certValid");
+  };
+
   const facts: { label: string; value: string }[] = [
-    { label: "Rol", value: worker.role },
+    { label: t("identity.factRole"), value: worker.role },
     {
-      label: "Comarca de origen",
+      label: t("identity.factComarca"),
       value: worker.comarcaOrigin ?? "—",
     },
     {
-      label: "Idiomas",
+      label: t("identity.factLanguages"),
       value: worker.languages.length ? worker.languages.join(", ") : "—",
     },
     {
-      label: "Desde",
+      label: t("identity.factSince"),
       value: worker.startedYear ? String(worker.startedYear) : "—",
     },
     {
-      label: "Jornal",
+      label: t("identity.factDayRate"),
       value:
         worker.dailyRateUsd == null
           ? "—"
@@ -86,12 +101,12 @@ export function WorkerIdentitySection({
   ];
 
   return (
-    <DossierSection id="identity" title="Identidad y certificaciones">
+    <DossierSection id="identity" title={t("identity.sectionTitle")}>
       <Card data-testid="worker-identity-card" className="animate-rise">
         <CardContent className="space-y-5">
           {/* Crew membership — the cross-entity link to /crew/[id]. */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-muted-fg">Cuadrilla</span>
+            <span className="text-xs text-muted-fg">{t("identity.crewLabel")}</span>
             {worker.crewId ? (
               <EntityLink
                 kind="crew"
@@ -107,7 +122,7 @@ export function WorkerIdentitySection({
               <Badge tone="neutral">{worker.crewName}</Badge>
             )}
             {worker.rehireEligible && (
-              <Badge tone="ok">Recontratable</Badge>
+              <Badge tone="ok">{t("identity.rehireable")}</Badge>
             )}
           </div>
 
@@ -126,12 +141,12 @@ export function WorkerIdentitySection({
           {/* Certifications with validity state. */}
           <div className="border-t border-line pt-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-forest/70">
-              Certificaciones vigentes
+              {t("identity.currentCerts")}
             </p>
             {certs.length === 0 ? (
               <p className="flex items-center gap-1.5 text-sm text-muted-fg">
                 <ShieldX className="h-4 w-4" aria-hidden />
-                Sin certificaciones vigentes
+                {t("identity.noCerts")}
               </p>
             ) : (
               <ul className="space-y-2" data-testid="worker-certs">
@@ -155,7 +170,7 @@ export function WorkerIdentitySection({
                           </span>
                         )}
                       </span>
-                      <Badge tone={CERT_TONE[v.state]}>{v.label}</Badge>
+                      <Badge tone={CERT_TONE[v.state]}>{certLabel(v)}</Badge>
                     </li>
                   );
                 })}

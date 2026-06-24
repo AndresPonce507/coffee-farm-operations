@@ -1,4 +1,5 @@
 import { ListChecks, Loader, TriangleAlert, Flag } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { Card } from "@/components/ui/card";
 import { Tile } from "@/components/ui/tile";
@@ -11,6 +12,7 @@ import { num, today } from "@/lib/utils";
  * Server component (pure render over the task reads).
  */
 export async function TaskSummary() {
+  const t = await getTranslations("tasks");
   const tasks = await getTasks();
 
   // Overdue keys off the LIVE today() — the same source the board + table use, so the
@@ -29,33 +31,33 @@ export async function TaskSummary() {
     <Card className="animate-rise overflow-hidden glass-hover glass-sheen">
       <div className="stagger perf-contain grid grid-cols-1 divide-y divide-white/60 sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4">
         <Tile
-          label="Open"
+          label={t("summary.open")}
           value={num(openCount)}
-          sub="Awaiting a start"
+          sub={t("summary.openSub")}
           accent="forest"
           icon={ListChecks}
           className="sm:border-r sm:border-white/60"
         />
         <Tile
-          label="In progress"
+          label={t("summary.inProgress")}
           value={num(inProgressCount)}
-          sub="Underway in the field"
+          sub={t("summary.inProgressSub")}
           accent="honey"
           icon={Loader}
           className="lg:border-r lg:border-white/60"
         />
         <Tile
-          label="Overdue"
+          label={t("summary.overdue")}
           value={num(overdueCount)}
-          sub="Past due, not done"
+          sub={t("summary.overdueSub")}
           accent="cherry"
           icon={TriangleAlert}
           className="sm:border-r sm:border-white/60"
         />
         <Tile
-          label="High priority"
+          label={t("summary.highPriority")}
           value={num(highPriorityCount)}
-          sub="Needs attention first"
+          sub={t("summary.highPrioritySub")}
           accent="coffee"
           icon={Flag}
         />

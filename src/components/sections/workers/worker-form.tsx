@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 import type { Worker } from "@/lib/types";
 import { ATTENDANCE_STATUSES, WORKER_ROLES } from "@/lib/enums";
@@ -27,6 +28,7 @@ export function WorkerForm({
   /** Crew names sourced LIVE from getCrews() by the RSC parent (no mock const). */
   crews: readonly string[];
 }) {
+  const t = useTranslations("workers");
   const [state, formAction, pending] = useActionState(action, IDLE);
 
   useEffect(() => {
@@ -42,13 +44,13 @@ export function WorkerForm({
 
       <div className="space-y-1">
         <label className={LABEL} htmlFor="name">
-          Name
+          {t("form.name")}
         </label>
         <input
           id="name"
           name="name"
           defaultValue={worker?.name}
-          placeholder="e.g. Rosa Quintero"
+          placeholder={t("form.namePlaceholder")}
           className={FIELD}
         />
         {fieldError("name") && (
@@ -59,11 +61,11 @@ export function WorkerForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="role">
-            Role
+            {t("form.role")}
           </label>
           <select id="role" name="role" defaultValue={worker?.role ?? ""} className={FIELD}>
             <option value="" disabled>
-              Choose…
+              {t("form.choose")}
             </option>
             {WORKER_ROLES.map((r) => (
               <option key={r} value={r}>
@@ -78,11 +80,11 @@ export function WorkerForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="crew">
-            Crew
+            {t("form.crew")}
           </label>
           <select id="crew" name="crew" defaultValue={worker?.crew ?? ""} className={FIELD}>
             <option value="" disabled>
-              Choose…
+              {t("form.choose")}
             </option>
             {crews.map((c) => (
               <option key={c} value={c}>
@@ -99,7 +101,7 @@ export function WorkerForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="daily_rate_usd">
-            Day rate (USD)
+            {t("form.dayRate")}
           </label>
           <input
             id="daily_rate_usd"
@@ -118,7 +120,7 @@ export function WorkerForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="started_year">
-            Started year
+            {t("form.startedYear")}
           </label>
           <input
             id="started_year"
@@ -138,7 +140,7 @@ export function WorkerForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="attendance">
-            Attendance
+            {t("form.attendance")}
           </label>
           <select
             id="attendance"
@@ -159,7 +161,7 @@ export function WorkerForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="phone">
-            Phone
+            {t("form.phone")}
           </label>
           <input
             id="phone"
@@ -182,10 +184,10 @@ export function WorkerForm({
 
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="ghost" onClick={onDone}>
-          Cancel
+          {t("form.cancel")}
         </Button>
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : submitLabel}
+          {pending ? t("form.saving") : submitLabel}
         </Button>
       </div>
     </form>

@@ -1,4 +1,5 @@
 import { GitBranch, Mountain, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { LotGenealogy, MoistureReading, QcStatus } from "@/lib/types";
 import type { FermentCurvePoint } from "@/lib/db/ferment";
@@ -82,6 +83,7 @@ export function CupToCausePanel({
   /** The originating plot + its elevation (harvests.plot_id → plots.altitude_masl). */
   plot?: CupCausePlot | null;
 }) {
+  const t = useTranslations("qc");
   const stages = orderedStages(genealogy);
   const variety = stages[0]?.variety;
 
@@ -94,10 +96,11 @@ export function CupToCausePanel({
     <Card className="animate-rise">
       <CardHeader>
         <div>
-          <CardTitle>Cup-to-cause</CardTitle>
+          <CardTitle>{t("cupToCause.title")}</CardTitle>
           <CardDescription>
-            What produced <span className="font-mono text-forest-700">{lotCode}</span>{" "}
-            — the lineage behind the score
+            {t("cupToCause.descriptionLead")}{" "}
+            <span className="font-mono text-forest-700">{lotCode}</span>
+            {t("cupToCause.descriptionTail")}
           </CardDescription>
         </div>
         <Sparkles className="h-5 w-5 text-honey-700" aria-hidden />
@@ -107,15 +110,15 @@ export function CupToCausePanel({
         {stages.length === 0 ? (
           <EmptyState
             icon={GitBranch}
-            title="No lineage data yet"
-            description="This lot's farm-to-green genealogy isn't available yet — the score still binds to the lot, and the cause fills in as ferment and drying are logged."
+            title={t("cupToCause.emptyTitle")}
+            description={t("cupToCause.emptyDescription")}
           />
         ) : (
           <>
             {variety && (
               <div className="flex items-center gap-2">
                 <span className="text-xs font-medium uppercase tracking-wide text-muted-fg">
-                  Variety
+                  {t("cupToCause.variety")}
                 </span>
                 <Badge tone="forest" dot>
                   {variety}
@@ -130,7 +133,7 @@ export function CupToCausePanel({
               <div className="flex items-center gap-2">
                 <Mountain className="h-4 w-4 text-forest-600" aria-hidden />
                 <span className="text-sm text-ink">
-                  Plot{" "}
+                  {t("cupToCause.plot")}{" "}
                   {plot.id ? (
                     <EntityLink
                       kind="plot"
@@ -144,7 +147,9 @@ export function CupToCausePanel({
                   )}
                   {" — "}
                   <span className="tabular-nums">
-                    {plot.altitudeMasl.toLocaleString("en-US")} masl
+                    {t("cupToCause.masl", {
+                      masl: plot.altitudeMasl.toLocaleString("en-US"),
+                    })}
                   </span>
                 </span>
               </div>
@@ -183,7 +188,7 @@ export function CupToCausePanel({
             {hasFerment && (
               <div>
                 <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-fg">
-                  Ferment curve (pH)
+                  {t("cupToCause.fermentCurve")}
                 </p>
                 <FermentCurve points={fermentCurve!} targetPh={null} kind="ph" />
               </div>
@@ -194,7 +199,7 @@ export function CupToCausePanel({
             {hasMoisture && (
               <div>
                 <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-fg">
-                  Drying moisture curve
+                  {t("cupToCause.dryingCurve")}
                 </p>
                 <MoistureCurve curve={moistureCurve!} height={140} />
               </div>
@@ -204,7 +209,7 @@ export function CupToCausePanel({
             {status && (
               <div className="rounded-2xl border border-white/60 bg-white/55 px-4 py-3">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-fg">
-                  Green-grading defects
+                  {t("cupToCause.defectsLabel")}
                 </p>
                 <div className="mt-1 flex items-center gap-4 text-sm">
                   <span className="tabular-nums">
@@ -217,13 +222,13 @@ export function CupToCausePanel({
                     >
                       {status.primaryDefects}
                     </span>{" "}
-                    <span className="text-muted-fg">primary</span>
+                    <span className="text-muted-fg">{t("cupToCause.primary")}</span>
                   </span>
                   <span className="tabular-nums">
                     <span className="font-semibold text-ink">
                       {status.secondaryDefects}
                     </span>{" "}
-                    <span className="text-muted-fg">secondary</span>
+                    <span className="text-muted-fg">{t("cupToCause.secondary")}</span>
                   </span>
                 </div>
               </div>

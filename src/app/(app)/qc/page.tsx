@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { QcStatusTable } from "@/components/sections/qc/qc-status-table";
 import { CupperDriftCard } from "@/components/sections/qc/cupper-drift-card";
@@ -21,6 +23,7 @@ import { getWorkers } from "@/lib/db/workers";
  * /qc/cup/[lot]. The app shell comes from (app)/layout.tsx.
  */
 export default async function QcPage() {
+  const t = await getTranslations("qc");
   const [status, drift, workers] = await Promise.all([
     getQcStatus(),
     getCupperDrift(),
@@ -33,10 +36,7 @@ export default async function QcPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Control de calidad"
-        subtitle="Puntajes de catación, clasificación de defectos y el QC-HOLD que impide vender un lote con fallas"
-      />
+      <PageHeader title={t("page.title")} subtitle={t("page.subtitle")} />
 
       <QcStatusTable rows={status} />
 

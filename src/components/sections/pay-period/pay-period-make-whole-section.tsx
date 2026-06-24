@@ -1,4 +1,5 @@
 import { HeartHandshake } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card } from "@/components/ui/card";
 import { DossierSection } from "@/components/dossier/dossier-section";
@@ -28,16 +29,17 @@ export interface PayPeriodMakeWholeSectionProps {
 export function PayPeriodMakeWholeSection({
   lines,
 }: PayPeriodMakeWholeSectionProps) {
+  const t = useTranslations("payPeriod");
   const protectedLines = lines.filter((l) => l.madeWhole);
   const total = protectedLines.reduce((sum, l) => sum + l.makeWholeUsd, 0);
 
   return (
     <DossierSection
       id="make-whole"
-      title="Ajuste al mínimo legal"
+      title={t("makeWhole.title")}
       count={protectedLines.length}
       empty={protectedLines.length === 0}
-      emptyLabel="Todos sobre el mínimo legal — el piso no tuvo que activarse"
+      emptyLabel={t("makeWhole.empty")}
     >
       <Card className="animate-rise overflow-hidden">
         <div className="flex items-center gap-3 border-b border-white/50 bg-honey-100/40 px-5 py-3">
@@ -49,13 +51,12 @@ export function PayPeriodMakeWholeSection({
           </span>
           <div>
             <p className="font-display text-sm font-semibold text-honey-700">
-              {protectedLines.length}{" "}
               {protectedLines.length === 1
-                ? "trabajador llevado al mínimo legal"
-                : "trabajadores llevados al mínimo legal"}
+                ? t("makeWhole.headlineOne", { count: protectedLines.length })
+                : t("makeWhole.headlineOther", { count: protectedLines.length })}
             </p>
             <p className="text-xs text-muted-fg">
-              Ajuste total del período:{" "}
+              {t("makeWhole.periodTotal")}{" "}
               <span className="font-medium tabular-nums text-honey-700">
                 {usd(total)}
               </span>
@@ -79,8 +80,10 @@ export function PayPeriodMakeWholeSection({
                   {line.workerName}
                 </EntityLink>
                 <p className="text-xs text-muted-fg">
-                  Ganó {usd(line.grossUsd - line.makeWholeUsd)} · piso{" "}
-                  {usd(line.minWageFloorUsd)}
+                  {t("makeWhole.earnedFloor", {
+                    earned: usd(line.grossUsd - line.makeWholeUsd),
+                    floor: usd(line.minWageFloorUsd),
+                  })}
                 </p>
               </div>
               <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-honey-100 px-3 py-1 text-xs font-semibold tabular-nums text-honey-700 ring-1 ring-honey/30">

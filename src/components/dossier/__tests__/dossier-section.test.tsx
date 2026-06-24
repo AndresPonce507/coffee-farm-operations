@@ -63,7 +63,7 @@ describe("DossierSection", () => {
         <p data-testid="body">cuerpo</p>
       </DossierSection>,
     );
-    expect(screen.getByText("Sin registros todavía")).toBeInTheDocument();
+    expect(screen.getByText("No records yet")).toBeInTheDocument();
     expect(screen.queryByTestId("body")).toBeNull();
   });
 
@@ -74,6 +74,6 @@ describe("DossierSection", () => {
       </DossierSection>,
     );
     expect(screen.getByTestId("body")).toBeInTheDocument();
-    expect(screen.queryByText("Sin registros todavía")).toBeNull();
+    expect(screen.queryByText("No records yet")).toBeNull();
   });
 });

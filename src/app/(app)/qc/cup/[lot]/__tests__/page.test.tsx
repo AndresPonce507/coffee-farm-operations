@@ -81,11 +81,11 @@ describe("/qc/cup/[lot] page (smoke)", () => {
 
     // The dossier shell wraps the cockpit with a localized eyebrow + back link
     // — chrome shared across all 7 dossiers. The cup view is a facet of a lot,
-    // so it uses kind="lot"; the "Catación" eyebrow distinguishes it.
+    // so it uses kind="lot"; the "Cupping" eyebrow distinguishes it.
     expect(screen.getByTestId("dossier-lot")).toBeInTheDocument();
-    expect(screen.getByText("Catación")).toBeInTheDocument();
+    expect(screen.getByText("Cupping")).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /todo el control de calidad/i }),
+      screen.getByRole("link", { name: /all quality control/i }),
     ).toHaveAttribute("href", "/qc");
 
     // The data is unchanged: the scoresheet renders for the resolved lot.

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { CloudOff, RotateCw } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +23,7 @@ export default function PayPeriodDossierError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("common");
   useEffect(() => {
     console.error("/pay-period/[id] dossier error:", error);
   }, [error]);
@@ -38,17 +40,16 @@ export default function PayPeriodDossierError({
           </div>
 
           <h2 className="mt-4 font-display text-lg font-semibold text-ink">
-            No pudimos cargar este período de pago
+            {t("error.payPeriod.title")}
           </h2>
           <p className="mx-auto mt-1 max-w-sm text-sm text-muted-fg">
-            La conexión con los registros de la finca se interrumpió un momento.
-            Suele ser temporal — inténtalo de nuevo.
+            {t("error.payPeriod.body")}
           </p>
 
           <div className="mt-6 flex items-center justify-center">
             <Button onClick={() => reset()}>
               <RotateCw className="h-4 w-4" />
-              Reintentar
+              {t("error.payPeriod.retry")}
             </Button>
           </div>
         </CardContent>

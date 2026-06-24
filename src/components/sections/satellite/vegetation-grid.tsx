@@ -1,4 +1,5 @@
 import { CloudOff, Leaf, Mountain, Radar, Satellite } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,14 +23,15 @@ import { confidenceLabel, confidenceNote, confidenceTone } from "./confidence";
  * `motion-reduce` disables, AA contrast on the paper canvas, a responsive grid.
  */
 export function VegetationGrid({ rows }: { rows: PlotVegetation[] }) {
+  const t = useTranslations("satellite");
   if (rows.length === 0) {
     return (
       <Card data-testid="vegetation-empty" className="animate-rise">
         <CardContent>
           <EmptyState
             icon={Satellite}
-            title="No satellite reads yet"
-            description="Ingest a Sentinel-2 / Sentinel-1 pass (or log a cached read) and each plot's vegetation health appears here with an honest confidence badge."
+            title={t("grid.emptyTitle")}
+            description={t("grid.emptyDescription")}
           />
         </CardContent>
       </Card>
@@ -84,7 +86,7 @@ export function VegetationGrid({ rows }: { rows: PlotVegetation[] }) {
                       {num(r.value as number, 2)}
                     </span>
                     <span className="text-[11px] font-medium uppercase tracking-wide text-muted-fg">
-                      {r.indexKind ?? "index"}
+                      {r.indexKind ?? t("grid.indexFallback")}
                     </span>
                   </div>
                   <div
@@ -92,7 +94,7 @@ export function VegetationGrid({ rows }: { rows: PlotVegetation[] }) {
                     aria-valuenow={pct}
                     aria-valuemin={0}
                     aria-valuemax={100}
-                    aria-label={`${r.plotName} vegetation index`}
+                    aria-label={t("grid.indexAria", { plotName: r.plotName })}
                     className="h-2 w-full overflow-hidden rounded-full bg-ink/5"
                   >
                     <div
@@ -113,7 +115,9 @@ export function VegetationGrid({ rows }: { rows: PlotVegetation[] }) {
               {hasValue ? (
                 <p className="text-[11px] text-muted-fg">
                   {confidenceNote(r.confidence, r.basis)}
-                  {r.cloudPct !== null ? ` · ${num(r.cloudPct)}% cloud` : ""}
+                  {r.cloudPct !== null
+                    ? ` · ${t("grid.cloudSuffix", { pct: num(r.cloudPct) })}`
+                    : ""}
                 </p>
               ) : null}
             </CardContent>

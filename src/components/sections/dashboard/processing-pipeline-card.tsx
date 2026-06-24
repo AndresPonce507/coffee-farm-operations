@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EntityLink } from "@/components/ui/entity-link";
@@ -16,14 +18,14 @@ import {
 
 type IconType = React.ComponentType<{ className?: string }>;
 
-/** Ordered pipeline definition — label + icon per stage, in flow order. */
-const STAGES: { key: BatchStage; label: string; icon: IconType }[] = [
-  { key: "cherry", label: "Cherry", icon: Cherry },
-  { key: "fermentation", label: "Fermentation", icon: FlaskConical },
-  { key: "drying", label: "Drying", icon: Sun },
-  { key: "parchment", label: "Parchment", icon: Layers },
-  { key: "milled", label: "Milled", icon: Cog },
-  { key: "green", label: "Green", icon: Sprout },
+/** Ordered pipeline definition — i18n key + icon per stage, in flow order. */
+const STAGES: { key: BatchStage; icon: IconType }[] = [
+  { key: "cherry", icon: Cherry },
+  { key: "fermentation", icon: FlaskConical },
+  { key: "drying", icon: Sun },
+  { key: "parchment", icon: Layers },
+  { key: "milled", icon: Cog },
+  { key: "green", icon: Sprout },
 ];
 
 /** Stage rank used to find the batches closest to the "green" finish line. */
@@ -41,6 +43,7 @@ const STAGE_RANK: Record<BatchStage, number> = {
  * Server component (pure render over mock data; no hooks or handlers).
  */
 export async function ProcessingPipelineCard() {
+  const t = await getTranslations("dashboard");
   const batches = await getBatches();
 
   // Aggregate batch count + total weight at each stage.
@@ -49,6 +52,7 @@ export async function ProcessingPipelineCard() {
     const totalKg = inStage.reduce((sum, b) => sum + b.currentKg, 0);
     return {
       ...stage,
+      label: t(`processing.stage.${stage.key}`),
       count: inStage.length,
       totalKg,
       active: inStage.length > 0,
@@ -70,19 +74,25 @@ export async function ProcessingPipelineCard() {
     .slice(0, 2);
 
   const stageLabel = (key: BatchStage): string =>
-    STAGES.find((s) => s.key === key)?.label ?? key;
+    STAGES.find((s) => s.key === key) ? t(`processing.stage.${key}`) : key;
 
   return (
     <Card className="animate-rise">
       <CardHeader>
         <div>
-          <CardTitle>Processing pipeline</CardTitle>
+          <CardTitle>{t("processing.title")}</CardTitle>
           <CardDescription>
-            {batches.length} batches in process · {kg(inFlightKg)} on the beds
+            {t("processing.description", {
+              count: batches.length,
+              kg: kg(inFlightKg),
+            })}
           </CardDescription>
         </div>
         <Badge tone="forest" dot>
-          {activeStages} of {STAGES.length} stages active
+          {t("processing.stagesActive", {
+            active: activeStages,
+            total: STAGES.length,
+          })}
         </Badge>
       </CardHeader>
 
@@ -91,7 +101,7 @@ export async function ProcessingPipelineCard() {
         <div className="cv-auto -mx-1 overflow-x-auto pb-1">
           <ol
             className="stagger flex min-w-max items-stretch gap-1 px-1"
-            aria-label="Processing stages from cherry to green coffee"
+            aria-label={t("processing.stagesAriaLabel")}
           >
             {byStage.map((stage, i) => {
               const Icon = stage.icon;
@@ -100,9 +110,16 @@ export async function ProcessingPipelineCard() {
                 <li
                   key={stage.key}
                   className="flex items-center"
-                  aria-label={`${stage.label}: ${stage.count} ${
-                    stage.count === 1 ? "batch" : "batches"
-                  }, ${kg(stage.totalKg)}`}
+                  aria-label={t("processing.stageItemAriaLabel", {
+                    label: stage.label,
+                    count: stage.count,
+                    unit: t(
+                      stage.count === 1
+                        ? "processing.batchOne"
+                        : "processing.batchOther",
+                    ),
+                    kg: kg(stage.totalKg),
+                  })}
                 >
                   <div
                     className={[
@@ -181,7 +198,7 @@ export async function ProcessingPipelineCard() {
         {nearingGreen.length > 0 && (
           <div className="mt-6 border-t border-line pt-4">
             <p className="font-display text-xs font-semibold uppercase tracking-wide text-muted-fg">
-              Closest to green
+              {t("processing.closestToGreen")}
             </p>
             <ul className="stagger mt-3 space-y-2">
               {nearingGreen.map((batch) => (

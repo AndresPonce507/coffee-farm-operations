@@ -1,4 +1,5 @@
 import { ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { DossierSection } from "@/components/dossier/dossier-section";
 import { EntityLink } from "@/components/ui/entity-link";
@@ -21,18 +22,22 @@ export function CrewRosterSection({
 }: {
   members: CrewRosterMember[];
 }) {
+  const t = useTranslations("crew");
   const present = members.filter((m) => m.attendance === "present").length;
 
   return (
     <DossierSection
       id="roster"
-      title="Cuadrilla"
+      title={t("rosterSection.title")}
       count={members.length}
       empty={members.length === 0}
-      emptyLabel="Sin integrantes en esta cuadrilla todavía"
+      emptyLabel={t("rosterSection.empty")}
     >
       <p className="mb-3 text-sm text-muted-fg">
-        {present} de {members.length} presentes hoy
+        {t("rosterSection.presentOfTotal", {
+          present,
+          total: members.length,
+        })}
       </p>
       <ul role="list" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {members.map((member) => (
@@ -58,21 +63,21 @@ export function CrewRosterSection({
               </div>
               {member.attendance === "present" ? (
                 <Badge tone="ok" dot className="shrink-0">
-                  Presente
+                  {t("rosterSection.present")}
                 </Badge>
               ) : member.attendance === "rest-day" ? (
                 <Badge tone="warn" dot className="shrink-0">
-                  Descanso
+                  {t("rosterSection.restDay")}
                 </Badge>
               ) : (
                 <Badge tone="neutral" dot className="shrink-0">
-                  Ausente
+                  {t("rosterSection.absent")}
                 </Badge>
               )}
               {member.rehireEligible ? (
                 <ShieldCheck
                   className="h-4 w-4 shrink-0 text-forest"
-                  aria-label="Elegible para recontratar"
+                  aria-label={t("rosterSection.rehireEligible")}
                 />
               ) : null}
             </EntityLink>

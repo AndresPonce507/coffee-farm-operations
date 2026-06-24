@@ -49,7 +49,7 @@ describe("CupperDriftCard — cupper is a dossier link (L3 wire-up)", () => {
   /**
    * WCAG 2.5.3 Label in Name — the aria-label MUST announce the human name, not
    * the raw slug, when a name is available. Without `name={name}` on EntityLink,
-   * aria-label is "Abrir trabajador w-cup-2" even when the screen shows "Eduardo Pérez",
+   * aria-label is "Open worker w-cup-2" even when the screen shows "Eduardo Pérez",
    * violating Label-in-Name for the ~90% Ngäbe-Buglé crew who rely on screen readers.
    */
   it("aria-label announces the human name (WCAG 2.5.3) when name is resolved", () => {
@@ -57,8 +57,8 @@ describe("CupperDriftCard — cupper is a dossier link (L3 wire-up)", () => {
     render(<CupperDriftCard drift={DRIFT} nameById={nameById} />);
     // With next/link forwarding aria-label, the attribute must contain the human name.
     const link = screen.getByRole("link", { name: /Eduardo Pérez/i });
-    expect(link).toHaveAttribute("aria-label", "Abrir trabajador Eduardo Pérez");
-    expect(link).not.toHaveAttribute("aria-label", "Abrir trabajador w-cup-2");
+    expect(link).toHaveAttribute("aria-label", "Open worker Eduardo Pérez");
+    expect(link).not.toHaveAttribute("aria-label", "Open worker w-cup-2");
   });
 
   it("aria-label is absent when no name is mapped (text content is the accessible name)", () => {

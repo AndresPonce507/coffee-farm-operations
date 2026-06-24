@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CheckCircle2, Lock, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { GreenLotAtp } from "@/lib/types";
 import {
@@ -41,6 +42,7 @@ const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export function ReservationDrawer({ lot }: { lot: GreenLotAtp }) {
+  const t = useTranslations("inventory");
   const [open, setOpen] = useState(false);
   const soldOut = lot.atp <= 0;
 
@@ -54,17 +56,17 @@ export function ReservationDrawer({ lot }: { lot: GreenLotAtp }) {
         onClick={() => setOpen(true)}
         aria-label={
           soldOut
-            ? `${lot.greenLotCode} sold out`
-            : `Reserve ${lot.greenLotCode}`
+            ? t("reservation.soldOutLabel", { code: lot.greenLotCode })
+            : t("reservation.reserveLabel", { code: lot.greenLotCode })
         }
       >
         {soldOut ? (
           <>
             <Lock className="h-3.5 w-3.5" />
-            Sold out
+            {t("reservation.soldOut")}
           </>
         ) : (
-          "Reserve"
+          t("reservation.reserve")
         )}
       </Button>
 
@@ -80,6 +82,7 @@ function ReservationPanel({
   lot: GreenLotAtp;
   onClose: () => void;
 }) {
+  const t = useTranslations("inventory");
   const [state, formAction, pending] = useActionState<
     InventoryActionState,
     FormData
@@ -184,13 +187,13 @@ function ReservationPanel({
       className="fixed inset-0 z-50 flex justify-end"
       role="dialog"
       aria-modal="true"
-      aria-label={`Reserve green lot ${lot.greenLotCode}`}
+      aria-label={t("reservation.dialogLabel", { code: lot.greenLotCode })}
       onKeyDown={onKeyDown}
     >
       {/* Click-away scrim. */}
       <button
         type="button"
-        aria-label="Close"
+        aria-label={t("reservation.closeScrim")}
         tabIndex={-1}
         onClick={onClose}
         className="absolute inset-0 cursor-default bg-forest/40 backdrop-blur-sm"
@@ -205,7 +208,7 @@ function ReservationPanel({
         <div className="mb-1 flex items-start justify-between">
           <div>
             <h2 className="font-display text-lg font-semibold text-ink">
-              Reserve green lot
+              {t("reservation.title")}
             </h2>
             <p className="mt-0.5 font-mono text-sm text-forest-700">
               {lot.greenLotCode}
@@ -214,7 +217,7 @@ function ReservationPanel({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close drawer"
+            aria-label={t("reservation.closeDrawer")}
             className="grid h-8 w-8 place-items-center rounded-lg text-muted-fg transition hover:bg-white/60 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-100"
           >
             <X className="h-4 w-4" />
@@ -225,14 +228,15 @@ function ReservationPanel({
             ceiling. The DB is the real ceiling; this is the human-readable one. */}
         <div className="mt-4 rounded-xl border border-white/60 bg-white/55 px-4 py-3">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-fg">
-            Available to promise
+            {t("reservation.availableToPromise")}
           </p>
           <p className="mt-0.5 font-display text-xl font-semibold tabular-nums text-honey-700">
             {kg(lot.atp)}
           </p>
           <p className="mt-0.5 text-xs text-muted-fg">
-            {kg(lot.currentKg)} on hand · {kg(lot.reservedKg + lot.shippedKg)}{" "}
-            committed · {lot.location}
+            {kg(lot.currentKg)} {t("reservation.onHand")} ·{" "}
+            {kg(lot.reservedKg + lot.shippedKg)} {t("reservation.committed")} ·{" "}
+            {lot.location}
           </p>
         </div>
 
@@ -241,12 +245,12 @@ function ReservationPanel({
 
           <div className="space-y-1">
             <label className={LABEL} htmlFor="reserve-buyer">
-              Buyer
+              {t("reservation.buyerLabel")}
             </label>
             <input
               id="reserve-buyer"
               name="buyer"
-              placeholder="e.g. Onyx Coffee Lab"
+              placeholder={t("reservation.buyerPlaceholder")}
               className={FIELD}
             />
             {fieldError("buyer") && (
@@ -256,7 +260,7 @@ function ReservationPanel({
 
           <div className="space-y-1">
             <label className={LABEL} htmlFor="reserve-kg">
-              Kilograms to reserve
+              {t("reservation.kgLabel")}
             </label>
             <input
               id="reserve-kg"
@@ -265,7 +269,7 @@ function ReservationPanel({
               min="0"
               max={lot.atp}
               step="any"
-              placeholder={`up to ${lot.atp}`}
+              placeholder={t("reservation.kgPlaceholder", { max: lot.atp })}
               className={FIELD}
             />
             {fieldError("kg") && (
@@ -275,10 +279,10 @@ function ReservationPanel({
 
           <div className="mt-auto flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={onClose}>
-              Cancel
+              {t("reservation.cancel")}
             </Button>
             <Button type="submit" disabled={pending}>
-              {pending ? "Holding…" : "Hold reservation"}
+              {pending ? t("reservation.holding") : t("reservation.submit")}
             </Button>
           </div>
         </form>
@@ -300,7 +304,7 @@ function ReservationPanel({
               )}
             >
               <CheckCircle2 className="h-4 w-4 shrink-0 text-forest" />
-              {state.message ?? "Reservation held."}
+              {state.message ?? t("reservation.heldFallback")}
             </div>
           )}
 

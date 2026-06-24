@@ -25,18 +25,18 @@ describe("DispatchAckSection", () => {
     render(<DispatchAckSection run={{ ...base, status: "acknowledged" }} />);
 
     expect(screen.getByTestId("section-ack")).toBeInTheDocument();
-    expect(screen.getByText(/confirmad/i)).toBeInTheDocument();
+    expect(screen.getByText(/confirmed/i)).toBeInTheDocument();
   });
 
   it("renders the awaiting-ack state for a sent-but-not-acknowledged run", () => {
     render(<DispatchAckSection run={{ ...base, status: "sent" }} />);
 
-    expect(screen.getByText(/esperando|sin confirmar|enviad/i)).toBeInTheDocument();
+    expect(screen.getByText(/awaiting confirmation|not sent|sent/i)).toBeInTheDocument();
   });
 
   it("notes acknowledgement is evidence-only (untrusted text never drives an action)", () => {
     render(<DispatchAckSection run={{ ...base, status: "acknowledged" }} />);
 
-    expect(screen.getByText(/evidencia/i)).toBeInTheDocument();
+    expect(screen.getByText(/proof of receipt/i)).toBeInTheDocument();
   });
 });

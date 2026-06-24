@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { FlaskConical } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { FermentRecipe } from "@/lib/db/ferment";
 import { Button } from "@/components/ui/button";
@@ -20,14 +21,15 @@ export function StartFermentButton({
   lots: string[];
   recipes: FermentRecipe[];
 }) {
+  const t = useTranslations("ferment");
   const [open, setOpen] = useState(false);
   return (
     <>
       <Button variant="primary" onClick={() => setOpen(true)}>
         <FlaskConical className="h-4 w-4" aria-hidden />
-        Start ferment
+        {t("startButton.startFerment")}
       </Button>
-      <Dialog open={open} onClose={() => setOpen(false)} title="Start a ferment">
+      <Dialog open={open} onClose={() => setOpen(false)} title={t("startButton.dialogTitle")}>
         <StartFermentForm
           lots={lots}
           recipes={recipes}

@@ -180,8 +180,8 @@ describe("CrewRosterBoard", () => {
     render(<CrewRosterBoard members={[member()]} />);
     const card = screen.getByTestId("worker-card-w-1");
     // WCAG 2.5.3: aria-label must contain the visible name (not slug).
-    // EntityLink renders aria-label="Abrir trabajador <name>" — name is member.preferredName or member.name.
-    const link = within(card).getByRole("link", { name: /abrir trabajador Rosa Quintero/i });
+    // EntityLink renders aria-label="Open worker <name>" — name is member.preferredName or member.name.
+    const link = within(card).getByRole("link", { name: /open worker Rosa Quintero/i });
     expect(link).toHaveAttribute("href", "/workers/w-1");
   });
 
@@ -189,15 +189,15 @@ describe("CrewRosterBoard", () => {
     render(<CrewRosterBoard members={[member({ preferredName: "Rosita" })]} />);
     const card = screen.getByTestId("worker-card-w-1");
     // preferredName takes precedence in both the aria-label and visible text.
-    const link = within(card).getByRole("link", { name: /abrir trabajador Rosita/i });
+    const link = within(card).getByRole("link", { name: /open worker Rosita/i });
     expect(link).toHaveAttribute("href", "/workers/w-1");
   });
 
   it("crew column header h3 is wrapped in an EntityLink to /crew/[crewId]", () => {
     render(<CrewRosterBoard members={[member({ crewId: "c-1" })]} />);
     // WCAG 2.5.3: aria-label must contain the visible crew name (not slug).
-    // EntityLink renders aria-label="Abrir cuadrilla <crewName>".
-    const link = screen.getByRole("link", { name: /abrir cuadrilla Cuadrilla Volcán/i });
+    // EntityLink renders aria-label="Open crew <crewName>".
+    const link = screen.getByRole("link", { name: /open crew Cuadrilla Volcán/i });
     expect(link).toHaveAttribute("href", "/crew/c-1");
     expect(within(link).getByRole("heading", { name: "Cuadrilla Volcán" })).toBeInTheDocument();
   });
@@ -207,6 +207,6 @@ describe("CrewRosterBoard", () => {
     // The heading still renders but without a link.
     expect(screen.getByRole("heading", { name: "Cuadrilla Volcán" })).toBeInTheDocument();
     // No crew link should be present.
-    expect(screen.queryByRole("link", { name: /abrir crew/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: /open crew/i })).toBeNull();
   });
 });

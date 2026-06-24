@@ -102,9 +102,9 @@ describe("WeighCapture", () => {
 
     // The reactive proof panel appears, naming ≥2 consumers, each a real link.
     await waitFor(() =>
-      expect(screen.getByText(/se reflejó/i)).toBeInTheDocument(),
+      expect(screen.getByText(/showed up in/i)).toBeInTheDocument(),
     );
-    const dash = screen.getByRole("link", { name: /Tablero|hoy/i });
+    const dash = screen.getByRole("link", { name: /Dashboard|today/i });
     expect(dash).toHaveAttribute("href", "/");
     const lot = screen.getByRole("link", { name: /JC-712/ });
     expect(lot).toHaveAttribute("href", "/lots/JC-712");
@@ -122,9 +122,9 @@ describe("WeighCapture", () => {
     fireEvent.click(screen.getByRole("button", { name: /Capture weigh-in/i }));
 
     await waitFor(() =>
-      expect(screen.getByText(/Tu lote/i)).toBeInTheDocument(),
+      expect(screen.getByText(/Your lot/i)).toBeInTheDocument(),
     );
-    const lots = screen.getByRole("link", { name: /Tu lote/i });
+    const lots = screen.getByRole("link", { name: /Your lot/i });
     expect(lots).toHaveAttribute("href", "/harvests");
   });
 
@@ -181,7 +181,7 @@ describe("WeighCapture", () => {
 
     // The picker is told why the plot didn't auto-change — no silent failure.
     await waitFor(() =>
-      expect(screen.getByRole("alert")).toHaveTextContent(/GPS|parcela|plot/i),
+      expect(screen.getByRole("alert")).toHaveTextContent(/GPS|plot/i),
     );
     // …and the button is usable again (not stuck busy).
     expect(gps).toBeEnabled();
@@ -201,7 +201,7 @@ describe("WeighCapture", () => {
     // First tap fails → the calm inline error surfaces.
     fireEvent.click(gps);
     await waitFor(() =>
-      expect(screen.getByRole("alert")).toHaveTextContent(/GPS|parcela|plot/i),
+      expect(screen.getByRole("alert")).toHaveTextContent(/GPS|plot/i),
     );
 
     // Second tap succeeds → the stale error must be gone (not contradicting success).

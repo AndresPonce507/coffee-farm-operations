@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { DossierShell } from "@/components/dossier/dossier-shell";
 import { DossierSection } from "@/components/dossier/dossier-section";
@@ -27,6 +28,7 @@ export default async function FermentBatchPage({
   params: Promise<{ batch: string }>;
 }) {
   const { batch: batchId } = await params;
+  const t = await getTranslations("ferment");
 
   const batches = await getFermentBatches();
   const batch = batches.find((b) => b.id === batchId);
@@ -43,13 +45,13 @@ export default async function FermentBatchPage({
   return (
     <DossierShell
       kind="batch"
-      title={`Lote ${batch.lotCode}`}
-      eyebrow="Lote en fermentación"
-      subtitle="Cabina de calidad por lote — curvas de pH/temp/Brix, punto de corte y agua por kg"
+      title={t("dossier.title", { lotCode: batch.lotCode })}
+      eyebrow={t("dossier.eyebrow")}
+      subtitle={t("dossier.subtitle")}
       backHref="/ferment"
-      backLabel="Todas las fermentaciones"
+      backLabel={t("dossier.backLabel")}
     >
-      <DossierSection id="tracker" title="Seguimiento de fermentación">
+      <DossierSection id="tracker" title={t("dossier.trackerTitle")}>
         <FermentTracker
           batch={batch}
           curve={curve}

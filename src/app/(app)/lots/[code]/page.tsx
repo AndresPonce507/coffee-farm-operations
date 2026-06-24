@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { DossierShell } from "@/components/dossier/dossier-shell";
 import { DossierSection } from "@/components/dossier/dossier-section";
@@ -34,6 +35,7 @@ export default async function LotGenealogyPage({
   params: Promise<{ code: string }>;
 }) {
   const { code } = await params;
+  const t = await getTranslations("lots");
   const graph = await getLotGenealogy(code);
 
   // The ⌘K palette (and any hand-typed URL) can route to /lots/JC-999 even when
@@ -66,18 +68,18 @@ export default async function LotGenealogyPage({
   return (
     <DossierShell
       kind="lot"
-      title={`Lot ${code}`}
-      eyebrow="Lote"
-      subtitle="Trazabilidad de la finca a la bolsa — flujo de masa desde la cereza hasta el lote verde vendido"
+      title={t("page.title", { code })}
+      eyebrow={t("page.eyebrow")}
+      subtitle={t("page.subtitle")}
       backHref="/lots"
-      backLabel="Todos los lotes"
+      backLabel={t("page.backLabel")}
     >
-      <DossierSection id="lineage" title="Linaje (de la finca a la bolsa)">
+      <DossierSection id="lineage" title={t("page.lineageSection")}>
         <GenealogyGraph graph={graph} terminalCode={code} />
       </DossierSection>
 
       {dossier && (
-        <DossierSection id="eudr" title="Diligencia debida EUDR">
+        <DossierSection id="eudr" title={t("page.eudrSection")}>
           <EudrDossier dossier={dossier} />
         </DossierSection>
       )}

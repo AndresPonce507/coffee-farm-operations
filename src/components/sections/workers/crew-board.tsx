@@ -1,5 +1,6 @@
 import { Users } from "lucide-react";
 import type { ReactNode } from "react";
+import { getTranslations } from "next-intl/server";
 
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,7 @@ import { getCrews } from "@/lib/db/people";
  * except crewId-less buckets, which can't resolve a dossier and stay inert.
  */
 export async function CrewBoard() {
+  const t = await getTranslations("workers");
   const [crews, workers] = await Promise.all([getCrews(), getWorkers()]);
 
   // The avatar wrap needs each crew's members; match the live roster by name
@@ -40,13 +42,11 @@ export async function CrewBoard() {
     <Card className="animate-rise overflow-hidden">
       <CardHeader>
         <div>
-          <CardTitle>Crews</CardTitle>
-          <CardDescription>
-            Field teams and today&rsquo;s presence on the farm
-          </CardDescription>
+          <CardTitle>{t("crewBoard.title")}</CardTitle>
+          <CardDescription>{t("crewBoard.description")}</CardDescription>
         </div>
         <Badge tone="forest" dot>
-          {cards.length} crews
+          {t("crewBoard.crewCount", { n: cards.length })}
         </Badge>
       </CardHeader>
 
@@ -64,11 +64,17 @@ export async function CrewBoard() {
                       {crewName}
                     </h4>
                     <p className="mt-0.5 text-xs text-muted-fg">
-                      {memberCount} {memberCount === 1 ? "member" : "members"}
+                      {memberCount}{" "}
+                      {memberCount === 1
+                        ? t("crewBoard.member")
+                        : t("crewBoard.members")}
                     </p>
                   </div>
                   <Badge tone={allIn ? "ok" : "warn"} dot>
-                    {presentCount}/{memberCount} present
+                    {t("crewBoard.present", {
+                      present: presentCount,
+                      total: memberCount,
+                    })}
                   </Badge>
                 </div>
 
@@ -89,15 +95,17 @@ export async function CrewBoard() {
                 ) : (
                   <p className="flex items-center gap-1.5 text-xs text-muted-fg">
                     <Users className="h-3.5 w-3.5" aria-hidden="true" />
-                    No one assigned
+                    {t("crewBoard.noneAssigned")}
                   </p>
                 )}
 
                 <p className="text-xs text-muted-fg">
-                  <span className="font-medium text-ink">{presentCount}</span> on
-                  the ground today
+                  <span className="font-medium text-ink">{presentCount}</span>{" "}
+                  {t("crewBoard.onGroundToday")}
                   {presentCount < memberCount ? (
-                    <span> · {memberCount - presentCount} off</span>
+                    <span>
+                      {t("crewBoard.off", { n: memberCount - presentCount })}
+                    </span>
                   ) : null}
                 </p>
               </>

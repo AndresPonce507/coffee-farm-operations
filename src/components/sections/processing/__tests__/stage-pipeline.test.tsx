@@ -96,13 +96,13 @@ describe("StagePipeline (smoke)", () => {
     ];
 
     for (const { code, href } of lotLinks) {
-      const link = screen.getByRole("link", { name: new RegExp(`Abrir lote ${code}`) });
+      const link = screen.getByRole("link", { name: new RegExp(`Open lot ${code}`) });
       expect(link).toHaveAttribute("href", href);
       expect(link).toHaveTextContent(code);
     }
   });
 
-  it("BatchTile 'Ver lote' links use ferment_batches UUID, not processing_batches id", async () => {
+  it("BatchTile 'View lot' links use ferment_batches UUID, not processing_batches id", async () => {
     const ui = await StagePipeline();
     render(ui);
 
@@ -118,7 +118,7 @@ describe("StagePipeline (smoke)", () => {
     expect(document.querySelector('a[href="/ferment/b5"]')).toBeNull();
   });
 
-  it("BatchTile omits 'Ver lote' link when no ferment run exists for that lot", async () => {
+  it("BatchTile omits 'View lot' link when no ferment run exists for that lot", async () => {
     const ui = await StagePipeline();
     render(ui);
 

@@ -1,0 +1,50 @@
+{
+  "page": {
+    "eyebrow": "Período de pago",
+    "backLabel": "Toda la nómina",
+    "subtitleWorkerOne": "trabajador",
+    "subtitleWorkerOther": "trabajadores",
+    "seasonPrefix": "Temporada {season} · "
+  },
+  "summary": {
+    "title": "Resumen del período",
+    "workers": "Trabajadores",
+    "totalGross": "Bruto total",
+    "totalNet": "Neto total",
+    "makeWhole": "Ajuste al mínimo",
+    "makeWholeSubOne": "{count} trabajador llevado al mínimo legal",
+    "makeWholeSubOther": "{count} trabajadores llevados al mínimo legal",
+    "makeWholeSubNone": "todos sobre el mínimo legal",
+    "seasonPrefix": "Temporada {season} · ",
+    "statusLine": "Estado: {status}",
+    "calculatedSuffix": " · calculado {date}",
+    "viewLines": "Ver las líneas de pago",
+    "statDrillAria": "{label}: {value}. Ver las líneas de pago que lo producen"
+  },
+  "lines": {
+    "title": "Líneas de pago por trabajador",
+    "empty": "Sin líneas calculadas todavía",
+    "worker": "Trabajador",
+    "crew": "Cuadrilla",
+    "pieceRate": "Por obra",
+    "hourly": "Por hora",
+    "adjustment": "Ajuste",
+    "gross": "Bruto",
+    "net": "Neto",
+    "makeWholeTag": "ajuste al mínimo legal"
+  },
+  "makeWhole": {
+    "title": "Ajuste al mínimo legal",
+    "empty": "Todos sobre el mínimo legal — el piso no tuvo que activarse",
+    "headlineOne": "{count} trabajador llevado al mínimo legal",
+    "headlineOther": "{count} trabajadores llevados al mínimo legal",
+    "periodTotal": "Ajuste total del período:",
+    "earnedFloor": "Ganó {earned} · piso {floor}"
+  },
+  "disbursements": {
+    "title": "Pagos registrados",
+    "empty": "Sin pagos registrados todavía",
+    "signedTitle": "Pago en efectivo con firma",
+    "signed": "firmado"
+  }
+}

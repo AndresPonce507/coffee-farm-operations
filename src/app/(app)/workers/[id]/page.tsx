@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { DossierShell } from "@/components/dossier/dossier-shell";
 import { WorkerIdentitySection } from "@/components/sections/workers/worker-identity-section";
@@ -37,6 +38,7 @@ export default async function WorkerDossierPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const t = await getTranslations("workers");
 
   // P2 — anchor existence gate: resolve identity with ONE getter, 404 if absent.
   const worker = await getWorkerById(id);
@@ -58,10 +60,13 @@ export default async function WorkerDossierPage({
     <DossierShell
       kind="worker"
       title={worker.preferredName ?? worker.name}
-      eyebrow="Trabajador"
-      subtitle={`${worker.role} · ${worker.crewName}`}
+      eyebrow={t("dossier.eyebrow")}
+      subtitle={t("dossier.subtitle", {
+        role: worker.role,
+        crew: worker.crewName,
+      })}
       backHref="/workers"
-      backLabel="Todos los trabajadores"
+      backLabel={t("dossier.backLabel")}
     >
       <WorkerIdentitySection worker={worker} certs={certs} />
       <WorkerProductivitySection summary={summary} events={events} />

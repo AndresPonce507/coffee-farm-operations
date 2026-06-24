@@ -67,16 +67,16 @@ describe("PlotHarvestsSection", () => {
   it("renders the empty state when there are no harvests", () => {
     render(<PlotHarvestsSection harvests={[]} pickerIds={{}} />);
     expect(screen.getByTestId("section-harvests")).toBeInTheDocument();
-    expect(screen.getByText(/Sin cosechas/i)).toBeInTheDocument();
+    expect(screen.getByText(/No harvests recorded/i)).toBeInTheDocument();
   });
 
-  it("section title uses 'parcela' not 'lote' to avoid collision with the coffee-lot entity", () => {
+  it("section title uses 'plot' not 'lot' to avoid collision with the coffee-lot entity", () => {
     render(
       <PlotHarvestsSection harvests={harvests} pickerIds={pickerIds} />,
     );
-    // The section heading must say 'parcela', never 'lote' (which is the coffee-lot entity word).
-    expect(screen.getByText(/parcela/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Cosechas de este lote/i)).not.toBeInTheDocument();
+    // The section heading must say 'plot', never 'lot' (which is the coffee-lot entity word).
+    expect(screen.getByText(/Harvests from this plot/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Harvests from this lot/i)).not.toBeInTheDocument();
   });
 
   it("EntityLinks carry focus-visible ring classes matching the worker-dossier pattern", () => {
@@ -88,7 +88,7 @@ describe("PlotHarvestsSection", () => {
       .getByText("Lupita González")
       .closest("a") as HTMLAnchorElement;
     const lotLink = screen
-      .getByRole("link", { name: /Abrir lote JC-564/i }) as HTMLAnchorElement;
+      .getByRole("link", { name: /Open lot JC-564/i }) as HTMLAnchorElement;
 
     for (const link of [pickerLink, lotLink]) {
       expect(link.className).toContain("focus-visible:ring-2");

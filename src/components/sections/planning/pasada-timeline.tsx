@@ -1,4 +1,5 @@
 import { CalendarDays, CloudRain, ListTodo, Mountain } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -19,21 +20,22 @@ import type { PasadaPlan, RipenessTarget } from "@/lib/types";
  * reduced-motion safe, AA contrast.
  */
 
-const RIPE_STYLES: Record<RipenessTarget, { chip: string; label: string }> = {
-  high: { chip: "border-forest/40 bg-forest-100/60 text-forest", label: "peak ripe" },
-  medium: { chip: "border-honey/40 bg-honey-100/60 text-honey-700", label: "ripe" },
-  low: { chip: "border-sky/40 bg-sky-100/60 text-sky", label: "early pass" },
+const RIPE_STYLES: Record<RipenessTarget, { chip: string; labelKey: string }> = {
+  high: { chip: "border-forest/40 bg-forest-100/60 text-forest", labelKey: "ripeHigh" },
+  medium: { chip: "border-honey/40 bg-honey-100/60 text-honey-700", labelKey: "ripeMedium" },
+  low: { chip: "border-sky/40 bg-sky-100/60 text-sky", labelKey: "ripeLow" },
 };
 
 export function PasadaTimeline({ plans }: { plans: PasadaPlan[] }) {
+  const t = useTranslations("planning");
   if (plans.length === 0) {
     return (
       <Card data-testid="pasada-empty" className="animate-rise">
         <CardContent>
           <EmptyState
             icon={CalendarDays}
-            title="No passes scheduled yet"
-            description="Schedule a pasada from a ready plot and it lands here — staggered down the altitude gradient — and fires a task onto the board."
+            title={t("pasadaTimeline.emptyTitle")}
+            description={t("pasadaTimeline.emptyDescription")}
           />
         </CardContent>
       </Card>
@@ -76,25 +78,25 @@ export function PasadaTimeline({ plans }: { plans: PasadaPlan[] }) {
                       </EntityLink>
                     </h3>
                     <span className="rounded-full bg-ink/5 px-1.5 py-0.5 text-[10px] font-medium text-muted-fg">
-                      Pasada {p.pasadaNumber}
+                      {t("pasadaTimeline.pasadaNumber", { number: p.pasadaNumber })}
                     </span>
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-fg">
                     <span>{p.variety}</span>
                     <span className="inline-flex items-center gap-1">
                       <Mountain className="h-3.5 w-3.5" aria-hidden />
-                      {num(p.altitudeMasl)} masl
+                      {t("pasadaTimeline.masl", { altitude: num(p.altitudeMasl) })}
                     </span>
                     {p.reason ? (
                       <span className="inline-flex items-center gap-1 text-cherry">
                         <CloudRain className="h-3.5 w-3.5" aria-hidden />
-                        re-planned · {p.reason}
+                        {t("pasadaTimeline.replanned", { reason: p.reason })}
                       </span>
                     ) : null}
                   </div>
                   {p.firedTaskId ? (
                     <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-cherry">
-                      <ListTodo className="h-3.5 w-3.5" aria-hidden /> On the board
+                      <ListTodo className="h-3.5 w-3.5" aria-hidden /> {t("pasadaTimeline.onTheBoard")}
                     </p>
                   ) : null}
                 </div>
@@ -105,7 +107,7 @@ export function PasadaTimeline({ plans }: { plans: PasadaPlan[] }) {
                     ripe.chip,
                   )}
                 >
-                  {ripe.label}
+                  {t(`pasadaTimeline.${ripe.labelKey}`)}
                 </span>
               </li>
             );

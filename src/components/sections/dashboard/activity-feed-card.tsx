@@ -1,4 +1,5 @@
 import { Coffee, FlaskConical, ListChecks, Users, Truck } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { EntityLink } from "@/components/ui/entity-link";
@@ -72,12 +73,13 @@ const KIND_CHIP: Record<ActivityKind, string> = {
  * A vertical, divider-separated timeline of the most recent farm events.
  */
 export async function ActivityFeedCard() {
+  const t = await getTranslations("dashboard");
   const activity = await getActivity();
 
   return (
     <Card className="animate-rise">
       <CardHeader>
-        <CardTitle>Recent activity</CardTitle>
+        <CardTitle>{t("activity.title")}</CardTitle>
       </CardHeader>
       <CardContent className="pt-2">
         <ul className="stagger -mx-2 divide-y divide-line">

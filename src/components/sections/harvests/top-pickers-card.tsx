@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -11,6 +13,7 @@ import { kg } from "@/lib/utils";
  * pickers with nothing today (absent / rest-day) are listed faded beneath.
  */
 export async function TopPickersCard() {
+  const t = await getTranslations("harvests");
   const pickers = await getPickers();
   const active = pickers
     .filter((p) => p.todayKg > 0)
@@ -28,8 +31,8 @@ export async function TopPickersCard() {
     <Card className="animate-rise">
       <CardHeader>
         <div>
-          <CardTitle>Mejores cosecheros hoy</CardTitle>
-          <CardDescription>Cerezas cosechadas desde la mañana</CardDescription>
+          <CardTitle>{t("topPickersCard.title")}</CardTitle>
+          <CardDescription>{t("topPickersCard.description")}</CardDescription>
         </div>
       </CardHeader>
 
@@ -72,7 +75,7 @@ export async function TopPickersCard() {
         {idle.length > 0 && (
           <div className="mt-5 border-t border-line pt-4">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-fg">
-              Sin actividad hoy
+              {t("topPickersCard.noActivity")}
             </p>
             <ul className="mt-3 space-y-2">
               {idle.map((picker) => (

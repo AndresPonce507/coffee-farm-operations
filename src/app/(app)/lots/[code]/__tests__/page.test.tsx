@@ -110,9 +110,9 @@ describe("/lots/[code] page (smoke)", () => {
     // (data-dossier="lot") with a localized eyebrow + back link, so all 7
     // dossiers share chrome. The data + sections are unchanged.
     expect(screen.getByTestId("dossier-lot")).toBeInTheDocument();
-    expect(screen.getByText("Lote")).toBeInTheDocument();
+    expect(screen.getByText("Lot")).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /todos los lotes/i }),
+      screen.getByRole("link", { name: /all lots/i }),
     ).toHaveAttribute("href", "/lots");
 
     // The header names the lot, and the genealogy figure renders.

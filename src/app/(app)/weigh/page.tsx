@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { WeighCapture } from "@/components/sections/weigh/weigh-capture";
 import { getCrewRoster } from "@/lib/db/people";
@@ -22,6 +24,7 @@ import {
  * authenticated-read RLS the S2 migration set). Writes never go through the page.
  */
 export default async function WeighPage() {
+  const t = await getTranslations("weigh");
   const [roster, plots, byPicker] = await Promise.all([
     getCrewRoster(),
     getWeighPlots(),
@@ -44,10 +47,7 @@ export default async function WeighPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Pesaje"
-        subtitle="El evento de campo de origen — registrar, pesar, madurez · funciona sin conexión"
-      />
+      <PageHeader title={t("page.title")} subtitle={t("page.subtitle")} />
       <WeighCapture pickers={pickers} plots={plots} farmKgToday={farmKgToday} />
     </div>
   );

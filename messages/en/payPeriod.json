@@ -1,0 +1,50 @@
+{
+  "page": {
+    "eyebrow": "Pay period",
+    "backLabel": "All payroll",
+    "subtitleWorkerOne": "worker",
+    "subtitleWorkerOther": "workers",
+    "seasonPrefix": "Season {season} · "
+  },
+  "summary": {
+    "title": "Period summary",
+    "workers": "Workers",
+    "totalGross": "Total gross",
+    "totalNet": "Total net",
+    "makeWhole": "Legal-minimum top-up",
+    "makeWholeSubOne": "{count} worker lifted to the legal minimum",
+    "makeWholeSubOther": "{count} workers lifted to the legal minimum",
+    "makeWholeSubNone": "all above the legal minimum",
+    "seasonPrefix": "Season {season} · ",
+    "statusLine": "Status: {status}",
+    "calculatedSuffix": " · calculated {date}",
+    "viewLines": "View the pay lines",
+    "statDrillAria": "{label}: {value}. View the pay lines that produce it"
+  },
+  "lines": {
+    "title": "Pay lines by worker",
+    "empty": "No lines calculated yet",
+    "worker": "Worker",
+    "crew": "Crew",
+    "pieceRate": "Piece-rate",
+    "hourly": "Hourly",
+    "adjustment": "Adjustment",
+    "gross": "Gross",
+    "net": "Net",
+    "makeWholeTag": "legal-minimum top-up"
+  },
+  "makeWhole": {
+    "title": "Legal-minimum top-up",
+    "empty": "All above the legal minimum — the floor never had to kick in",
+    "headlineOne": "{count} worker lifted to the legal minimum",
+    "headlineOther": "{count} workers lifted to the legal minimum",
+    "periodTotal": "Total top-up for the period:",
+    "earnedFloor": "Earned {earned} · floor {floor}"
+  },
+  "disbursements": {
+    "title": "Recorded payments",
+    "empty": "No payments recorded yet",
+    "signedTitle": "Signed cash payment",
+    "signed": "signed"
+  }
+}

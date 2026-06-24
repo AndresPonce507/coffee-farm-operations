@@ -10,6 +10,8 @@ import {
   HelpCircle,
 } from "lucide-react";
 
+import { getTranslations } from "next-intl/server";
+
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import type { BadgeTone } from "@/components/ui/badge";
@@ -18,12 +20,15 @@ import { getTasks } from "@/lib/db/tasks";
 import type { FarmTask, Priority, TaskCategory, TaskStatus } from "@/lib/types";
 import { cn, relativeDay, today } from "@/lib/utils";
 
-/* ---- Column definitions (status → display title), rendered left→right ---- */
-const COLUMNS: ReadonlyArray<{ status: TaskStatus; title: string }> = [
-  { status: "todo", title: "To do" },
-  { status: "in-progress", title: "In progress" },
-  { status: "blocked", title: "Blocked" },
-  { status: "done", title: "Done" },
+/** A minimal translator shape — the `t(key)` returned by getTranslations. */
+type Translator = (key: string) => string;
+
+/* ---- Column definitions (status → title translation key), rendered left→right ---- */
+const COLUMNS: ReadonlyArray<{ status: TaskStatus; titleKey: string }> = [
+  { status: "todo", titleKey: "board.todo" },
+  { status: "in-progress", titleKey: "board.inProgress" },
+  { status: "blocked", titleKey: "board.blocked" },
+  { status: "done", titleKey: "board.done" },
 ];
 
 /* ---- Category → Badge tone (explicit literal map; no interpolation) ---- */
@@ -58,10 +63,10 @@ const PRIORITY_DOT: Record<Priority, string> = {
   low: "bg-muted-fg/40",
 };
 
-const PRIORITY_LABEL: Record<Priority, string> = {
-  high: "High priority",
-  medium: "Medium priority",
-  low: "Low priority",
+const PRIORITY_LABEL_KEY: Record<Priority, string> = {
+  high: "board.priorityHigh",
+  medium: "board.priorityMedium",
+  low: "board.priorityLow",
 };
 
 /** Overdue = due before today's real local date AND not yet done. */
@@ -70,7 +75,7 @@ function isOverdue(task: FarmTask): boolean {
 }
 
 /* ---- A single task tile ---- */
-function TaskTile({ task }: { task: FarmTask }) {
+function TaskTile({ task, t }: { task: FarmTask; t: Translator }) {
   // Total lookup: a future DB enum value the TS contract hasn't caught up to
   // must never render `undefined` (which throws and 500s the whole route).
   const Icon = CATEGORY_ICON[task.category] ?? HelpCircle;
@@ -86,7 +91,7 @@ function TaskTile({ task }: { task: FarmTask }) {
         <span
           className={cn("mt-1.5 h-2 w-2 shrink-0 rounded-full", PRIORITY_DOT[task.priority])}
           role="img"
-          aria-label={PRIORITY_LABEL[task.priority]}
+          aria-label={t(PRIORITY_LABEL_KEY[task.priority])}
         />
       </div>
 
@@ -127,13 +132,14 @@ function TaskTile({ task }: { task: FarmTask }) {
 
 /* ---- Kanban board: the centerpiece of the tasks page ---- */
 export async function TaskBoard() {
+  const t = await getTranslations("tasks");
   const tasks = await getTasks();
 
   return (
-    <section className="animate-rise cv-auto" aria-label="Task board by status">
+    <section className="animate-rise cv-auto" aria-label={t("board.ariaLabel")}>
       <div className="perf-contain grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {COLUMNS.map(({ status, title }) => {
-          const columnTasks = tasks.filter((t) => t.status === status);
+        {COLUMNS.map(({ status, titleKey }) => {
+          const columnTasks = tasks.filter((task) => task.status === status);
 
           return (
             <div
@@ -141,7 +147,7 @@ export async function TaskBoard() {
               className="glass-card flex flex-col rounded-2xl p-3"
             >
               <header className="mb-3 flex items-center justify-between px-1">
-                <h3 className="font-display text-sm font-semibold text-ink">{title}</h3>
+                <h3 className="font-display text-sm font-semibold text-ink">{t(titleKey)}</h3>
                 <span className="grid h-6 min-w-6 place-items-center rounded-full border border-white/60 bg-white/55 px-2 text-xs font-semibold text-muted-fg">
                   {columnTasks.length}
                 </span>
@@ -149,10 +155,10 @@ export async function TaskBoard() {
 
               <div className="stagger flex flex-col gap-2.5">
                 {columnTasks.length > 0 ? (
-                  columnTasks.map((task) => <TaskTile key={task.id} task={task} />)
+                  columnTasks.map((task) => <TaskTile key={task.id} task={task} t={t} />)
                 ) : (
                   <p className="rounded-xl border border-dashed border-line px-3 py-6 text-center text-xs text-muted-fg">
-                    No tasks
+                    {t("board.noTasks")}
                   </p>
                 )}
               </div>

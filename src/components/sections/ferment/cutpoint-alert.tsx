@@ -1,4 +1,5 @@
 import { AlertTriangle, Beaker, Hourglass, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { FermentCutpoint } from "@/lib/db/ferment";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ import { cn } from "@/lib/utils";
  * `motion-safe:` so it is still on a reduced-motion device, just static.
  */
 export function CutpointAlert({ cutpoint }: { cutpoint: FermentCutpoint }) {
+  const t = useTranslations("ferment");
   const { targetPh, latestPh, hoursElapsed, cutReached } = cutpoint;
 
   // No recipe → nothing to cut against.
@@ -26,7 +28,7 @@ export function CutpointAlert({ cutpoint }: { cutpoint: FermentCutpoint }) {
         className="flex items-center gap-2 rounded-xl border border-white/60 bg-white/50 px-4 py-3 text-sm text-muted-fg"
       >
         <Beaker className="h-4 w-4 shrink-0 text-muted-fg/70" aria-hidden />
-        <span>Sin receta aplicada — aplica una receta para proyectar el punto de corte.</span>
+        <span>{t("cutpoint.noRecipe")}</span>
       </div>
     );
   }
@@ -39,12 +41,15 @@ export function CutpointAlert({ cutpoint }: { cutpoint: FermentCutpoint }) {
         className="flex items-center gap-2 rounded-xl border border-white/60 bg-white/50 px-4 py-3 text-sm text-muted-fg"
       >
         <Hourglass className="h-4 w-4 shrink-0 text-muted-fg/70" aria-hidden />
-        <span>Sin lecturas — registra una lectura de pH para rastrear el corte.</span>
+        <span>{t("cutpoint.noReadings")}</span>
       </div>
     );
   }
 
-  const hours = hoursElapsed !== null ? `${hoursElapsed.toFixed(1)}h transcurridas` : "";
+  const hours =
+    hoursElapsed !== null
+      ? t("cutpoint.hoursElapsed", { hours: hoursElapsed.toFixed(1) })
+      : "";
 
   if (cutReached) {
     return (
@@ -61,9 +66,9 @@ export function CutpointAlert({ cutpoint }: { cutpoint: FermentCutpoint }) {
       >
         <AlertTriangle className="h-5 w-5 shrink-0" aria-hidden />
         <div>
-          <p>Corta ahora — el pH {latestPh} alcanzó el objetivo de {targetPh}.</p>
+          <p>{t("cutpoint.cutNowTitle", { latest: latestPh, target: targetPh })}</p>
           <p className="mt-0.5 text-xs font-normal text-cherry-700">
-            {hours} · la ventana de fermentación se está cerrando.
+            {t("cutpoint.cutNowSub", { hours })}
           </p>
         </div>
       </div>
@@ -77,9 +82,11 @@ export function CutpointAlert({ cutpoint }: { cutpoint: FermentCutpoint }) {
     >
       <Sparkles className="h-4 w-4 shrink-0 text-forest" aria-hidden />
       <div>
-        <p className="font-medium">Rastreando — pH {latestPh}, objetivo {targetPh}.</p>
+        <p className="font-medium">
+          {t("cutpoint.trackingTitle", { latest: latestPh, target: targetPh })}
+        </p>
         <p className="mt-0.5 text-xs text-forest-700/80">
-          {hours} · la alerta de corte se activa cuando el pH alcanza la banda objetivo.
+          {t("cutpoint.trackingSub", { hours })}
         </p>
       </div>
     </div>

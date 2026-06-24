@@ -26,7 +26,7 @@ describe("SeasonHero (smoke)", () => {
 
     // Greeting heading uses BRAND.shortName.
     expect(
-      screen.getByRole("heading", { name: /Buenos días, Janson/ }),
+      screen.getByRole("heading", { name: /Good morning, Janson/ }),
     ).toBeInTheDocument();
     expect(screen.getByText("Harvested YTD")).toBeInTheDocument();
     // AD-4: the estimate signal lives in the READOUT (an "est." prefix + lighter

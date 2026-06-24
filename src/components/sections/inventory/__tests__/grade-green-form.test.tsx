@@ -196,7 +196,7 @@ describe("GradeGreenForm (grade & materialize green lot)", () => {
     // the entityHref SSOT (/lots/[code]) and carries an es-PA aria-label naming the
     // minted lot (WCAG 2.5.3) — the visible "View lot traceability" text doesn't name
     // the entity, so the human-readable green code is passed as the name.
-    const link = screen.getByRole("link", { name: /abrir lote JC-572/i });
+    const link = screen.getByRole("link", { name: /open lot JC-572/i });
     expect(link).toHaveAttribute("href", "/lots/JC-572");
   });
 

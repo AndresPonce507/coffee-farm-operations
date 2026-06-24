@@ -1,22 +1,9 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { type ReactNode } from "react";
 
 import { entityHref, type DossierKind } from "@/lib/dossier/entity-href";
 import { cn } from "@/lib/utils";
-
-/**
- * Frozen es-PA vocabulary for each dossier kind, matching the CommandPalette labels.
- * Using `satisfies` to keep it narrowly typed while preserving literal inference.
- */
-const KIND_ES = {
-  lot: "lote",
-  plot: "parcela",
-  worker: "trabajador",
-  crew: "cuadrilla",
-  batch: "tanda",
-  dispatch: "despacho",
-  "pay-period": "periodo de pago",
-} as const satisfies Record<DossierKind, string>;
 
 /**
  * Default focus-visible ring applied to every EntityLink so every call site satisfies
@@ -64,15 +51,17 @@ export function EntityLink({
    */
   name?: string;
 }) {
+  const t = useTranslations("dossier");
   const href = entityHref[kind](String(id), anchor ? { anchor } : undefined);
-  const kindEs = KIND_ES[kind];
   // Only set aria-label when the caller supplies an explicit `name`.
   // When omitted, the visible children ARE the accessible name — forcing a slug
   // aria-label would silently override them and violate WCAG 2.5.3 (Label-in-Name).
   // Pass `name` only when children are non-text (icons, thumbnails, etc.) or when you
   // want a richer announcement than the raw visible text (e.g. "Abrir trabajador Lupita
   // González" rather than just "Lupita González").
-  const ariaLabel = name ? `Abrir ${kindEs} ${name}` : undefined;
+  const ariaLabel = name
+    ? t("entityLink.open", { kind: t(`entityLink.kind.${kind}`), name })
+    : undefined;
   return (
     <Link
       href={href}

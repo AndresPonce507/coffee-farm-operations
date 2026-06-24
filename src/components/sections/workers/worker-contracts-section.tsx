@@ -1,4 +1,5 @@
 import { FileSignature } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,13 +30,14 @@ function fmtDate(iso: string): string {
 export function WorkerContractsSection({
   contracts,
 }: WorkerContractsSectionProps) {
+  const t = useTranslations("workers");
   return (
     <DossierSection
       id="contracts"
-      title="Contratos por obra"
+      title={t("contracts.sectionTitle")}
       count={contracts.length}
       empty={contracts.length === 0}
-      emptyLabel="Sin contratos por obra todavía"
+      emptyLabel={t("contracts.emptyLabel")}
     >
       <div className="space-y-3" data-testid="worker-contracts">
         {contracts.map((c) => {
@@ -73,7 +75,7 @@ export function WorkerContractsSection({
                     </span>
                   </span>
                   <Badge tone={active ? "ok" : "neutral"}>
-                    {active ? "Vigente" : "Reemplazado"}
+                    {active ? t("contracts.active") : t("contracts.superseded")}
                   </Badge>
                 </div>
               </CardContent>

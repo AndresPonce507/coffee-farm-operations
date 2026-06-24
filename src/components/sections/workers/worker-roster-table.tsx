@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/data-table";
 import { Avatar } from "@/components/ui/avatar";
@@ -16,10 +18,10 @@ const ATTENDANCE_TONE: Record<AttendanceStatus, BadgeTone> = {
   absent: "danger",
 };
 
-const ATTENDANCE_LABEL: Record<AttendanceStatus, string> = {
-  present: "Presente",
-  "rest-day": "Día de descanso",
-  absent: "Ausente",
+const ATTENDANCE_LABEL_KEY: Record<AttendanceStatus, string> = {
+  present: "roster.attendancePresent",
+  "rest-day": "roster.attendanceRestDay",
+  absent: "roster.attendanceAbsent",
 };
 
 /**
@@ -27,6 +29,7 @@ const ATTENDANCE_LABEL: Record<AttendanceStatus, string> = {
  * Server component: static display only, no hooks or handlers.
  */
 export async function WorkerRosterTable() {
+  const t = await getTranslations("workers");
   const [workers, crews] = await Promise.all([getWorkers(), getCrews()]);
   // Crew names for the inline edit form's crew picker (live, mock-free).
   const crewNames = crews
@@ -46,9 +49,9 @@ export async function WorkerRosterTable() {
     <Card className="animate-rise overflow-hidden">
       <CardHeader>
         <div>
-          <CardTitle>Nómina</CardTitle>
+          <CardTitle>{t("roster.title")}</CardTitle>
           <CardDescription>
-            {workers.length} integrantes de cuadrilla en la finca
+            {t("roster.description", { n: workers.length })}
           </CardDescription>
         </div>
       </CardHeader>
@@ -57,14 +60,14 @@ export async function WorkerRosterTable() {
         <Table className="border-0">
           <THead>
             <TR className="hover:bg-transparent">
-              <TH className="pl-5">Trabajador/a</TH>
-              <TH>Rol</TH>
-              <TH>Cuadrilla</TH>
-              <TH className="text-right">Desde</TH>
-              <TH className="text-right">Tarifa diaria</TH>
-              <TH className="text-right">Hoy</TH>
-              <TH className="text-right">Asistencia</TH>
-              <TH className="pr-5 text-right">Acciones</TH>
+              <TH className="pl-5">{t("roster.colWorker")}</TH>
+              <TH>{t("roster.colRole")}</TH>
+              <TH>{t("roster.colCrew")}</TH>
+              <TH className="text-right">{t("roster.colSince")}</TH>
+              <TH className="text-right">{t("roster.colDailyRate")}</TH>
+              <TH className="text-right">{t("roster.colToday")}</TH>
+              <TH className="text-right">{t("roster.colAttendance")}</TH>
+              <TH className="pr-5 text-right">{t("roster.colActions")}</TH>
             </TR>
           </THead>
           <TBody>
@@ -72,7 +75,7 @@ export async function WorkerRosterTable() {
               <TR className="hover:bg-transparent">
                 <TD colSpan={8} className="px-5 py-10 text-center">
                   <span className="inline-block rounded-xl border border-dashed border-line bg-white/40 px-4 py-3 text-sm text-muted-fg">
-                    Aún no hay trabajadores.
+                    {t("roster.empty")}
                   </span>
                 </TD>
               </TR>
@@ -114,14 +117,14 @@ export async function WorkerRosterTable() {
                   {worker.todayKg > 0 ? (
                     <span className="font-medium text-ink">{worker.todayKg} kg</span>
                   ) : (
-                    <span className="text-muted-fg" aria-label="No se recogieron cerezas hoy">
+                    <span className="text-muted-fg" aria-label={t("roster.noCherriesToday")}>
                       —
                     </span>
                   )}
                 </TD>
                 <TD className="text-right">
                   <Badge tone={ATTENDANCE_TONE[worker.attendance]} dot>
-                    {ATTENDANCE_LABEL[worker.attendance]}
+                    {t(ATTENDANCE_LABEL_KEY[worker.attendance])}
                   </Badge>
                 </TD>
                 <TD className="pr-5 text-right">

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HeartHandshake, Users, Wallet } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { entityHref } from "@/lib/dossier/entity-href";
@@ -29,18 +30,18 @@ export interface PeriodBoardProps {
   className?: string;
 }
 
-/** Pay-period lifecycle → badge tone + a colour-independent label. */
-function statusMeta(status: string): { tone: BadgeTone; label: string } {
+/** Pay-period lifecycle → badge tone + a colour-independent label key. */
+function statusMeta(status: string): { tone: BadgeTone; labelKey: string } {
   switch (status) {
     case "paid":
-      return { tone: "forest", label: "Paid" };
+      return { tone: "forest", labelKey: "board.statusPaid" };
     case "approved":
-      return { tone: "honey", label: "Approved" };
+      return { tone: "honey", labelKey: "board.statusApproved" };
     case "calculated":
-      return { tone: "sky", label: "Calculated" };
+      return { tone: "sky", labelKey: "board.statusCalculated" };
     case "open":
     default:
-      return { tone: "neutral", label: "Open" };
+      return { tone: "neutral", labelKey: "board.statusOpen" };
   }
 }
 
@@ -59,14 +60,15 @@ export function PeriodBoard({
   activePeriodId,
   className,
 }: PeriodBoardProps) {
+  const t = useTranslations("payroll");
   if (periods.length === 0) {
     return (
       <Card className="animate-rise">
         <CardContent className="py-4">
           <EmptyState
             icon={Wallet}
-            title="No pay periods yet"
-            description="Open a pay period and calculate it to roll up the blended piece-rate + hourly earnings — with the legal-minimum make-whole guard applied to every worker."
+            title={t("board.emptyTitle")}
+            description={t("board.emptyDescription")}
           />
         </CardContent>
       </Card>
@@ -109,19 +111,22 @@ export function PeriodBoard({
                     ) : null}
                   </div>
                   <Badge tone={status.tone} dot className="shrink-0">
-                    {status.label}
+                    {t(status.labelKey)}
                   </Badge>
                 </div>
 
                 <div className="flex items-center gap-1.5 text-xs text-muted-fg">
                   <Users className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  {p.workerCount} {p.workerCount === 1 ? "worker" : "workers"}
+                  {p.workerCount}{" "}
+                  {p.workerCount === 1
+                    ? t("board.workerSingular")
+                    : t("board.workerPlural")}
                 </div>
 
                 <dl className="flex items-end justify-between gap-3 pt-1">
                   <div>
                     <dt className="text-[11px] uppercase tracking-wide text-muted-fg">
-                      Gross
+                      {t("board.gross")}
                     </dt>
                     <dd className="font-display text-base font-semibold tabular-nums text-ink">
                       {usd(p.totalGrossUsd)}
@@ -129,7 +134,7 @@ export function PeriodBoard({
                   </div>
                   <div className="text-right">
                     <dt className="text-[11px] uppercase tracking-wide text-muted-fg">
-                      Net
+                      {t("board.net")}
                     </dt>
                     <dd className="font-display text-base font-semibold tabular-nums text-forest-700">
                       {usd(p.totalNetUsd)}
@@ -146,7 +151,7 @@ export function PeriodBoard({
                       className="h-3.5 w-3.5 shrink-0"
                       aria-hidden="true"
                     />
-                    {p.madeWholeCount} made whole
+                    {t("board.madeWholeChip", { n: p.madeWholeCount })}
                   </div>
                 ) : null}
               </CardContent>

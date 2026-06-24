@@ -30,9 +30,9 @@ describe("PayPeriodDisbursementsSection", () => {
       />,
     );
     // EntityLink carries the es-PA aria-label (the contract); the component passes
-    // the resolved worker name so the label is "Abrir trabajador Lucía Morales"
+    // the resolved worker name so the label is "Open worker Lucía Morales"
     // (richer than the raw slug) — the page hands in the workerId→name map.
-    const link = screen.getByRole("link", { name: /trabajador lucía morales/i });
+    const link = screen.getByRole("link", { name: /worker lucía morales/i });
     expect(link).toHaveAttribute("href", "/workers/w-06");
     expect(link).toHaveTextContent("Lucía Morales");
   });
@@ -49,10 +49,10 @@ describe("PayPeriodDisbursementsSection", () => {
     expect(within(section).getByText(/yappy/i)).toBeInTheDocument();
   });
 
-  it("renders the es-PA empty state when no payments have been recorded", () => {
+  it("renders the empty state when no payments have been recorded", () => {
     render(<PayPeriodDisbursementsSection disbursements={[]} workerNames={{}} />);
     const section = screen.getByTestId("section-disbursements");
-    expect(within(section).getByText(/Sin/i)).toBeInTheDocument();
+    expect(within(section).getByText(/No payments recorded/i)).toBeInTheDocument();
   });
 
   it("falls back to the worker id when the name is unknown (still links to the dossier)", () => {

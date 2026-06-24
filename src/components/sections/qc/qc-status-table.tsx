@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CheckCircle2, Coffee, PackageOpen, ShieldAlert } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { QcStatus } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -34,37 +35,36 @@ function scoreLabel(score: number | null): string {
 }
 
 function HeldBadge({ held }: { held: boolean }) {
+  const t = useTranslations("qc");
   return held ? (
     <Badge tone="cherry" dot>
-      On hold
+      {t("statusTable.held")}
     </Badge>
   ) : (
     <Badge tone="ok" dot>
-      Clear
+      {t("statusTable.clear")}
     </Badge>
   );
 }
 
 export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
+  const t = useTranslations("qc");
   const heldCount = rows.filter((r) => r.held).length;
 
   return (
     <Card className="animate-rise overflow-hidden">
       <CardHeader>
         <div>
-          <CardTitle>Quality control</CardTitle>
-          <CardDescription>
-            Cup scores, green-grading defects, and the QC-HOLD quarantine — a held
-            lot is physically un-sellable until released
-          </CardDescription>
+          <CardTitle>{t("statusTable.title")}</CardTitle>
+          <CardDescription>{t("statusTable.description")}</CardDescription>
         </div>
         {heldCount > 0 ? (
           <Badge tone="cherry" dot>
-            {heldCount} on hold
+            {t("statusTable.onHoldBadge", { count: heldCount })}
           </Badge>
         ) : (
           <Badge tone="forest" dot>
-            all clear
+            {t("statusTable.allClearBadge")}
           </Badge>
         )}
       </CardHeader>
@@ -73,8 +73,8 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
         {rows.length === 0 ? (
           <EmptyState
             icon={PackageOpen}
-            title="No green lots to QC yet"
-            description="Grade a finished lot in Inventory to mint a green lot you can cup, grade for defects, and hold."
+            title={t("statusTable.emptyTitle")}
+            description={t("statusTable.emptyDescription")}
           />
         ) : (
           <>
@@ -83,12 +83,12 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
               <table className="w-full border-separate border-spacing-0 text-sm">
                 <THead>
                   <TR className="hover:bg-transparent">
-                    <TH>Lot</TH>
-                    <TH>QC state</TH>
-                    <TH className="text-right">Latest cup</TH>
-                    <TH className="text-right">Primary</TH>
-                    <TH className="text-right">Secondary</TH>
-                    <TH className="text-right">Actions</TH>
+                    <TH>{t("statusTable.colLot")}</TH>
+                    <TH>{t("statusTable.colState")}</TH>
+                    <TH className="text-right">{t("statusTable.colLatestCup")}</TH>
+                    <TH className="text-right">{t("statusTable.colPrimary")}</TH>
+                    <TH className="text-right">{t("statusTable.colSecondary")}</TH>
+                    <TH className="text-right">{t("statusTable.colActions")}</TH>
                   </TR>
                 </THead>
                 <TBody>
@@ -132,10 +132,10 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
                           <Link
                             href={`/qc/cup/${encodeURIComponent(row.greenLotCode)}`}
                             className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white/60 px-2.5 py-1.5 text-xs font-medium text-ink transition hover:border-forest-300 hover:text-forest-700"
-                            aria-label={`Cup ${row.greenLotCode}`}
+                            aria-label={t("statusTable.cupAria", { lot: row.greenLotCode })}
                           >
                             <Coffee className="h-3.5 w-3.5" />
-                            Cup
+                            {t("statusTable.cup")}
                           </Link>
                           <QcHoldControl lot={row} />
                         </div>
@@ -172,7 +172,7 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
                   )}
                   <div className="mt-3 flex items-center justify-between text-xs text-muted-fg">
                     <span>
-                      Cup{" "}
+                      {t("statusTable.cup")}{" "}
                       <span className="font-medium tabular-nums text-ink">
                         {scoreLabel(row.latestCupScore)}
                       </span>
@@ -185,11 +185,11 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
                   <div className="mt-3 flex items-center justify-end gap-2">
                     <Link
                       href={`/qc/cup/${encodeURIComponent(row.greenLotCode)}`}
-                      aria-label={`Cup ${row.greenLotCode}`}
+                      aria-label={t("statusTable.cupAria", { lot: row.greenLotCode })}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white/60 px-3 py-2 text-xs font-medium text-ink transition hover:border-forest-300 hover:text-forest-700"
                     >
                       <Coffee className="h-3.5 w-3.5" />
-                      Cup
+                      {t("statusTable.cup")}
                     </Link>
                     <QcHoldControl lot={row} />
                   </div>

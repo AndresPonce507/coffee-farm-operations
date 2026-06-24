@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { ArrowRight, CheckCircle2, Lock, MoveRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { BatchStage } from "@/lib/types";
 import { BATCH_STAGES } from "@/lib/enums";
@@ -48,15 +49,6 @@ const FIELD =
   "h-10 w-full rounded-xl border border-line bg-white/70 px-3 text-sm text-ink outline-none transition focus:border-forest-300 focus:ring-2 focus:ring-forest-100";
 const LABEL = "text-xs font-medium text-muted-fg";
 
-const STAGE_LABEL: Record<BatchStage, string> = {
-  cherry: "Cherry",
-  fermentation: "Fermentation",
-  drying: "Drying",
-  parchment: "Parchment",
-  milled: "Milled",
-  green: "Green",
-};
-
 /** The stages strictly AFTER `stage` in pipeline order (the legal forward set). */
 function forwardStages(stage: BatchStage): BatchStage[] {
   const i = BATCH_STAGES.indexOf(stage);
@@ -78,6 +70,7 @@ export function AdvanceStageControl({
   currentStage: BatchStage;
   currentKg: number;
 }) {
+  const t = useTranslations("processing");
   const [open, setOpen] = useState(false);
   const ahead = forwardStages(currentStage);
 
@@ -92,16 +85,16 @@ export function AdvanceStageControl({
         variant="outline"
         size="sm"
         onClick={() => setOpen(true)}
-        aria-label={`Advance ${lotCode} to the next stage`}
+        aria-label={t("advance.triggerAria", { code: lotCode })}
       >
         <MoveRight className="h-3.5 w-3.5" />
-        Advance
+        {t("advance.advance")}
       </Button>
 
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
-        title={`Advance ${lotCode}`}
+        title={t("advance.dialogTitle", { code: lotCode })}
       >
         <AdvanceForm
           lotCode={lotCode}
@@ -128,6 +121,7 @@ function AdvanceForm({
   forward: BatchStage[];
   onDone: () => void;
 }) {
+  const t = useTranslations("processing");
   const [state, formAction, pending] = useActionState<
     ProcessingActionState,
     FormData
@@ -143,8 +137,8 @@ function AdvanceForm({
   // server-side, so the board reflects the new stage on the next paint).
   useEffect(() => {
     if (state.status === "success") {
-      const t = setTimeout(onDone, 700);
-      return () => clearTimeout(t);
+      const timer = setTimeout(onDone, 700);
+      return () => clearTimeout(timer);
     }
   }, [state, onDone]);
 
@@ -167,18 +161,18 @@ function AdvanceForm({
       {/* From → To context so the family reads the move at a glance. */}
       <div className="flex items-center justify-center gap-3 rounded-xl border border-white/60 bg-white/55 px-4 py-3">
         <span className="rounded-lg bg-white/70 px-2.5 py-1 text-xs font-medium text-muted-fg">
-          {STAGE_LABEL[currentStage]}
+          {t(`stages.${currentStage}`)}
         </span>
         <ArrowRight className="h-4 w-4 shrink-0 text-forest-500" aria-hidden />
         <span className="rounded-lg bg-forest-100 px-2.5 py-1 text-xs font-semibold text-forest-700">
-          {STAGE_LABEL[nextStage]}
+          {t(`stages.${nextStage}`)}
         </span>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="advance-stage">
-            Move to stage
+            {t("advance.moveToStage")}
           </label>
           <select
             id="advance-stage"
@@ -188,7 +182,7 @@ function AdvanceForm({
           >
             {forward.map((s) => (
               <option key={s} value={s}>
-                {STAGE_LABEL[s]}
+                {t(`stages.${s}`)}
               </option>
             ))}
           </select>
@@ -199,7 +193,7 @@ function AdvanceForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="advance-kg">
-            Weight after step (kg)
+            {t("advance.weightAfter")}
           </label>
           <input
             id="advance-kg"
@@ -219,8 +213,7 @@ function AdvanceForm({
       </div>
 
       <p className="text-xs text-muted-fg">
-        Now at {kg(currentKg)}. Processing conserves or loses mass — the new
-        weight should be the same or lower.
+        {t("advance.massHint", { weight: kg(currentKg) })}
       </p>
 
       {/* Friendly RPC rejection (forward-only / no mass-gain) as an inline alert. */}
@@ -246,16 +239,16 @@ function AdvanceForm({
           )}
         >
           <CheckCircle2 className="h-4 w-4 shrink-0 text-forest" />
-          {state.message ?? "Lot advanced."}
+          {state.message ?? t("advance.lotAdvanced")}
         </div>
       )}
 
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="ghost" onClick={onDone}>
-          Cancel
+          {t("advance.cancel")}
         </Button>
         <Button type="submit" disabled={pending}>
-          {pending ? "Advancing…" : "Advance lot"}
+          {pending ? t("advance.advancing") : t("advance.advanceLot")}
         </Button>
       </div>
     </form>

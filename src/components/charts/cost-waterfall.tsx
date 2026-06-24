@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { cn, usd } from "@/lib/utils";
 
 export interface CostWaterfallStep {
@@ -54,6 +56,7 @@ export function CostWaterfall({
   height = 200,
   className,
 }: CostWaterfallProps) {
+  const t = useTranslations("ui");
   // Running cumulative total at each step boundary. SIGNED accumulation so the
   // total equals Σ(step values) and therefore agrees with both the per-step
   // readout chips and the authoritative cost-per-kg-green headline. (Clamping to
@@ -92,10 +95,12 @@ export function CostWaterfall({
 
   const ariaLabel =
     built.length > 0
-      ? `Cost waterfall. ${built
-          .map((b) => `${b.label}: ${usd(b.value, 2)} per kg`)
-          .join(", ")}. Total cost ${usd(total, 2)} per kg green.`
-      : "Cost waterfall with no data.";
+      ? `${t("costWaterfall.ariaPrefix")} ${built
+          .map((b) =>
+            t("costWaterfall.ariaStep", { label: b.label, value: usd(b.value, 2) }),
+          )
+          .join(", ")}. ${t("costWaterfall.ariaTotal", { total: usd(total, 2) })}`
+      : t("costWaterfall.noDataAria");
 
   return (
     <div className={cn("inline-flex flex-col", className)}>
@@ -239,12 +244,12 @@ export function CostWaterfall({
 
       {/* Visually-hidden data table — SR-legible provenance of every step. */}
       <table className="sr-only">
-        <caption>Cost build-up per kg green</caption>
+        <caption>{t("costWaterfall.tableCaption")}</caption>
         <thead>
           <tr>
-            <th scope="col">Driver</th>
-            <th scope="col">Cost ({unit})</th>
-            <th scope="col">Running total</th>
+            <th scope="col">{t("costWaterfall.tableDriver")}</th>
+            <th scope="col">{t("costWaterfall.tableCost", { unit })}</th>
+            <th scope="col">{t("costWaterfall.tableRunningTotal")}</th>
           </tr>
         </thead>
         <tbody>
@@ -256,7 +261,7 @@ export function CostWaterfall({
             </tr>
           ))}
           <tr>
-            <td>Total</td>
+            <td>{t("costWaterfall.tableTotal")}</td>
             <td>{usd(total, 2)}</td>
             <td>{usd(total, 2)}</td>
           </tr>

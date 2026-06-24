@@ -13,27 +13,27 @@ describe("Sidebar", () => {
   it("marks the active nav link with aria-current=page", () => {
     render(<Sidebar />);
 
-    const active = screen.getByRole("link", { name: /Parcelas/ });
+    const active = screen.getByRole("link", { name: /Plots/ });
     expect(active).toHaveAttribute("aria-current", "page");
   });
 
   it("does not set aria-current on inactive nav links", () => {
     render(<Sidebar />);
 
-    const inactive = screen.getByRole("link", { name: /Cosechas/ });
+    const inactive = screen.getByRole("link", { name: /Harvests/ });
     expect(inactive).not.toHaveAttribute("aria-current");
   });
 
   it("includes a Map nav link pointing at /map", () => {
     render(<Sidebar />);
 
-    const mapLink = screen.getByRole("link", { name: /Mapa/ });
+    const mapLink = screen.getByRole("link", { name: /Map/ });
     expect(mapLink).toHaveAttribute("href", "/map");
   });
 
   it("surfaces the P2-S4 Drying route in the nav (the reposo-gate surface)", () => {
     render(<Sidebar />);
-    expect(screen.getByRole("link", { name: /Secado/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Drying/ })).toHaveAttribute(
       "href",
       "/drying",
     );
@@ -41,11 +41,11 @@ describe("Sidebar", () => {
 
   it("surfaces the S5/S7/S8 routes in the nav (Inventory, Costing, EUDR)", () => {
     render(<Sidebar />);
-    expect(screen.getByRole("link", { name: /Inventario/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Inventory/ })).toHaveAttribute(
       "href",
       "/inventory",
     );
-    expect(screen.getByRole("link", { name: /Costos/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Costing/ })).toHaveAttribute(
       "href",
       "/costing",
     );
@@ -57,7 +57,7 @@ describe("Sidebar", () => {
 
   it("surfaces the P2-S1 people route in the nav (Crew → /crew)", () => {
     render(<Sidebar />);
-    expect(screen.getByRole("link", { name: /Cuadrillas/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Crews/ })).toHaveAttribute(
       "href",
       "/crew",
     );
@@ -65,7 +65,7 @@ describe("Sidebar", () => {
 
   it("surfaces the P2-S3 Ferment route in the nav", () => {
     render(<Sidebar />);
-    expect(screen.getByRole("link", { name: /Fermentación/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Fermentation/ })).toHaveAttribute(
       "href",
       "/ferment",
     );
@@ -73,7 +73,7 @@ describe("Sidebar", () => {
 
   it("surfaces the P2-S6 QC route in the nav", () => {
     render(<Sidebar />);
-    expect(screen.getByRole("link", { name: /Calidad/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Quality/ })).toHaveAttribute(
       "href",
       "/qc",
     );
@@ -89,7 +89,7 @@ describe("Sidebar", () => {
 
   it("surfaces the P2-S7 payroll route in the nav (Payroll → /payroll)", () => {
     render(<Sidebar />);
-    expect(screen.getByRole("link", { name: /Nómina/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Payroll/ })).toHaveAttribute(
       "href",
       "/payroll",
     );
@@ -97,7 +97,7 @@ describe("Sidebar", () => {
 
   it("surfaces the P2-S2 weigh-capture route in the nav (Weigh → /weigh)", () => {
     render(<Sidebar />);
-    expect(screen.getByRole("link", { name: /Pesaje/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Weigh/ })).toHaveAttribute(
       "href",
       "/weigh",
     );
@@ -105,7 +105,7 @@ describe("Sidebar", () => {
 
   it("surfaces the P2-S5 morning dispatch route in the nav (Dispatch → /dispatch)", () => {
     render(<Sidebar />);
-    expect(screen.getByRole("link", { name: /Despacho/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Dispatch/ })).toHaveAttribute(
       "href",
       "/dispatch",
     );

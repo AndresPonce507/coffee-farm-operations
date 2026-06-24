@@ -8,7 +8,7 @@ afterEach(cleanup);
 describe("/crew/[id] dossier loading skeleton (smoke)", () => {
   it("renders an aria-busy placeholder without throwing", () => {
     render(<CrewDossierLoading />);
-    expect(screen.getByLabelText("Cargando cuadrilla")).toHaveAttribute(
+    expect(screen.getByLabelText("Loading crew member")).toHaveAttribute(
       "aria-busy",
       "true",
     );

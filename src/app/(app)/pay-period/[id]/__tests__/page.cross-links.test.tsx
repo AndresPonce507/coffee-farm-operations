@@ -114,7 +114,7 @@ describe("/pay-period/[id] cross-entity connectivity", () => {
     });
     render(ui);
     expect(
-      screen.getByRole("link", { name: /Toda la nómina/i }),
+      screen.getByRole("link", { name: /All payroll/i }),
     ).toHaveAttribute("href", "/payroll");
   });
 });

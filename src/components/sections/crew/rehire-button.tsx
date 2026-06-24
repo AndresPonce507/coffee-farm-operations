@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Check, UserPlus } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -71,6 +72,7 @@ export function RehireButton({
   disabled = false,
   className,
 }: RehireButtonProps) {
+  const t = useTranslations("crew");
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -92,14 +94,14 @@ export function RehireButton({
           // paint "Welcome back" over a failure — keep the button actionable for
           // a retry and surface the route's error message.
           setDone(false);
-          setError(errorMessageOf(result) ?? "No se pudo recontratar. Intentá de nuevo.");
+          setError(errorMessageOf(result) ?? t("rehireButton.error"));
         }
       } catch {
         // A thrown action (network/unexpected). Same posture as a resolved error:
         // leave the button actionable and surface a message. (No throw across
         // the transition boundary.)
         setDone(false);
-        setError("No se pudo recontratar. Intentá de nuevo.");
+        setError(t("rehireButton.error"));
       }
     });
   }
@@ -114,7 +116,7 @@ export function RehireButton({
         className={cn("text-forest", className)}
       >
         <Check className="h-4 w-4" aria-hidden="true" />
-        Welcome back
+        {t("rehireButton.welcomeBack")}
       </Button>
     );
   }
@@ -126,12 +128,12 @@ export function RehireButton({
         variant="primary"
         onClick={onClick}
         disabled={disabled || pending}
-        aria-label={`Rehire for ${season}`}
+        aria-label={t("rehireButton.rehireFor", { season })}
         title={`${TERMS.rehire.es} · ${TERMS.rehire.ng}`}
         className={className}
       >
         <UserPlus className="h-4 w-4" aria-hidden="true" />
-        {pending ? "Rehiring…" : "Rehire"}
+        {pending ? t("rehireButton.rehiring") : t("rehireButton.rehire")}
       </Button>
       {error && (
         <p role="alert" className="text-xs font-medium text-cherry">

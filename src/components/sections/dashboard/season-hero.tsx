@@ -1,4 +1,5 @@
 import { Coffee, Sprout, Wallet } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { StatRing } from "@/components/charts/stat-ring";
 import { BRAND } from "@/lib/brand";
@@ -12,6 +13,7 @@ function HeroStat({
   sub,
   icon: Icon,
   modeled = false,
+  estLabel,
 }: {
   label: string;
   value: string;
@@ -24,6 +26,8 @@ function HeroStat({
    * figures (default) render at full paper-white weight.
    */
   modeled?: boolean;
+  /** Translated "est." prefix shown ahead of a modeled value. */
+  estLabel?: string;
 }) {
   return (
     <div className="flex items-start gap-3">
@@ -48,7 +52,7 @@ function HeroStat({
         >
           {modeled ? (
             <span className="mr-1 text-sm font-semibold lowercase tracking-tight text-paper/55">
-              est.
+              {estLabel}
             </span>
           ) : null}
           {value}
@@ -67,6 +71,7 @@ function HeroStat({
  * toward the full-season goal. Pure presentation; safe as a server component.
  */
 export async function SeasonHero() {
+  const t = await getTranslations("dashboard");
   const SEASON = await getSeason();
 
   // Guard the divide (mirrors kpi-row): a zero/missing target must read as 0%,
@@ -108,19 +113,21 @@ export async function SeasonHero() {
               className="h-1.5 w-1.5 rounded-full bg-honey-100"
               aria-hidden="true"
             />
-            Harvest season · {BRAND.location}
+            {t("hero.harvestSeason")} · {BRAND.location}
           </span>
 
           <h1
             id="season-hero-heading"
             className="mt-5 font-display text-3xl font-bold tracking-tight text-paper sm:text-4xl"
           >
-            Buenos días, {BRAND.shortName}
+            {t("hero.greeting", { name: BRAND.shortName })}
           </h1>
           <p className="mt-2 max-w-xl text-sm text-paper/70 sm:text-base">
-            {BRAND.tagline}. We&apos;re at the peak of the {BRAND.varieties[0]}
-            {" "}and {BRAND.varieties[1]} pickings — the cherries are coming in
-            beautifully.
+            {BRAND.tagline}
+            {t("hero.story", {
+              first: BRAND.varieties[0],
+              second: BRAND.varieties[1],
+            })}
           </p>
 
           {/* Headline: today's cherries */}
@@ -130,29 +137,30 @@ export async function SeasonHero() {
             </span>
             <span className="pb-1 text-lg font-semibold text-honey-100">kg</span>
             <span className="pb-1.5 text-sm text-paper/60">
-              cherries received today
+              {t("hero.cherriesReceivedToday")}
             </span>
           </div>
 
           {/* Inline supporting stats */}
           <div className="stagger perf-contain mt-8 grid gap-5 border-t border-paper/10 pt-6 sm:grid-cols-3">
             <HeroStat
-              label="Harvested YTD"
+              label={t("hero.harvestedYtd")}
               value={kg(SEASON.harvestedKg)}
-              sub={`${num(remainingKg)} kg to target`}
+              sub={t("hero.kgToTarget", { kg: num(remainingKg) })}
               icon={Sprout}
             />
             <HeroStat
-              label="Revenue"
+              label={t("hero.revenue")}
               value={usd(SEASON.ytdRevenueUsd)}
-              sub="Season to date"
+              sub={t("hero.seasonToDate")}
               icon={Wallet}
               modeled
+              estLabel={t("hero.estPrefix")}
             />
             <HeroStat
-              label="Season target"
+              label={t("hero.seasonTarget")}
               value={kg(SEASON.targetKg)}
-              sub="Full-season goal"
+              sub={t("hero.fullSeasonGoal")}
               icon={Coffee}
             />
           </div>
@@ -170,13 +178,16 @@ export async function SeasonHero() {
               className="relative drop-shadow-[0_8px_18px_rgba(200,146,46,0.28)]"
               value={seasonPct}
               size={168}
-              label="Season target"
-              sublabel={`${kg(SEASON.harvestedKg)} of ${num(SEASON.targetKg)}`}
+              label={t("hero.seasonTarget")}
+              sublabel={t("hero.ringSublabel", {
+                harvested: kg(SEASON.harvestedKg),
+                target: num(SEASON.targetKg),
+              })}
               color="#C8922E"
               track="#E7DED0"
             />
             <p className="relative max-w-[12rem] text-xs leading-relaxed text-muted-fg">
-              On pace toward this season&apos;s cherry goal across all plots.
+              {t("hero.onPace")}
             </p>
           </div>
         </div>

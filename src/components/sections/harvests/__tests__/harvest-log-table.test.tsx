@@ -37,7 +37,7 @@ describe("HarvestLogTable (smoke)", () => {
     const ui = await HarvestLogTable({ plots: [], pickers: [], lots: [] });
     render(ui);
 
-    expect(screen.getByText("Registro de cosecha")).toBeInTheDocument();
+    expect(screen.getByText("Harvest log")).toBeInTheDocument();
     // Lot codes and plot names from the two rows surface in the table body.
     expect(screen.getByText("JC-564")).toBeInTheDocument();
     expect(screen.getByText("Tizingal Alto")).toBeInTheDocument();
@@ -48,7 +48,7 @@ describe("HarvestLogTable (smoke)", () => {
     const ui = await HarvestLogTable({ plots: [], pickers: [], lots: [] });
     const { container } = render(ui);
 
-    // EntityLink carries aria-label="Abrir lote <code>"; match on the text content.
+    // EntityLink carries aria-label="Open lot <code>"; match on the text content.
     const lotLinks = container.querySelectorAll<HTMLAnchorElement>('a[href="/lots/JC-564"]');
     expect(lotLinks.length).toBeGreaterThan(0);
     expect(lotLinks[0]).toHaveTextContent("JC-564");

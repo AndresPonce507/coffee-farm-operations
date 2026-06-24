@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Donut, type DonutDatum } from "@/components/charts/donut";
 import { CHART_COLORS } from "@/lib/brand";
@@ -20,6 +22,7 @@ function shortKg(value: number): string {
 }
 
 export async function VarietyMixCard() {
+  const t = await getTranslations("dashboard");
   const varietyShares = await getVarietyShares();
 
   const totalKg = varietyShares.reduce((sum, v) => sum + v.kg, 0);
@@ -41,7 +44,7 @@ export async function VarietyMixCard() {
   return (
     <Card className="glass-hover animate-rise">
       <CardHeader>
-        <CardTitle>Variety mix</CardTitle>
+        <CardTitle>{t("varietyMix.title")}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col items-center gap-7 sm:flex-row sm:items-center sm:gap-8">
@@ -50,7 +53,7 @@ export async function VarietyMixCard() {
             size={176}
             thickness={24}
             centerLabel={shortKg(totalKg)}
-            centerSub="harvested"
+            centerSub={t("varietyMix.centerSub")}
             className="shrink-0"
           />
 

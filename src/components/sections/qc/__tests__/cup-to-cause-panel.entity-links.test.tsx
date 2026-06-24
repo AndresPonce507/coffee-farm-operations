@@ -93,7 +93,7 @@ describe("CupToCausePanel — plot + lineage codes are dossier links (L3 wire-up
     );
     const cherry = screen.getByRole("link", { name: /JC-050/i });
     expect(cherry).toHaveAttribute("href", "/lots/JC-050");
-    const green = screen.getByRole("link", { name: /lote JC-101/i });
+    const green = screen.getByRole("link", { name: /lot JC-101/i });
     expect(green).toHaveAttribute("href", "/lots/JC-101");
   });
 
@@ -108,7 +108,7 @@ describe("CupToCausePanel — plot + lineage codes are dossier links (L3 wire-up
     );
     // The honest-degradation contract: no fabricated plot → no plot link.
     expect(
-      screen.queryByRole("link", { name: /parcela p-/i }),
+      screen.queryByRole("link", { name: /plot p-/i }),
     ).not.toBeInTheDocument();
   });
 });

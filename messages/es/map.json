@@ -1,0 +1,21 @@
+{
+  "page": {
+    "title": "Mapa de la finca",
+    "subtitle": "Lotes de cultivo coloreados según su salud, con la reserva protegida del quetzal."
+  },
+  "legend": {
+    "healthy": "Sano",
+    "watch": "En observación",
+    "atRisk": "En riesgo",
+    "reserve": "Reserva"
+  },
+  "placeholderNote": "Los linderos son provisionales mientras la familia traza los contornos de las parcelas.",
+  "farmMap": {
+    "regionLabel": "Mapa de parcelas de la finca",
+    "plotListLabel": "Lista de parcelas"
+  },
+  "skeleton": {
+    "loadingLabel": "Cargando mapa",
+    "loadingText": "Cargando mapa…"
+  }
+}

@@ -1,4 +1,5 @@
 import { ShieldCheck, ShieldAlert, MapPin } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Tile } from "@/components/ui/tile";
@@ -18,6 +19,7 @@ import { EudrStatusBadge } from "./eudr-status-badge";
  * per-lot grid. Nothing here re-derives the verdict — the RPC is the SSOT.
  */
 export async function EudrSummary() {
+  const t = await getTranslations("eudr");
   const lots = await getEudrSummary();
 
   const compliant = lots.filter((l) => l.status === "compliant").length;
@@ -27,8 +29,7 @@ export async function EudrSummary() {
     return (
       <Card data-testid="eudr-empty" className="animate-rise">
         <CardContent className="py-12 text-center text-sm text-muted-fg">
-          No green lots yet. EUDR due-diligence dossiers appear here once a lot
-          reaches the green stage.
+          {t("summary.empty")}
         </CardContent>
       </Card>
     );
@@ -40,25 +41,25 @@ export async function EudrSummary() {
         <CardContent className="p-0">
           <div className="stagger grid grid-cols-1 divide-y divide-white/50 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
             <Tile
-              label="Export-ready"
+              label={t("summary.exportReady")}
               value={num(compliant)}
-              sub={`of ${num(lots.length)} green lots`}
+              sub={t("summary.exportReadySub", { count: num(lots.length) })}
               accent="forest"
               icon={ShieldCheck}
               className="glass-hover"
             />
             <Tile
-              label="Needs attention"
+              label={t("summary.needsAttention")}
               value={num(needsAttention)}
-              sub="incomplete or unverified origin"
+              sub={t("summary.needsAttentionSub")}
               accent="honey"
               icon={ShieldAlert}
               className="glass-hover"
             />
             <Tile
-              label="Cutoff"
+              label={t("summary.cutoff")}
               value="2020"
-              sub="deforestation-free since 2020-12-31"
+              sub={t("summary.cutoffSub")}
               accent="coffee"
               icon={MapPin}
               className="glass-hover"
@@ -98,7 +99,7 @@ export async function EudrSummary() {
                     data-testid={`eudr-no-plots-${lot.code}`}
                     className="text-xs text-muted-fg"
                   >
-                    No plots of origin traced
+                    {t("summary.noPlotsTraced")}
                   </p>
                 ) : (
                   <div className="flex flex-wrap gap-1">

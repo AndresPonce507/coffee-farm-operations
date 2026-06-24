@@ -34,13 +34,13 @@ describe("FermentBoard (smoke)", () => {
   it("renders a card per ferment batch linking to its tracker", () => {
     render(<FermentBoard batches={batches} lots={["JC-800", "JC-801"]} recipes={[]} />);
     // The batch-tracker link is an EntityLink (kind="batch") — it carries the
-    // centralized focus ring + an es-PA aria-label "Abrir tanda <lot>", and still
+    // centralized focus ring + a localized aria-label "Open batch <lot>", and still
     // resolves to /ferment/<id> via the entityHref SSOT.
     expect(
-      screen.getByRole("link", { name: /abrir tanda JC-800/i }),
+      screen.getByRole("link", { name: /open batch JC-800/i }),
     ).toHaveAttribute("href", "/ferment/b1");
     expect(
-      screen.getByRole("link", { name: /abrir tanda JC-801/i }),
+      screen.getByRole("link", { name: /open batch JC-801/i }),
     ).toHaveAttribute("href", "/ferment/b2");
     expect(screen.getAllByText("JC-800").length).toBeGreaterThan(0);
   });
@@ -49,9 +49,9 @@ describe("FermentBoard (smoke)", () => {
     render(<FermentBoard batches={batches} lots={["JC-800", "JC-801"]} recipes={[]} />);
     // The lot code names a Lot entity — under the no-dead-UI mandate it must be a
     // real <a href> to the lot dossier, distinct from the card's batch link.
-    const lotLink = screen.getByRole("link", { name: /abrir lote JC-800/i });
+    const lotLink = screen.getByRole("link", { name: /open lot JC-800/i });
     expect(lotLink).toHaveAttribute("href", "/lots/JC-800");
-    const lotLink2 = screen.getByRole("link", { name: /abrir lote JC-801/i });
+    const lotLink2 = screen.getByRole("link", { name: /open lot JC-801/i });
     expect(lotLink2).toHaveAttribute("href", "/lots/JC-801");
   });
 

@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import {
   Card,
   CardContent,
@@ -19,18 +21,19 @@ import type { AttendanceStatus } from "@/lib/types";
 
 interface AttendanceSlice {
   status: AttendanceStatus;
-  label: string;
+  labelKey: string;
   color: string;
 }
 
 // Display order + the brand color each status maps to. Donut legend reuses this.
 const SLICES: readonly AttendanceSlice[] = [
-  { status: "present", label: "Present", color: PALETTE.forest500 },
-  { status: "rest-day", label: "Rest day", color: PALETTE.honey },
-  { status: "absent", label: "Absent", color: PALETTE.cherry },
+  { status: "present", labelKey: "attendance.present", color: PALETTE.forest500 },
+  { status: "rest-day", labelKey: "attendance.restDay", color: PALETTE.honey },
+  { status: "absent", labelKey: "attendance.absent", color: PALETTE.cherry },
 ] as const;
 
 export async function AttendanceCard() {
+  const t = await getTranslations("workers");
   const workers = await getWorkers();
 
   // Tally each attendance status across the full workforce.
@@ -47,7 +50,7 @@ export async function AttendanceCard() {
   const presentCount = counts.present;
 
   const donutData = SLICES.map((s) => ({
-    label: s.label,
+    label: t(s.labelKey),
     value: counts[s.status],
     color: s.color,
   }));
@@ -55,7 +58,7 @@ export async function AttendanceCard() {
   return (
     <Card className="glass-hover glass-sheen animate-rise">
       <CardHeader>
-        <CardTitle>Attendance</CardTitle>
+        <CardTitle>{t("attendance.title")}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center sm:justify-between">
@@ -64,7 +67,7 @@ export async function AttendanceCard() {
             size={168}
             thickness={22}
             centerLabel={String(presentCount)}
-            centerSub="present"
+            centerSub={t("attendance.centerSub")}
             className="shrink-0"
           />
 
@@ -83,7 +86,7 @@ export async function AttendanceCard() {
                       className="size-2.5 shrink-0 rounded-full"
                       style={{ backgroundColor: s.color }}
                     />
-                    <span className="text-sm text-muted-fg">{s.label}</span>
+                    <span className="text-sm text-muted-fg">{t(s.labelKey)}</span>
                   </span>
                   <span className="flex items-baseline gap-1.5">
                     <span className="font-display text-sm font-semibold tabular-nums text-ink">

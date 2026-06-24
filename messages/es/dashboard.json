@@ -1,0 +1,81 @@
+{
+  "metrics": {
+    "ariaLabel": "Métricas clave de la finca"
+  },
+  "kpi": {
+    "todaysCherries": "Cerezas de hoy",
+    "todaysCherriesHint": "recibidas hoy",
+    "vs7dAgo": "{pct} vs. hace 7 d",
+    "pickersPresent": "Cosecheros presentes",
+    "pickersPresentHint": "de {count} cosecheros",
+    "dryingBatches": "Tandas en secado",
+    "dryingBatchesHint": "en las camas ahora",
+    "seasonToDate": "Temporada al día",
+    "seasonToDateHint": "{pct} de la meta"
+  },
+  "hero": {
+    "harvestSeason": "Temporada de cosecha",
+    "greeting": "Buenos días, {name}",
+    "story": ". Estamos en el punto máximo de la pasada de {first} y {second} — las cerezas están entrando preciosas.",
+    "cherriesReceivedToday": "cerezas recibidas hoy",
+    "estPrefix": "est.",
+    "harvestedYtd": "Cosechado en la temporada",
+    "kgToTarget": "{kg} kg para la meta",
+    "revenue": "Ingresos",
+    "seasonToDate": "Temporada al día",
+    "seasonTarget": "Meta de temporada",
+    "fullSeasonGoal": "Meta de toda la temporada",
+    "ringSublabel": "{harvested} de {target}",
+    "onPace": "En camino hacia la meta de cerezas de esta temporada en todas las parcelas."
+  },
+  "yieldTrend": {
+    "title": "Ingreso diario de cerezas",
+    "caption": "Últimos 14 días, kilogramos",
+    "avgPerDay": "{kg} kg promedio / día"
+  },
+  "varietyMix": {
+    "title": "Mezcla de variedades",
+    "centerSub": "cosechado"
+  },
+  "weather": {
+    "title": "Pronóstico de Volcán",
+    "caption": "Tierras altas de Chiriquí · 5 días",
+    "condition": {
+      "sun": "Soleado",
+      "cloud": "Nublado",
+      "rain": "Lluvia",
+      "fog": "Neblina"
+    }
+  },
+  "activity": {
+    "title": "Actividad reciente"
+  },
+  "plotHealth": {
+    "title": "Salud de las parcelas",
+    "viewAll": "Ver todo",
+    "status": {
+      "healthy": "Sana",
+      "watch": "En observación",
+      "atRisk": "En riesgo"
+    },
+    "ofExpected": "de {kg}"
+  },
+  "processing": {
+    "title": "Línea de procesamiento",
+    "description": "{count} tandas en proceso · {kg} en las camas",
+    "stagesActive": "{active} de {total} etapas activas",
+    "stagesAriaLabel": "Etapas de procesamiento, de la cereza al café verde",
+    "stageItemAriaLabel": "{label}: {count} {unit}, {kg}",
+    "batchOne": "tanda",
+    "batchOther": "tandas",
+    "closestToGreen": "Más cerca de verde",
+    "stage": {
+      "cherry": "Cereza",
+      "fermentation": "Fermentación",
+      "drying": "Secado",
+      "parchment": "Pergamino",
+      "milled": "Trillado",
+      "green": "Verde"
+    }
+  }
+}

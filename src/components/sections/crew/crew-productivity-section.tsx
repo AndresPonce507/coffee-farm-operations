@@ -1,4 +1,5 @@
 import { Scale } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { DossierSection } from "@/components/dossier/dossier-section";
 import { EntityLink } from "@/components/ui/entity-link";
@@ -27,15 +28,16 @@ export function CrewProductivitySection({
 }: {
   productivity: CrewProductivity;
 }) {
+  const t = useTranslations("crew");
   const { pickers, totalKg, totalLatas, pickerCount } = productivity;
 
   return (
     <DossierSection
       id="productivity"
-      title="Productividad de hoy"
+      title={t("productivitySection.title")}
       count={pickerCount}
       empty={pickerCount === 0}
-      emptyLabel="Esta cuadrilla aún no ha pesado café hoy"
+      emptyLabel={t("productivitySection.empty")}
     >
       {/* Computed roll-up — drills to its source weigh records via each picker. */}
       <div className="glass-card mb-3 flex flex-wrap items-center gap-6 rounded-2xl p-4">
@@ -48,7 +50,7 @@ export function CrewProductivitySection({
           </span>
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-fg">
-              Total hoy
+              {t("productivitySection.totalToday")}
             </p>
             <p className="font-display text-xl font-bold text-ink">
               {kg(totalKg)}
@@ -56,7 +58,9 @@ export function CrewProductivitySection({
           </div>
         </div>
         <div>
-          <p className="text-xs uppercase tracking-wide text-muted-fg">Latas</p>
+          <p className="text-xs uppercase tracking-wide text-muted-fg">
+            {t("productivitySection.latas")}
+          </p>
           <p className="font-display text-xl font-bold text-ink">
             {totalLatas.toLocaleString("es-PA")}
           </p>
@@ -76,8 +80,15 @@ export function CrewProductivitySection({
                 {picker.name}
               </span>
               <span className="shrink-0 text-sm text-muted-fg">
-                {kg(picker.kgToday)} · {picker.lataCount}{" "}
-                {picker.lataCount === 1 ? "lata" : "latas"}
+                {picker.lataCount === 1
+                  ? t("productivitySection.pickerLataOne", {
+                      kg: kg(picker.kgToday),
+                      count: picker.lataCount,
+                    })
+                  : t("productivitySection.pickerLataOther", {
+                      kg: kg(picker.kgToday),
+                      count: picker.lataCount,
+                    })}
               </span>
             </EntityLink>
           </li>

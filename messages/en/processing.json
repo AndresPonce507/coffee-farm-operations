@@ -1,0 +1,103 @@
+{
+  "stages": {
+    "cherry": "Cherry",
+    "fermentation": "Fermentation",
+    "drying": "Drying",
+    "parchment": "Parchment",
+    "milled": "Milled",
+    "green": "Green"
+  },
+  "page": {
+    "title": "Processing",
+    "subtitle": "Wet milling, drying beds, and green coffee",
+    "dryingLink": "Drying & reposo",
+    "restingRegionLabel": "Resting lots — open a lot's drying detail",
+    "restingLots": "Resting lots",
+    "restingHint": "· open one to see its moisture curve and reposo gate",
+    "openLotTitle": "Open lot {code} — {reason}"
+  },
+  "summary": {
+    "activeBatches": "Active batches",
+    "activeBatchesSub": "in the pipeline",
+    "onDryingBeds": "On drying beds",
+    "bedsResting": "{n} bed resting",
+    "bedsRestingPlural": "{n} beds resting",
+    "avgMoisture": "Avg moisture",
+    "avgMoistureSub": "across drying beds",
+    "greenReady": "Green ready",
+    "greenReadySub": "cleared for export"
+  },
+  "pipeline": {
+    "heading": "Processing pipeline",
+    "subtitle": "Every active lot, from cherry intake to export-ready green coffee.",
+    "lotsInProcess": "{n} lots in process",
+    "stageRegionLabel": "{stage} stage",
+    "emptyStage": "No lots in this stage",
+    "weight": "Weight",
+    "moisture": "Moisture",
+    "pipelineProgress": "Pipeline",
+    "viewLot": "View lot →",
+    "stageSub": {
+      "cherry": "Intake & sorting",
+      "fermentation": "Tanks & beds",
+      "drying": "Raised beds / patio",
+      "parchment": "Resting in pergamino",
+      "milled": "Hulled & graded",
+      "green": "Export-ready"
+    }
+  },
+  "table": {
+    "cardTitle": "All batches",
+    "cardDescription": "Every lot in the mill, from cherry intake to green coffee",
+    "activeCount": "{n} active",
+    "colLot": "Lot",
+    "colVariety": "Variety",
+    "colMethod": "Method",
+    "colStage": "Stage",
+    "colPatio": "Patio",
+    "colStarted": "Started",
+    "colInput": "Input",
+    "colCurrent": "Current",
+    "colMoisture": "Moisture",
+    "colProgress": "Progress",
+    "colActions": "Actions",
+    "empty": "No batches in process."
+  },
+  "actions": {
+    "newBatch": "New batch",
+    "addBatch": "Add batch",
+    "editBatch": "Edit batch",
+    "editAria": "Edit {code}",
+    "deleteAria": "Delete {code}",
+    "deleteConfirm": "Delete batch {code}?"
+  },
+  "form": {
+    "lot": "Lot",
+    "variety": "Variety",
+    "method": "Method",
+    "stage": "Stage",
+    "started": "Started",
+    "patioBed": "Patio / bed",
+    "patioPlaceholder": "e.g. Bed 7",
+    "cherryIntake": "Cherry intake (kg)",
+    "currentWeight": "Current weight (kg)",
+    "moisture": "Moisture (%)",
+    "progress": "Progress (%)",
+    "choose": "Choose…",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "saveChanges": "Save changes"
+  },
+  "advance": {
+    "triggerAria": "Advance {code} to the next stage",
+    "advance": "Advance",
+    "dialogTitle": "Advance {code}",
+    "moveToStage": "Move to stage",
+    "weightAfter": "Weight after step (kg)",
+    "massHint": "Now at {weight}. Processing conserves or loses mass — the new weight should be the same or lower.",
+    "lotAdvanced": "Lot advanced.",
+    "cancel": "Cancel",
+    "advancing": "Advancing…",
+    "advanceLot": "Advance lot"
+  }
+}

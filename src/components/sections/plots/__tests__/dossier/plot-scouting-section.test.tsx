@@ -30,6 +30,6 @@ describe("PlotScoutingSection", () => {
   it("renders the empty state when there are no scouting reads", () => {
     render(<PlotScoutingSection scouting={[]} />);
     expect(screen.getByTestId("section-scouting")).toBeInTheDocument();
-    expect(screen.getByText(/Sin monitoreo/i)).toBeInTheDocument();
+    expect(screen.getByText(/No scouting recorded/i)).toBeInTheDocument();
   });
 });

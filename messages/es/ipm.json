@@ -1,0 +1,66 @@
+{
+  "page": {
+    "title": "Monitoreo",
+    "subtitle": "Monitoreo MIP por umbral económico + un registro de aplicaciones certificado y seguro según PHI/REI"
+  },
+  "board": {
+    "safetyWindowsLabel": "Ventanas de seguridad PHI / REI",
+    "safetyWindowsHeading": "Ventanas de seguridad activas (PHI / REI)",
+    "scoutingLabel": "Monitoreo MIP",
+    "scoutingHeading": "Monitoreo — {countLabel} {count, plural, one {parcela} other {parcelas}} sobre el umbral",
+    "logSprayLabel": "Registrar una aplicación",
+    "logSprayHeading": "Registro de aplicaciones con certificación",
+    "logSprayHint": "Una aplicación queda bloqueada en la capa de datos a menos que el aplicador tenga una certificación vigente para el manejo de plaguicidas y se respeten las ventanas PHI/REI.",
+    "sprayHistoryLabel": "Historial de aplicaciones",
+    "sprayHistoryHeading": "Registro de aplicaciones"
+  },
+  "phiChips": {
+    "emptyTitle": "No hay ventanas PHI/REI activas",
+    "emptyDescription": "Toda parcela está libre para cosechar y segura para entrar — no hay ningún intervalo de aplicación abierto actualmente.",
+    "phiUntil": "PHI hasta {date}",
+    "reiActive": "REI activo"
+  },
+  "scoutingBoard": {
+    "emptyTitle": "Aún no hay parcelas monitoreadas",
+    "emptyDescription": "Registra un monitoreo de broca o roya y el motor de umbral económico muestra aquí una recomendación de controlar o esperar — y dispara una tarea de control cuando se cruza el umbral.",
+    "recommendControl": "Recomendar control",
+    "holdAndMonitor": "Esperar y monitorear",
+    "observedIncidence": "incidencia observada",
+    "actionThreshold": "umbral de acción",
+    "noThreshold": "sin umbral (plaga desconocida)",
+    "controlTaskFired": "Tarea de control enviada al tablero",
+    "belowThreshold": "Bajo el umbral — en monitoreo, no se justifica intervenir."
+  },
+  "sprayHistory": {
+    "emptyTitle": "Aún no hay aplicaciones registradas",
+    "emptyDescription": "Una aplicación solo puede ser registrada por un aplicador certificado — una vez registrada, aparece aquí de forma inmutable con sus ventanas PHI/REI.",
+    "phiDays": "PHI {days}d",
+    "reiHours": "REI {hours}h"
+  },
+  "sprayForm": {
+    "noCertWarning": "Ningún miembro de la cuadrilla tiene una certificación vigente para el manejo de plaguicidas — no se puede registrar una aplicación hasta que alguien esté certificado.",
+    "plot": "Parcela",
+    "product": "Producto",
+    "productPlaceholder": "p. ej. Verdadero 600",
+    "activeIngredient": "Ingrediente activo",
+    "activeIngredientPlaceholder": "p. ej. ciproconazol",
+    "appliedAt": "Aplicado el",
+    "phi": "PHI (intervalo precosecha, días)",
+    "phiPlaceholder": "p. ej. 21",
+    "rei": "REI (intervalo de reingreso, horas)",
+    "reiPlaceholder": "p. ej. 12",
+    "applicator": "Aplicador",
+    "chooseApplicator": "Elegir un aplicador certificado…",
+    "optionCertified": "{name} — certificado",
+    "optionNoCert": "{name} — sin certificación vigente",
+    "errorProductRequired": "Se requiere un producto.",
+    "errorChooseApplicator": "Elige el aplicador.",
+    "errorNotCertified": "{name} no tiene una certificación vigente para el manejo de plaguicidas — no se puede registrar la aplicación.",
+    "errorThisWorker": "Este trabajador",
+    "errorCouldNotLog": "No se pudo registrar la aplicación.",
+    "errorUnreachable": "No se pudo conectar con el registro — revisa tu conexión y reintenta.",
+    "success": "Aplicación registrada — ventanas PHI/REI estampadas; el planificador las respetará.",
+    "submitLogging": "Registrando…",
+    "submitLog": "Registrar aplicación"
+  }
+}

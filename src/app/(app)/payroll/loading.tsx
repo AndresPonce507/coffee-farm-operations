@@ -7,9 +7,12 @@
  *
  * Pure server component: no data imports, no client JS, no props.
  */
+import { useTranslations } from "next-intl";
+
 export default function PayrollLoading() {
+  const t = useTranslations("common");
   return (
-    <div className="space-y-6" aria-busy="true" aria-label="Loading payroll">
+    <div className="space-y-6" aria-busy="true" aria-label={t("loading.payroll")}>
       {/* Header — mirrors PageHeader. */}
       <div className="animate-rise relative mb-6 pb-4">
         <div className="space-y-2.5">

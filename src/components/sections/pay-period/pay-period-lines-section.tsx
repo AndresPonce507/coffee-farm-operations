@@ -1,4 +1,5 @@
 import { HeartHandshake } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { DossierSection } from "@/components/dossier/dossier-section";
 import { EntityLink } from "@/components/ui/entity-link";
@@ -58,26 +59,27 @@ function CrewName({ line }: { line: PayPeriodPayLine }) {
 }
 
 export function PayPeriodLinesSection({ lines }: PayPeriodLinesSectionProps) {
+  const t = useTranslations("payPeriod");
   return (
     <DossierSection
       id="lines"
-      title="Líneas de pago por trabajador"
+      title={t("lines.title")}
       count={lines.length}
       empty={lines.length === 0}
-      emptyLabel="Sin líneas calculadas todavía"
+      emptyLabel={t("lines.empty")}
     >
       {/* ── Dense desktop table (lg+). ── */}
       <div className="hidden overflow-hidden rounded-2xl glass-card lg:block">
         <table className="w-full border-separate border-spacing-0 text-sm">
           <THead>
             <TR className="hover:bg-transparent">
-              <TH>Trabajador</TH>
-              <TH>Cuadrilla</TH>
-              <TH className="text-right">Por obra</TH>
-              <TH className="text-right">Por hora</TH>
-              <TH className="text-right">Ajuste</TH>
-              <TH className="text-right">Bruto</TH>
-              <TH className="text-right">Neto</TH>
+              <TH>{t("lines.worker")}</TH>
+              <TH>{t("lines.crew")}</TH>
+              <TH className="text-right">{t("lines.pieceRate")}</TH>
+              <TH className="text-right">{t("lines.hourly")}</TH>
+              <TH className="text-right">{t("lines.adjustment")}</TH>
+              <TH className="text-right">{t("lines.gross")}</TH>
+              <TH className="text-right">{t("lines.net")}</TH>
             </TR>
           </THead>
           <TBody>
@@ -147,7 +149,7 @@ export function PayPeriodLinesSection({ lines }: PayPeriodLinesSectionProps) {
               </div>
               <div className="text-right">
                 <p className="text-[11px] uppercase tracking-wide text-muted-fg">
-                  Neto
+                  {t("lines.net")}
                 </p>
                 <p className="font-display text-base font-semibold tabular-nums text-forest-700">
                   {usd(line.netUsd)}
@@ -159,22 +161,22 @@ export function PayPeriodLinesSection({ lines }: PayPeriodLinesSectionProps) {
               <div className="mt-3">
                 <span className="inline-flex items-center gap-1 rounded-full bg-honey-100 px-2.5 py-1 text-xs font-semibold tabular-nums text-honey-700 ring-1 ring-honey/30">
                   <HeartHandshake className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                  {usd(line.makeWholeUsd)} · ajuste al mínimo legal
+                  {usd(line.makeWholeUsd)} · {t("lines.makeWholeTag")}
                 </span>
               </div>
             ) : null}
 
             <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
               <div className="flex justify-between">
-                <dt className="text-muted-fg">Por obra</dt>
+                <dt className="text-muted-fg">{t("lines.pieceRate")}</dt>
                 <dd className="tabular-nums text-ink">{usd(line.pieceRateUsd)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-muted-fg">Por hora</dt>
+                <dt className="text-muted-fg">{t("lines.hourly")}</dt>
                 <dd className="tabular-nums text-ink">{usd(line.hourlyUsd)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-muted-fg">Bruto</dt>
+                <dt className="text-muted-fg">{t("lines.gross")}</dt>
                 <dd className="tabular-nums font-medium text-ink">
                   {usd(line.grossUsd)}
                 </dd>

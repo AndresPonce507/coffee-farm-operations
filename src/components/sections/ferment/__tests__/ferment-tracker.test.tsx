@@ -127,11 +127,11 @@ describe("FermentTracker (smoke)", () => {
         water={water}
       />,
     );
-    // The eco-mill water draw affordance — es-PA "Registrar agua de molino" —
-    // drives logMillWaterAction so the water-per-kg ledger is no longer a dead
+    // The eco-mill water draw affordance — "Record mill water" — drives
+    // logMillWaterAction so the water-per-kg ledger is no longer a dead
     // server capability with no UI to invoke it.
     expect(
-      screen.getByRole("button", { name: /registrar agua de molino/i }),
+      screen.getByRole("button", { name: /record mill water/i }),
     ).toBeInTheDocument();
     const litersInput = container.querySelector(
       "input[name='liters']",

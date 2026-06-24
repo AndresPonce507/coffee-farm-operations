@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, ClipboardCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { CuppingProtocol } from "@/lib/types";
 import {
@@ -58,6 +59,7 @@ export function CuppingScoresheet({
   lotCode: string;
   cuppers: { id: string; name: string }[];
 }) {
+  const t = useTranslations("qc");
   const [protocol, setProtocol] = useState<CuppingProtocol>("sca-cva");
   const [scores, setScores] = useState<Record<string, number>>({});
   const [cupperId, setCupperId] = useState<string>(cuppers[0]?.id ?? "");
@@ -129,27 +131,27 @@ export function CuppingScoresheet({
     sessionState.status === "error"
       ? (sessionState.message ??
         Object.values(sessionState.errors ?? {})[0] ??
-        "Could not record the cup.")
+        t("scoresheet.errorFallback"))
       : undefined;
 
   return (
     <Card className="animate-rise">
       <CardHeader>
         <div>
-          <CardTitle>Cupping scoresheet</CardTitle>
+          <CardTitle>{t("scoresheet.title")}</CardTitle>
           <CardDescription>
-            <span className="font-mono text-forest-700">{lotCode}</span> · score each
-            attribute 0–10 — the total mirrors the server&apos;s
+            <span className="font-mono text-forest-700">{lotCode}</span>
+            {t("scoresheet.descriptionLead")}
           </CardDescription>
         </div>
         <Segmented
           options={[
-            { id: "sca-cva", label: "SCA CVA" },
-            { id: "legacy-100", label: "Legacy 100-pt" },
+            { id: "sca-cva", label: t("scoresheet.protocolScaCva") },
+            { id: "legacy-100", label: t("scoresheet.protocolLegacy") },
           ]}
           value={protocol}
           onChange={onProtocol}
-          ariaLabel="Cupping protocol"
+          ariaLabel={t("scoresheet.protocolAria")}
         />
       </CardHeader>
 
@@ -162,7 +164,7 @@ export function CuppingScoresheet({
           {/* Session meta: who cupped + whether this is a calibration sample. */}
           <div className="flex flex-wrap items-center gap-3">
             <label className="text-xs font-medium text-muted-fg" htmlFor="cupper">
-              Cupper
+              {t("scoresheet.cupperLabel")}
             </label>
             <select
               id="cupper"
@@ -185,7 +187,7 @@ export function CuppingScoresheet({
                 onChange={(e) => setIsCalibration(e.target.checked)}
                 className="h-4 w-4 rounded border-line accent-forest-600"
               />
-              Calibration sample
+              {t("scoresheet.calibrationSample")}
             </label>
           </div>
 
@@ -216,7 +218,7 @@ export function CuppingScoresheet({
                     max={10}
                     step={0.25}
                     value={value}
-                    aria-label={`${attribute} score`}
+                    aria-label={t("scoresheet.scoreAria", { attribute })}
                     onChange={(e) => setScore(attribute, Number(e.target.value))}
                     className="mt-2 h-2 w-full cursor-pointer appearance-none rounded-full bg-forest-100 accent-forest-600"
                   />
@@ -229,7 +231,7 @@ export function CuppingScoresheet({
           <div className="flex items-center justify-between rounded-2xl border border-forest-100 bg-forest-100/40 px-5 py-4">
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-muted-fg">
-                Live total
+                {t("scoresheet.liveTotal")}
               </p>
               <p
                 data-testid="cup-live-total"
@@ -253,8 +255,8 @@ export function CuppingScoresheet({
                 >
                   <CheckCircle2 className="h-4 w-4 shrink-0" />
                   {appended
-                    ? "Cup recorded — bound to this lot forever."
-                    : "Session opened — saving scores…"}
+                    ? t("scoresheet.cupRecorded")
+                    : t("scoresheet.sessionOpened")}
                 </span>
               )}
               {errorMessage && (
@@ -272,7 +274,11 @@ export function CuppingScoresheet({
               className="shrink-0"
             >
               <ClipboardCheck className="h-4 w-4" />
-              {pending ? "Recording…" : saved ? "Recorded" : "Record cup"}
+              {pending
+                ? t("scoresheet.recording")
+                : saved
+                  ? t("scoresheet.recorded")
+                  : t("scoresheet.recordCup")}
             </Button>
           </div>
         </form>

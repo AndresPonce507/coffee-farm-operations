@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { Worker } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -10,17 +11,18 @@ import { createWorker, deleteWorker, updateWorker } from "@/lib/actions/workers"
 import { WorkerForm } from "./worker-form";
 
 export function AddWorkerButton({ crews }: { crews: readonly string[] }) {
+  const t = useTranslations("workers");
   const [open, setOpen] = useState(false);
   return (
     <>
       <Button variant="primary" onClick={() => setOpen(true)}>
         <Plus className="h-4 w-4" />
-        New worker
+        {t("actions.newWorker")}
       </Button>
-      <Dialog open={open} onClose={() => setOpen(false)} title="New worker">
+      <Dialog open={open} onClose={() => setOpen(false)} title={t("actions.newWorker")}>
         <WorkerForm
           action={createWorker}
-          submitLabel="Add worker"
+          submitLabel={t("actions.addWorker")}
           onDone={() => setOpen(false)}
           crews={crews}
         />
@@ -36,6 +38,7 @@ export function WorkerRowActions({
   worker: Worker;
   crews: readonly string[];
 }) {
+  const t = useTranslations("workers");
   const [editing, setEditing] = useState(false);
   const [pending, startTransition] = useTransition();
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -43,7 +46,7 @@ export function WorkerRowActions({
   function onDelete() {
     if (
       typeof window !== "undefined" &&
-      !window.confirm(`Delete "${worker.name}"?`)
+      !window.confirm(t("actions.confirmDelete", { name: worker.name }))
     ) {
       return;
     }
@@ -51,7 +54,7 @@ export function WorkerRowActions({
     startTransition(async () => {
       const result = await deleteWorker(worker.id);
       if (result.status === "error") {
-        setDeleteError(result.message ?? "No se pudo eliminar el trabajador.");
+        setDeleteError(result.message ?? t("actions.deleteFailed"));
       }
     });
   }
@@ -61,7 +64,7 @@ export function WorkerRowActions({
       <button
         type="button"
         onClick={() => setEditing(true)}
-        aria-label={`Edit ${worker.name}`}
+        aria-label={t("actions.edit", { name: worker.name })}
         className="grid h-8 w-8 place-items-center rounded-lg text-muted-fg transition hover:bg-white/60 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
       >
         <Pencil className="h-4 w-4" />
@@ -70,7 +73,7 @@ export function WorkerRowActions({
         type="button"
         onClick={onDelete}
         disabled={pending}
-        aria-label={`Delete ${worker.name}`}
+        aria-label={t("actions.delete", { name: worker.name })}
         className="grid h-8 w-8 place-items-center rounded-lg text-muted-fg transition hover:bg-cherry/10 hover:text-cherry disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
       >
         <Trash2 className="h-4 w-4" />
@@ -82,11 +85,11 @@ export function WorkerRowActions({
         </p>
       )}
 
-      <Dialog open={editing} onClose={() => setEditing(false)} title="Edit worker">
+      <Dialog open={editing} onClose={() => setEditing(false)} title={t("actions.editWorker")}>
         <WorkerForm
           worker={worker}
           action={updateWorker}
-          submitLabel="Save changes"
+          submitLabel={t("actions.saveChanges")}
           onDone={() => setEditing(false)}
           crews={crews}
         />

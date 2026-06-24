@@ -1,0 +1,107 @@
+{
+  "common": {
+    "done": "Done",
+    "cancel": "Cancel"
+  },
+  "summary": {
+    "payPeriods": "Pay periods",
+    "totalGross": "Total gross",
+    "totalNet": "Total net",
+    "madeWhole": "Made whole",
+    "liftedToFloor": "{n} lifted to the legal floor",
+    "workerSingular": "worker",
+    "workerPlural": "workers",
+    "allAboveFloor": "all above the floor"
+  },
+  "board": {
+    "statusPaid": "Paid",
+    "statusApproved": "Approved",
+    "statusCalculated": "Calculated",
+    "statusOpen": "Open",
+    "emptyTitle": "No pay periods yet",
+    "emptyDescription": "Open a pay period and calculate it to roll up the blended piece-rate + hourly earnings — with the legal-minimum make-whole guard applied to every worker.",
+    "workerSingular": "worker",
+    "workerPlural": "workers",
+    "gross": "Gross",
+    "net": "Net",
+    "madeWholeChip": "{n} made whole"
+  },
+  "breakdown": {
+    "makeWholeLabel": "adjusted to the legal minimum",
+    "emptyTitle": "No pay lines for this period",
+    "emptyDescription": "Calculate the period to roll up each worker's blended piece-rate + hourly earnings, with the legal-minimum top-up applied.",
+    "colWorker": "Worker",
+    "colPieceRate": "Piece-rate",
+    "colHourly": "Hourly",
+    "colMakeWhole": "Top-up",
+    "colGross": "Gross",
+    "colCss": "CSS",
+    "colSeguroEducativo": "Seguro Educativo",
+    "colDecimo": "Décimo",
+    "colNet": "Net",
+    "totals": "Totals"
+  },
+  "payslip": {
+    "qrAriaLabel": "Payslip QR code"
+  },
+  "methods": {
+    "yappy": "Yappy",
+    "nequi": "Nequi",
+    "ach": "ACH (bank transfer)",
+    "cashSigned": "Signed cash · cash-signed"
+  },
+  "compute": {
+    "periodIdLabel": "Period identifier",
+    "periodIdPlaceholder": "e.g. pp-2026-06-w3",
+    "from": "From",
+    "to": "To",
+    "seasonLabel": "Season",
+    "optional": "(optional)",
+    "seasonPlaceholder": "2026-2027",
+    "calculating": "Calculating…",
+    "calculateButton": "Calculate period"
+  },
+  "approve": {
+    "ariaLabel": "Approve the pay line for {name}",
+    "pending": "Approving…",
+    "approved": "Approved",
+    "approve": "Approve"
+  },
+  "signature": {
+    "label": "Worker signature · signature",
+    "clear": "Clear",
+    "canvasAriaLabel": "Worker signature for the cash payment",
+    "helpText": "The worker signs here to confirm they received the cash payment."
+  },
+  "disbursement": {
+    "net": "net",
+    "methodLabel": "Payment method",
+    "amountLabel": "Amount (USD)",
+    "refLabel": "Reference / receipt",
+    "refPlaceholder": "e.g. yappy-tx-1024",
+    "captureSignature": "Capture the worker's signature to record the cash payment.",
+    "disclaimer": "Deliberate and irreversible action — records a payment already made. It does not move any money on its own.",
+    "recording": "Recording…",
+    "recordButton": "Record disbursement"
+  },
+  "ledger": {
+    "title": "Recorded payments",
+    "description": "Payment ledger for the period — most recent first",
+    "signed": "signed"
+  },
+  "page": {
+    "title": "Payroll",
+    "subtitle": "Blended piece-rate + hourly pay, with the legal-minimum top-up guaranteed in the data layer",
+    "calculateTitle": "Calculate a period",
+    "calculateDescription": "Freezes the calculation: one line per worker, with the legal-minimum top-up applied.",
+    "payslipsTitle": "Payslips",
+    "payslipsDescription": "Tap a worker to view their bilingual payslip (es · ngäbere) with a QR code.",
+    "viewPayslipFor": "View the payslip for {name}",
+    "approvePayTitle": "Approve and pay",
+    "approvePayDescription": "Approve each calculated line, then record the payment (Yappy / Nequi / ACH / signed cash).",
+    "paidSuffix": " · paid",
+    "statusApproved": "approved",
+    "statusPaid": "paid",
+    "statusCalculated": "calculated"
+  }
+}

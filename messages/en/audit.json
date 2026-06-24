@@ -1,0 +1,11 @@
+{
+  "drawer": {
+    "dialogLabel": "Audit trail for {streamKey}",
+    "close": "Close",
+    "eyebrow": "Audit trail",
+    "chainVerified": "Chain verified",
+    "chainUnverified": "Chain unverified",
+    "closeTrail": "Close audit trail",
+    "empty": "No events recorded for this stream yet."
+  }
+}

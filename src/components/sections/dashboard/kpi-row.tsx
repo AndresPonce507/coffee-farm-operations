@@ -1,4 +1,5 @@
 import { Coffee, Users, FlaskConical, Target } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { StatCard } from "@/components/ui/stat-card";
 import { getWorkers } from "@/lib/db/workers";
@@ -12,6 +13,7 @@ import { kg, num, pct } from "@/lib/utils";
  * mock data at module scope, so it renders identically on server and client.
  */
 export async function KpiRow() {
+  const t = await getTranslations("dashboard");
   const [workers, batches, dailyCherries, SEASON, provenance] = await Promise.all([
     getWorkers(),
     getBatches(),
@@ -43,41 +45,41 @@ export async function KpiRow() {
 
   return (
     <section
-      aria-label="Key farm metrics"
+      aria-label={t("metrics.ariaLabel")}
       className="stagger perf-contain grid animate-rise gap-4 sm:grid-cols-2 xl:grid-cols-4"
     >
       <StatCard
-        label="Today's cherries"
+        label={t("kpi.todaysCherries")}
         value={kg(SEASON.todayKg)}
         icon={Coffee}
         accent="forest"
-        delta={{ value: `${pct(changePct)} vs 7d ago`, dir: deltaDir }}
-        hint="received today"
+        delta={{ value: t("kpi.vs7dAgo", { pct: pct(changePct) }), dir: deltaDir }}
+        hint={t("kpi.todaysCherriesHint")}
         spark={spark}
       />
 
       <StatCard
-        label="Pickers present"
+        label={t("kpi.pickersPresent")}
         value={num(pickersPresent)}
         icon={Users}
         accent="honey"
-        hint={`of ${num(allPickers.length)} pickers`}
+        hint={t("kpi.pickersPresentHint", { count: num(allPickers.length) })}
       />
 
       <StatCard
-        label="Drying batches"
+        label={t("kpi.dryingBatches")}
         value={num(dryingBatches)}
         icon={FlaskConical}
         accent="coffee"
-        hint="on the beds now"
+        hint={t("kpi.dryingBatchesHint")}
       />
 
       <StatCard
-        label="Season to date"
+        label={t("kpi.seasonToDate")}
         value={kg(SEASON.harvestedKg)}
         icon={Target}
         accent="cherry"
-        hint={`${pct(seasonPct)} of target`}
+        hint={t("kpi.seasonToDateHint", { pct: pct(seasonPct) })}
         // AD-4: this harvest figure is DERIVED by summing the logged harvests, so
         // it carries an honest, always-visible "derived from N harvests · <date>"
         // readout — a real row count + the most-recent harvest date (not a chip).

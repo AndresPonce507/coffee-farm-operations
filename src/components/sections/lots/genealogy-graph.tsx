@@ -1,8 +1,12 @@
+import { useTranslations } from "next-intl";
+
 import type { LotEdge, LotGenealogy, LotNode } from "@/lib/types";
 import { layoutGenealogy, type PositionedNode } from "@/lib/ui/graph-layout";
 import { EntityLink } from "@/components/ui/entity-link";
 import { LotGraphInteractive } from "./lot-graph-interactive.client";
 import { cn, kg } from "@/lib/utils";
+
+type Translator = ReturnType<typeof useTranslations<"lots">>;
 
 /**
  * <GenealogyGraph> — the S6 lot-genealogy surface, SERVER-rendered SVG.
@@ -51,8 +55,8 @@ function stageFill(stage: string | null | undefined): string {
  * `code` (null stage/variety/mass). Never paint the literal string "null" into
  * the graph — show an em-dash / "Unknown" instead (review finding #22).
  */
-function stageLabel(stage: unknown): string {
-  return stage == null || stage === "" ? "Unknown" : String(stage);
+function stageLabel(stage: unknown, unknownLabel: string): string {
+  return stage == null || stage === "" ? unknownLabel : String(stage);
 }
 
 /** Mass readout that degrades a null/undefined/NaN kg to an em-dash, never "null". */
@@ -82,13 +86,15 @@ export function GenealogyGraph({
   terminalCode,
   className,
 }: GenealogyGraphProps) {
+  const t = useTranslations("lots");
+  const unknownLabel = t("genealogyGraph.unknownStage");
   const layout = layoutGenealogy(graph);
   const { nodes, edges, bounds } = layout;
 
   if (nodes.length === 0) {
     return (
       <div className={cn("glass-card rounded-2xl p-8 text-center", className)}>
-        <p className="text-sm text-muted-fg">No lineage to display.</p>
+        <p className="text-sm text-muted-fg">{t("genealogyGraph.empty")}</p>
       </div>
     );
   }
@@ -110,7 +116,10 @@ export function GenealogyGraph({
   // draw a dashed strand falling off the node face representing the lost kg.
   const wisps = yieldLossWisps(nodes, edges);
 
-  const ariaLabel = `Lot genealogy graph: ${nodes.length} lots, ${edges.length} mass transfers.`;
+  const ariaLabel = t("genealogyGraph.ariaLabel", {
+    nodes: nodes.length,
+    edges: edges.length,
+  });
 
   return (
     <div className={cn("glass-card overflow-hidden rounded-2xl", className)}>
@@ -211,7 +220,10 @@ export function GenealogyGraph({
                 data-yield-loss={w.code}
               >
                 <title>
-                  {w.code}: {kg(w.lostKg)} yield loss
+                  {t("genealogyGraph.yieldLossTitle", {
+                    code: w.code,
+                    kg: kg(w.lostKg),
+                  })}
                 </title>
               </path>
             ))}
@@ -275,7 +287,7 @@ export function GenealogyGraph({
                     fontSize={11}
                     fill="#6c6155"
                   >
-                    {stageLabel(n.stage)} · {kgLabel(n.currentKg)}
+                    {stageLabel(n.stage, unknownLabel)} · {kgLabel(n.currentKg)}
                   </text>
                   {/* AD-3: the redundant collision-avoided label-band <text> was
                       removed — the code is already on the opaque white node card
@@ -336,7 +348,7 @@ export function GenealogyGraph({
       </LotGraphInteractive>
 
       {/* D18: the operable role="tree" fallback from the SAME data. */}
-      <GenealogyTree graph={graph} terminalCode={terminal} />
+      <GenealogyTree graph={graph} terminalCode={terminal} t={t} />
     </div>
   );
 }
@@ -419,9 +431,11 @@ function ribbonish(kgVal: number): number {
 function GenealogyTree({
   graph,
   terminalCode,
+  t,
 }: {
   graph: LotGenealogy;
   terminalCode?: string;
+  t: Translator;
 }) {
   const { nodes, edges } = graph;
   const byCode = new Map(nodes.map((n) => [n.code, n]));
@@ -448,7 +462,7 @@ function GenealogyTree({
   return (
     <ul
       role="tree"
-      aria-label="Lot genealogy outline"
+      aria-label={t("genealogyGraph.treeAriaLabel")}
       className="border-line border-t p-4 text-sm"
     >
       {roots.map((r) => (
@@ -460,6 +474,7 @@ function GenealogyTree({
           edgeKg={null}
           terminalCode={terminalCode}
           rendered={rendered}
+          t={t}
         />
       ))}
     </ul>
@@ -473,6 +488,7 @@ function TreeNode({
   edgeKg,
   terminalCode,
   rendered,
+  t,
 }: {
   node: LotNode;
   childEdges: Map<string, LotEdge[]>;
@@ -481,13 +497,14 @@ function TreeNode({
   terminalCode?: string;
   /** Tree-global set of codes already given a full (linked) entry. */
   rendered: Set<string>;
+  t: Translator;
 }) {
   // Already rendered somewhere in the outline (a DAG diamond or a cycle): show a
   // non-link breadcrumb so each lot's dossier link stays unique tree-wide.
   if (rendered.has(node.code)) {
     return (
       <li role="treeitem" className="text-muted-fg pl-2">
-        {node.code} (already shown)
+        {node.code} {t("genealogyGraph.alreadyShown")}
       </li>
     );
   }
@@ -515,7 +532,8 @@ function TreeNode({
           {node.code}
         </EntityLink>
         <span className="text-muted-fg text-xs">
-          {stageLabel(node.stage)} · {kgLabel(node.currentKg)}
+          {stageLabel(node.stage, t("genealogyGraph.unknownStage"))} ·{" "}
+          {kgLabel(node.currentKg)}
         </span>
         {edgeKg && (
           <span className="text-muted-fg text-xs">
@@ -523,7 +541,9 @@ function TreeNode({
           </span>
         )}
         {isTerminal && (
-          <span className="text-forest text-xs font-semibold">(sold lot)</span>
+          <span className="text-forest text-xs font-semibold">
+            {t("genealogyGraph.soldLot")}
+          </span>
         )}
       </span>
       {kids.length > 0 && (
@@ -540,6 +560,7 @@ function TreeNode({
                 edgeKg={{ kind: e.kind, kg: e.kg }}
                 terminalCode={terminalCode}
                 rendered={rendered}
+                t={t}
               />
             );
           })}

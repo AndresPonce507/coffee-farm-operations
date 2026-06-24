@@ -30,6 +30,6 @@ describe("PlotSatelliteSection", () => {
   it("renders the honest 'no signal' empty when there is no vegetation read", () => {
     render(<PlotSatelliteSection vegetation={null} />);
     expect(screen.getByTestId("section-vegetation")).toBeInTheDocument();
-    expect(screen.getByText(/Sin lectura|Sin señal/i)).toBeInTheDocument();
+    expect(screen.getByText(/No reliable reading|no signal/i)).toBeInTheDocument();
   });
 });

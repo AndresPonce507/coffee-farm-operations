@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { AtpTable } from "@/components/sections/inventory/atp-table";
 import { GradeGreenForm } from "@/components/sections/inventory/grade-green-form";
@@ -24,6 +26,7 @@ import { getGradableLots } from "@/lib/db/gradable-lots";
  * The app shell (sidebar, topbar, padded main) comes from (app)/layout.tsx.
  */
 export default async function InventoryPage() {
+  const t = await getTranslations("inventory");
   const [atp, gradableSources] = await Promise.all([
     getGreenLotAtp(),
     getGradableLots(),
@@ -32,8 +35,8 @@ export default async function InventoryPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Inventario"
-        subtitle="Café verde, clasificado y disponible para comprometer"
+        title={t("page.title")}
+        subtitle={t("page.subtitle")}
       >
         <GradeGreenForm sources={gradableSources} />
       </PageHeader>

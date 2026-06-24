@@ -33,12 +33,12 @@ describe("TopPickersCard (smoke)", () => {
     const ui = await TopPickersCard();
     render(ui);
 
-    expect(screen.getByText("Mejores cosecheros hoy")).toBeInTheDocument();
+    expect(screen.getByText("Top pickers today")).toBeInTheDocument();
     // Active picker name + their today total render in the leaderboard.
     expect(screen.getByText("Marisol Quintero")).toBeInTheDocument();
     expect(screen.getByText("145 kg")).toBeInTheDocument();
-    // The rest-day picker shows under the "Sin actividad hoy" group.
-    expect(screen.getByText("Sin actividad hoy")).toBeInTheDocument();
+    // The rest-day picker shows under the "No activity today" group.
+    expect(screen.getByText("No activity today")).toBeInTheDocument();
     expect(screen.getByText("Ana Beltrán")).toBeInTheDocument();
   });
 
@@ -47,12 +47,12 @@ describe("TopPickersCard (smoke)", () => {
     render(ui);
 
     // WCAG 2.5.3: EntityLink aria-label must contain the visible name (not slug).
-    // EntityLink renders aria-label="Abrir trabajador <name>" — name is picker.name.
-    const marisolLink = screen.getByRole("link", { name: /trabajador Marisol Quintero/i });
+    // EntityLink renders aria-label="Open worker <name>" — name is picker.name.
+    const marisolLink = screen.getByRole("link", { name: /worker Marisol Quintero/i });
     expect(marisolLink).toHaveAttribute("href", "/workers/w1");
     expect(marisolLink).toHaveTextContent("Marisol Quintero");
 
-    const diegoLink = screen.getByRole("link", { name: /trabajador Diego Santamaría/i });
+    const diegoLink = screen.getByRole("link", { name: /worker Diego Santamaría/i });
     expect(diegoLink).toHaveAttribute("href", "/workers/w2");
     expect(diegoLink).toHaveTextContent("Diego Santamaría");
   });
@@ -62,7 +62,7 @@ describe("TopPickersCard (smoke)", () => {
     render(ui);
 
     // The idle picker (todayKg === 0) also gets an EntityLink
-    const anaLink = screen.getByRole("link", { name: /trabajador Ana Beltrán/i });
+    const anaLink = screen.getByRole("link", { name: /worker Ana Beltrán/i });
     expect(anaLink).toHaveAttribute("href", "/workers/w3");
     expect(anaLink).toHaveTextContent("Ana Beltrán");
   });
@@ -73,7 +73,7 @@ describe("TopPickersCard (smoke)", () => {
 
     // The active-row EntityLink must have `flex` + `flex-col` so the inner
     // truncate <p> and baseline-aligned flex children can clamp correctly.
-    const marisolLink = screen.getByRole("link", { name: /trabajador Marisol Quintero/i });
+    const marisolLink = screen.getByRole("link", { name: /worker Marisol Quintero/i });
     expect(marisolLink.className).toMatch(/\bflex\b/);
     expect(marisolLink.className).toMatch(/\bflex-col\b/);
     expect(marisolLink.className).toMatch(/\bmin-w-0\b/);
@@ -85,7 +85,7 @@ describe("TopPickersCard (smoke)", () => {
 
     // The idle-row EntityLink must have `block` so the inner truncate <p>
     // can clamp correctly within the flex row container.
-    const anaLink = screen.getByRole("link", { name: /trabajador Ana Beltrán/i });
+    const anaLink = screen.getByRole("link", { name: /worker Ana Beltrán/i });
     expect(anaLink.className).toMatch(/\bblock\b/);
     expect(anaLink.className).toMatch(/\bmin-w-0\b/);
   });

@@ -1,4 +1,5 @@
 import { Satellite } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { DossierSection } from "@/components/dossier/dossier-section";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,10 +11,11 @@ import type { PlotVegetation, VegetationConfidence } from "@/lib/types";
  * never hidden). Pure Server Component. A null read renders the honest "no
  * trustworthy signal" empty state, never a fabricated value. */
 
-const CONFIDENCE_LABEL: Record<VegetationConfidence, string> = {
-  high: "Confianza alta",
-  medium: "Confianza media",
-  low: "Confianza baja",
+/** Confidence → its translation key under plots.satellite.confidence. */
+const CONFIDENCE_KEY: Record<VegetationConfidence, string> = {
+  high: "high",
+  medium: "medium",
+  low: "low",
 };
 const CONFIDENCE_TONE: Record<VegetationConfidence, BadgeTone> = {
   high: "ok",
@@ -33,14 +35,15 @@ export function PlotSatelliteSection({
 }: {
   vegetation: PlotVegetation | null;
 }) {
+  const t = useTranslations("plots");
   const hasSignal = vegetation != null && vegetation.value != null;
 
   return (
     <DossierSection
       id="vegetation"
-      title="Vegetación (NDVI)"
+      title={t("satellite.title")}
       empty={!hasSignal}
-      emptyLabel="Sin lectura confiable ahora mismo (nube / sin señal)"
+      emptyLabel={t("satellite.empty")}
     >
       {vegetation && vegetation.value != null && (
         <Card>
@@ -53,7 +56,7 @@ export function PlotSatelliteSection({
             </div>
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-muted-fg">
-                {(vegetation.indexKind ?? "índice").toUpperCase()}
+                {(vegetation.indexKind ?? t("satellite.indexFallback")).toUpperCase()}
               </p>
               <p className="font-display text-2xl font-bold text-ink">
                 {vegetation.value.toFixed(2)}
@@ -61,12 +64,12 @@ export function PlotSatelliteSection({
             </div>
             <div className="ml-auto flex flex-col items-end gap-1.5">
               <Badge tone={CONFIDENCE_TONE[vegetation.confidence]} dot>
-                {CONFIDENCE_LABEL[vegetation.confidence]}
+                {t(`satellite.confidence.${CONFIDENCE_KEY[vegetation.confidence]}`)}
               </Badge>
               <span className="text-xs text-muted-fg">
-                {vegetation.basis === "optical" ? "Óptico" : "SAR"}
+                {vegetation.basis === "optical" ? t("satellite.optical") : "SAR"}
                 {vegetation.cloudPct != null &&
-                  ` · ${vegetation.cloudPct}% nube`}
+                  ` · ${t("satellite.cloud", { pct: vegetation.cloudPct })}`}
                 {vegetation.observedAt &&
                   ` · ${fmtDate(vegetation.observedAt)}`}
               </span>

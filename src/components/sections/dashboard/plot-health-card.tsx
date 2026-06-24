@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -6,6 +8,8 @@ import { getPlots } from "@/lib/db/plots";
 import type { Plot, PlotStatus } from "@/lib/types";
 import { pct, kg } from "@/lib/utils";
 
+type T = Awaited<ReturnType<typeof getTranslations>>;
+
 /** Status -> Badge tone (problems use warn/danger so they read at a glance). */
 const STATUS_TONE: Record<PlotStatus, BadgeTone> = {
   healthy: "ok",
@@ -13,11 +17,11 @@ const STATUS_TONE: Record<PlotStatus, BadgeTone> = {
   "at-risk": "danger",
 };
 
-/** Status -> human label. */
-const STATUS_LABEL: Record<PlotStatus, string> = {
-  healthy: "Healthy",
-  watch: "Watch",
-  "at-risk": "At risk",
+/** Status -> i18n key suffix under "plotHealth.status". */
+const STATUS_LABEL_KEY: Record<PlotStatus, string> = {
+  healthy: "healthy",
+  watch: "watch",
+  "at-risk": "atRisk",
 };
 
 /** Status -> ProgressBar fill tone, so a struggling plot's bar matches its badge. */
@@ -34,7 +38,7 @@ const STATUS_ORDER: Record<PlotStatus, number> = {
   healthy: 2,
 };
 
-function PlotHealthRow({ plot }: { plot: Plot }) {
+function PlotHealthRow({ plot, t }: { plot: Plot; t: T }) {
   const progress =
     plot.expectedYieldKg > 0
       ? (plot.harvestedKg / plot.expectedYieldKg) * 100
@@ -51,7 +55,7 @@ function PlotHealthRow({ plot }: { plot: Plot }) {
           <div className="flex items-center justify-between gap-3">
             <p className="truncate text-sm font-medium text-ink">{plot.name}</p>
             <Badge tone={STATUS_TONE[plot.status]} dot>
-              {STATUS_LABEL[plot.status]}
+              {t(`plotHealth.status.${STATUS_LABEL_KEY[plot.status]}`)}
             </Badge>
           </div>
           <p className="mt-0.5 text-xs text-muted-fg">{plot.variety}</p>
@@ -68,7 +72,7 @@ function PlotHealthRow({ plot }: { plot: Plot }) {
           <p className="mt-1.5 text-xs text-muted-fg">
             {kg(plot.harvestedKg)}{" "}
             <span className="text-muted-fg/70">
-              of {kg(plot.expectedYieldKg)}
+              {t("plotHealth.ofExpected", { kg: kg(plot.expectedYieldKg) })}
             </span>
           </p>
         </div>
@@ -82,6 +86,7 @@ function PlotHealthRow({ plot }: { plot: Plot }) {
  * Lists ~6 plots with status badge and a harvested/expected progress bar.
  */
 export async function PlotHealthCard() {
+  const t = await getTranslations("dashboard");
   const plots = await getPlots();
 
   const ranked = [...plots]
@@ -98,18 +103,18 @@ export async function PlotHealthCard() {
   return (
     <Card className="animate-rise">
       <CardHeader>
-        <CardTitle>Plot health</CardTitle>
+        <CardTitle>{t("plotHealth.title")}</CardTitle>
         <a
           href="/plots"
           className="rounded text-xs font-medium text-muted-fg transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-300"
         >
-          View all
+          {t("plotHealth.viewAll")}
         </a>
       </CardHeader>
       <CardContent>
         <ul className="stagger divide-y divide-line/70">
           {ranked.map((plot) => (
-            <PlotHealthRow key={plot.id} plot={plot} />
+            <PlotHealthRow key={plot.id} plot={plot} t={t} />
           ))}
         </ul>
       </CardContent>

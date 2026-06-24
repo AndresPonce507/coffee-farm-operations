@@ -1,0 +1,107 @@
+{
+  "common": {
+    "done": "Listo",
+    "cancel": "Cancelar"
+  },
+  "summary": {
+    "payPeriods": "Períodos de pago",
+    "totalGross": "Bruto total",
+    "totalNet": "Neto total",
+    "madeWhole": "Ajustados al mínimo",
+    "liftedToFloor": "{n} ajustados al mínimo legal",
+    "workerSingular": "trabajador/a",
+    "workerPlural": "trabajadores/as",
+    "allAboveFloor": "todos por encima del mínimo"
+  },
+  "board": {
+    "statusPaid": "Pagado",
+    "statusApproved": "Aprobado",
+    "statusCalculated": "Calculado",
+    "statusOpen": "Abierto",
+    "emptyTitle": "Aún no hay períodos de pago",
+    "emptyDescription": "Abra un período de pago y calcúlelo para consolidar los ingresos combinados por obra + por hora, con el ajuste al mínimo legal aplicado a cada trabajador/a.",
+    "workerSingular": "trabajador/a",
+    "workerPlural": "trabajadores/as",
+    "gross": "Bruto",
+    "net": "Neto",
+    "madeWholeChip": "{n} ajustados al mínimo"
+  },
+  "breakdown": {
+    "makeWholeLabel": "ajustado al mínimo legal",
+    "emptyTitle": "Sin líneas de pago para este período",
+    "emptyDescription": "Calcule el período para consolidar los ingresos combinados por obra + por hora de cada trabajador/a, con el ajuste al mínimo legal aplicado.",
+    "colWorker": "Trabajador/a",
+    "colPieceRate": "Por obra",
+    "colHourly": "Por hora",
+    "colMakeWhole": "Ajuste mínimo",
+    "colGross": "Bruto",
+    "colCss": "CSS",
+    "colSeguroEducativo": "Seguro Educativo",
+    "colDecimo": "Décimo",
+    "colNet": "Neto",
+    "totals": "Totales"
+  },
+  "payslip": {
+    "qrAriaLabel": "Código QR del comprobante de pago"
+  },
+  "methods": {
+    "yappy": "Yappy",
+    "nequi": "Nequi",
+    "ach": "ACH (transferencia bancaria)",
+    "cashSigned": "Efectivo firmado · cash-signed"
+  },
+  "compute": {
+    "periodIdLabel": "Identificador del período",
+    "periodIdPlaceholder": "p. ej. pp-2026-06-w3",
+    "from": "Desde",
+    "to": "Hasta",
+    "seasonLabel": "Temporada",
+    "optional": "(opcional)",
+    "seasonPlaceholder": "2026-2027",
+    "calculating": "Calculando…",
+    "calculateButton": "Calcular período"
+  },
+  "approve": {
+    "ariaLabel": "Aprobar la línea de pago de {name}",
+    "pending": "Aprobando…",
+    "approved": "Aprobado",
+    "approve": "Aprobar"
+  },
+  "signature": {
+    "label": "Firma del trabajador · signature",
+    "clear": "Borrar",
+    "canvasAriaLabel": "Firma del trabajador para el pago en efectivo",
+    "helpText": "El trabajador firma aquí para confirmar que recibió el pago en efectivo."
+  },
+  "disbursement": {
+    "net": "neto",
+    "methodLabel": "Método de pago",
+    "amountLabel": "Monto (USD)",
+    "refLabel": "Referencia / recibo",
+    "refPlaceholder": "p. ej. yappy-tx-1024",
+    "captureSignature": "Capture la firma del trabajador para registrar el pago en efectivo.",
+    "disclaimer": "Acción deliberada e irreversible — registra un pago ya realizado. No mueve dinero por sí sola.",
+    "recording": "Registrando…",
+    "recordButton": "Registrar desembolso"
+  },
+  "ledger": {
+    "title": "Pagos registrados",
+    "description": "Libro de pagos del período — el más reciente primero",
+    "signed": "firmado"
+  },
+  "page": {
+    "title": "Nómina",
+    "subtitle": "Pago mixto por obra + por hora, con el ajuste al mínimo legal garantizado en la capa de datos",
+    "calculateTitle": "Calcular un período",
+    "calculateDescription": "Congela el cálculo: una línea por trabajador, con el ajuste al mínimo legal aplicado.",
+    "payslipsTitle": "Comprobantes de pago",
+    "payslipsDescription": "Toque a un trabajador para ver su comprobante bilingüe (es · ngäbere) con código QR.",
+    "viewPayslipFor": "Ver el comprobante de pago de {name}",
+    "approvePayTitle": "Aprobar y pagar",
+    "approvePayDescription": "Apruebe cada línea calculada, luego registre el pago (Yappy / Nequi / ACH / efectivo firmado).",
+    "paidSuffix": " · pagado",
+    "statusApproved": "aprobado",
+    "statusPaid": "pagado",
+    "statusCalculated": "calculado"
+  }
+}

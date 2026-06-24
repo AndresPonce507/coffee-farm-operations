@@ -9,9 +9,12 @@
  * Pure server component: no data imports, no client JS, no props. Glassy
  * `animate-pulse` placeholders float over the global LivingBackground.
  */
+import { useTranslations } from "next-intl";
+
 export default function CrewLoading() {
+  const t = useTranslations("common");
   return (
-    <div className="space-y-6" aria-busy="true" aria-label="Loading crew">
+    <div className="space-y-6" aria-busy="true" aria-label={t("loading.crew")}>
       {/* Header — mirrors PageHeader (title + subtitle, hairline divider). */}
       <div className="animate-rise relative mb-6 pb-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">

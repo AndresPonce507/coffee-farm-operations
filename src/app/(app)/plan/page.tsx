@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { HarvestPlanner } from "@/components/sections/planning/harvest-planner";
 
@@ -17,11 +19,12 @@ import { HarvestPlanner } from "@/components/sections/planning/harvest-planner";
  * provided by (app)/layout.tsx; this page renders only its inner content.
  */
 export default function PlanPage() {
+  const t = useTranslations("planning");
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Plan de Cosecha"
-        subtitle="Parcelas ordenadas por madurez y un calendario de pasadas escalonado según el gradiente de altitud"
+        title={t("page.title")}
+        subtitle={t("page.subtitle")}
       />
 
       <HarvestPlanner />

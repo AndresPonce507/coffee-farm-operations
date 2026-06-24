@@ -30,6 +30,6 @@ describe("PlotEudrSection", () => {
   it("renders the honest empty state when the plot feeds no green lot", () => {
     render(<PlotEudrSection status={null} />);
     expect(screen.getByTestId("section-eudr")).toBeInTheDocument();
-    expect(screen.getByText(/No alimenta|Sin origen/i)).toBeInTheDocument();
+    expect(screen.getByText(/Doesn't feed any green lot|no origin/i)).toBeInTheDocument();
   });
 });

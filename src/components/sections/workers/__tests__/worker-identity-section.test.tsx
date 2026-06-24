@@ -56,7 +56,7 @@ describe("WorkerIdentitySection", () => {
 
     // aria-label uses the human-readable crew name (WCAG 2.5.3), not the raw id.
     const crewLink = within(card).getByRole("link", {
-      name: /cuadrilla Cuadrilla Norte/i,
+      name: /crew Cuadrilla Norte/i,
     });
     expect(crewLink).toHaveAttribute("href", "/crew/crew-norte");
   });
@@ -66,14 +66,14 @@ describe("WorkerIdentitySection", () => {
     const list = screen.getByTestId("worker-certs");
 
     expect(within(list).getByText("Aplicador IPM")).toBeInTheDocument();
-    expect(within(list).getByText(/Vence en 18 d/)).toBeInTheDocument();
-    expect(within(list).getByText("Sin vencimiento")).toBeInTheDocument();
+    expect(within(list).getByText(/Expires in 18 d/)).toBeInTheDocument();
+    expect(within(list).getByText("No expiry")).toBeInTheDocument();
   });
 
   it("renders an empty cert state without throwing", () => {
     render(<WorkerIdentitySection worker={worker} certs={[]} now={NOW} />);
     expect(
-      screen.getByText("Sin certificaciones vigentes"),
+      screen.getByText("No current certifications"),
     ).toBeInTheDocument();
   });
 

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ShieldCheck, ShieldAlert, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { EntityLink } from "@/components/ui/entity-link";
@@ -66,6 +67,7 @@ export function AuditDrawer({
   events,
   chainVerified,
 }: AuditDrawerProps) {
+  const t = useTranslations("audit");
   const panelRef = useRef<HTMLElement>(null);
   // The element focused right before the drawer opened, restored on close.
   const restoreRef = useRef<HTMLElement | null>(null);
@@ -153,13 +155,13 @@ export function AuditDrawer({
       className="fixed inset-0 z-50 flex justify-end"
       role="dialog"
       aria-modal="true"
-      aria-label={`Audit trail for ${streamKey}`}
+      aria-label={t("drawer.dialogLabel", { streamKey })}
       onKeyDown={onKeyDown}
     >
       {/* Click-away backdrop — soft forest scrim, mild blur on the chrome only. */}
       <button
         type="button"
-        aria-label="Close"
+        aria-label={t("drawer.close")}
         tabIndex={-1}
         onClick={onClose}
         className="absolute inset-0 cursor-default bg-forest/40 backdrop-blur-sm"
@@ -181,7 +183,7 @@ export function AuditDrawer({
         <header className="flex items-start justify-between gap-3 border-b border-line/70 px-5 pt-5 pb-4">
           <div className="min-w-0">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-fg">
-              Audit trail
+              {t("drawer.eyebrow")}
             </p>
             <h2 className="font-display text-lg font-semibold text-ink">
               <EntityLink kind="lot" id={streamKey}>
@@ -191,14 +193,16 @@ export function AuditDrawer({
             <div className="mt-2" data-testid="chain-badge">
               <Badge tone={chainVerified ? "forest" : "honey"} className="gap-1.5">
                 <VerifyIcon className="h-3.5 w-3.5" aria-hidden="true" />
-                {chainVerified ? "Chain verified" : "Chain unverified"}
+                {chainVerified
+                  ? t("drawer.chainVerified")
+                  : t("drawer.chainUnverified")}
               </Badge>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close audit trail"
+            aria-label={t("drawer.closeTrail")}
             className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted-fg transition hover:bg-white/60 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-100"
           >
             <X className="h-4 w-4" />
@@ -209,7 +213,7 @@ export function AuditDrawer({
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
           {events.length === 0 ? (
             <p className="py-12 text-center text-sm text-muted-fg">
-              No events recorded for this stream yet.
+              {t("drawer.empty")}
             </p>
           ) : (
             <ol className="stagger relative space-y-3">

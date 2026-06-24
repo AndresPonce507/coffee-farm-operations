@@ -1,4 +1,5 @@
 import { Coins, HeartHandshake, Wallet } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card } from "@/components/ui/card";
 import type { PayPeriodSummary } from "@/lib/db/payroll";
@@ -45,6 +46,7 @@ interface Stat {
 }
 
 export function PayrollSummary({ periods, className }: PayrollSummaryProps) {
+  const t = useTranslations("payroll");
   const latest = periods[0];
   const totalGross = latest?.totalGrossUsd ?? 0;
   const totalNet = latest?.totalNetUsd ?? 0;
@@ -52,27 +54,29 @@ export function PayrollSummary({ periods, className }: PayrollSummaryProps) {
 
   const stats: Stat[] = [
     {
-      label: "Pay periods",
+      label: t("summary.payPeriods"),
       value: String(periods.length),
       icon: Coins,
     },
     {
-      label: "Total gross",
+      label: t("summary.totalGross"),
       value: usd(totalGross),
       icon: Wallet,
     },
     {
-      label: "Total net",
+      label: t("summary.totalNet"),
       value: usd(totalNet),
       icon: Wallet,
     },
     {
-      label: "Made whole",
+      label: t("summary.madeWhole"),
       value: String(madeWhole),
       sub:
         madeWhole > 0
-          ? `${madeWhole === 1 ? "worker" : "workers"} lifted to the legal floor`
-          : "all above the floor",
+          ? t("summary.liftedToFloor", {
+              n: madeWhole === 1 ? t("summary.workerSingular") : t("summary.workerPlural"),
+            })
+          : t("summary.allAboveFloor"),
       icon: HeartHandshake,
       highlight: true,
     },

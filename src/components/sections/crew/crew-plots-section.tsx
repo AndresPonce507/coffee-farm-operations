@@ -1,4 +1,5 @@
 import { MapPin } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { DossierSection } from "@/components/dossier/dossier-section";
 import { EntityLink } from "@/components/ui/entity-link";
@@ -21,13 +22,14 @@ export function CrewPlotsSection({
 }: {
   plots: CrewAssignedPlot[];
 }) {
+  const t = useTranslations("crew");
   return (
     <DossierSection
       id="plots"
-      title="Parcelas asignadas"
+      title={t("plotsSection.title")}
       count={plots.length}
       empty={plots.length === 0}
-      emptyLabel="Esta cuadrilla aún no ha sido despachada a ninguna parcela"
+      emptyLabel={t("plotsSection.empty")}
     >
       <ul role="list" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {plots.map((plot) => (
@@ -49,16 +51,21 @@ export function CrewPlotsSection({
                   {plot.plotName}
                 </p>
                 <p className="mt-0.5 truncate text-xs text-muted-fg">
-                  {plot.variety} · {plot.altitudeMasl.toLocaleString("es-PA")}{" "}
-                  msnm
+                  {plot.variety} ·{" "}
+                  {t("plotsSection.masl", {
+                    altitude: plot.altitudeMasl.toLocaleString("es-PA"),
+                  })}
                 </p>
                 <p className="mt-1 text-[11px] text-muted-fg">
-                  Último despacho: {plot.lastDispatchDate}
+                  {t("plotsSection.lastDispatch", {
+                    date: plot.lastDispatchDate,
+                  })}
                 </p>
               </div>
               <Badge tone="forest" className="shrink-0">
-                {plot.runCount}{" "}
-                {plot.runCount === 1 ? "despacho" : "despachos"}
+                {plot.runCount === 1
+                  ? t("plotsSection.runCountOne", { count: plot.runCount })
+                  : t("plotsSection.runCountOther", { count: plot.runCount })}
               </Badge>
             </EntityLink>
           </li>

@@ -35,8 +35,8 @@ describe("WorkerAttendanceSection", () => {
   it("renders the timeline events with their localized kind labels", () => {
     render(<WorkerAttendanceSection events={events} chainVerified />);
     const tl = screen.getByTestId("worker-attendance-timeline");
-    expect(within(tl).getByText("Entrada")).toBeInTheDocument();
-    expect(within(tl).getByText("Día de descanso")).toBeInTheDocument();
+    expect(within(tl).getByText("Clock in")).toBeInTheDocument();
+    expect(within(tl).getByText("Rest day")).toBeInTheDocument();
   });
 
   it("links an event's plot to /plots/[id]", () => {
@@ -50,14 +50,14 @@ describe("WorkerAttendanceSection", () => {
   it("shows the chain-verified badge", () => {
     render(<WorkerAttendanceSection events={events} chainVerified />);
     expect(screen.getByTestId("attendance-chain")).toHaveTextContent(
-      "Cadena verificada",
+      "Chain verified",
     );
   });
 
   it("renders the empty state with no events", () => {
     render(<WorkerAttendanceSection events={[]} />);
     expect(
-      screen.getByText("Sin eventos de asistencia todavía"),
+      screen.getByText("No attendance events yet"),
     ).toBeInTheDocument();
   });
 });

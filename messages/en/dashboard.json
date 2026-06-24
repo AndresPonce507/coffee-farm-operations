@@ -1,0 +1,81 @@
+{
+  "metrics": {
+    "ariaLabel": "Key farm metrics"
+  },
+  "kpi": {
+    "todaysCherries": "Today's cherries",
+    "todaysCherriesHint": "received today",
+    "vs7dAgo": "{pct} vs 7d ago",
+    "pickersPresent": "Pickers present",
+    "pickersPresentHint": "of {count} pickers",
+    "dryingBatches": "Drying batches",
+    "dryingBatchesHint": "on the beds now",
+    "seasonToDate": "Season to date",
+    "seasonToDateHint": "{pct} of target"
+  },
+  "hero": {
+    "harvestSeason": "Harvest season",
+    "greeting": "Good morning, {name}",
+    "story": ". We're at the peak of the {first} and {second} pickings — the cherries are coming in beautifully.",
+    "cherriesReceivedToday": "cherries received today",
+    "estPrefix": "est.",
+    "harvestedYtd": "Harvested YTD",
+    "kgToTarget": "{kg} kg to target",
+    "revenue": "Revenue",
+    "seasonToDate": "Season to date",
+    "seasonTarget": "Season target",
+    "fullSeasonGoal": "Full-season goal",
+    "ringSublabel": "{harvested} of {target}",
+    "onPace": "On pace toward this season's cherry goal across all plots."
+  },
+  "yieldTrend": {
+    "title": "Daily cherry intake",
+    "caption": "Last 14 days, kilograms",
+    "avgPerDay": "{kg} kg avg / day"
+  },
+  "varietyMix": {
+    "title": "Variety mix",
+    "centerSub": "harvested"
+  },
+  "weather": {
+    "title": "Volcán forecast",
+    "caption": "Chiriquí highlands · 5-day",
+    "condition": {
+      "sun": "Sunny",
+      "cloud": "Cloudy",
+      "rain": "Rain",
+      "fog": "Fog"
+    }
+  },
+  "activity": {
+    "title": "Recent activity"
+  },
+  "plotHealth": {
+    "title": "Plot health",
+    "viewAll": "View all",
+    "status": {
+      "healthy": "Healthy",
+      "watch": "Watch",
+      "atRisk": "At risk"
+    },
+    "ofExpected": "of {kg}"
+  },
+  "processing": {
+    "title": "Processing pipeline",
+    "description": "{count} batches in process · {kg} on the beds",
+    "stagesActive": "{active} of {total} stages active",
+    "stagesAriaLabel": "Processing stages from cherry to green coffee",
+    "stageItemAriaLabel": "{label}: {count} {unit}, {kg}",
+    "batchOne": "batch",
+    "batchOther": "batches",
+    "closestToGreen": "Closest to green",
+    "stage": {
+      "cherry": "Cherry",
+      "fermentation": "Fermentation",
+      "drying": "Drying",
+      "parchment": "Parchment",
+      "milled": "Milled",
+      "green": "Green"
+    }
+  }
+}

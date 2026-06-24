@@ -46,7 +46,7 @@ describe("PayPeriodMakeWholeSection", () => {
     const section = screen.getByTestId("section-make-whole");
     // EntityLink carries the es-PA aria-label (the contract); the worker NAME is
     // the visible link text.
-    const link = within(section).getByRole("link", { name: /trabajador lucía morales/i });
+    const link = within(section).getByRole("link", { name: /worker lucía morales/i });
     expect(link).toHaveAttribute("href", "/workers/w-06");
     expect(link).toHaveTextContent("Lucía Morales");
     // the non-made-whole worker is NOT in the floor section.
@@ -60,7 +60,7 @@ describe("PayPeriodMakeWholeSection", () => {
     const section = screen.getByTestId("section-make-whole");
     // the empty-state copy reassures the floor never had to activate.
     expect(
-      within(section).getByText(/el piso no tuvo que activarse/i),
+      within(section).getByText(/the floor never had to kick in/i),
     ).toBeInTheDocument();
   });
 });

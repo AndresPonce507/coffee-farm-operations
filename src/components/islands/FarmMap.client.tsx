@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { FeatureCollection, Polygon } from "geojson";
@@ -80,6 +81,7 @@ export function FarmMap({ plots, reserve }: FarmMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrimRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const t = useTranslations("map");
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -207,7 +209,7 @@ export function FarmMap({ plots, reserve }: FarmMapProps) {
     <div
       className="relative h-full w-full overflow-hidden rounded-2xl"
       role="application"
-      aria-label="Mapa de parcelas de la finca"
+      aria-label={t("farmMap.regionLabel")}
     >
       {/* GL canvas mounts here */}
       <div ref={containerRef} className="absolute inset-0" />
@@ -224,7 +226,7 @@ export function FarmMap({ plots, reserve }: FarmMapProps) {
        * can tab through all plot dossiers without ever touching the canvas.
        */}
       <nav
-        aria-label="Lista de parcelas"
+        aria-label={t("farmMap.plotListLabel")}
         className="sr-only"
       >
         <ul>
@@ -246,15 +248,16 @@ export function FarmMap({ plots, reserve }: FarmMapProps) {
  * lazy-load causes CLS ≈ 0. Honors prefers-reduced-motion (shimmer is CSS-gated).
  */
 export function SkeletonMap() {
+  const t = useTranslations("map");
   return (
     <div
       role="status"
-      aria-label="Loading map"
+      aria-label={t("skeleton.loadingLabel")}
       aria-busy="true"
       className="glass-card relative h-full w-full overflow-hidden rounded-2xl"
     >
       <div className="skeleton-shimmer absolute inset-0" />
-      <span className="sr-only">Loading map…</span>
+      <span className="sr-only">{t("skeleton.loadingText")}</span>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { Coffee, Scale } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,7 @@ export function WeighTally({
   farmKgToday,
   className,
 }: WeighTallyProps) {
+  const t = useTranslations("weigh");
   return (
     <div
       className={cn("glass-card grid grid-cols-2 rounded-2xl", className)}
@@ -38,20 +40,22 @@ export function WeighTally({
       <div className="flex flex-col gap-0.5 border-r border-line px-4 py-3">
         <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-fg">
           <Scale className="h-3.5 w-3.5" aria-hidden="true" />
-          {pickerName ?? "This picker"} · today
+          {t("tally.todaySuffix", { name: pickerName ?? t("tally.thisPicker") })}
         </span>
         <span className="font-display text-2xl font-bold tabular-nums text-ink">
           {pickerKgToday.toFixed(1)}
           <span className="ml-1 text-sm font-medium text-muted-fg">kg</span>
         </span>
         <span className="text-[11px] text-muted-fg">
-          {pickerLatas} {pickerLatas === 1 ? "lata" : "latas"}
+          {pickerLatas === 1
+            ? t("tally.lataOne", { count: pickerLatas })
+            : t("tally.lataMany", { count: pickerLatas })}
         </span>
       </div>
       <div className="flex flex-col gap-0.5 px-4 py-3">
         <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-fg">
           <Coffee className="h-3.5 w-3.5" aria-hidden="true" />
-          Farm · today
+          {t("tally.farmToday")}
         </span>
         <span className="font-display text-2xl font-bold tabular-nums text-forest">
           {farmKgToday.toFixed(1)}

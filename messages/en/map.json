@@ -1,0 +1,21 @@
+{
+  "page": {
+    "title": "Farm map",
+    "subtitle": "Growing plots colored by their health, with the protected quetzal reserve."
+  },
+  "legend": {
+    "healthy": "Healthy",
+    "watch": "Watch",
+    "atRisk": "At risk",
+    "reserve": "Reserve"
+  },
+  "placeholderNote": "Boundaries are placeholders pending the family’s traced plot outlines.",
+  "farmMap": {
+    "regionLabel": "Farm plots map",
+    "plotListLabel": "Plot list"
+  },
+  "skeleton": {
+    "loadingLabel": "Loading map",
+    "loadingText": "Loading map…"
+  }
+}

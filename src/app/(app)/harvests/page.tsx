@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { getPlots } from "@/lib/db/plots";
 import { getPickers } from "@/lib/db/workers";
@@ -18,6 +20,7 @@ import { RecordIntakeButton } from "@/components/sections/harvests/record-intake
  * traceability log.
  */
 export default async function HarvestsPage() {
+  const t = await getTranslations("harvests");
   // Only lots that can take fresh cherry intake (cherry-stage / unstaged) — never
   // green export or milled source lots (FINDING #35). Feeds both the "Log harvest"
   // form and the per-row edit form so neither can target a green/milled lot.
@@ -30,8 +33,8 @@ export default async function HarvestsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Cosechas"
-        subtitle="Ingreso diario de cerezas y rendimiento de cosecheros"
+        title={t("page.title")}
+        subtitle={t("page.subtitle")}
       >
         {/* The genesis WRITE — mints a traceable JC-NNN lot the whole spine
             reads (COGS / EUDR / inventory) — sits as the primary action,

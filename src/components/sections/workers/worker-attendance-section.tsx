@@ -1,4 +1,5 @@
 import { LogIn, LogOut, Coffee, CircleSlash } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { EntityLink } from "@/components/ui/entity-link";
@@ -22,12 +23,12 @@ export interface WorkerAttendanceSectionProps {
 
 const KIND_META: Record<
   string,
-  { label: string; icon: React.ComponentType<{ className?: string }> }
+  { labelKey: string; icon: React.ComponentType<{ className?: string }> }
 > = {
-  "clock-in": { label: "Entrada", icon: LogIn },
-  "clock-out": { label: "Salida", icon: LogOut },
-  "rest-day": { label: "Día de descanso", icon: Coffee },
-  absent: { label: "Ausente", icon: CircleSlash },
+  "clock-in": { labelKey: "attendanceSection.kindClockIn", icon: LogIn },
+  "clock-out": { labelKey: "attendanceSection.kindClockOut", icon: LogOut },
+  "rest-day": { labelKey: "attendanceSection.kindRestDay", icon: Coffee },
+  absent: { labelKey: "attendanceSection.kindAbsent", icon: CircleSlash },
 };
 
 /** es-PA short timestamp; pure + locale-stable for the render test. */
@@ -45,13 +46,14 @@ export function WorkerAttendanceSection({
   events,
   chainVerified,
 }: WorkerAttendanceSectionProps) {
+  const t = useTranslations("workers");
   return (
     <DossierSection
       id="attendance"
-      title="Asistencia"
+      title={t("attendanceSection.sectionTitle")}
       count={events.length}
       empty={events.length === 0}
-      emptyLabel="Sin eventos de asistencia todavía"
+      emptyLabel={t("attendanceSection.emptyLabel")}
     >
       <Card data-testid="worker-attendance-card" className="animate-rise">
         <CardContent>
@@ -61,17 +63,15 @@ export function WorkerAttendanceSection({
               className="mb-3 text-xs font-medium text-muted-fg"
             >
               {chainVerified
-                ? "Cadena verificada ✓"
-                : "Cadena no verificada"}
+                ? t("attendanceSection.chainVerified")
+                : t("attendanceSection.chainNotVerified")}
             </p>
           )}
           <ol className="space-y-3" data-testid="worker-attendance-timeline">
             {events.map((e) => {
-              const meta = KIND_META[e.eventKind] ?? {
-                label: e.eventKind,
-                icon: CircleSlash,
-              };
-              const Icon = meta.icon;
+              const meta = KIND_META[e.eventKind];
+              const label = meta ? t(meta.labelKey) : e.eventKind;
+              const Icon = meta?.icon ?? CircleSlash;
               return (
                 <li key={e.eventUid} className="flex items-start gap-3">
                   <span
@@ -83,7 +83,7 @@ export function WorkerAttendanceSection({
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
                       <span className="text-sm font-medium text-ink">
-                        {meta.label}
+                        {label}
                       </span>
                       <span className="text-xs tabular-nums text-muted-fg">
                         {fmt(e.occurredAt)}

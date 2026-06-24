@@ -44,17 +44,17 @@ describe("WorkerContractsSection", () => {
   it("marks the active vs superseded contracts", () => {
     render(<WorkerContractsSection contracts={contracts} />);
     expect(
-      within(screen.getByTestId("contract-2")).getByText("Vigente"),
+      within(screen.getByTestId("contract-2")).getByText("Active"),
     ).toBeInTheDocument();
     expect(
-      within(screen.getByTestId("contract-1")).getByText("Reemplazado"),
+      within(screen.getByTestId("contract-1")).getByText("Superseded"),
     ).toBeInTheDocument();
   });
 
   it("renders the empty state with no contracts", () => {
     render(<WorkerContractsSection contracts={[]} />);
     expect(
-      screen.getByText("Sin contratos por obra todavía"),
+      screen.getByText("No piece-rate contracts yet"),
     ).toBeInTheDocument();
   });
 });
