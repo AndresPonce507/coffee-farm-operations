@@ -107,8 +107,8 @@ describe("TaskBoard (smoke)", () => {
     render(ui);
 
     // WCAG 2.5.3: aria-label must contain the visible plot name (not slug).
-    // t1 has plotId="p1", plotName="Tizingal Alto" — EntityLink emits aria-label="Abrir parcela Tizingal Alto"
-    const plotLinks = screen.getAllByRole("link", { name: /Abrir parcela Tizingal Alto/i });
+    // t1 has plotId="p1", plotName="Tizingal Alto" — EntityLink emits aria-label="Open plot Tizingal Alto"
+    const plotLinks = screen.getAllByRole("link", { name: /Open plot Tizingal Alto/i });
     expect(plotLinks.length).toBeGreaterThan(0);
     expect(plotLinks[0]).toHaveAttribute("href", "/plots/p1");
     // the link wraps the plot name text
@@ -146,8 +146,8 @@ describe("TaskBoard (smoke)", () => {
     render(ui);
 
     // WCAG 2.5.3: aria-label must contain the visible assignee name (not slug).
-    // t1 has workerId="w1", assignee="Marisol Quintero" — EntityLink emits aria-label="Abrir trabajador Marisol Quintero"
-    const workerLinks = screen.getAllByRole("link", { name: /Abrir trabajador Marisol Quintero/i });
+    // t1 has workerId="w1", assignee="Marisol Quintero" — EntityLink emits aria-label="Open worker Marisol Quintero"
+    const workerLinks = screen.getAllByRole("link", { name: /Open worker Marisol Quintero/i });
     expect(workerLinks.length).toBeGreaterThan(0);
     expect(workerLinks[0]).toHaveAttribute("href", "/workers/w1");
     // the link wraps the assignee name text

@@ -15,7 +15,7 @@
   },
   "hero": {
     "harvestSeason": "Harvest season",
-    "greeting": "Buenos días, {name}",
+    "greeting": "Good morning, {name}",
     "story": ". We're at the peak of the {first} and {second} pickings — the cherries are coming in beautifully.",
     "cherriesReceivedToday": "cherries received today",
     "estPrefix": "est.",

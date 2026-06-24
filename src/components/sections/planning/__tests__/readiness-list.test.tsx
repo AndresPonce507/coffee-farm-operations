@@ -93,9 +93,9 @@ describe("ReadinessList (render/smoke)", () => {
 
   it("plot name heading is navigable — rendered inside the EntityLink anchor", () => {
     render(<ReadinessList rows={[ready]} />);
-    // EntityLink sets aria-label="Abrir parcela <name>" — human plotName, not slug.
+    // EntityLink sets aria-label="Open plot <name>" — human plotName, not slug.
     // WCAG 2.5.3: the accessible name must contain the visible label.
-    const link = screen.getByRole("link", { name: /abrir parcela Cuesta de Piedra/i });
+    const link = screen.getByRole("link", { name: /open plot Cuesta de Piedra/i });
     expect(link).toHaveAttribute("href", "/plots/p-cuesta-piedra");
     // the card is nested inside the link
     expect(within(link).getByTestId("readiness-p-cuesta-piedra")).toBeInTheDocument();
@@ -114,7 +114,7 @@ describe("ReadinessList (render/smoke)", () => {
     // ALONGSIDE EntityLink's FOCUS_RING (ring-forest/40), with an order-dependent winner.
     // The call site must keep only layout/shape tokens and let FOCUS_RING own the ring.
     render(<ReadinessList rows={[ready]} />);
-    const link = screen.getByRole("link", { name: /abrir parcela Cuesta de Piedra/i });
+    const link = screen.getByRole("link", { name: /open plot Cuesta de Piedra/i });
     const cls = link.getAttribute("class") ?? "";
     // layout/shape tokens stay
     expect(cls).toContain("group");

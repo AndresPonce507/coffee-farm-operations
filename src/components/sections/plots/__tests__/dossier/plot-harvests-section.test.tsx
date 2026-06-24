@@ -88,7 +88,7 @@ describe("PlotHarvestsSection", () => {
       .getByText("Lupita González")
       .closest("a") as HTMLAnchorElement;
     const lotLink = screen
-      .getByRole("link", { name: /Abrir lote JC-564/i }) as HTMLAnchorElement;
+      .getByRole("link", { name: /Open lot JC-564/i }) as HTMLAnchorElement;
 
     for (const link of [pickerLink, lotLink]) {
       expect(link.className).toContain("focus-visible:ring-2");

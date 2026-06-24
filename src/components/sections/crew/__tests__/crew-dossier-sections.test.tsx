@@ -101,12 +101,12 @@ const productivity: CrewProductivity = {
 describe("CrewRosterSection", () => {
   it("renders each member name as a link to their /workers/[id] dossier", () => {
     render(<CrewRosterSection members={members} />);
-    // EntityLink uses preferredName (or full name) → "Abrir trabajador Lucía"
-    const lucia = screen.getByRole("link", { name: /trabajador Lucía/i });
+    // EntityLink uses preferredName (or full name) → "Open worker Lucía"
+    const lucia = screen.getByRole("link", { name: /worker Lucía/i });
     expect(lucia).toHaveAttribute("href", "/workers/w-06");
     expect(within(lucia).getByText("Lucía")).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /trabajador Carlos Beker/i }),
+      screen.getByRole("link", { name: /worker Carlos Beker/i }),
     ).toHaveAttribute("href", "/workers/w-07");
   });
 
@@ -121,8 +121,8 @@ describe("CrewRosterSection", () => {
 describe("CrewPlotsSection", () => {
   it("renders each plot as a link to its /plots/[id] dossier", () => {
     render(<CrewPlotsSection plots={plots} />);
-    // EntityLink uses the human-readable plotName as aria-label → "Abrir parcela Norte Bajo"
-    const link = screen.getByRole("link", { name: /parcela Norte Bajo/i });
+    // EntityLink uses the human-readable plotName as aria-label → "Open plot Norte Bajo"
+    const link = screen.getByRole("link", { name: /plot Norte Bajo/i });
     expect(link).toHaveAttribute("href", "/plots/p-norte-bajo");
     expect(within(link).getByText("Norte Bajo")).toBeInTheDocument();
   });
@@ -155,7 +155,7 @@ describe("CrewDispatchSection", () => {
     ).toHaveAttribute("href", "/dispatch/42");
     // Plot link: aria-label uses the human-readable plotName, not the raw plotId.
     expect(
-      screen.getByRole("link", { name: /parcela Norte Bajo/i }),
+      screen.getByRole("link", { name: /plot Norte Bajo/i }),
     ).toHaveAttribute("href", "/plots/p-norte-bajo");
   });
 
@@ -169,7 +169,7 @@ describe("CrewDispatchSection", () => {
   it("plot pill links meet the 44px glove-friendly touch target (min-h-11)", () => {
     render(<CrewDispatchSection history={history} />);
     const plotLink = screen.getByRole("link", {
-      name: /parcela Norte Bajo/i,
+      name: /plot Norte Bajo/i,
     });
     // The link element must carry min-h-11 so the tap target reaches >=44px.
     expect(plotLink.className).toMatch(/min-h-11/);
@@ -186,9 +186,9 @@ describe("CrewDispatchSection", () => {
 describe("CrewProductivitySection", () => {
   it("links each picker to their /workers/[id] dossier and shows the crew total", () => {
     render(<CrewProductivitySection productivity={productivity} />);
-    // EntityLink uses the picker's full name → "Abrir trabajador Lucía Morales"
+    // EntityLink uses the picker's full name → "Open worker Lucía Morales"
     expect(
-      screen.getByRole("link", { name: /trabajador Lucía Morales/i }),
+      screen.getByRole("link", { name: /worker Lucía Morales/i }),
     ).toHaveAttribute("href", "/workers/w-06");
     expect(screen.getByText("70.0 kg")).toBeInTheDocument();
   });

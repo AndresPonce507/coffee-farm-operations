@@ -1,5 +1,17 @@
 {
   "section": {
     "emptyDefault": "No records yet"
+  },
+  "entityLink": {
+    "open": "Open {kind} {name}",
+    "kind": {
+      "lot": "lot",
+      "plot": "plot",
+      "worker": "worker",
+      "crew": "crew",
+      "batch": "batch",
+      "dispatch": "dispatch",
+      "pay-period": "pay period"
+    }
   }
 }

@@ -57,9 +57,9 @@ describe("PlotsExplorer (smoke)", () => {
   // Phase 5 D2 — formerly-COSMETIC grid card names now drill into /plots/[id].
   it("links each grid plot card name to its plot dossier", () => {
     render(<PlotsExplorer plots={plots} />);
-    // EntityLink receives `name` so aria-label is "Abrir parcela <plot.name>" (human name,
+    // EntityLink receives `name` so aria-label is "Open plot <plot.name>" (localized, human name,
     // not raw id) — far richer for es-PA screen readers per the updated EntityLink contract.
-    const link = screen.getByRole("link", { name: /abrir parcela tizingal alto/i });
+    const link = screen.getByRole("link", { name: /open plot tizingal alto/i });
     expect(link).toHaveAttribute("href", "/plots/p1");
     expect(link).toHaveTextContent("Tizingal Alto");
   });
@@ -70,8 +70,8 @@ describe("PlotsExplorer (smoke)", () => {
     // Switch to list view.
     const listToggle = screen.getByRole("button", { name: /^List$/ });
     fireEvent.click(listToggle);
-    // aria-label is "Abrir parcela <plot.name>" (human name, not raw id).
-    const link = screen.getByRole("link", { name: /abrir parcela paso ancho/i });
+    // aria-label is "Open plot <plot.name>" (localized, human name, not raw id).
+    const link = screen.getByRole("link", { name: /open plot paso ancho/i });
     expect(link).toHaveAttribute("href", "/plots/p2");
     expect(link).toHaveTextContent("Paso Ancho");
   });

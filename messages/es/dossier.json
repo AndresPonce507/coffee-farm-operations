@@ -1,5 +1,17 @@
 {
   "section": {
     "emptyDefault": "Sin registros todavía"
+  },
+  "entityLink": {
+    "open": "Abrir {kind} {name}",
+    "kind": {
+      "lot": "lote",
+      "plot": "parcela",
+      "worker": "trabajador",
+      "crew": "cuadrilla",
+      "batch": "tanda",
+      "dispatch": "despacho",
+      "pay-period": "periodo de pago"
+    }
   }
 }

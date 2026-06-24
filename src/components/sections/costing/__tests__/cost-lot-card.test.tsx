@@ -77,9 +77,9 @@ describe("CostLotCard (smoke + provenance)", () => {
       />,
     );
     // The lot code must be wrapped in an <a> pointing at /lots/JC-101 (no hash).
-    // Only the headline carries aria-label="Abrir lote JC-101" — the provenance
+    // Only the headline carries aria-label="Open lot JC-101" — the provenance
     // link intentionally has NO `name` so its visible text is its accessible name.
-    const headlineLink = screen.getByRole("link", { name: "Abrir lote JC-101" });
+    const headlineLink = screen.getByRole("link", { name: "Open lot JC-101" });
     expect(headlineLink).toHaveAttribute("href", "/lots/JC-101");
     expect(headlineLink).toHaveTextContent("JC-101");
   });
@@ -93,7 +93,7 @@ describe("CostLotCard (smoke + provenance)", () => {
         breakdown={breakdown}
       />,
     );
-    // EntityLink renders an <a> with aria-label="Abrir lote JC-101".
+    // EntityLink renders an <a> with aria-label="Open lot JC-101".
     // With anchor="cost-entries" it resolves to /lots/JC-101#cost-entries.
     const prov = screen.getByTestId("cost-provenance-JC-101");
     // The testid is on a span inside the <a>; climb to the parent link.
@@ -113,7 +113,7 @@ describe("CostLotCard (smoke + provenance)", () => {
     );
     const prov = screen.getByTestId("cost-provenance-JC-101");
     const link = prov.closest("a")!;
-    // The provenance link must NOT carry an "Abrir lote JC-101" aria-label — that
+    // The provenance link must NOT carry an "Open lot JC-101" aria-label — that
     // text isn't visible on this affordance, so it would violate Label-in-Name.
     expect(link).not.toHaveAttribute("aria-label");
     // Its accessible name comes from the visible text instead.

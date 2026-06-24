@@ -59,7 +59,7 @@ describe("DryingBoard (smoke)", () => {
     render(<DryingBoard lots={[restingLot, readyLot]} />);
     // The visible lot-code text IS the accessible name (WCAG 2.5.3 Label-in-Name):
     // no `name` prop is passed, so the link's accessible name is its visible "JC-571"
-    // text, not an "Abrir lote …" slug-label that would mask it. Match by href to
+    // text, not an "Open lot …" slug-label that would mask it. Match by href to
     // disambiguate from the "Advance lot … to milling" links that also name the code.
     const link = screen.getByRole("link", { name: "JC-571" });
     expect(link).toHaveAttribute("href", "/lots/JC-571");

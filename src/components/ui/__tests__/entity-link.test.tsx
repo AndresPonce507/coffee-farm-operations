@@ -54,21 +54,21 @@ describe("EntityLink", () => {
       </EntityLink>,
     );
     expect(
-      screen.getByRole("link", { name: /abrir trabajador lupita gonzález/i }),
+      screen.getByRole("link", { name: /open worker lupita gonzález/i }),
     ).toBeInTheDocument();
   });
 
-  it("uses Spanish kind labels in aria-label when name prop is provided, for all dossier kinds", () => {
+  it("uses locale-aware kind labels in aria-label when name prop is provided, for all dossier kinds", () => {
     const cases: Array<[Parameters<typeof EntityLink>[0]["kind"], string]> = [
-      ["lot", "lote"],
-      ["plot", "parcela"],
-      ["crew", "cuadrilla"],
-      ["batch", "tanda"],
-      ["dispatch", "despacho"],
-      ["pay-period", "periodo de pago"],
+      ["lot", "lot"],
+      ["plot", "plot"],
+      ["crew", "crew"],
+      ["batch", "batch"],
+      ["dispatch", "dispatch"],
+      ["pay-period", "pay period"],
     ];
-    for (const [kind, esLabel] of cases) {
-      const humanName = `Entidad ${esLabel}`;
+    for (const [kind, kindLabel] of cases) {
+      const humanName = `Entidad ${kindLabel}`;
       const { unmount } = render(
         <EntityLink kind={kind} id="x1" name={humanName}>
           {humanName}
@@ -76,7 +76,7 @@ describe("EntityLink", () => {
       );
       expect(
         screen.getByRole("link", {
-          name: new RegExp(`abrir ${esLabel} entidad`, "i"),
+          name: new RegExp(`open ${kindLabel} entidad`, "i"),
         }),
       ).toBeInTheDocument();
       unmount();

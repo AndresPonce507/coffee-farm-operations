@@ -252,8 +252,8 @@ describe("DisbursementLedger", () => {
       />,
     );
     // WCAG 2.5.3: aria-label must contain the visible name (not slug).
-    // EntityLink renders aria-label="Abrir trabajador Rosa López" (the visible name from workerNames map).
-    const link = screen.getByRole("link", { name: /Abrir trabajador Rosa López/i });
+    // EntityLink renders aria-label="Open worker Rosa López" (the visible name from workerNames map).
+    const link = screen.getByRole("link", { name: /Open worker Rosa López/i });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute("href", "/workers/w-7");
     // The visible worker name text lives inside the link.

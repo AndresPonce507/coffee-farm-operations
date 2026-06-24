@@ -135,7 +135,7 @@ describe("CherryIntakeForm", () => {
     // the EntityLink primitive — its es-PA aria-label names the lot (the icon
     // makes the children non-text, so the human name is carried explicitly).
     const link = await screen.findByRole("link", {
-      name: "Abrir lote JC-742",
+      name: "Open lot JC-742",
     });
     expect(link).toHaveAttribute("href", "/lots/JC-742");
     // and it celebrates the mint (the genesis-of-traceability message).

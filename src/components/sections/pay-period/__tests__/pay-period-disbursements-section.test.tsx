@@ -30,9 +30,9 @@ describe("PayPeriodDisbursementsSection", () => {
       />,
     );
     // EntityLink carries the es-PA aria-label (the contract); the component passes
-    // the resolved worker name so the label is "Abrir trabajador Lucía Morales"
+    // the resolved worker name so the label is "Open worker Lucía Morales"
     // (richer than the raw slug) — the page hands in the workerId→name map.
-    const link = screen.getByRole("link", { name: /trabajador lucía morales/i });
+    const link = screen.getByRole("link", { name: /worker lucía morales/i });
     expect(link).toHaveAttribute("href", "/workers/w-06");
     expect(link).toHaveTextContent("Lucía Morales");
   });

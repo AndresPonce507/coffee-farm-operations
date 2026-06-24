@@ -184,7 +184,7 @@ describe("BatchTable (smoke)", () => {
 
     // Every lot-code cell must be an anchor pointing at the /lots/[code] dossier.
     // Exact-match the code so the lot link is not confused with the sibling ferment
-    // icon link, whose accessible name is now "Abrir tanda <code>" (human-readable).
+    // icon link, whose accessible name is now "Open batch <code>" (human-readable).
     const lotLink564 = screen.getByRole("link", { name: "JC-564" });
     expect(lotLink564).toHaveAttribute("href", "/lots/JC-564");
 
@@ -251,9 +251,9 @@ describe("BatchTable (smoke)", () => {
     const ui = await BatchTable({ lots: ["JC-564"] });
     render(ui);
 
-    // EntityLink builds aria-label="Abrir tanda {lotCode}" — a human-readable name
+    // EntityLink builds aria-label="Open batch {lotCode}" — a human-readable name
     // (the lot code), not the raw ferment uuid.
-    const iconLink = screen.getByRole("link", { name: /abrir tanda JC-564/i });
+    const iconLink = screen.getByRole("link", { name: /open batch JC-564/i });
 
     // Must have min-h-11 and min-w-11 (≥44px) so the touch target is large enough.
     expect(iconLink.className).toContain("min-h-11");
