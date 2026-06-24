@@ -77,5 +77,38 @@
     "cancel": "Cancel",
     "submit": "Assign to station",
     "submitting": "Assigning…"
+  },
+  "stationDossier": {
+    "eyebrow": "Drying station",
+    "subtitle": "{kind} · {cap} capacity",
+    "backLabel": "All drying stations",
+    "capacityTitle": "Capacity",
+    "committed": "On the bed",
+    "available": "Free",
+    "capacity": "Capacity",
+    "utilization": "{pct}% full",
+    "overCapacity": "Over capacity",
+    "lotsTitle": "Lots resting here",
+    "lotsEmpty": "No lots are drying on this station right now.",
+    "lotMoisture": "{pct}% moisture",
+    "lotNoMoisture": "No moisture reading yet",
+    "lotResting": "{days}d resting",
+    "lotReady": "Clear to mill",
+    "lotRestingBadge": "Resting",
+    "weatherTitle": "Cover forecast",
+    "weatherEmpty": "No cover risk — this station is sheltered.",
+    "rainPct": "{pct}% rain",
+    "coverRiskDay": "Cover {day} · {pct}% rain",
+    "clearDay": "Clear {day} · {pct}% rain"
+  },
+  "weekday": {
+    "today": "Today",
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sun": "Sun"
   }
 }

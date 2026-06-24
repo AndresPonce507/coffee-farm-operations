@@ -11,7 +11,8 @@
       "crew": "cuadrilla",
       "batch": "tanda",
       "dispatch": "despacho",
-      "pay-period": "periodo de pago"
+      "pay-period": "periodo de pago",
+      "drying-station": "estación de secado"
     }
   }
 }

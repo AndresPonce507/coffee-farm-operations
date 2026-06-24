@@ -9,7 +9,8 @@
     "payroll": "Loading payroll",
     "plan": "Loading harvest plan",
     "processing": "Loading processing",
-    "weigh": "Loading weigh"
+    "weigh": "Loading weigh",
+    "dryingStationDetail": "Loading drying station"
   },
   "error": {
     "app": {
@@ -34,6 +35,11 @@
     },
     "worker": {
       "title": "We couldn't load this worker",
+      "body": "The connection to the farm records dropped for a moment. This is usually temporary — give it another try.",
+      "retry": "Try again"
+    },
+    "dryingStation": {
+      "title": "We couldn't load this station",
       "body": "The connection to the farm records dropped for a moment. This is usually temporary — give it another try.",
       "retry": "Try again"
     }

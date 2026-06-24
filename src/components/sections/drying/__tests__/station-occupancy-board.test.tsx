@@ -43,25 +43,14 @@ describe("StationOccupancyBoard (smoke)", () => {
   });
 
   /**
-   * DEPTH TICKET — wire-up-audit §10: station cards are cosmetic.
-   * The /drying-station/[id] dossier route does not exist yet; no EntityLink
-   * is possible until that route is created (and entity-href.ts + entity-link.tsx
-   * are extended). This test documents the gap so the dossier slice can pick it up:
-   * it asserts the station name renders as plain text (not an <a>), and will need
-   * to be updated to `toHaveAttribute("href", "/drying-station/st-patio-1")` once
-   * the dossier route ships.
+   * The station name drills to its dossier — the 8th connected entity. No cosmetic
+   * rows (PRINCIPLE Rule 1/3): every station card is a real link to /drying-station/[id].
    */
-  it("station name is plain text (not a link) — depth ticket until drying-station dossier exists", () => {
+  it("station name is an EntityLink to its /drying-station/[id] dossier (not /undefined)", () => {
     render(<StationOccupancyBoard stations={stations} weatherRisk={[]} />);
-    const cards = screen.getAllByTestId("station-card");
-    const patioCard = cards.find((c) => within(c).queryByText("Patio Norte"));
-    expect(patioCard).toBeTruthy();
-    // The station name should be rendered as text inside the card.
-    const nameEl = within(patioCard!).getByText("Patio Norte");
-    expect(nameEl).toBeInTheDocument();
-    // NOT a link yet — /drying-station/[id] route does not exist.
-    // TODO(drying-station-dossier): wrap in <EntityLink kind="drying-station" id={s.stationId}>
-    // once the route is created and entity-href.ts / DossierKind are extended.
-    expect(nameEl.closest("a")).toBeNull();
+    const link = screen.getByRole("link", { name: /Open drying station Patio Norte/i });
+    expect(link).toHaveAttribute("href", "/drying-station/st-patio-1");
+    // never a fabricated /drying-station/undefined
+    expect(link.getAttribute("href")).not.toContain("undefined");
   });
 });

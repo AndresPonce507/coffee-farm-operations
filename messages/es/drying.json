@@ -77,5 +77,38 @@
     "cancel": "Cancelar",
     "submit": "Asignar a estación",
     "submitting": "Asignando…"
+  },
+  "stationDossier": {
+    "eyebrow": "Estación de secado",
+    "subtitle": "{kind} · {cap} de capacidad",
+    "backLabel": "Todas las estaciones de secado",
+    "capacityTitle": "Capacidad",
+    "committed": "En la cama",
+    "available": "Libre",
+    "capacity": "Capacidad",
+    "utilization": "{pct}% lleno",
+    "overCapacity": "Sobre capacidad",
+    "lotsTitle": "Lotes en reposo aquí",
+    "lotsEmpty": "Ningún lote se está secando en esta estación ahora.",
+    "lotMoisture": "{pct}% de humedad",
+    "lotNoMoisture": "Aún sin lectura de humedad",
+    "lotResting": "{days}d en reposo",
+    "lotReady": "Listo para trillar",
+    "lotRestingBadge": "En reposo",
+    "weatherTitle": "Pronóstico de cobertura",
+    "weatherEmpty": "Sin riesgo de cobertura — esta estación está protegida.",
+    "rainPct": "{pct}% lluvia",
+    "coverRiskDay": "Cubrir {day} · {pct}% lluvia",
+    "clearDay": "Despejado {day} · {pct}% lluvia"
+  },
+  "weekday": {
+    "today": "Hoy",
+    "mon": "Lun",
+    "tue": "Mar",
+    "wed": "Mié",
+    "thu": "Jue",
+    "fri": "Vie",
+    "sat": "Sáb",
+    "sun": "Dom"
   }
 }

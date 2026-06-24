@@ -9,7 +9,8 @@
     "payroll": "Cargando nómina",
     "plan": "Cargando plan de cosecha",
     "processing": "Cargando procesamiento",
-    "weigh": "Cargando pesaje"
+    "weigh": "Cargando pesaje",
+    "dryingStationDetail": "Cargando estación de secado"
   },
   "error": {
     "app": {
@@ -35,6 +36,11 @@
     "worker": {
       "title": "No pudimos cargar este trabajador",
       "body": "La conexión con los registros de la finca se interrumpió un momento. Suele ser temporal — intenta de nuevo.",
+      "retry": "Reintentar"
+    },
+    "dryingStation": {
+      "title": "No pudimos cargar esta estación",
+      "body": "La conexión con los registros de la finca se interrumpió un momento. Suele ser temporal — inténtalo de nuevo.",
       "retry": "Reintentar"
     }
   }
