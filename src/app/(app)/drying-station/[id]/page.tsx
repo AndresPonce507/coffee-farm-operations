@@ -10,15 +10,8 @@ import {
   getDryingStationLots,
   getDryingStationWeatherRisk,
 } from "@/lib/db/dossier/drying-station";
+import { STATION_KIND_KEY } from "@/lib/drying/station-labels";
 import { kg } from "@/lib/utils";
-
-/** station `kind` → its existing `stations.*` translation key (for the subtitle). */
-const KIND_KEY: Record<string, string> = {
-  patio: "stations.kindPatio",
-  "raised-bed": "stations.kindRaisedBed",
-  guardiola: "stations.kindGuardiola",
-  parabolic: "stations.kindParabolic",
-};
 
 /**
  * /drying-station/[id] — the DRYING STATION dossier (Phase 5 L2, the 8th connected
@@ -46,7 +39,9 @@ export default async function DryingStationDossierPage({
     getDryingStationWeatherRisk(id),
   ]);
 
-  const kindLabel = KIND_KEY[station.kind] ? t(KIND_KEY[station.kind]) : station.kind;
+  const kindLabel = STATION_KIND_KEY[station.kind]
+    ? t(STATION_KIND_KEY[station.kind])
+    : station.kind;
 
   return (
     <DossierShell

@@ -3,16 +3,9 @@ import { useTranslations } from "next-intl";
 import { DossierSection } from "@/components/dossier/dossier-section";
 import { AtpMeter } from "@/components/ui/atp-meter";
 import { Badge } from "@/components/ui/badge";
+import { STATION_KIND_KEY } from "@/lib/drying/station-labels";
 import { kg } from "@/lib/utils";
 import type { StationOccupancy } from "@/lib/types";
-
-/** Maps a station `kind` to its existing `stations.*` translation key. */
-const KIND_KEY: Record<string, string> = {
-  patio: "stations.kindPatio",
-  "raised-bed": "stations.kindRaisedBed",
-  guardiola: "stations.kindGuardiola",
-  parabolic: "stations.kindParabolic",
-};
 
 /**
  * DryingStationCapacitySection — the station dossier's load section: the dual-bar
@@ -31,7 +24,9 @@ export function DryingStationCapacitySection({
     station.capacityKg > 0
       ? Math.round((station.committedKg / station.capacityKg) * 100)
       : 0;
-  const kindLabel = KIND_KEY[station.kind] ? t(KIND_KEY[station.kind]) : station.kind;
+  const kindLabel = STATION_KIND_KEY[station.kind]
+    ? t(STATION_KIND_KEY[station.kind])
+    : station.kind;
 
   return (
     <DossierSection id="capacity" title={t("stationDossier.capacityTitle")}>

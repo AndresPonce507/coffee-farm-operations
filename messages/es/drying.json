@@ -97,6 +97,18 @@
     "lotRestingBadge": "En reposo",
     "weatherTitle": "Pronóstico de cobertura",
     "weatherEmpty": "Sin riesgo de cobertura — esta estación está protegida.",
-    "rainPct": "{pct}% lluvia"
+    "rainPct": "{pct}% lluvia",
+    "coverRiskDay": "Cubrir {day} · {pct}% lluvia",
+    "clearDay": "Despejado {day} · {pct}% lluvia"
+  },
+  "weekday": {
+    "today": "Hoy",
+    "mon": "Lun",
+    "tue": "Mar",
+    "wed": "Mié",
+    "thu": "Jue",
+    "fri": "Vie",
+    "sat": "Sáb",
+    "sun": "Dom"
   }
 }

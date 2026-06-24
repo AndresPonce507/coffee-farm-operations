@@ -10,7 +10,7 @@ import {
  * entityHref is THE single source of truth for entity → dossier URLs (ARCHITECTURE
  * §7 C1, build-plan §3 RESOLVED). The Map's imperative `router.push`, the ⌘K palette,
  * and every `<EntityLink>` all read it — so its shape is a frozen contract. db-free
- * pure-map unit coverage of all 7 dossier kinds, id encoding, and #anchor appension.
+ * pure-map unit coverage of all 8 dossier kinds, id encoding, and #anchor appension.
  */
 describe("entityHref", () => {
   it("covers all 8 dossier kinds and nothing else", () => {

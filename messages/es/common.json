@@ -41,7 +41,7 @@
     "dryingStation": {
       "title": "No pudimos cargar esta estación",
       "body": "La conexión con los registros de la finca se interrumpió un momento. Suele ser temporal — inténtalo de nuevo.",
-      "retry": "Intentar de nuevo"
+      "retry": "Reintentar"
     }
   }
 }

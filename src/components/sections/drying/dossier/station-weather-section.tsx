@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 
 import { DossierSection } from "@/components/dossier/dossier-section";
 import { Badge } from "@/components/ui/badge";
+import { weekdayKey } from "@/lib/drying/station-labels";
 import type { DryingWeatherRisk } from "@/lib/types";
 
 /**
@@ -26,18 +27,26 @@ export function DryingStationWeatherSection({
       emptyLabel={t("stationDossier.weatherEmpty")}
     >
       <ul role="list" className="flex flex-wrap gap-2">
-        {risk.map((r) => (
-          <li key={r.forecastOrder}>
-            <Badge tone={r.coverRisk ? "cherry" : "sky"} dot={r.coverRisk}>
-              {r.coverRisk ? (
-                <CloudRain aria-hidden className="h-3 w-3" />
-              ) : (
-                <Sun aria-hidden className="h-3 w-3" />
-              )}
-              {r.day} · {t("stationDossier.rainPct", { pct: r.rainPct })}
-            </Badge>
-          </li>
-        ))}
+        {risk.map((r) => {
+          // Localize the forecast day token so "Mon"/"Today" don't leak English into es.
+          const wk = weekdayKey(r.day);
+          const day = wk ? t(wk) : r.day;
+          // The cover-vs-clear verdict lives in TEXT (not color alone) — WCAG 1.4.1.
+          return (
+            <li key={`${r.forecastOrder}-${r.day}`}>
+              <Badge tone={r.coverRisk ? "cherry" : "sky"} dot={r.coverRisk}>
+                {r.coverRisk ? (
+                  <CloudRain aria-hidden className="h-3 w-3" />
+                ) : (
+                  <Sun aria-hidden className="h-3 w-3" />
+                )}
+                {r.coverRisk
+                  ? t("stationDossier.coverRiskDay", { day, pct: r.rainPct })
+                  : t("stationDossier.clearDay", { day, pct: r.rainPct })}
+              </Badge>
+            </li>
+          );
+        })}
       </ul>
     </DossierSection>
   );

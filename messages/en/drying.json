@@ -97,6 +97,18 @@
     "lotRestingBadge": "Resting",
     "weatherTitle": "Cover forecast",
     "weatherEmpty": "No cover risk — this station is sheltered.",
-    "rainPct": "{pct}% rain"
+    "rainPct": "{pct}% rain",
+    "coverRiskDay": "Cover {day} · {pct}% rain",
+    "clearDay": "Clear {day} · {pct}% rain"
+  },
+  "weekday": {
+    "today": "Today",
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sun": "Sun"
   }
 }
