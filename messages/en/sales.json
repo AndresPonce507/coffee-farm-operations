@@ -1,0 +1,273 @@
+{
+  "offers": {
+    "title": "Offers",
+    "subtitle": "What the estate is offering buyers right now. Reserve lots on their own merit, commodity lots against the C.",
+    "summary": {
+      "live": "Live offers",
+      "liveSub": "published, not withdrawn",
+      "reserve": "Reserve",
+      "reserveSub": "single-origin, off the C",
+      "commodity": "Commodity",
+      "commoditySub": "C plus a differential",
+      "atp": "Left to sell",
+      "atpSub": "kg across the board"
+    },
+    "regime": {
+      "reserveTag": "Reserve · {variety}",
+      "commodityTag": "Commodity · C + diff"
+    },
+    "card": {
+      "asking": "Asking price",
+      "perKg": "{price}/kg",
+      "auction": "Auction / RFQ",
+      "auctionSub": "no fixed ask — best bid wins",
+      "offered": "Offered",
+      "offeredAll": "All available",
+      "offeredKg": "{kg} kg",
+      "atp": "Available",
+      "atpKg": "{kg} kg left",
+      "atpNone": "Fully committed",
+      "score": "Cup {score}",
+      "noScore": "Not cupped yet",
+      "grade": "{grade}"
+    },
+    "empty": {
+      "title": "No offers published yet",
+      "description": "Publish a green lot and it lands here. Reserve coffees get offered on their own merit, commodity lots against the day's C plus a differential."
+    },
+    "publish": {
+      "open": "Publish an offer",
+      "title": "Publish a green offer",
+      "lotLabel": "Green lot",
+      "lotPlaceholder": "Pick a green lot",
+      "regimeNote": "The regime follows the lot's grade — a single-origin Reserve coffee can never be offered on the commodity index.",
+      "askingLabel": "Asking price (USD per kg)",
+      "askingHint": "Leave blank for an auction or RFQ — no fixed ask.",
+      "kgLabel": "Kilograms offered",
+      "kgHint": "Leave blank to offer everything available.",
+      "currencyLabel": "Currency",
+      "submit": "Publish offer",
+      "publishing": "Publishing…",
+      "published": "Offer published",
+      "cancel": "Cancel",
+      "another": "Publish another",
+      "noLots": "Grade a lot to green first — then it can be offered."
+    },
+    "loading": "Loading the offer board",
+    "errors": {
+      "lotRequired": "Pick a green lot to offer.",
+      "askingPositive": "The asking price must be greater than zero.",
+      "kgPositive": "The kilograms offered must be greater than zero.",
+      "generic": "Could not publish that offer. Check the details and try again."
+    }
+  },
+  "contracts": {
+    "title": "Contracts",
+    "subtitle": "Standards-based sales contracts, from draft to closed. Every line claims green inventory, so the crown-jewel can never be double-sold.",
+    "summary": {
+      "total": "Contracts",
+      "totalSub": "across all buyers",
+      "open": "In progress",
+      "openSub": "draft, signed or fixed",
+      "kg": "Contracted",
+      "kgSub": "kg under contract"
+    },
+    "card": {
+      "buyer": "Buyer",
+      "incoterm": "Incoterm",
+      "basis": "Pricing basis",
+      "totalKg": "Volume",
+      "totalKgValue": "{kg} kg",
+      "fixedValue": "Fixed value",
+      "fixation": "Fixed",
+      "open": "Open contract"
+    },
+    "status": {
+      "draft": "Draft",
+      "signed": "Signed",
+      "fixed": "Fixed",
+      "in_transit": "In transit",
+      "delivered": "Delivered",
+      "closed": "Closed",
+      "cancelled": "Cancelled"
+    },
+    "basis": {
+      "fixed": "Fixed price",
+      "differential": "Differential over C",
+      "auction": "Auction"
+    },
+    "empty": {
+      "title": "No contracts yet",
+      "description": "Create a contract for a buyer, add the lots they're taking, and sign it. Each line reserves green inventory the moment you add it."
+    },
+    "create": {
+      "open": "New contract",
+      "title": "New sales contract",
+      "buyerLabel": "Buyer",
+      "buyerPlaceholder": "Pick a buyer",
+      "incotermLabel": "Incoterm (2020)",
+      "namedPlaceLabel": "Named place",
+      "namedPlacePlaceholder": "e.g. Balboa, PA",
+      "standardLabel": "Contract standard",
+      "basisLabel": "Pricing basis",
+      "currencyLabel": "Currency",
+      "submit": "Create contract",
+      "creating": "Creating…",
+      "created": "Contract created",
+      "cancel": "Cancel",
+      "noBuyers": "Add a buyer first, then create a contract."
+    },
+    "newBuyer": {
+      "open": "Add a buyer",
+      "title": "Add a buyer",
+      "nameLabel": "Name",
+      "namePlaceholder": "Roaster, importer or agent",
+      "countryLabel": "Country code",
+      "countryPlaceholder": "e.g. JP, CH, US",
+      "typeLabel": "Type",
+      "incotermLabel": "Default incoterm",
+      "currencyLabel": "Default currency",
+      "submit": "Save buyer",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "type": {
+        "roaster": "Roaster",
+        "importer": "Importer",
+        "agent": "Agent"
+      }
+    },
+    "loading": "Loading contracts",
+    "errors": {
+      "buyerRequired": "Pick a buyer for this contract.",
+      "incotermRequired": "Pick an Incoterm.",
+      "basisRequired": "Pick a pricing basis.",
+      "nameRequired": "Enter the buyer's name.",
+      "generic": "Could not create that contract. Check the details and try again.",
+      "buyerGeneric": "Could not save that buyer. Check the details and try again."
+    }
+  },
+  "workspace": {
+    "back": "Back to contracts",
+    "eyebrow": "Sales contract",
+    "buyerLine": "{buyer} · {incoterm}{place}",
+    "notFound": "Contract not found",
+    "summary": {
+      "volume": "Volume",
+      "volumeValue": "{kg} kg",
+      "fixedValue": "Fixed value",
+      "fixation": "Fixed",
+      "standard": "Standard",
+      "currency": "Currency"
+    },
+    "status": {
+      "draft": "Draft",
+      "signed": "Signed",
+      "fixed": "Fixed",
+      "in_transit": "In transit",
+      "delivered": "Delivered",
+      "closed": "Closed",
+      "cancelled": "Cancelled"
+    },
+    "basis": {
+      "fixed": "Fixed price",
+      "differential": "Differential over C",
+      "auction": "Auction"
+    },
+    "lines": {
+      "title": "Contract lines",
+      "lot": "Green lot",
+      "kg": "Volume",
+      "kgValue": "{kg} kg",
+      "price": "Unit price",
+      "priceValue": "{price}/kg",
+      "unfixed": "Not fixed yet",
+      "differential": "C + {cents}¢/lb",
+      "month": "{month}",
+      "empty": "No lines yet. Add the lots this buyer is taking.",
+      "reservation": "Reserved"
+    },
+    "add": {
+      "title": "Add a line",
+      "lotLabel": "Green lot",
+      "lotPlaceholder": "Pick a green lot",
+      "reserveExcluded": "Reserve lots can't sit on a differential contract.",
+      "kgLabel": "Kilograms",
+      "kgHint": "Reserves this volume the moment you add it.",
+      "unitPriceLabel": "Unit price (USD per kg)",
+      "differentialLabel": "Differential (cents per lb)",
+      "monthLabel": "C contract month",
+      "monthPlaceholder": "e.g. DEC25",
+      "submit": "Add line",
+      "adding": "Adding…",
+      "atpAfter": "{kg} kg left after this",
+      "atpLine": "{kg} kg available"
+    },
+    "sign": {
+      "open": "Sign contract",
+      "title": "Sign this contract?",
+      "body": "Signing locks the {count} line(s) on {contract} for {buyer}. You can't add or change lines after this.",
+      "needsLine": "Add at least one line before signing.",
+      "reservePrereq": "A Reserve contract needs an approved pre-shipment sample before it can be signed.",
+      "irreversible": "This is a legal instrument. Signing is final.",
+      "confirm": "Sign contract",
+      "signing": "Signing…",
+      "cancel": "Not yet",
+      "signed": "Contract signed"
+    },
+    "loading": "Loading the contract",
+    "errors": {
+      "lotRequired": "Pick a green lot.",
+      "kgPositive": "The kilograms must be greater than zero.",
+      "pricePositive": "The unit price must be zero or more.",
+      "monthRequired": "Enter the C contract month.",
+      "generic": "Could not add that line. Check the details and try again.",
+      "signGeneric": "Could not sign the contract. Try again."
+    }
+  },
+  "fixation": {
+    "title": "Fixation",
+    "subtitle": "Differential lines waiting on a C lock. Pick the moment, fix the price. Reserve lots are off the C and never appear here.",
+    "summary": {
+      "open": "Un-fixed lines",
+      "openSub": "differential, awaiting a lock",
+      "kg": "At risk",
+      "kgSub": "kg priced on a floating C",
+      "ready": "Ready to fix",
+      "readySub": "lines with a live C mark"
+    },
+    "card": {
+      "contract": "Contract",
+      "kg": "Volume",
+      "kgValue": "{kg} kg",
+      "month": "C month",
+      "currentC": "Current C",
+      "currentCValue": "{price}/lb",
+      "noMark": "No C mark for this month yet",
+      "differential": "Differential",
+      "differentialValue": "+{cents}¢/lb",
+      "implied": "Implied price",
+      "impliedValue": "{price}/kg",
+      "impliedUnknown": "Waiting on a C mark",
+      "fix": "Fix now"
+    },
+    "fix": {
+      "title": "Fix this line's price?",
+      "body": "Locks {kg} kg of {lot} at the current C plus the differential — {price}/kg.",
+      "bodyUnknown": "Locks {kg} kg of {lot} at the current C plus the differential.",
+      "irreversible": "Irreversible — this locks the C leg at today's mark. There's no un-fix.",
+      "confirm": "Lock the price",
+      "fixing": "Locking…",
+      "cancel": "Not yet",
+      "fixed": "Price fixed"
+    },
+    "empty": {
+      "title": "Nothing to fix right now",
+      "description": "Differential contract lines show up here while their C leg floats. Add a differential line on a contract and it appears, ready to lock."
+    },
+    "loading": "Loading the fixation cockpit",
+    "errors": {
+      "lineRequired": "Pick a line to fix.",
+      "generic": "Could not fix that line. Try again."
+    }
+  }
+}

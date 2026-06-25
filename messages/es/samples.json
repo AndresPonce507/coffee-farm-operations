@@ -1,0 +1,92 @@
+{
+  "page": {
+    "title": "Muestras",
+    "subtitle": "Cada muestra de verde que sale y en qué quedó el veredicto del comprador en cada una."
+  },
+  "summary": {
+    "open": "Muestras abiertas",
+    "openSub": "{count} esperando veredicto",
+    "preShipment": "Pre-embarque",
+    "preShipmentSub": "Sacadas del inventario",
+    "documentation": "Oferta y tipo",
+    "documentationSub": "Registradas, sin descuento",
+    "lots": "Lotes muestreados",
+    "lotsSub": "Lotes de verde distintos"
+  },
+  "empty": {
+    "title": "No hay muestras abiertas",
+    "description": "Registra una muestra para un comprador y se queda aquí hasta que mande su veredicto."
+  },
+  "kind": {
+    "offer": "Oferta",
+    "pre_shipment": "Pre-embarque",
+    "type": "Tipo",
+    "arbitration": "Arbitraje"
+  },
+  "card": {
+    "noBuyer": "Muestra de tipo / espec.",
+    "grams": "Gramos",
+    "gramsValue": "{grams} g",
+    "grade": "Grado",
+    "noGrade": "Sin grado",
+    "score": "Puntaje",
+    "noScore": "Sin catar",
+    "scoreValue": "{score}",
+    "courier": "Mensajería",
+    "dispatched": "Enviada {date}",
+    "track": "Rastrear envío →",
+    "noTracking": "Aún sin número de rastreo",
+    "reserveTag": "Banda reserva",
+    "unlockNote": "Aprobar esta muestra de pre-embarque habilita la firma del contrato de {lot}.",
+    "verdict": "Registrar veredicto"
+  },
+  "log": {
+    "open": "Registrar muestra",
+    "title": "Registrar una muestra",
+    "lotLabel": "Lote de verde",
+    "lotPlaceholder": "Elige un lote de verde",
+    "buyerLabel": "Comprador",
+    "buyerNone": "Sin comprador (muestra de tipo / espec.)",
+    "kindLabel": "Tipo de muestra",
+    "gramsLabel": "Gramos",
+    "gramsHint": "Una muestra de pre-embarque saca estos gramos de los kilos disponibles del lote.",
+    "courierLabel": "Mensajería",
+    "courierPlaceholder": "DHL, FedEx, UPS...",
+    "trackingLabel": "Número de rastreo",
+    "trackingPlaceholder": "Opcional",
+    "submit": "Registrar muestra",
+    "submitting": "Registrando...",
+    "logged": "Muestra registrada.",
+    "cancel": "Cancelar"
+  },
+  "verdict": {
+    "open": "Registrar veredicto",
+    "title": "Registrar el veredicto del comprador",
+    "body": "¿Qué dijo {buyer} sobre la muestra {kind} de {lot}?",
+    "noBuyer": "el comprador",
+    "verdictLabel": "Veredicto",
+    "approved": "Aprobada",
+    "rejected": "Rechazada",
+    "counter": "Contraoferta",
+    "scoreLabel": "Puntaje del comprador",
+    "scoreHint": "0 a 100, opcional.",
+    "scorePlaceholder": "ej. 92",
+    "unlockNote": "Una muestra de pre-embarque aprobada es lo que permite firmar un contrato de reserva.",
+    "submit": "Guardar veredicto",
+    "submitting": "Guardando...",
+    "saved": "Veredicto guardado.",
+    "cancel": "Cancelar"
+  },
+  "errors": {
+    "lotRequired": "Elige un lote de verde para muestrear.",
+    "kindRequired": "Elige el tipo de muestra.",
+    "gramsPositive": "Los gramos deben ser mayores que cero.",
+    "sampleRequired": "Elige una muestra para registrar su veredicto.",
+    "verdictRequired": "Elige aprobada, rechazada o contraoferta.",
+    "scoreRange": "Un puntaje del comprador debe estar entre 0 y 100.",
+    "generic": "No se pudo guardar. Revisa los datos e intenta de nuevo."
+  },
+  "loading": {
+    "board": "Cargando muestras"
+  }
+}

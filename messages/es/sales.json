@@ -1,0 +1,273 @@
+{
+  "offers": {
+    "title": "Ofertas",
+    "subtitle": "Lo que la finca ofrece a los compradores ahora mismo. Los lotes Reserva por su propio mérito, los comerciales contra la C.",
+    "summary": {
+      "live": "Ofertas activas",
+      "liveSub": "publicadas, sin retirar",
+      "reserve": "Reserva",
+      "reserveSub": "origen único, fuera de la C",
+      "commodity": "Comercial",
+      "commoditySub": "la C más un diferencial",
+      "atp": "Por vender",
+      "atpSub": "kg en el tablero"
+    },
+    "regime": {
+      "reserveTag": "Reserva · {variety}",
+      "commodityTag": "Comercial · C + dif"
+    },
+    "card": {
+      "asking": "Precio pedido",
+      "perKg": "{price}/kg",
+      "auction": "Subasta / RFQ",
+      "auctionSub": "sin precio fijo — gana la mejor oferta",
+      "offered": "Ofrecido",
+      "offeredAll": "Todo lo disponible",
+      "offeredKg": "{kg} kg",
+      "atp": "Disponible",
+      "atpKg": "{kg} kg libres",
+      "atpNone": "Totalmente comprometido",
+      "score": "Taza {score}",
+      "noScore": "Sin catar aún",
+      "grade": "{grade}"
+    },
+    "empty": {
+      "title": "Aún no hay ofertas publicadas",
+      "description": "Publica un lote verde y aparece aquí. Los cafés Reserva se ofrecen por su propio mérito, los comerciales contra la C del día más un diferencial."
+    },
+    "publish": {
+      "open": "Publicar una oferta",
+      "title": "Publicar una oferta de café verde",
+      "lotLabel": "Lote verde",
+      "lotPlaceholder": "Elige un lote verde",
+      "regimeNote": "El régimen sigue al grado del lote — un café Reserva de origen único nunca se puede ofrecer en el índice comercial.",
+      "askingLabel": "Precio pedido (USD por kg)",
+      "askingHint": "Déjalo en blanco para una subasta o RFQ — sin precio fijo.",
+      "kgLabel": "Kilogramos ofrecidos",
+      "kgHint": "Déjalo en blanco para ofrecer todo lo disponible.",
+      "currencyLabel": "Moneda",
+      "submit": "Publicar oferta",
+      "publishing": "Publicando…",
+      "published": "Oferta publicada",
+      "cancel": "Cancelar",
+      "another": "Publicar otra",
+      "noLots": "Primero gradúa un lote a verde — luego se puede ofrecer."
+    },
+    "loading": "Cargando el tablero de ofertas",
+    "errors": {
+      "lotRequired": "Elige un lote verde para ofrecer.",
+      "askingPositive": "El precio pedido debe ser mayor que cero.",
+      "kgPositive": "Los kilogramos ofrecidos deben ser mayores que cero.",
+      "generic": "No se pudo publicar esa oferta. Revisa los datos e inténtalo de nuevo."
+    }
+  },
+  "contracts": {
+    "title": "Contratos",
+    "subtitle": "Contratos de venta basados en estándares, del borrador al cierre. Cada línea reclama inventario verde, así la joya de la corona nunca se vende dos veces.",
+    "summary": {
+      "total": "Contratos",
+      "totalSub": "entre todos los compradores",
+      "open": "En curso",
+      "openSub": "borrador, firmado o fijado",
+      "kg": "Contratado",
+      "kgSub": "kg bajo contrato"
+    },
+    "card": {
+      "buyer": "Comprador",
+      "incoterm": "Incoterm",
+      "basis": "Base de precio",
+      "totalKg": "Volumen",
+      "totalKgValue": "{kg} kg",
+      "fixedValue": "Valor fijado",
+      "fixation": "Fijado",
+      "open": "Abrir contrato"
+    },
+    "status": {
+      "draft": "Borrador",
+      "signed": "Firmado",
+      "fixed": "Fijado",
+      "in_transit": "En tránsito",
+      "delivered": "Entregado",
+      "closed": "Cerrado",
+      "cancelled": "Cancelado"
+    },
+    "basis": {
+      "fixed": "Precio fijo",
+      "differential": "Diferencial sobre la C",
+      "auction": "Subasta"
+    },
+    "empty": {
+      "title": "Aún no hay contratos",
+      "description": "Crea un contrato para un comprador, agrega los lotes que se lleva y fírmalo. Cada línea reserva inventario verde en el momento en que la agregas."
+    },
+    "create": {
+      "open": "Nuevo contrato",
+      "title": "Nuevo contrato de venta",
+      "buyerLabel": "Comprador",
+      "buyerPlaceholder": "Elige un comprador",
+      "incotermLabel": "Incoterm (2020)",
+      "namedPlaceLabel": "Lugar designado",
+      "namedPlacePlaceholder": "ej. Balboa, PA",
+      "standardLabel": "Estándar de contrato",
+      "basisLabel": "Base de precio",
+      "currencyLabel": "Moneda",
+      "submit": "Crear contrato",
+      "creating": "Creando…",
+      "created": "Contrato creado",
+      "cancel": "Cancelar",
+      "noBuyers": "Agrega un comprador primero, luego crea un contrato."
+    },
+    "newBuyer": {
+      "open": "Agregar comprador",
+      "title": "Agregar un comprador",
+      "nameLabel": "Nombre",
+      "namePlaceholder": "Tostador, importador o agente",
+      "countryLabel": "Código de país",
+      "countryPlaceholder": "ej. JP, CH, US",
+      "typeLabel": "Tipo",
+      "incotermLabel": "Incoterm por defecto",
+      "currencyLabel": "Moneda por defecto",
+      "submit": "Guardar comprador",
+      "saving": "Guardando…",
+      "cancel": "Cancelar",
+      "type": {
+        "roaster": "Tostador",
+        "importer": "Importador",
+        "agent": "Agente"
+      }
+    },
+    "loading": "Cargando contratos",
+    "errors": {
+      "buyerRequired": "Elige un comprador para este contrato.",
+      "incotermRequired": "Elige un Incoterm.",
+      "basisRequired": "Elige una base de precio.",
+      "nameRequired": "Ingresa el nombre del comprador.",
+      "generic": "No se pudo crear ese contrato. Revisa los datos e inténtalo de nuevo.",
+      "buyerGeneric": "No se pudo guardar ese comprador. Revisa los datos e inténtalo de nuevo."
+    }
+  },
+  "workspace": {
+    "back": "Volver a contratos",
+    "eyebrow": "Contrato de venta",
+    "buyerLine": "{buyer} · {incoterm}{place}",
+    "notFound": "Contrato no encontrado",
+    "summary": {
+      "volume": "Volumen",
+      "volumeValue": "{kg} kg",
+      "fixedValue": "Valor fijado",
+      "fixation": "Fijado",
+      "standard": "Estándar",
+      "currency": "Moneda"
+    },
+    "status": {
+      "draft": "Borrador",
+      "signed": "Firmado",
+      "fixed": "Fijado",
+      "in_transit": "En tránsito",
+      "delivered": "Entregado",
+      "closed": "Cerrado",
+      "cancelled": "Cancelado"
+    },
+    "basis": {
+      "fixed": "Precio fijo",
+      "differential": "Diferencial sobre la C",
+      "auction": "Subasta"
+    },
+    "lines": {
+      "title": "Líneas del contrato",
+      "lot": "Lote verde",
+      "kg": "Volumen",
+      "kgValue": "{kg} kg",
+      "price": "Precio unitario",
+      "priceValue": "{price}/kg",
+      "unfixed": "Aún sin fijar",
+      "differential": "C + {cents}¢/lb",
+      "month": "{month}",
+      "empty": "Aún no hay líneas. Agrega los lotes que se lleva este comprador.",
+      "reservation": "Reservado"
+    },
+    "add": {
+      "title": "Agregar una línea",
+      "lotLabel": "Lote verde",
+      "lotPlaceholder": "Elige un lote verde",
+      "reserveExcluded": "Los lotes Reserva no pueden ir en un contrato diferencial.",
+      "kgLabel": "Kilogramos",
+      "kgHint": "Reserva este volumen en el momento en que lo agregas.",
+      "unitPriceLabel": "Precio unitario (USD por kg)",
+      "differentialLabel": "Diferencial (centavos por lb)",
+      "monthLabel": "Mes del contrato C",
+      "monthPlaceholder": "ej. DEC25",
+      "submit": "Agregar línea",
+      "adding": "Agregando…",
+      "atpAfter": "{kg} kg libres después de esto",
+      "atpLine": "{kg} kg disponibles"
+    },
+    "sign": {
+      "open": "Firmar contrato",
+      "title": "¿Firmar este contrato?",
+      "body": "Firmar bloquea las {count} línea(s) de {contract} para {buyer}. Después de esto no puedes agregar ni cambiar líneas.",
+      "needsLine": "Agrega al menos una línea antes de firmar.",
+      "reservePrereq": "Un contrato Reserva necesita una muestra de pre-embarque aprobada antes de firmarse.",
+      "irreversible": "Esto es un instrumento legal. La firma es definitiva.",
+      "confirm": "Firmar contrato",
+      "signing": "Firmando…",
+      "cancel": "Todavía no",
+      "signed": "Contrato firmado"
+    },
+    "loading": "Cargando el contrato",
+    "errors": {
+      "lotRequired": "Elige un lote verde.",
+      "kgPositive": "Los kilogramos deben ser mayores que cero.",
+      "pricePositive": "El precio unitario debe ser cero o más.",
+      "monthRequired": "Ingresa el mes del contrato C.",
+      "generic": "No se pudo agregar esa línea. Revisa los datos e inténtalo de nuevo.",
+      "signGeneric": "No se pudo firmar el contrato. Inténtalo de nuevo."
+    }
+  },
+  "fixation": {
+    "title": "Fijación",
+    "subtitle": "Líneas diferenciales esperando un bloqueo de la C. Elige el momento, fija el precio. Los lotes Reserva están fuera de la C y nunca aparecen aquí.",
+    "summary": {
+      "open": "Líneas sin fijar",
+      "openSub": "diferenciales, esperando bloqueo",
+      "kg": "En riesgo",
+      "kgSub": "kg con una C flotante",
+      "ready": "Listas para fijar",
+      "readySub": "líneas con una C activa"
+    },
+    "card": {
+      "contract": "Contrato",
+      "kg": "Volumen",
+      "kgValue": "{kg} kg",
+      "month": "Mes C",
+      "currentC": "C actual",
+      "currentCValue": "{price}/lb",
+      "noMark": "Aún no hay marca de C para este mes",
+      "differential": "Diferencial",
+      "differentialValue": "+{cents}¢/lb",
+      "implied": "Precio implícito",
+      "impliedValue": "{price}/kg",
+      "impliedUnknown": "Esperando una marca de C",
+      "fix": "Fijar ahora"
+    },
+    "fix": {
+      "title": "¿Fijar el precio de esta línea?",
+      "body": "Bloquea {kg} kg de {lot} a la C actual más el diferencial — {price}/kg.",
+      "bodyUnknown": "Bloquea {kg} kg de {lot} a la C actual más el diferencial.",
+      "irreversible": "Irreversible — esto bloquea la C a la marca de hoy. No hay deshacer.",
+      "confirm": "Bloquear el precio",
+      "fixing": "Bloqueando…",
+      "cancel": "Todavía no",
+      "fixed": "Precio fijado"
+    },
+    "empty": {
+      "title": "Nada que fijar ahora mismo",
+      "description": "Las líneas de contrato diferenciales aparecen aquí mientras su C flota. Agrega una línea diferencial a un contrato y aparece, lista para bloquear."
+    },
+    "loading": "Cargando la cabina de fijación",
+    "errors": {
+      "lineRequired": "Elige una línea para fijar.",
+      "generic": "No se pudo fijar esa línea. Inténtalo de nuevo."
+    }
+  }
+}

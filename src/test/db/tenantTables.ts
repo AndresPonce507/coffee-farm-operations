@@ -41,6 +41,13 @@ export const DIRECT_TENANT_TABLES = [
   "auction_comps", // dual_regime_pricing.sql — reserve comp library (append-only)
   "differential_schedule", // dual_regime_pricing.sql — commodity bands (versioned)
   "reserve_price_model", // dual_regime_pricing.sql — reserve coefficients (versioned)
+  // P3-S1 B2B trade trunk — CRM master + contract header (no tenant-carrying parent FK;
+  // tenant_id default current_tenant_id(), RPC-only writes).
+  "b2b_buyers", // b2b_offers_contracts.sql — green-buyer CRM master
+  "sales_contracts", // b2b_offers_contracts.sql — standards-based contract header
+  // P3-S4 specialty auctions — the auction header (no tenant-carrying parent FK;
+  // tenant_id default current_tenant_id(), RPC-only writes).
+  "auctions", // specialty_auctions.sql — BoP/CoE/Algrano auction header
 ] as const;
 
 /**
@@ -95,6 +102,20 @@ export const INHERITED_TENANT_TABLES = [
   // P3-S0 pricing spine — binding price tables (inherit via the green lot / quote).
   "price_quotes", // dual_regime_pricing.sql — via green_lots (tenant,lot_code) composite FK
   "fixations", // dual_regime_pricing.sql — via price_quotes + lot_reservations
+  // P3-S1 B2B trade trunk — published offers + contract lines (inherit via the green
+  // lot / parent contract).
+  "green_offers", // b2b_offers_contracts.sql — via green_lots (tenant,lot_code) composite FK
+  "contract_lines", // b2b_offers_contracts.sql — via sales_contracts + green_lots
+  // P3-S2 B2B sample ledger — inherits via the green lot (tenant,green_lot_code).
+  "green_samples", // b2b_samples.sql — via green_lots (tenant,lot_code) composite FK
+  // P3-S4 specialty auctions — entries inherit via the green lot; scoresheets via the entry.
+  "auction_entries", // specialty_auctions.sql — via green_lots (tenant,lot_code) composite FK
+  "auction_scoresheets", // specialty_auctions.sql — via auction_entries (append-only jury capture)
+  // P3-S3 export-doc-pack — shipment (via the contract), lines (via the shipment /
+  // green lot), and the append-only issued-doc ledger (via the shipment).
+  "export_shipments", // export_doc_pack.sql — via sales_contracts
+  "export_shipment_lines", // export_doc_pack.sql — via export_shipments + green_lots
+  "export_documents", // export_doc_pack.sql — via export_shipments (append-only legal ledger)
 ] as const;
 
 /**
@@ -120,6 +141,7 @@ export const EXEMPT: readonly string[] = Object.freeze([
   "units", // event_log_units_lot_graph.sql:31 — UCUM unit registry (shared)
   "lot_yield_curve", // event_log_units_lot_graph.sql:186 — house yield factors (shared default)
   "statutory_rates", // payroll.sql:97 — Panama CSS/seguro/décimo (national law)
+  "export_doc_prereqs", // export_doc_pack.sql — GLOBAL trade-rule reference (MIDA/ICO/Incoterms), shared
   "tenants", // §3 — the tenancy root; has no tenant_id of its own
   "tenant_users", // §3 — the membership map / trust anchor
 ]);

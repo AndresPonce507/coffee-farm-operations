@@ -1,0 +1,131 @@
+{
+  "page": {
+    "title": "Export shipments",
+    "subtitle": "Every consignment and its document pack. A doc cannot issue until its prerequisites are met."
+  },
+  "summary": {
+    "shipments": "Shipments",
+    "shipmentsSub": "{count} on the board",
+    "building": "Building",
+    "buildingSub": "still loading bags",
+    "docsIssued": "Docs issued",
+    "docsIssuedSub": "packs in progress",
+    "bags": "Bags loaded",
+    "bagsSub": "across all shipments"
+  },
+  "empty": {
+    "title": "No shipments yet",
+    "description": "Build a consignment from a signed contract to start its export document pack."
+  },
+  "status": {
+    "building": "Building",
+    "docs_issued": "Docs issued",
+    "departed": "Departed",
+    "arrived": "Arrived",
+    "closed": "Closed"
+  },
+  "card": {
+    "contract": "Contract",
+    "buyer": "Consignee",
+    "noBuyer": "Unassigned",
+    "bags": "Bags",
+    "netKg": "Net kg",
+    "lines": "Lines",
+    "docs": "Docs live",
+    "docsValue": "{issued} of 5",
+    "open": "Open pack"
+  },
+  "build": {
+    "title": "Build a shipment",
+    "subtitle": "Pick a signed contract. A consignment number is minted for you.",
+    "contractLabel": "Contract",
+    "contractPlaceholder": "Select a contract",
+    "portLabel": "Port of loading",
+    "bagWeightLabel": "Bag weight (kg)",
+    "submit": "Build shipment",
+    "submitting": "Building...",
+    "noContracts": "No signed contracts to ship yet. Sign a contract first.",
+    "contractOption": "{contractNo} · {buyer}"
+  },
+  "loading": {
+    "board": "Loading shipments",
+    "detail": "Loading shipment"
+  },
+  "detail": {
+    "back": "All shipments",
+    "eyebrow": "Export consignment",
+    "title": "Shipment {shipmentNo}",
+    "subtitle": "Load the contract lines, then issue the five-document pack in order.",
+    "consignee": "Consignee",
+    "noBuyer": "Unassigned",
+    "contract": "Contract",
+    "port": "Port of loading",
+    "bagWeight": "Bag weight",
+    "bagWeightValue": "{kg} kg / bag",
+    "totals": "{bags} bags · {kg} kg net"
+  },
+  "lines": {
+    "title": "Loaded lines",
+    "empty": "No lines loaded yet. Add a contract line to claim its bags.",
+    "lot": "Lot",
+    "bags": "Bags",
+    "netKg": "Net kg",
+    "lockedTitle": "Lines are locked",
+    "lockedNote": "Lines can only be loaded while a shipment is still building.",
+    "addTitle": "Load a contract line",
+    "pickLine": "Contract line",
+    "linePlaceholder": "Select a lot",
+    "lineOption": "{lot} · {kg} kg reserved",
+    "bagsLabel": "Bags",
+    "add": "Load line",
+    "adding": "Loading...",
+    "noLoadable": "Every contract line is already loaded.",
+    "netHint": "{bags} bags x {bagWeight} kg = {netKg} kg net"
+  },
+  "pack": {
+    "title": "Document pack",
+    "subtitle": "Red means a prerequisite is unmet. Green means issued. The bill of lading unlocks only after the other four.",
+    "issueAll": "Issue full pack",
+    "issuingAll": "Issuing pack...",
+    "allClear": "All five documents are clear to issue.",
+    "someBlocked": "Some documents are still blocked by their prerequisites.",
+    "noLines": "Load at least one contract line before issuing documents."
+  },
+  "doc": {
+    "commercial_invoice": "Commercial invoice",
+    "certificate_of_origin": "ICO certificate of origin",
+    "phytosanitary": "MIDA phytosanitary",
+    "packing_list": "Packing list",
+    "bill_of_lading": "Bill of lading"
+  },
+  "tile": {
+    "issuedTag": "Issued",
+    "readyTag": "Ready",
+    "blockedTag": "Blocked",
+    "lockedTag": "Chain-locked",
+    "docNo": "Doc {docNo}",
+    "issue": "Issue",
+    "issuing": "Issuing...",
+    "reissue": "Re-issue",
+    "unmetTitle": "Blocked until:",
+    "ready": "Prerequisites met. Ready to issue.",
+    "issuedAt": "Issued {date}"
+  },
+  "issued": {
+    "title": "Issued documents",
+    "empty": "No documents issued yet.",
+    "docNo": "Doc no.",
+    "view": "View payload"
+  },
+  "errors": {
+    "generic": "Could not complete that. Check the details and try again.",
+    "contractRequired": "Select a contract to build the shipment.",
+    "bagsPositive": "Enter a bag count greater than zero.",
+    "bagWeightPositive": "Bag weight must be greater than zero.",
+    "shipmentRequired": "That shipment could not be found.",
+    "lineRequired": "Select a contract line to load.",
+    "docRequired": "Choose a document to issue.",
+    "access": "You do not have access to this shipment.",
+    "duplicate": "That was already recorded."
+  }
+}

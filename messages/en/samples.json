@@ -1,0 +1,92 @@
+{
+  "page": {
+    "title": "Samples",
+    "subtitle": "Every green sample out the door and where the buyer's verdict stands on each one."
+  },
+  "summary": {
+    "open": "Open samples",
+    "openSub": "{count} awaiting a verdict",
+    "preShipment": "Pre-shipment",
+    "preShipmentSub": "Drawn from inventory",
+    "documentation": "Offer & type",
+    "documentationSub": "Tracked, no draw",
+    "lots": "Lots sampled",
+    "lotsSub": "Distinct green lots"
+  },
+  "empty": {
+    "title": "No open samples",
+    "description": "Log a sample to a buyer and it stays here until they send a verdict back."
+  },
+  "kind": {
+    "offer": "Offer",
+    "pre_shipment": "Pre-shipment",
+    "type": "Type",
+    "arbitration": "Arbitration"
+  },
+  "card": {
+    "noBuyer": "Spec / type sample",
+    "grams": "Grams",
+    "gramsValue": "{grams} g",
+    "grade": "Grade",
+    "noGrade": "Ungraded",
+    "score": "Score",
+    "noScore": "Not cupped",
+    "scoreValue": "{score}",
+    "courier": "Courier",
+    "dispatched": "Sent {date}",
+    "track": "Track shipment →",
+    "noTracking": "No tracking number yet",
+    "reserveTag": "Reserve band",
+    "unlockNote": "Approving this pre-shipment sample unlocks the contract sign for {lot}.",
+    "verdict": "Record verdict"
+  },
+  "log": {
+    "open": "Log a sample",
+    "title": "Log a sample",
+    "lotLabel": "Green lot",
+    "lotPlaceholder": "Pick a green lot",
+    "buyerLabel": "Buyer",
+    "buyerNone": "No buyer (spec / type sample)",
+    "kindLabel": "Sample kind",
+    "gramsLabel": "Grams",
+    "gramsHint": "A pre-shipment draw pulls these grams from the lot's available kilos.",
+    "courierLabel": "Courier",
+    "courierPlaceholder": "DHL, FedEx, UPS...",
+    "trackingLabel": "Tracking number",
+    "trackingPlaceholder": "Optional",
+    "submit": "Log sample",
+    "submitting": "Logging...",
+    "logged": "Sample logged.",
+    "cancel": "Cancel"
+  },
+  "verdict": {
+    "open": "Record verdict",
+    "title": "Record the buyer's verdict",
+    "body": "What did {buyer} say about the {kind} sample of {lot}?",
+    "noBuyer": "the buyer",
+    "verdictLabel": "Verdict",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "counter": "Counter",
+    "scoreLabel": "Buyer score",
+    "scoreHint": "0 to 100, optional.",
+    "scorePlaceholder": "e.g. 92",
+    "unlockNote": "An approved pre-shipment sample is what lets a reserve contract be signed.",
+    "submit": "Save verdict",
+    "submitting": "Saving...",
+    "saved": "Verdict saved.",
+    "cancel": "Cancel"
+  },
+  "errors": {
+    "lotRequired": "Pick a green lot to sample.",
+    "kindRequired": "Choose the sample kind.",
+    "gramsPositive": "Grams must be greater than zero.",
+    "sampleRequired": "Pick a sample to record a verdict on.",
+    "verdictRequired": "Choose approved, rejected, or counter.",
+    "scoreRange": "A buyer score must be between 0 and 100.",
+    "generic": "Could not save that. Check the details and try again."
+  },
+  "loading": {
+    "board": "Loading samples"
+  }
+}

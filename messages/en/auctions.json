@@ -1,0 +1,145 @@
+{
+  "page": {
+    "title": "Auctions",
+    "subtitle": "Your highest-multiplier channel. Enter a lot, capture the jury, watch it clear above the C."
+  },
+  "summary": {
+    "total": "Auctions",
+    "totalSub": "{count} on the calendar",
+    "live": "In play",
+    "liveSub": "entered or scoring",
+    "sold": "Cleared",
+    "soldSub": "results posted",
+    "bestMultiplier": "Best multiple",
+    "bestMultiplierSub": "over the commodity C"
+  },
+  "status": {
+    "entered": "Entered",
+    "scored": "Scoring",
+    "live": "Live",
+    "sold": "Cleared",
+    "withdrawn": "Withdrawn"
+  },
+  "platform": {
+    "best_of_panama": "Best of Panama",
+    "cup_of_excellence": "Cup of Excellence",
+    "algrano": "Algrano",
+    "private": "Private auction"
+  },
+  "card": {
+    "entries": "{count} lots entered",
+    "entriesOne": "1 lot entered",
+    "noEntries": "No lots entered yet",
+    "cleared": "Cleared {price}/kg",
+    "multiplier": "{mult}× the C",
+    "multiplierPending": "Multiple pending a C mark",
+    "deadlineEntry": "Entries close {date}",
+    "deadlineScoring": "Scoring by {date}",
+    "noDeadline": "No deadline set",
+    "open": "Open auction"
+  },
+  "empty": {
+    "title": "No auctions yet",
+    "description": "Start an auction, enter a green lot, and the jury scores and clearing price live here. The result seeds the next Geisha's reserve price."
+  },
+  "loading": {
+    "board": "Loading auctions",
+    "detail": "Loading auction"
+  },
+  "new": {
+    "open": "New auction",
+    "title": "Start an auction",
+    "platformLabel": "Platform",
+    "nameLabel": "Auction name",
+    "namePlaceholder": "Best of Panama 2026",
+    "entryDeadlineLabel": "Entries close",
+    "scoringDeadlineLabel": "Scoring by",
+    "create": "Create auction",
+    "creating": "Creating…",
+    "cancel": "Cancel"
+  },
+  "detail": {
+    "eyebrow": "Auction",
+    "back": "Back to auctions",
+    "lotsHeading": "Lots in this round",
+    "noEntries": "No lots entered yet. Enter one to start the round.",
+    "entryDeadline": "Entries close {date}",
+    "scoringDeadline": "Scoring by {date}"
+  },
+  "enter": {
+    "heading": "Enter a lot",
+    "subheading": "Pick a green lot and the weight to commit. Entering reserves it, so it can't be sold twice.",
+    "lotLabel": "Green lot",
+    "lotPlaceholder": "Choose a lot",
+    "lotOption": "{lot} · {variety} · cup {score}",
+    "kgLabel": "Kilograms to enter",
+    "atpHint": "{kg} kg available",
+    "noLots": "No green lots with weight left to enter.",
+    "submit": "Enter lot",
+    "confirmTitle": "Enter this lot?",
+    "confirmBody": "Entering reserves {kg} kg of {lot} for {auction}. It leaves the available pool right away.",
+    "atpBefore": "Now",
+    "atpAfter": "After",
+    "atpUnit": "kg left",
+    "irreversible": "This commits green inventory. The next buyer sees the lower number.",
+    "confirm": "Enter and reserve",
+    "entering": "Entering…",
+    "cancel": "Not yet",
+    "entered": "Lot entered"
+  },
+  "entry": {
+    "farmScore": "Farm cup",
+    "juryScore": "Jury score",
+    "panelScore": "Panel avg",
+    "notScored": "Not scored yet",
+    "kg": "{kg} kg entered",
+    "cleared": "Cleared at",
+    "clearedValue": "{price}/kg",
+    "multiplier": "{mult}× the commodity C",
+    "baseline": "Commodity baseline {price}/kg",
+    "noBaseline": "No C mark yet, so the multiple is pending",
+    "winner": "Won by {bidder}",
+    "open": "Open",
+    "marks": "{count} marks · {jurors} jurors",
+    "noMarks": "No jury marks yet"
+  },
+  "score": {
+    "heading": "Score this lot",
+    "jurorLabel": "Juror",
+    "jurorPlaceholder": "Juror name",
+    "attributeLabel": "Attribute",
+    "attributePlaceholder": "Aroma, flavour, acidity…",
+    "scoreLabel": "Score",
+    "dialLabel": "Score, 0 to 100",
+    "submit": "Add mark",
+    "adding": "Adding…",
+    "added": "Mark added"
+  },
+  "result": {
+    "open": "Record result",
+    "title": "Record the auction result",
+    "body": "This posts {lot}'s clearing price, seeds the comp library, and books the sale. Make sure the numbers are final.",
+    "juryLabel": "Final jury score",
+    "clearingLabel": "Clearing price (USD/kg)",
+    "bidderLabel": "Winning bidder",
+    "bidderPlaceholder": "Roaster or importer",
+    "yearLabel": "Result year",
+    "irreversible": "This is final. The clearing price becomes a comp for the next Geisha and books a reserve sale.",
+    "confirm": "Record result",
+    "recording": "Recording…",
+    "recorded": "Result recorded",
+    "cancel": "Cancel"
+  },
+  "errors": {
+    "nameRequired": "Name the auction.",
+    "platformRequired": "Pick a platform.",
+    "lotRequired": "Choose a green lot to enter.",
+    "kgPositive": "Kilograms must be greater than zero.",
+    "jurorRequired": "Enter the juror's name.",
+    "attributeRequired": "Name the attribute scored.",
+    "scoreRange": "Score has to be between 0 and 100.",
+    "clearingPositive": "Enter a clearing price greater than zero.",
+    "entryRequired": "Pick the entry to record.",
+    "generic": "Could not save that. Check the numbers and try again."
+  }
+}

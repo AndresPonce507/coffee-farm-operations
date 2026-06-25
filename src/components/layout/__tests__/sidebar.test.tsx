@@ -126,4 +126,32 @@ describe("Sidebar", () => {
       "/hedge",
     );
   });
+
+  it("surfaces the P3 Wave 1 commerce cluster in the nav (offers, contracts, fixation, samples, auctions, shipments)", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /Offers/ })).toHaveAttribute(
+      "href",
+      "/sales/offers",
+    );
+    expect(screen.getByRole("link", { name: /Contracts/ })).toHaveAttribute(
+      "href",
+      "/sales/contracts",
+    );
+    expect(screen.getByRole("link", { name: /Fixation/ })).toHaveAttribute(
+      "href",
+      "/sales/fixation",
+    );
+    expect(screen.getByRole("link", { name: /Samples/ })).toHaveAttribute(
+      "href",
+      "/sales/samples",
+    );
+    expect(screen.getByRole("link", { name: /Auctions/ })).toHaveAttribute(
+      "href",
+      "/sales/auctions",
+    );
+    expect(screen.getByRole("link", { name: /Shipments/ })).toHaveAttribute(
+      "href",
+      "/sales/shipments",
+    );
+  });
 });

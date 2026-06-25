@@ -26,6 +26,12 @@ import {
   Banknote,
   TrendingUp,
   Anchor,
+  Megaphone,
+  FileSignature,
+  Lock,
+  TestTube2,
+  Gavel,
+  Ship,
 } from "lucide-react";
 import { JansonLogo } from "./logo";
 import { BRAND } from "@/lib/brand";
@@ -53,6 +59,13 @@ export const NAV = [
   { href: "/qc", key: "qc", icon: Award },
   { href: "/pricing", key: "pricing", icon: TrendingUp },
   { href: "/hedge", key: "hedge", icon: Anchor },
+  // P3 Wave 1 commerce cluster — offer board, contracts, fixation, samples, auctions, export
+  { href: "/sales/offers", key: "offers", icon: Megaphone },
+  { href: "/sales/contracts", key: "contracts", icon: FileSignature },
+  { href: "/sales/fixation", key: "fixation", icon: Lock },
+  { href: "/sales/samples", key: "samples", icon: TestTube2 },
+  { href: "/sales/auctions", key: "auctions", icon: Gavel },
+  { href: "/sales/shipments", key: "shipments", icon: Ship },
   { href: "/satellite", key: "satellite", icon: Satellite },
   { href: "/scouting", key: "scouting", icon: Bug },
   { href: "/costing", key: "costing", icon: Coins },

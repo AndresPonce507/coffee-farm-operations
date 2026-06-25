@@ -30,6 +30,8 @@ export const NAMESPACES = [
   "costing", "crew", "dashboard", "dispatch", "drying", "eudr", "ferment",
   "harvests", "hedge", "inventory", "ipm", "lots", "payPeriod", "payroll", "planning",
   "plots", "pricing", "processing", "qc", "satellite", "tasks", "weigh", "workers",
+  // P3 Wave 1 commerce cluster (S1 trade trunk, S2 samples, S3 export docs, S4 auctions)
+  "sales", "samples", "shipments", "auctions",
 ] as const;
 
 export function isLocale(value: unknown): value is Locale {
