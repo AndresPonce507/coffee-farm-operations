@@ -48,6 +48,13 @@ export const DIRECT_TENANT_TABLES = [
   // P3-S4 specialty auctions — the auction header (no tenant-carrying parent FK;
   // tenant_id default current_tenant_id(), RPC-only writes).
   "auctions", // specialty_auctions.sql — BoP/CoE/Algrano auction header
+  // P3-S7 dry-mill readiness — the dry-mill chain registry (no tenant-carrying parent
+  // FK; tenant_id default current_tenant_id(), owner-seeded read-only).
+  "mill_machines", // dry_milling_readiness.sql — huller→…→optical-sorter registry
+  // P3-S10 roasting — the roaster registry + the versioned golden-curve library. No
+  // tenant-carrying parent FK; tenant_id default current_tenant_id(), RPC/seed writes.
+  "roasters", // roasting.sql — per-tenant roaster registry (seeded, read-only)
+  "roast_profiles", // roasting.sql — versioned golden-curve library (one-way status lock)
 ] as const;
 
 /**
@@ -116,6 +123,27 @@ export const INHERITED_TENANT_TABLES = [
   "export_shipments", // export_doc_pack.sql — via sales_contracts
   "export_shipment_lines", // export_doc_pack.sql — via export_shipments + green_lots
   "export_documents", // export_doc_pack.sql — via export_shipments (append-only legal ledger)
+  // P3-S7 dry-mill readiness + run skeleton — both bind to the parchment lot via the
+  // composite (tenant_id, parchment_lot_code) -> lots(tenant_id, code) FK.
+  "mill_readiness", // dry_milling_readiness.sql — the pre-mill reposo/spec gate (append-only)
+  "milling_runs", // dry_milling_readiness.sql — one parchment lot through the chain
+  // P3-S8 machine-pass chain + byproducts — passes inherit via run_id -> milling_runs;
+  // byproducts via run_id -> milling_runs AND the minted (tenant_id, byproduct_lot_code)
+  // -> lots composite FK. Both RPC-only-write, append-only ledgers.
+  "mill_passes", // dry_milling_passes.sql — the ordered machine-chain ledger
+  "mill_byproducts", // dry_milling_passes.sql — each byproduct = its own conserved lots node
+  // P3-S9 finalize — the SCA green-grade ledger inherits via the green lot composite
+  // (tenant_id, green_lot_code) -> green_lots(tenant_id, lot_code) FK. Append-only,
+  // RPC-only write (finalize_milling_run auto-grades; record_green_grade re-grades).
+  "mill_grade", // dry_milling_finalize.sql — SCA Arabica green grade (sca_prep GENERATED)
+  // P3-S10 roasting — the roasted-node header inherits via the green lot composite
+  // (tenant_id, green_lot_code) -> green_lots; the .alog capture ledgers + roast SKUs
+  // inherit via batch_id -> roast_batches. All RPC-only-write.
+  "roast_batches", // roasting.sql — the roasted lots-node header (shrinkage_pct GENERATED)
+  "roast_curve_points", // roasting.sql — Artisan .alog BT/ET/RoR time-series (append-only)
+  "roast_events", // roasting.sql — roast phase markers (append-only)
+  "roast_alog_imports", // roasting.sql — .alog receipt + deviation-vs-golden (append-only)
+  "roast_skus", // roasting.sql — roast→product link for the per-bag QR
 ] as const;
 
 /**
