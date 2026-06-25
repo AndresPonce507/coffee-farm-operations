@@ -103,6 +103,7 @@ const KIND_TO_ACTION_FILES: Record<string, string[]> = {
   "crew-event": ["app/crew/actions.ts"],
   "plan-event": ["app/plan/actions.ts"],
   "eudr-declaration": ["app/eudr/actions.ts"],
+  "fixation-locked": ["app/hedge/actions.ts"],
 };
 
 /** Resolve a KIND_TO_ACTION_FILES path to an absolute path on disk. */

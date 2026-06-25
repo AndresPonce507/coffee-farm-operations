@@ -35,6 +35,12 @@ export const DIRECT_TENANT_TABLES = [
   // hash-chained but FK-carrying ledgers; still DIRECT-stamped at append (head-select keys on stream_key)
   "weigh_event", // weigh_capture.sql:91
   "attendance_event", // people_system.sql:61
+  // P3-S0 pricing spine — market-data ledgers + versioned rule config. No
+  // tenant-carrying parent FK; tenant_id default current_tenant_id(), RPC-only writes.
+  "ice_c_quotes", // dual_regime_pricing.sql — ICE "C" marks (append-only)
+  "auction_comps", // dual_regime_pricing.sql — reserve comp library (append-only)
+  "differential_schedule", // dual_regime_pricing.sql — commodity bands (versioned)
+  "reserve_price_model", // dual_regime_pricing.sql — reserve coefficients (versioned)
 ] as const;
 
 /**
@@ -86,6 +92,9 @@ export const INHERITED_TENANT_TABLES = [
   // FK-inherited shape as the rest of this group, so it belongs in the scoping loop.
   // The static parity guard (§8 block 4) would RED the suite if it were missing.
   "crew_plot",
+  // P3-S0 pricing spine — binding price tables (inherit via the green lot / quote).
+  "price_quotes", // dual_regime_pricing.sql — via green_lots (tenant,lot_code) composite FK
+  "fixations", // dual_regime_pricing.sql — via price_quotes + lot_reservations
 ] as const;
 
 /**

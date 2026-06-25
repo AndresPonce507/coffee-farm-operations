@@ -1,0 +1,123 @@
+{
+  "page": {
+    "title": "Precios",
+    "subtitle": "Lo que vale cada lote de verde. Los cafés de reserva por su propio mérito, los comerciales contra la C"
+  },
+  "summary": {
+    "lots": "Lotes con precio",
+    "lotsSub": "{count} de verde en el libro",
+    "reserve": "Lotes de reserva",
+    "reserveSub": "de un solo origen, fuera de la C",
+    "commodity": "Lotes comerciales",
+    "commoditySub": "la C más un diferencial",
+    "atp": "Disponible para vender",
+    "atpSub": "kg en todo el libro"
+  },
+  "regime": {
+    "reserve": "Reserva",
+    "commodity": "Comercial",
+    "reserveTag": "Reserva · {variety}",
+    "commodityTag": "Comercial · C + dif"
+  },
+  "card": {
+    "indicative": "Precio indicativo",
+    "perKg": "{price}/kg",
+    "cogsFloor": "Piso de costo",
+    "cogsFloorValue": "{price}/kg verde",
+    "cogsUnknown": "Costo aún sin registrar",
+    "margin": "Margen",
+    "marginUnknown": "Margen desconocido",
+    "atpRemaining": "{kg} kg disponibles",
+    "atpNone": "Todo comprometido",
+    "score": "Taza {score}",
+    "noScore": "Sin catar todavía",
+    "compStory": "Comp más cercano: {auction}",
+    "compStoryValue": "{price}/kg",
+    "compStorySub": "{variety} · {process} · {score} pts · {year}",
+    "noComp": "Aún no hay comp de subasta",
+    "open": "Abrir compositor",
+    "priceUnknown": "Precio a la espera de una marca de la C"
+  },
+  "empty": {
+    "title": "Aún no hay lotes de verde para cotizar",
+    "description": "Califica un lote a verde y aparece aquí. Los cafés de reserva se cotizan por taza y escasez, los comerciales contra la C del día."
+  },
+  "loading": {
+    "board": "Cargando el libro de precios",
+    "composer": "Cargando el compositor de cotizaciones"
+  },
+  "composer": {
+    "eyebrow": "Compositor de cotizaciones",
+    "title": "Cotizar {lot}",
+    "back": "Volver al libro de precios",
+    "reserveRegime": "Café de reserva, cotizado por su propio mérito",
+    "commodityRegime": "Café comercial, cotizado contra la C",
+    "atpLine": "{kg} kg disponibles para vender",
+    "cogsLine": "Piso de costo {price}/kg verde",
+    "cogsUnknownLine": "Sin costo registrado, así que el margen sale como desconocido",
+    "marginFloorLine": "Piso: no puedes cotizar por debajo de {price}/kg ({pct} sobre el costo)",
+    "kgLabel": "Kilogramos a cotizar",
+    "currencyLabel": "Moneda de liquidación",
+    "fxLabel": "Cambio a USD",
+    "indicativeLine": "Indicativo {price}/kg",
+    "marginLine": "Margen {pct}",
+    "marginUnknownLine": "Margen desconocido hasta registrar un costo",
+    "quote": "Guardar cotización",
+    "quoting": "Guardando…",
+    "quoted": "Cotización guardada",
+    "cancel": "Cancelar"
+  },
+  "commodity": {
+    "story": "La historia de la C",
+    "currentC": "C actual",
+    "currentCValue": "{price}/lb",
+    "contractMonth": "Contrato {month}",
+    "differential": "Diferencial sobre la C",
+    "differentialValue": "+{value}/lb",
+    "perLb": "{price}/lb",
+    "perKg": "{price}/kg",
+    "buildLine": "(C {c} + dif {diff})/lb × {factor} lb/kg",
+    "noMark": "Aún no hay marca de la C. Escribe el cierre de la mañana para cotizar.",
+    "sparkLabel": "Precio de la C, marcas recientes"
+  },
+  "reserve": {
+    "story": "La construcción del precio",
+    "base": "Base",
+    "coefficient": "Premio por taza",
+    "coefficientLine": "{coef}/pt × ({score} − {pivot} pts)",
+    "scarcity": "Escasez",
+    "modeled": "Precio modelado",
+    "override": "Precio manual",
+    "overrideHint": "Déjalo en blanco para tomar el precio modelado",
+    "comp": "Comp de subasta",
+    "compLine": "{auction} · {variety} · {score} pts ({year})",
+    "compValue": "{price}/kg",
+    "noModel": "Aún no hay modelo de reserva configurado",
+    "noComp": "Aún no hay comp de subasta"
+  },
+  "accept": {
+    "open": "Aceptar cotización",
+    "title": "¿Aceptar esta cotización?",
+    "body": "Al aceptar, reservas {kg} kg de {lot} para este comprador.",
+    "atpBefore": "Ahora",
+    "atpAfter": "Después",
+    "atpUnit": "kg disponibles",
+    "buyerLabel": "Comprador",
+    "buyerPlaceholder": "Nombre del tostador o importador",
+    "confirm": "Aceptar y reservar",
+    "accepting": "Aceptando…",
+    "cancel": "Todavía no",
+    "accepted": "Cotización aceptada",
+    "irreversible": "Esto compromete inventario de verde. El siguiente comprador ve el número más bajo de inmediato."
+  },
+  "errors": {
+    "kgRequired": "Indica cuántos kilogramos vas a cotizar.",
+    "kgPositive": "Los kilogramos deben ser mayores que cero.",
+    "currencyRequired": "Elige una moneda de liquidación.",
+    "fxPositive": "El tipo de cambio debe ser mayor que cero.",
+    "contractRequired": "Elige el mes de contrato de la C contra el cual cotizar.",
+    "buyerRequired": "Escribe el nombre del comprador para aceptar.",
+    "quoteRequired": "Elige la cotización a aceptar.",
+    "generic": "No se pudo guardar esa cotización. Revisa los números e inténtalo de nuevo."
+  }
+}

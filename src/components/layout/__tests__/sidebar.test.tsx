@@ -110,4 +110,20 @@ describe("Sidebar", () => {
       "/dispatch",
     );
   });
+
+  it("surfaces the P3-S0 pricing route in the nav (Pricing → /pricing)", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /Pricing/ })).toHaveAttribute(
+      "href",
+      "/pricing",
+    );
+  });
+
+  it("surfaces the P3-S0 hedge route in the nav (Hedge → /hedge)", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /Hedge/ })).toHaveAttribute(
+      "href",
+      "/hedge",
+    );
+  });
 });

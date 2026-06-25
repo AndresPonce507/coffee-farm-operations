@@ -24,6 +24,8 @@ import {
   Satellite,
   Bug,
   Banknote,
+  TrendingUp,
+  Anchor,
 } from "lucide-react";
 import { JansonLogo } from "./logo";
 import { BRAND } from "@/lib/brand";
@@ -49,6 +51,8 @@ export const NAV = [
   { href: "/drying", key: "drying", icon: Wind },
   { href: "/inventory", key: "inventory", icon: Boxes },
   { href: "/qc", key: "qc", icon: Award },
+  { href: "/pricing", key: "pricing", icon: TrendingUp },
+  { href: "/hedge", key: "hedge", icon: Anchor },
   { href: "/satellite", key: "satellite", icon: Satellite },
   { href: "/scouting", key: "scouting", icon: Bug },
   { href: "/costing", key: "costing", icon: Coins },

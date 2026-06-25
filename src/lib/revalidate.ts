@@ -44,7 +44,9 @@ export type EventKind =
   | "inventory-update"
   | "crew-event"
   | "plan-event"
-  | "eudr-declaration";
+  | "eudr-declaration"
+  // P3 pricing write paths
+  | "fixation-locked";
 
 /**
  * Per-event downstream consumer routes (the §2 propagation-contract table). Each
@@ -110,6 +112,10 @@ export const RIPPLE: Record<EventKind, readonly string[]> = {
   // EUDR declaration -- deforestation-free assertion on a lot. Also moves the plot
   // dossier EUDR FactChip (/plots/[id] reads the deforestation_free column the action sets).
   "eudr-declaration": ["/eudr", "/lots/[code]", "/plots/[id]"],
+  // Fixation locked -- commits a commodity hedge price; moves the hedge cockpit (un-fixed
+  // list shrinks), the price book (/pricing), per-lot price composer (/pricing/[lot]),
+  // and the lot dossier commercial history (/lots/[code]).
+  "fixation-locked": ["/hedge", "/pricing", "/pricing/[lot]", "/lots/[code]"],
 };
 
 /**

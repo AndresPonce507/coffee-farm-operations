@@ -28,8 +28,8 @@ export const LOCALE_LABEL: Record<Locale, string> = {
 export const NAMESPACES = [
   "common", "ui", "layout", "auth", "dossier", "map", "scouting", "audit",
   "costing", "crew", "dashboard", "dispatch", "drying", "eudr", "ferment",
-  "harvests", "inventory", "ipm", "lots", "payPeriod", "payroll", "planning",
-  "plots", "processing", "qc", "satellite", "tasks", "weigh", "workers",
+  "harvests", "hedge", "inventory", "ipm", "lots", "payPeriod", "payroll", "planning",
+  "plots", "pricing", "processing", "qc", "satellite", "tasks", "weigh", "workers",
 ] as const;
 
 export function isLocale(value: unknown): value is Locale {
