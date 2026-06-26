@@ -1,0 +1,112 @@
+{
+  "page": {
+    "title": "Tienda",
+    "subtitle": "SKU tostados con trazabilidad de la bolsa al lote, con inventario de producto terminado en vivo."
+  },
+  "summary": {
+    "products": "Productos",
+    "productsSub": "Maestros tostados",
+    "skus": "SKU",
+    "skusSub": "Bolsas ligadas a lote",
+    "onHand": "En mano",
+    "onHandSub": "Unidades en todos los SKU",
+    "reserve": "Club de Reserva",
+    "reserveSub": "Bolsas solo para suscriptores"
+  },
+  "empty": {
+    "title": "Aún no hay SKU en el catálogo",
+    "description": "Crea un producto tostado y luego liga una bolsa a un lote verde que tengas para empezar a venderla."
+  },
+  "card": {
+    "reserveClub": "Club de Reserva",
+    "tracesTo": "Trazado a",
+    "price": "Precio",
+    "gtin": "GTIN",
+    "onHand": "En mano",
+    "allocated": "Apartado",
+    "available": "Disponible",
+    "units": "unidades",
+    "inactive": "Inactivo"
+  },
+  "loading": {
+    "board": "Cargando el catálogo de la tienda"
+  },
+  "manage": {
+    "newProduct": "Nuevo producto",
+    "newSku": "Nuevo SKU",
+    "recordMovement": "Registrar movimiento"
+  },
+  "product": {
+    "title": "Nuevo producto tostado",
+    "slugLabel": "Identificador",
+    "slugHint": "El nombre corto para la URL, por ejemplo bop-geisha.",
+    "nameLabel": "Nombre",
+    "varietyLabel": "Variedad",
+    "processLabel": "Proceso",
+    "notesLabel": "Notas de cata",
+    "submit": "Crear producto",
+    "saving": "Creando…",
+    "created": "Producto creado.",
+    "another": "Agregar otro",
+    "cancel": "Cancelar"
+  },
+  "sku": {
+    "title": "Nuevo SKU ligado a lote",
+    "productLabel": "Producto",
+    "lotLabel": "Lote verde",
+    "lotHint": "Solo un lote que de verdad tengas puede respaldar una bolsa (es toda la cadena de origen de la bolsa).",
+    "lotAtp": "{kg} kg disponibles",
+    "lotNoAtp": "sin disponible",
+    "packLabel": "Formato",
+    "bagLabel": "Tamaño de bolsa",
+    "priceLabel": "Precio (USD)",
+    "gtinLabel": "GTIN",
+    "gtinHint": "La identidad GS1 de la etiqueta. Opcional hasta que vendas en tienda.",
+    "reserveLabel": "Bolsa Club de Reserva",
+    "submit": "Crear SKU",
+    "saving": "Creando…",
+    "created": "SKU creado.",
+    "another": "Agregar otro",
+    "cancel": "Cancelar",
+    "noProducts": "Crea un producto primero.",
+    "noLots": "Aún no hay lotes verdes para respaldar una bolsa."
+  },
+  "movement": {
+    "title": "Registrar un movimiento de producto terminado",
+    "skuLabel": "SKU",
+    "reasonLabel": "Motivo",
+    "unitsLabel": "Unidades",
+    "unitsHint": "Bolsas movidas. Una venta baja el inventario; la caja nunca puede quedar bajo cero.",
+    "directionLabel": "Dirección",
+    "directionAdd": "Agregar",
+    "directionRemove": "Quitar",
+    "submit": "Guardar movimiento",
+    "saving": "Registrando…",
+    "recorded": "Movimiento registrado.",
+    "another": "Registrar otro",
+    "cancel": "Cancelar",
+    "noSkus": "Crea un SKU primero.",
+    "reason": {
+      "roast-in": "Entrada de tueste",
+      "sale": "Venta",
+      "subscription-fulfill": "Entrega de suscripción",
+      "adjust": "Ajuste",
+      "return": "Devolución"
+    }
+  },
+  "errors": {
+    "slugRequired": "Escribe un identificador para el producto.",
+    "nameRequired": "Escribe un nombre para el producto.",
+    "productRequired": "Elige un producto para este SKU.",
+    "lotRequired": "Elige el lote verde que respalda esta bolsa.",
+    "packInvalid": "Elige un formato.",
+    "bagInvalid": "Elige un tamaño de bolsa.",
+    "priceInvalid": "Escribe un precio de cero o más.",
+    "skuRequired": "Elige un SKU para mover.",
+    "qtyInvalid": "Escribe un número de unidades distinto de cero.",
+    "reasonInvalid": "Elige un motivo del movimiento.",
+    "generic": "No se pudo guardar. Revisa los datos e inténtalo de nuevo.",
+    "access": "No tienes acceso para gestionar el catálogo.",
+    "duplicate": "Eso ya se había guardado."
+  }
+}

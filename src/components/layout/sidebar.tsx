@@ -35,6 +35,11 @@ import {
   Factory,
   Flame,
   BarChart2,
+  Store,
+  ShoppingCart,
+  Repeat2,
+  QrCode,
+  CreditCard,
 } from "lucide-react";
 import { JansonLogo } from "./logo";
 import { BRAND } from "@/lib/brand";
@@ -73,6 +78,12 @@ export const NAV = [
   { href: "/sales/samples", key: "samples", icon: TestTube2 },
   { href: "/sales/auctions", key: "auctions", icon: Gavel },
   { href: "/sales/shipments", key: "shipments", icon: Ship },
+  // P3 Wave 3 DTC commerce cluster — storefront SKUs, orders, Reserve Club, provenance, POS
+  { href: "/shop", key: "shop", icon: Store },
+  { href: "/orders", key: "orders", icon: ShoppingCart },
+  { href: "/subscriptions", key: "subscriptions", icon: Repeat2 },
+  { href: "/provenance", key: "provenance", icon: QrCode },
+  { href: "/pos", key: "pos", icon: CreditCard },
   { href: "/satellite", key: "satellite", icon: Satellite },
   { href: "/scouting", key: "scouting", icon: Bug },
   { href: "/costing", key: "costing", icon: Coins },

@@ -1,0 +1,112 @@
+{
+  "page": {
+    "title": "Storefront",
+    "subtitle": "Roasted SKUs traced bag-to-lot, with live finished-goods inventory."
+  },
+  "summary": {
+    "products": "Products",
+    "productsSub": "Roasted masters",
+    "skus": "SKUs",
+    "skusSub": "Lot-linked bags",
+    "onHand": "On hand",
+    "onHandSub": "Units across all SKUs",
+    "reserve": "Reserve Club",
+    "reserveSub": "Subscriber-only bags"
+  },
+  "empty": {
+    "title": "No SKUs in the catalog yet",
+    "description": "Mint a roasted product, then link a bag to a green lot you hold to start selling it."
+  },
+  "card": {
+    "reserveClub": "Reserve Club",
+    "tracesTo": "Traces to",
+    "price": "Price",
+    "gtin": "GTIN",
+    "onHand": "On hand",
+    "allocated": "Allocated",
+    "available": "Available",
+    "units": "units",
+    "inactive": "Inactive"
+  },
+  "loading": {
+    "board": "Loading the storefront catalog"
+  },
+  "manage": {
+    "newProduct": "New product",
+    "newSku": "New SKU",
+    "recordMovement": "Record movement"
+  },
+  "product": {
+    "title": "New roasted product",
+    "slugLabel": "Slug",
+    "slugHint": "The URL-safe handle, e.g. bop-geisha.",
+    "nameLabel": "Name",
+    "varietyLabel": "Variety",
+    "processLabel": "Process",
+    "notesLabel": "Tasting notes",
+    "submit": "Create product",
+    "saving": "Creating…",
+    "created": "Product created.",
+    "another": "Add another",
+    "cancel": "Cancel"
+  },
+  "sku": {
+    "title": "New lot-linked SKU",
+    "productLabel": "Product",
+    "lotLabel": "Green lot",
+    "lotHint": "Only a lot you actually hold can back a bag (it is the bag's whole provenance chain).",
+    "lotAtp": "{kg} kg available",
+    "lotNoAtp": "no ATP",
+    "packLabel": "Pack format",
+    "bagLabel": "Bag size",
+    "priceLabel": "Price (USD)",
+    "gtinLabel": "GTIN",
+    "gtinHint": "The GS1 bag-label identity. Optional until you sell through retail.",
+    "reserveLabel": "Reserve Club bag",
+    "submit": "Create SKU",
+    "saving": "Creating…",
+    "created": "SKU created.",
+    "another": "Add another",
+    "cancel": "Cancel",
+    "noProducts": "Create a product first.",
+    "noLots": "No green lots to back a bag yet."
+  },
+  "movement": {
+    "title": "Record a finished-goods movement",
+    "skuLabel": "SKU",
+    "reasonLabel": "Reason",
+    "unitsLabel": "Units",
+    "unitsHint": "Bags moved. A sale draws inventory down; the till can never go below zero.",
+    "directionLabel": "Direction",
+    "directionAdd": "Add",
+    "directionRemove": "Remove",
+    "submit": "Save movement",
+    "saving": "Recording…",
+    "recorded": "Movement recorded.",
+    "another": "Record another",
+    "cancel": "Cancel",
+    "noSkus": "Create a SKU first.",
+    "reason": {
+      "roast-in": "Roast-in",
+      "sale": "Sale",
+      "subscription-fulfill": "Subscription fulfil",
+      "adjust": "Adjustment",
+      "return": "Return"
+    }
+  },
+  "errors": {
+    "slugRequired": "Enter a slug for the product.",
+    "nameRequired": "Enter a name for the product.",
+    "productRequired": "Pick a product for this SKU.",
+    "lotRequired": "Pick the green lot this bag is backed by.",
+    "packInvalid": "Pick a pack format.",
+    "bagInvalid": "Pick a bag size.",
+    "priceInvalid": "Enter a price of zero or more.",
+    "skuRequired": "Pick a SKU to move.",
+    "qtyInvalid": "Enter a non-zero number of units.",
+    "reasonInvalid": "Pick a movement reason.",
+    "generic": "Could not save that. Check the details and try again.",
+    "access": "You don't have access to manage the catalog.",
+    "duplicate": "That was already saved."
+  }
+}

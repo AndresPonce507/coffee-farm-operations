@@ -170,4 +170,28 @@ describe("Sidebar", () => {
       "/yields",
     );
   });
+
+  it("surfaces the P3 Wave 3 DTC commerce cluster in the nav (shop, orders, subscriptions, provenance, pos)", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /Storefront/ })).toHaveAttribute(
+      "href",
+      "/shop",
+    );
+    expect(screen.getByRole("link", { name: /Orders/ })).toHaveAttribute(
+      "href",
+      "/orders",
+    );
+    expect(screen.getByRole("link", { name: /Reserve Club/ })).toHaveAttribute(
+      "href",
+      "/subscriptions",
+    );
+    expect(screen.getByRole("link", { name: /Provenance/ })).toHaveAttribute(
+      "href",
+      "/provenance",
+    );
+    expect(screen.getByRole("link", { name: /Point of sale/ })).toHaveAttribute(
+      "href",
+      "/pos",
+    );
+  });
 });

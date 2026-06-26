@@ -1,0 +1,82 @@
+{
+  "page": {
+    "title": "Point of sale",
+    "subtitle": "Farm store and café register. Rings up bags, charges ITBMS, and keeps selling when the wifi drops."
+  },
+  "summary": {
+    "sales": "Sales",
+    "salesSub": "rung up recently",
+    "gross": "Gross",
+    "grossSub": "incl. ITBMS",
+    "tax": "ITBMS collected",
+    "taxSub": "7% statutory",
+    "catalog": "On the shelf",
+    "catalogSub": "{count} SKUs in stock"
+  },
+  "empty": {
+    "noTerminals": {
+      "title": "No register set up yet",
+      "description": "Register a till for the Janson Farm Store or Lagunas Café to start ringing up sales."
+    },
+    "noSales": {
+      "title": "No sales yet today",
+      "description": "Tap a bag on the register to ring up the first sale of the day."
+    }
+  },
+  "register": {
+    "heading": "Register",
+    "terminalLabel": "Till",
+    "catalogHeading": "Tap to add",
+    "noSkus": "No bags in stock. Roast and stock a SKU first.",
+    "available": "{count} in stock",
+    "outOfStock": "Sold out",
+    "addAria": "Add {name} to the sale",
+    "reserveTag": "Reserve Club",
+    "customerLabel": "Customer (optional)",
+    "customerPlaceholder": "Walk-in",
+    "cart": {
+      "heading": "This sale",
+      "empty": "Tap a bag to start the sale.",
+      "qtyDecAria": "One fewer {name}",
+      "qtyIncAria": "One more {name}",
+      "removeAria": "Remove {name} from the sale",
+      "subtotal": "Subtotal",
+      "tax": "ITBMS (7%)",
+      "total": "Total",
+      "previewNote": "The till confirms the final total when the sale is recorded."
+    },
+    "cobrar": "Charge",
+    "cobrando": "Recording…",
+    "folio": "Sale {sale} recorded.",
+    "another": "New sale",
+    "clear": "Clear",
+    "offlineQueued": "Saved offline. It will sync when the wifi returns.",
+    "queuedBadge": "{count} waiting to sync",
+    "online": "Online",
+    "offline": "Offline",
+    "errors": {
+      "noTerminal": "Pick a till first.",
+      "emptyCart": "Add at least one bag to the sale.",
+      "generic": "That sale could not be recorded. Try again."
+    }
+  },
+  "history": {
+    "heading": "Recent sales",
+    "units": "{count} bags",
+    "subtotal": "Subtotal",
+    "tax": "ITBMS",
+    "total": "Total",
+    "fiscalPending": "Recibo (non-fiscal)",
+    "fiscalStamped": "Stamped {cufe}"
+  },
+  "status": {
+    "pending": "Pending",
+    "paid": "Paid",
+    "fulfilled": "Fulfilled",
+    "cancelled": "Cancelled",
+    "refunded": "Refunded"
+  },
+  "loading": {
+    "board": "Loading the register"
+  }
+}

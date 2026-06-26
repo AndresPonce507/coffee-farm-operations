@@ -71,8 +71,12 @@ describe("RehireButton", () => {
     );
     // …and the success confirmation is NEVER painted over the failure.
     expect(screen.queryByText("Welcome back")).not.toBeInTheDocument();
-    // The button stays actionable so the tap can be retried.
-    expect(screen.getByRole("button", { name: /Rehire/i })).toBeEnabled();
+    // The button stays actionable so the tap can be retried. The transition's
+    // pending flag settles a tick after the error paints, so wait for the
+    // button to re-enable rather than asserting on the intermediate render.
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /Rehire/i })).toBeEnabled(),
+    );
   });
 
   it("surfaces a fallback error and stays actionable when the action throws", async () => {
@@ -92,7 +96,9 @@ describe("RehireButton", () => {
       expect(screen.getByRole("alert")).toBeInTheDocument(),
     );
     expect(screen.queryByText("Welcome back")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Rehire/i })).toBeEnabled();
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /Rehire/i })).toBeEnabled(),
+    );
   });
 
   it("does not call the action when disabled", () => {

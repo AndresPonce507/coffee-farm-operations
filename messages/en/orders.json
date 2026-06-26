@@ -1,0 +1,50 @@
+{
+  "page": {
+    "title": "Orders",
+    "subtitle": "Every DTC order, its server-computed total, and the cost floor behind each lot it ships."
+  },
+  "summary": {
+    "orders": "Orders",
+    "ordersSub": "{count} on the book",
+    "paid": "Paid",
+    "paidSub": "settled by Stripe",
+    "revenue": "Gross paid",
+    "revenueSub": "total of paid orders",
+    "pending": "Awaiting payment",
+    "pendingSub": "not yet settled"
+  },
+  "channel": {
+    "web": "Web",
+    "pos": "Store",
+    "wholesale": "Wholesale"
+  },
+  "status": {
+    "pending": "Pending",
+    "paid": "Paid",
+    "fulfilled": "Fulfilled",
+    "cancelled": "Cancelled",
+    "refunded": "Refunded"
+  },
+  "card": {
+    "order": "Order #{id}",
+    "noCustomer": "Guest checkout",
+    "lines": "Lines",
+    "linesValue": "{count}",
+    "subtotal": "Subtotal",
+    "tax": "ITBMS 7%",
+    "total": "Total",
+    "fiscalFolio": "Fiscal folio {cufe}",
+    "fiscalPending": "Pending fiscal stamp",
+    "cogsTitle": "Cost floor per lot",
+    "cogsValue": "{price}/kg green",
+    "cogsUnknown": "Cost not booked yet",
+    "qty": "{qty} units"
+  },
+  "empty": {
+    "title": "No orders yet",
+    "description": "When a customer checks out, the order lands here with its lot-level cost floor."
+  },
+  "loading": {
+    "board": "Loading orders"
+  }
+}

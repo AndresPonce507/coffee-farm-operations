@@ -1,0 +1,105 @@
+{
+  "page": {
+    "title": "Club Reserva",
+    "subtitle": "Cajas recurrentes, la asignación de lote verde detrás de cada ciclo y la cola de cobros."
+  },
+  "summary": {
+    "active": "Activas",
+    "activeSub": "cajas en envío",
+    "paused": "Pausadas",
+    "pausedSub": "en espera",
+    "pastDue": "Vencidas",
+    "pastDueSub": "pago fallido",
+    "allocatedKg": "Asignado",
+    "allocatedKgSub": "kg reservados a lotes"
+  },
+  "status": {
+    "active": "Activa",
+    "paused": "Pausada",
+    "past_due": "Vencida",
+    "cancelled": "Cancelada"
+  },
+  "cadence": {
+    "monthly": "Mensual",
+    "bi-monthly": "Cada 2 meses",
+    "quarterly": "Trimestral"
+  },
+  "card": {
+    "member": "Miembro del Club Reserva",
+    "customerFallback": "Miembro sin nombre",
+    "cadenceLabel": "Frecuencia",
+    "allocated": "Asignado",
+    "allocatedValue": "{kg} kg",
+    "dunning": "Cobros",
+    "dunningValue": "{count}",
+    "since": "Miembro desde {date}"
+  },
+  "controls": {
+    "manage": "Gestionar",
+    "pause": "Pausar",
+    "resume": "Reanudar",
+    "skip": "Saltar ciclo",
+    "cancel": "Cancelar",
+    "allocate": "Asignar ciclo",
+    "dunning": "Registrar cobro",
+    "busy": "Procesando",
+    "allocateTitle": "Asignar este ciclo",
+    "allocateBody": "Reserva café verde para la próxima caja de {cust}. Esto aparta kg del lote, así un microlote escaso nunca se promete dos veces.",
+    "lotLabel": "Lote verde",
+    "lotPlaceholder": "Elige un lote",
+    "lotOption": "{code} · {atp} kg libres",
+    "kgLabel": "Kilogramos",
+    "cycleLabel": "Etiqueta del ciclo",
+    "cyclePlaceholder": "ej. 2026-Q1",
+    "atpBefore": "Libre ahora",
+    "atpAfter": "Libre después",
+    "atpUnit": "kg disponibles para prometer",
+    "irreversible": "Esto aparta inventario verde. Corrígelo luego con un registro que lo sustituya, no con un borrado.",
+    "allocateCancel": "Cancelar",
+    "allocateConfirm": "Asignar",
+    "allocating": "Asignando",
+    "allocated": "Asignado",
+    "skipTitle": "Saltar un ciclo",
+    "skipBody": "Salta una entrega para {cust}. La suscripción sigue activa.",
+    "skipCycleLabel": "Etiqueta del ciclo",
+    "skipCancel": "Cancelar",
+    "skipConfirm": "Saltar",
+    "skipping": "Saltando",
+    "skipped": "Saltado",
+    "cancelTitle": "Cancelar esta suscripción",
+    "cancelBody": "Termina la caja del Club Reserva de {cust}. Las asignaciones existentes quedan en los libros.",
+    "cancelKeep": "Conservar",
+    "cancelConfirm": "Cancelar suscripción",
+    "cancelling": "Cancelando",
+    "dunningTitle": "Registrar un paso de cobro",
+    "dunningBody": "Registra un seguimiento de pago fallido para {cust}. Un paso final marca la suscripción como vencida.",
+    "stageLabel": "Etapa",
+    "stageSoft": "Primer aviso",
+    "stageReminder": "Recordatorio",
+    "stageFinal": "Aviso final",
+    "dunningCancel": "Cancelar",
+    "dunningConfirm": "Registrar",
+    "dunningSaving": "Guardando",
+    "dunningSaved": "Registrado"
+  },
+  "dunningQueue": {
+    "title": "Cola de cobros",
+    "description": "Suscripciones con un pago fallido que necesitan seguimiento.",
+    "empty": "Ningún pago necesita seguimiento ahora."
+  },
+  "empty": {
+    "title": "Todavía no hay suscripciones",
+    "description": "Las cajas del Club Reserva aparecen aquí con su tablero de asignación y la cola de cobros."
+  },
+  "loading": {
+    "board": "Cargando suscripciones"
+  },
+  "errors": {
+    "generic": "No se pudo guardar el cambio. Inténtalo de nuevo.",
+    "subRequired": "Elige una suscripción primero.",
+    "kgPositive": "Los kilogramos deben ser mayores que cero.",
+    "lotRequired": "Elige un lote verde para asignar.",
+    "cycleRequired": "Escribe una etiqueta de ciclo.",
+    "stageRequired": "Elige una etapa de cobro."
+  }
+}
