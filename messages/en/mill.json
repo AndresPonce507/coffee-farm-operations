@@ -1,0 +1,82 @@
+{
+  "page": {
+    "title": "Milling",
+    "subtitle": "The dry-mill readiness gate and run skeleton. A parchment lot cannot open a run until it is rested and in spec."
+  },
+  "summary": {
+    "stages": "Chain stages",
+    "stagesSub": "huller to optical sorter",
+    "cleared": "Cleared to mill",
+    "clearedSub": "rested and in spec",
+    "open": "Runs open",
+    "openSub": "milling now",
+    "finalized": "Runs finalized",
+    "finalizedSub": "green outturn booked"
+  },
+  "chain": {
+    "title": "Dry-mill chain",
+    "subtitle": "Five stages, parchment to export green.",
+    "hours": "{hours} h run",
+    "calibrationDue": "Calibration due {date}",
+    "calibrationOk": "No calibration due",
+    "empty": "No mill machines registered yet."
+  },
+  "status": {
+    "finalized": "Finalized",
+    "milling": "Milling",
+    "ready": "Ready to mill",
+    "blocked": "Gate closed"
+  },
+  "card": {
+    "reposo": "Reposo",
+    "reading": "Last reading {moisture}% moisture, aw {aw}",
+    "noReading": "No spec reading recorded yet",
+    "passed": "In spec",
+    "failed": "Out of spec",
+    "run": "Run #{id}",
+    "kgIn": "{kg} kg parchment in",
+    "outturn": "{out} kg green at {pct} outturn",
+    "gateNote": "Record an in-spec reading (moisture 10.5-11.5%, aw below 0.60, rested) to open a run."
+  },
+  "empty": {
+    "title": "No parchment lots in the mill pipeline",
+    "description": "When a lot finishes drying and rests as parchment it lands here, ready for the spec gate."
+  },
+  "loading": {
+    "board": "Loading the milling board"
+  },
+  "gate": {
+    "open": "Open milling run",
+    "title": "Reposo / spec gate",
+    "noLots": "No parchment lots are waiting for the mill right now.",
+    "lotLabel": "Parchment lot",
+    "reposoLabel": "Reposo clearance",
+    "reposoReady": "Rested, clear to mill",
+    "reposoNotReady": "Not yet cleared by reposo",
+    "moistureLabel": "Moisture %",
+    "moistureHint": "In spec from 10.5% to 11.5%.",
+    "awLabel": "Water activity (aw)",
+    "awHint": "In spec below 0.60.",
+    "previewPass": "This reading passes the gate.",
+    "previewFail": "This reading does not pass the gate yet.",
+    "previewReposo": "Blocked upstream: the lot is not reposo-cleared.",
+    "record": "Record reading",
+    "recording": "Recording...",
+    "recorded": "Reading recorded.",
+    "kgLabel": "Parchment kg in",
+    "kgHint": "The parchment mass entering the chain.",
+    "openRun": "Open run",
+    "opening": "Opening...",
+    "opened": "Milling run opened.",
+    "another": "Run another lot",
+    "cancel": "Close",
+    "blockedNote": "The run stays shut until a reading passes the gate. The database is the wall, not just this form."
+  },
+  "errors": {
+    "lotRequired": "Choose a parchment lot.",
+    "moisturePositive": "Enter a moisture reading.",
+    "awPositive": "Enter a water-activity reading.",
+    "kgPositive": "Enter the parchment kilograms.",
+    "generic": "Could not save that. Try again."
+  }
+}

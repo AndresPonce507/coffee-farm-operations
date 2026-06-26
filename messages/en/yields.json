@@ -1,0 +1,68 @@
+{
+  "page": {
+    "title": "Yield reference",
+    "subtitle": "How much mass survives each step from cherry to roasted bag. The house factors every milling and roasting run is measured against."
+  },
+  "summary": {
+    "stages": "Stages tracked",
+    "stagesSub": "{count} steps in the curve",
+    "millOutturn": "Mill outturn",
+    "millOutturnSub": "parchment → green",
+    "millOutturnNone": "Not seeded",
+    "roastShrinkage": "Roast shrinkage",
+    "roastShrinkageSub": "green → roasted",
+    "roastShrinkageNone": "Not seeded",
+    "cherryToGreen": "Cherry → green",
+    "cherryToGreenSub": "whole-chain survival",
+    "cherryToGreenNone": "Chain not complete"
+  },
+  "kind": {
+    "process": "Wet process",
+    "mill": "Dry mill",
+    "roast": "Roast",
+    "byproduct": "Byproduct"
+  },
+  "card": {
+    "flow": "{from} → {to}",
+    "retained": "{pct} retained",
+    "lost": "{pct} lost",
+    "factor": "factor × {factor}"
+  },
+  "legend": {
+    "title": "New transform edges",
+    "subtitle": "This release teaches the lot graph three new mass-conserved transforms. Each mill output, roast batch, and byproduct stream is now its own tracked edge, and the conservation guard still balances every gram.",
+    "millTitle": "Mill",
+    "mill": "Parchment becomes green, the screen-graded and gravity-sorted output of the dry mill.",
+    "roastTitle": "Roast",
+    "roast": "Green becomes roasted, shedding moisture as it develops.",
+    "byproductTitle": "Byproduct",
+    "byproduct": "Husk, chaff, screen rejects and defects, each tracked as its own stream so nothing quietly vanishes."
+  },
+  "calc": {
+    "title": "Outturn calculator",
+    "subtitle": "Project a parchment lot through the mill and the roaster. Numbers only, nothing is saved.",
+    "inputLabel": "Parchment in",
+    "unit": "kg",
+    "greenLabel": "Green after milling",
+    "greenHint": "{pct} of parchment",
+    "roastedLabel": "Roasted after roasting",
+    "roastedHint": "{pct} of green",
+    "note": "A planning estimate from the house yield curve. The real run posts its own measured mass and the conservation guard balances it."
+  },
+  "stage": {
+    "cherry": "Cherry",
+    "fermentation": "Fermentation",
+    "drying": "Drying",
+    "parchment": "Parchment",
+    "milled": "Milled",
+    "green": "Green",
+    "roasted": "Roasted"
+  },
+  "empty": {
+    "title": "No yield factors on file yet",
+    "description": "The house yield curve seeds with the milling and roasting schema. Once it lands, every step from cherry to bag shows here."
+  },
+  "loading": {
+    "board": "Loading yield reference"
+  }
+}

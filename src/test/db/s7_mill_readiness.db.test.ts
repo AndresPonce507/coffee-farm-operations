@@ -74,6 +74,7 @@ describe("P3-S7 no-mill-out-of-spec gate — a run cannot open without a passing
     await seedReposoReadyLot(h, "JC-310"); // rested, but we'll record OUT-of-spec moisture
     await seedUnrestedLot(h, "JC-320"); // perfect moisture/aw but NOT rested
     await seedReposoReadyLot(h, "JC-350"); // rested but NEVER gets a readiness row
+    await seedReposoReadyLot(h, "JC-360"); // passes, then re-measures FAILING (stale-pass regression)
   });
   afterAll(async () => h.close());
 
@@ -140,6 +141,37 @@ describe("P3-S7 no-mill-out-of-spec gate — a run cannot open without a passing
   it("REJECTS opening a run for a lot with NO readiness row at all", async () => {
     await expect(
       h.query(`select open_milling_run('JC-350', 90, 'run-350');`),
+    ).rejects.toThrow(/no-mill-out-of-spec|readiness|spec/i);
+  });
+
+  it("REJECTS opening a run when the LATEST re-measure FAILS, even though an earlier reading PASSED (stale-pass cannot reopen the gate)", async () => {
+    // mill_readiness is append-only and re-measurement is the correction path: a lot
+    // that passed, then degraded (e.g. moisture re-absorbed → 12.5% out of band) and
+    // got a NEW failing re-measure must NOT mill — the gate reads the LATEST row, not
+    // "any historical pass". v_mill_readiness already shows only the latest (FAIL), so
+    // the gate must agree with the panel.
+    await h.query(
+      `select record_mill_readiness('JC-360', 11.0, 0.55, now() - interval '2 hours', 'rdy-360-pass');`,
+    );
+    const firstPass = await h.query<{ passed: boolean }>(
+      `select passed from mill_readiness
+         where parchment_lot_code = 'JC-360' order by measured_at desc, id desc limit 1;`,
+    );
+    expect(firstPass[0].passed).toBe(true); // earlier reading PASSED
+
+    // later re-measure: moisture re-absorbed to 12.5% (out of the 11.5% ceiling) ⇒ FAIL.
+    await h.query(
+      `select record_mill_readiness('JC-360', 12.5, 0.55, now(), 'rdy-360-fail');`,
+    );
+    const latest = await h.query<{ passed: boolean }>(
+      `select passed from mill_readiness
+         where parchment_lot_code = 'JC-360' order by measured_at desc, id desc limit 1;`,
+    );
+    expect(latest[0].passed).toBe(false); // latest reading FAILS
+
+    // the gate must read the LATEST (FAIL), not the stale PASS.
+    await expect(
+      h.query(`select open_milling_run('JC-360', 90, 'run-360');`),
     ).rejects.toThrow(/no-mill-out-of-spec|readiness|spec/i);
   });
 });

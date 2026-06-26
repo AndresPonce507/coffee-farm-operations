@@ -224,15 +224,18 @@ begin
     return v_id;                                  -- exactly-once replay
   end if;
 
-  -- THE KEYSTONE GATE (invariant 2): a passing readiness (in-spec moisture + aw +
-  -- reposo-cleared) MUST exist for this lot, or the door stays shut.
-  select exists (
-    select 1 from mill_readiness
-     where tenant_id = v_tenant
-       and parchment_lot_code = p_parchment_lot_code
-       and passed
-  ) into v_passed;
-  if not v_passed then
+  -- THE KEYSTONE GATE (invariant 2): the LATEST readiness for this lot must pass
+  -- (in-spec moisture + aw + reposo-cleared), or the door stays shut. mill_readiness
+  -- is append-only and re-measurement IS the correction path, so a lot that passed,
+  -- then degraded and got a NEWER failing re-measure must NOT mill — gate on the most
+  -- recent measurement, NOT "any historical pass" (else a stale pass reopens the gate
+  -- and v_mill_readiness, which shows only the latest row, would disagree with it).
+  select passed into v_passed from mill_readiness
+   where tenant_id = v_tenant
+     and parchment_lot_code = p_parchment_lot_code
+   order by measured_at desc, id desc
+   limit 1;
+  if v_passed is null or not v_passed then
     raise exception
       'no-mill-out-of-spec: parchment lot % has no passing mill_readiness (need moisture 10.5-11.5%%, aw < 0.60, and reposo cleared) — cannot open a milling run',
       p_parchment_lot_code

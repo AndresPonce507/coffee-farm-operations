@@ -1,0 +1,113 @@
+{
+  "page": {
+    "eyebrow": "Trilla seca",
+    "title": "Balance de trilla",
+    "subtitle": "Corrida {run} · lote pergamino {lot}"
+  },
+  "back": "Volver al molino",
+  "status": {
+    "readiness_pending": "Listeza pendiente",
+    "open": "Abierta",
+    "finalized": "Finalizada"
+  },
+  "balanceBadge": {
+    "ok": "Balance de masa cerrado",
+    "off": "Masa sin justificar",
+    "pending": "Esperando el verde"
+  },
+  "summary": {
+    "parchmentIn": "Pergamino que entra",
+    "parchmentInSub": "{variety} hacia la cadena",
+    "greenOut": "Verde que sale",
+    "greenOutSub": "verde limpio recuperado",
+    "greenOutPending": "aún sin registrar",
+    "outturn": "Rendimiento",
+    "outturnSub": "verde sobre pergamino",
+    "outturnPending": "pendiente de finalizar",
+    "byproducts": "Subproductos",
+    "byproductsSub": "cascarilla, polvillo, rechazo de zaranda"
+  },
+  "sankey": {
+    "title": "Balance de masa",
+    "subtitle": "A dónde fue cada kilo de pergamino",
+    "green": "Verde",
+    "byproduct": "Subproducto",
+    "reject": "Rechazo",
+    "moisture": "Pérdida por humedad",
+    "unaccounted": "Sin justificar",
+    "kgValue": "{kg} kg",
+    "balanced": "Balanceado. Cada kilo está justificado.",
+    "unbalanced": "{kg} kg sin justificar, por encima del tope de {ceiling} kg.",
+    "pendingGreen": "Registra el último paso o finaliza la corrida para cerrar el balance.",
+    "ceilingNote": "Tope de pérdida {kg} kg, derivado de la curva de rendimiento de la variedad."
+  },
+  "chain": {
+    "title": "Cadena de máquinas",
+    "subtitle": "El pergamino pasa por trilladora, pulidora y zarandas en orden",
+    "empty": "Aún no hay pasos registrados",
+    "pass": "Paso {no}",
+    "inLabel": "Entra",
+    "outLabel": "Sale",
+    "rejectLabel": "Rechazo"
+  },
+  "machine": {
+    "huller": "Trilladora",
+    "polisher": "Pulidora",
+    "screen_grader": "Zaranda de malla",
+    "gravity_table": "Mesa densimétrica",
+    "optical_sorter": "Selectora óptica"
+  },
+  "byproducts": {
+    "title": "Subproductos",
+    "subtitle": "Cada flujo es su propio lote vendible y trazable",
+    "empty": "Sin subproductos registrados",
+    "kgValue": "{kg} kg"
+  },
+  "byproductKind": {
+    "husk": "Cascarilla",
+    "chaff": "Polvillo",
+    "screen_rejects": "Rechazo de zaranda",
+    "defects": "Defectos"
+  },
+  "empty": {
+    "title": "Aún no se ha trillado nada en esta corrida",
+    "description": "Registra el primer paso de máquina para iniciar el balance de masa cerrado."
+  },
+  "loading": {
+    "workspace": "Cargando el balance de trilla"
+  },
+  "record": {
+    "passTitle": "Registrar un paso de máquina",
+    "byproductTitle": "Registrar un subproducto",
+    "passNo": "Número de paso",
+    "machine": "Máquina",
+    "machinePlaceholder": "Elige una máquina",
+    "inputKg": "Entrada (kg)",
+    "outputKg": "Salida limpia (kg)",
+    "rejectKg": "Rechazo (kg)",
+    "submitPass": "Registrar paso",
+    "recordingPass": "Registrando",
+    "passRecorded": "Paso registrado",
+    "massHint": "La salida limpia más el rechazo nunca pueden superar la entrada.",
+    "kind": "Tipo de subproducto",
+    "kindPlaceholder": "Elige un flujo",
+    "kg": "Kilogramos",
+    "submitByproduct": "Registrar subproducto",
+    "recordingByproduct": "Registrando",
+    "byproductRecorded": "Lote de subproducto {code} creado",
+    "byproductHint": "Crea un lote de subproducto vendible y trazable, y descuenta de la masa del pergamino.",
+    "closedRun": "Esta corrida está {status}. Los pasos solo se registran mientras está abierta.",
+    "passContinuity": "La entrada se rellena con la salida del paso anterior para que el flujo limpio siga continuo."
+  },
+  "errors": {
+    "generic": "Algo salió mal. Inténtalo de nuevo.",
+    "passNo": "El número de paso debe ser un entero de 1 o más.",
+    "machine": "Elige una máquina para este paso.",
+    "inputPositive": "La entrada debe ser mayor que 0 kg.",
+    "outputNonNeg": "La salida limpia no puede ser negativa.",
+    "rejectNonNeg": "El rechazo no puede ser negativo.",
+    "massBalance": "La salida limpia más el rechazo no pueden superar la entrada.",
+    "kind": "Elige un flujo de subproducto.",
+    "kgPositive": "Los kilogramos deben ser mayores que 0."
+  }
+}

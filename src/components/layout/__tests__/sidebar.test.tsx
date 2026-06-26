@@ -154,4 +154,20 @@ describe("Sidebar", () => {
       "/sales/shipments",
     );
   });
+
+  it("surfaces the P3 Wave 2 milling, roasting, and yield routes in the nav", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /Milling/ })).toHaveAttribute(
+      "href",
+      "/mill",
+    );
+    expect(screen.getByRole("link", { name: /Roasting/ })).toHaveAttribute(
+      "href",
+      "/roast",
+    );
+    expect(screen.getByRole("link", { name: /Yields/ })).toHaveAttribute(
+      "href",
+      "/yields",
+    );
+  });
 });

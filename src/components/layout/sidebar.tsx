@@ -32,6 +32,9 @@ import {
   TestTube2,
   Gavel,
   Ship,
+  Factory,
+  Flame,
+  BarChart2,
 } from "lucide-react";
 import { JansonLogo } from "./logo";
 import { BRAND } from "@/lib/brand";
@@ -55,8 +58,12 @@ export const NAV = [
   { href: "/processing", key: "processing", icon: FlaskConical },
   { href: "/ferment", key: "ferment", icon: Beaker },
   { href: "/drying", key: "drying", icon: Wind },
+  // P3 Wave 2 — dry milling (post-drying), inventory, QC, then roasting + yields
+  { href: "/mill", key: "mill", icon: Factory },
   { href: "/inventory", key: "inventory", icon: Boxes },
   { href: "/qc", key: "qc", icon: Award },
+  { href: "/roast", key: "roast", icon: Flame },
+  { href: "/yields", key: "yields", icon: BarChart2 },
   { href: "/pricing", key: "pricing", icon: TrendingUp },
   { href: "/hedge", key: "hedge", icon: Anchor },
   // P3 Wave 1 commerce cluster — offer board, contracts, fixation, samples, auctions, export
