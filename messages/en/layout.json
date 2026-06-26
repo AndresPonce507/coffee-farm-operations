@@ -41,7 +41,8 @@
     "payroll": "Payroll",
     "tasks": "Tasks",
     "finance": "Finance",
-    "margins": "Margin & FX"
+    "margins": "Margin & FX",
+    "reputation": "Reputation"
   },
   "mobileNav": {
     "openMenu": "Open navigation menu",

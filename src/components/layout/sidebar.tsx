@@ -42,6 +42,7 @@ import {
   CreditCard,
   Receipt,
   LineChart,
+  Trophy,
 } from "lucide-react";
 import { JansonLogo } from "./logo";
 import { BRAND } from "@/lib/brand";
@@ -89,6 +90,8 @@ export const NAV = [
   // P3 Wave 4 accounting cluster — AR / invoices and realized margin + FX
   { href: "/finance", key: "finance", icon: Receipt },
   { href: "/margins", key: "margins", icon: LineChart },
+  // P3 Wave 5 reputation cluster — lot accolades, wall of fame (S19)
+  { href: "/reputation", key: "reputation", icon: Trophy },
   { href: "/satellite", key: "satellite", icon: Satellite },
   { href: "/scouting", key: "scouting", icon: Bug },
   { href: "/costing", key: "costing", icon: Coins },

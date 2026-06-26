@@ -79,6 +79,18 @@ export const DIRECT_TENANT_TABLES = [
   "account_map", // accounting_sync.sql — our-ledger → buyer-account-code mapping (config)
   "sync_outbox", // accounting_sync.sql — idempotent append-only post queue (content-hash key)
   "sync_inbound", // accounting_sync.sql — append-only log of pulls FROM QBO/Xero (idempotent on target+external_id)
+  // P3-S18 direct-trade CRM — the mutable contact anchor + its hash-chained relationship
+  // ledger. No tenant-carrying parent FK (buyer_id is nullable); tenant_id default
+  // current_tenant_id(), RPC-only writes. contact_events is a lot_event-style ledger
+  // (stream_key='contact:<id>'), DIRECT-stamped at the append RPC like lot_event.
+  "contacts", // crm_contacts.sql — the green-buyer/relationship CRM anchor (mutable)
+  "contact_events", // crm_contacts.sql — append-only, hash-chained PII relationship ledger
+  // P3-S20 storage + marketing — DIRECT-stamped (tenant_id default current_tenant_id()).
+  // storage_locations: only FK is to tenants (no tenant-carrying parent). marketing_campaigns:
+  // green_lot_code parent is nullable (like contacts.buyer_id) → DIRECT. marketing_segments: no FK.
+  "storage_locations", // storage_and_marketing.sql — controlled-environment config (RPC-only write)
+  "marketing_campaigns", // storage_and_marketing.sql — campaign header (nullable lot FK)
+  "marketing_segments", // storage_and_marketing.sql — saved audience definitions
 ] as const;
 
 /**
@@ -139,6 +151,12 @@ export const INHERITED_TENANT_TABLES = [
   "contract_lines", // b2b_offers_contracts.sql — via sales_contracts + green_lots
   // P3-S2 B2B sample ledger — inherits via the green lot (tenant,green_lot_code).
   "green_samples", // b2b_samples.sql — via green_lots (tenant,lot_code) composite FK
+  // P3-S18 CRM sample dispatches — the THIRD oversell-guarded claim table; inherits via
+  // the green lot (tenant,green_lot_code) composite FK, like lot_reservations/lot_shipments.
+  "sample_dispatches", // crm_contacts.sql — via green_lots (tenant,lot_code) composite FK
+  // P3-S19 reputation ledger — append-only, hash-chained accolades bound to a lot via
+  // the (tenant_id, lot_code) -> lots(tenant_id, code) composite FK. RPC-only-write.
+  "lot_accolades", // reputation_ledger.sql — cup scores / awards / certs (append-only)
   // P3-S4 specialty auctions — entries inherit via the green lot; scoresheets via the entry.
   "auction_entries", // specialty_auctions.sql — via green_lots (tenant,lot_code) composite FK
   "auction_scoresheets", // specialty_auctions.sql — via auction_entries (append-only jury capture)
@@ -196,6 +214,10 @@ export const INHERITED_TENANT_TABLES = [
   "ar_doc_line", // accounting_sales.sql — via ar_doc
   "ar_payment", // accounting_sales.sql — via ar_doc (append-only inbound cash; cap + status triggers)
   "fx_gain_loss_entry", // accounting_sales.sql — via ar_doc (append-only realized FX, two-rate CHECK)
+  // P3-S20 storage + marketing — INHERITED via a tenant-carrying parent FK hop.
+  "storage_readings", // storage_and_marketing.sql — via storage_locations (append-only time-series)
+  "storage_certificates", // storage_and_marketing.sql — via green_lots (append-only, cert_hash-bound)
+  "marketing_outbound", // storage_and_marketing.sql — via marketing_campaigns + contacts (consent-gated queue)
 ] as const;
 
 /**

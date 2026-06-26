@@ -206,4 +206,12 @@ describe("Sidebar", () => {
       "/margins",
     );
   });
+
+  it("surfaces the P3 Wave 5 reputation route in the nav (Reputation → /reputation)", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /Reputation/ })).toHaveAttribute(
+      "href",
+      "/reputation",
+    );
+  });
 });
