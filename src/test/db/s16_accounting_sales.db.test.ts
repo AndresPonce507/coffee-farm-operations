@@ -372,6 +372,20 @@ describe("P3-S16 AD-8 grant posture", () => {
       asAnon(h, (hh) => hh.query(`select * from revenue_entry limit 1;`)),
     ).rejects.toThrow();
   });
+
+  it("revenue_entry is RPC-only: NO client holds INSERT (the single write door is the S17 SECDEF RPC)", async () => {
+    // Regression guard — a "tenant append" INSERT policy + `grant insert ... to
+    // authenticated` once opened an UNAUDITED back door (no record_lot_event, no
+    // ar_doc linkage), the exact hole hardened shut for cost_entry. The only legal
+    // revenue writers are the S17 owner-run RPCs, which bypass grants — so neither
+    // authenticated nor anon may hold a direct INSERT on this ledger.
+    const r = await h.query<{ au: boolean; an: boolean }>(
+      `select has_table_privilege('authenticated','revenue_entry','insert') as au,
+              has_table_privilege('anon','revenue_entry','insert') as an;`,
+    );
+    expect(r[0].au, "authenticated must NOT directly insert revenue rows").toBe(false);
+    expect(r[0].an, "anon must NOT directly insert revenue rows").toBe(false);
+  });
 });
 
 // ──────────────────────────────────────────────────────────────────────────

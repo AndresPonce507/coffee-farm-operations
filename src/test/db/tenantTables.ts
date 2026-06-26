@@ -73,6 +73,12 @@ export const DIRECT_TENANT_TABLES = [
   "fx_rate", // accounting_sales.sql — canonical daily rate SSOT (append-only, RPC-only write)
   "revenue_entry", // accounting_sales.sql — revenue-side mirror of cost_entry; green_lot_code un-FK'd (DIRECT, like cost_entry)
   "ar_doc", // accounting_sales.sql — AR instrument header; soft-refs to buyer/contract, no tenant-parent FK
+  // P3-S17 accounting sync seam — account map + the idempotent post queue + the inbound
+  // pull log. No tenant-carrying parent FK; tenant_id default current_tenant_id(),
+  // RPC-only writes (set_account_map / issue_ar_doc / claim_sync_batch / apply_sync_inbound).
+  "account_map", // accounting_sync.sql — our-ledger → buyer-account-code mapping (config)
+  "sync_outbox", // accounting_sync.sql — idempotent append-only post queue (content-hash key)
+  "sync_inbound", // accounting_sync.sql — append-only log of pulls FROM QBO/Xero (idempotent on target+external_id)
 ] as const;
 
 /**

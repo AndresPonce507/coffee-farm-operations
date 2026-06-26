@@ -39,7 +39,9 @@
     "workers": "Workers",
     "crew": "Crews",
     "payroll": "Payroll",
-    "tasks": "Tasks"
+    "tasks": "Tasks",
+    "finance": "Finance",
+    "margins": "Margin & FX"
   },
   "mobileNav": {
     "openMenu": "Open navigation menu",

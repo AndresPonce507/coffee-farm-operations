@@ -1,0 +1,74 @@
+{
+  "page": {
+    "title": "Margen y FX",
+    "subtitle": "Margen real por kilo de café verde, lote por lote. El número que cierra el ciclo, sobre el libro de tipos de cambio canónico."
+  },
+  "summary": {
+    "revenue": "Ingreso real",
+    "revenueSub": "Registrado en {count} lotes",
+    "margin": "Margen real",
+    "marginSub": "Ingreso menos costo real",
+    "avgMargin": "Margen prom. / kg verde",
+    "avgMarginSub": "Entre lotes costeados",
+    "avgMarginNone": "Aún no hay lotes costeados",
+    "lots": "Lotes con margen",
+    "lotsSub": "{pending} esperan costo"
+  },
+  "empty": {
+    "title": "Aún no hay margen real",
+    "description": "Cuando un lote genera ingreso y su costo queda en los libros, su margen real por kilo aparece aquí."
+  },
+  "card": {
+    "variety": "{variety}",
+    "noVariety": "Lote verde",
+    "marginTag": "Margen",
+    "belowCost": "Bajo costo",
+    "marginPending": "Costo pendiente",
+    "awaitingCost": "Esperando costo",
+    "marginPendingNote": "El ingreso está registrado. Agrega el costo de este lote en Costeo para ver su margen real.",
+    "marginPerKg": "Margen / kg verde",
+    "perKg": "{value} / kg",
+    "revenuePerKg": "Ingreso / kg verde",
+    "costPerKg": "Costo / kg verde",
+    "notBooked": "Sin registrar",
+    "marginUsd": "Margen total",
+    "greenKg": "{kg} kg verde"
+  },
+  "fx": {
+    "title": "Libro de tipos de cambio",
+    "subtitle": "Un solo lugar donde vive cada tipo, nunca fijo en el código. El feed diario gratis del BCE, con entrada manual como respaldo sin costo.",
+    "empty": "No hay tipos de cambio registrados. Los lotes en USD no necesitan ninguno. Registra un tipo el día que se emita un documento que no sea en USD.",
+    "pair": "{base} → {quote}",
+    "asOf": "al {date}",
+    "record": "Registrar tipo de cambio"
+  },
+  "loading": {
+    "board": "Cargando márgenes"
+  },
+  "form": {
+    "title": "Registrar un tipo de cambio",
+    "intro": "El tipo diario canónico que los libros usan para valorar un documento que no es en USD. Una cifra deliberada, ingresada por una persona, el respaldo sin costo al feed gratis del BCE.",
+    "asOfLabel": "Vigente al",
+    "baseLabel": "Moneda base",
+    "basePlaceholder": "EUR",
+    "quoteLabel": "Moneda cotizada",
+    "rateLabel": "Tipo (base a cotizada)",
+    "rateHint": "Una unidad de la base en la moneda cotizada, por ejemplo 1.08 USD por EUR.",
+    "sourceLabel": "Fuente",
+    "sourceManual": "Manual",
+    "sourceEcb": "BCE diario",
+    "cancel": "Cancelar",
+    "submit": "Registrar tipo",
+    "submitting": "Registrando...",
+    "recorded": "Tipo registrado."
+  },
+  "errors": {
+    "baseRequired": "Ingresa la moneda base, por ejemplo EUR.",
+    "quoteRequired": "Ingresa la moneda cotizada.",
+    "ratePositive": "El tipo debe ser mayor que cero.",
+    "dateRequired": "Elige la fecha en que aplica el tipo.",
+    "duplicate": "Ya existe un tipo para ese día y par de monedas en los libros.",
+    "access": "No tienes acceso para registrar tipos de cambio.",
+    "generic": "No se pudo registrar ese tipo. Revisa los valores e intenta de nuevo."
+  }
+}

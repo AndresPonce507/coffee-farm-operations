@@ -1,0 +1,216 @@
+{
+  "page": {
+    "title": "Finanzas",
+    "subtitle": "Caja, lo que le deben a la finca y el alcance que dan los dos libros."
+  },
+  "empty": {
+    "title": "Todavía no hay nada en los libros",
+    "description": "Cuando emitas una factura aparece aquí con su compromiso de inventario, su línea de pagos y el margen realizado."
+  },
+  "loading": {
+    "cockpit": "Cargando el tablero de finanzas",
+    "invoices": "Cargando facturas",
+    "invoice": "Cargando factura",
+    "runway": "Cargando el alcance de caja",
+    "sync": "Cargando la consola de sincronización"
+  },
+  "status": {
+    "draft": "Borrador",
+    "issued": "Emitida",
+    "partially_paid": "Pago parcial",
+    "paid": "Pagada",
+    "void": "Anulada"
+  },
+  "kind": {
+    "proforma": "Proforma",
+    "commercial_invoice": "Factura comercial",
+    "credit_note": "Nota de crédito",
+    "dtc_receipt": "Recibo"
+  },
+  "method": {
+    "wire": "Transferencia",
+    "ach": "ACH",
+    "card": "Tarjeta",
+    "cash": "Efectivo",
+    "yappy": "Yappy",
+    "check": "Cheque"
+  },
+  "bucket": {
+    "0-30": "0 a 30 días",
+    "31-60": "31 a 60 días",
+    "61-90": "61 a 90 días",
+    "90+": "90+ días"
+  },
+  "summary": {
+    "net": { "label": "Posición neta", "sub": "Cuentas por cobrar menos costo comprometido" },
+    "ar": { "label": "Por cobrar", "sub": "En {count} documentos abiertos" },
+    "cost": { "label": "Costo comprometido", "sub": "COGS registrado a la fecha" },
+    "open": { "label": "Facturas abiertas", "sub": "En espera de pago" }
+  },
+  "aging": {
+    "title": "Antigüedad de cobros",
+    "viewAll": "Todas las facturas",
+    "empty": "Todavía no hay facturas."
+  },
+  "health": {
+    "title": "Salud de la sincronización",
+    "healthy": "Todo sincronizado",
+    "alarm": "{count} fallidas",
+    "viewAll": "Consola de sincronización"
+  },
+  "invoices": {
+    "title": "Facturas",
+    "subtitle": "Cada documento por cobrar, del más nuevo al más viejo. Cada uno compromete inventario verde de verdad.",
+    "new": "Nueva factura",
+    "empty": {
+      "title": "Todavía no hay facturas",
+      "description": "Cuando emites una proforma o una factura comercial aparece aquí, con su compromiso de inventario y su línea de pagos."
+    },
+    "card": {
+      "balance": "Saldo",
+      "total": "Total",
+      "paid": "Cobrado",
+      "days": "{days}d pendientes",
+      "open": "Abrir"
+    }
+  },
+  "invoice": {
+    "back": "Todas las facturas",
+    "eyebrow": "Factura",
+    "summary": {
+      "total": "Total",
+      "paid": "Pagado",
+      "balance": "Saldo",
+      "issued": "Emitida {date}",
+      "incoterm": "Incoterm {incoterm}",
+      "buyer": "Comprador {buyer}",
+      "contract": "Contrato {contract}",
+      "fx": "Emitida a tipo {rate}"
+    },
+    "lines": {
+      "title": "Renglones",
+      "lot": "Lote {lot}",
+      "noLot": "Sin lote",
+      "kg": "{kg} kg",
+      "unit": "{price} / kg",
+      "provenance": "Procedencia"
+    },
+    "margin": {
+      "title": "Margen realizado",
+      "subtitle": "Ingreso contra el costo real por kg verde, por lote en este documento.",
+      "revenuePerKg": "Ingreso / kg",
+      "costPerKg": "Costo / kg",
+      "marginPerKg": "Margen / kg",
+      "unknown": "Costo sin registrar",
+      "empty": "No hay renglones con lote para calcular margen."
+    },
+    "payments": {
+      "title": "Pagos",
+      "empty": "Todavía no hay pagos registrados.",
+      "received": "Recibido {date}"
+    },
+    "actions": {
+      "recordPayment": "Registrar pago",
+      "void": "Anular"
+    }
+  },
+  "pay": {
+    "title": "Registrar un pago",
+    "description": "Esta acción mueve dinero. Confirma el monto y el método antes de registrarlo.",
+    "balanceLine": "Saldo pendiente {balance}",
+    "amount": "Monto ({currency})",
+    "method": "Método",
+    "confirm": "Registrar pago",
+    "cancel": "Cancelar",
+    "success": "Pago registrado."
+  },
+  "void": {
+    "title": "Anular esta factura",
+    "description": "Esto revierte el ingreso con un renglón de corrección. No borra nada, y un documento con pagos no se puede anular. Emite una nota de crédito en su lugar.",
+    "reason": "Motivo",
+    "confirm": "Anular factura",
+    "cancel": "Mantener factura",
+    "success": "Factura anulada."
+  },
+  "runway": {
+    "title": "Alcance de caja",
+    "subtitle": "El único lugar donde los dos libros se cruzan, más la brecha de financiamiento antes de la cosecha.",
+    "net": { "label": "Posición neta" },
+    "ar": { "label": "Por cobrar" },
+    "cost": { "label": "Costo comprometido" },
+    "waterfall": {
+      "title": "Por cobrar contra costo comprometido",
+      "sub": "Una neta positiva quiere decir que las cuentas por cobrar cubren el costo registrado.",
+      "arLabel": "Por cobrar",
+      "costLabel": "Costo comprometido",
+      "netLabel": "Neta"
+    },
+    "preharvest": {
+      "title": "Antes de que llegue la cuadrilla",
+      "sub": "Volumen vendido por adelantado contra la deuda de mano de obra por obra abierta, para ver la brecha temprano.",
+      "presold": "Vendido por adelantado",
+      "presoldUnit": "{kg} kg",
+      "contracts": "Contratos por obra abiertos",
+      "laborRate": "Tarifa de mano de obra indicativa"
+    }
+  },
+  "sync": {
+    "title": "Sincronización contable",
+    "subtitle": "QuickBooks, Xero y el puente con el PAC de la DGI de Panamá. Mapeamos nuestro libro cafetalero a los libros del comprador, no los reconstruimos.",
+    "target": {
+      "qbo": "QuickBooks",
+      "xero": "Xero",
+      "dgi_pac": "PAC DGI"
+    },
+    "health": {
+      "pending": "Pendiente",
+      "inFlight": "En curso",
+      "failed": "Fallidas",
+      "synced": "Sincronizadas",
+      "alarm": "Sincronización detenida",
+      "healthy": "Sana",
+      "oldest": "Más antigua sin sincronizar {date}",
+      "empty": "No hay nada en cola. Emite una factura para empezar a sincronizar.",
+      "retry": "Procesar cola",
+      "processing": "Procesando"
+    },
+    "map": {
+      "title": "Mapa de cuentas",
+      "subtitle": "Cómo cada clave del libro se registra en el catálogo de cuentas del comprador.",
+      "add": "Agregar mapeo",
+      "target": "Destino",
+      "entryKind": "Tipo de registro",
+      "matchKey": "Nuestra clave",
+      "accountCode": "Código de cuenta",
+      "accountName": "Nombre de cuenta",
+      "save": "Guardar mapeo",
+      "cancel": "Cancelar",
+      "empty": "Todavía no hay mapeos.",
+      "kind": {
+        "cost": "Costo (regla de asignación)",
+        "revenue": "Ingreso (tipo de fuente)"
+      }
+    },
+    "failed": {
+      "title": "Envíos fallidos",
+      "empty": "No hay envíos fallidos.",
+      "attempts": "{n} intentos"
+    }
+  },
+  "errors": {
+    "generic": "No se pudo guardar. Revisa los números e inténtalo de nuevo.",
+    "kindRequired": "Elige un tipo de documento.",
+    "currencyRequired": "Fija una moneda.",
+    "linesRequired": "Agrega al menos un renglón.",
+    "amountPositive": "El monto debe ser mayor que cero.",
+    "kgPositive": "Los kilogramos deben ser mayores que cero.",
+    "exportGate": "Una factura comercial necesita una referencia de contrato y un Incoterm.",
+    "docRequired": "No hay factura seleccionada.",
+    "methodRequired": "Elige un método de pago.",
+    "reasonRequired": "Agrega un motivo para la anulación.",
+    "targetRequired": "Elige un destino de sincronización.",
+    "entryKindRequired": "Elige costo o ingreso.",
+    "matchKeyRequired": "Fija la clave del libro a mapear.",
+    "accountCodeRequired": "Fija el código de cuenta."
+  }
+}

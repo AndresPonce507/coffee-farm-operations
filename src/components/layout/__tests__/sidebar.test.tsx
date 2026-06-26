@@ -194,4 +194,16 @@ describe("Sidebar", () => {
       "/pos",
     );
   });
+
+  it("surfaces the P3 Wave 4 accounting cluster in the nav (finance, margins)", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /Finance/ })).toHaveAttribute(
+      "href",
+      "/finance",
+    );
+    expect(screen.getByRole("link", { name: /Margin & FX/ })).toHaveAttribute(
+      "href",
+      "/margins",
+    );
+  });
 });

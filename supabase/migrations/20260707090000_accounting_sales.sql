@@ -25,8 +25,10 @@
 -- Rails honored:
 --   * One write door — fx_rate writes only via record_fx_rate (SECURITY DEFINER,
 --     set search_path = public, extensions, tenant-clamped, idempotent). revenue_entry
---     mirrors cost_entry's append posture (direct INSERT, append-only — the journal
---     source the commerce slices post through). No client UPDATE/DELETE on any ledger.
+--     is RPC-only too (mirrors cost_entry's hardened posture): the journal source the
+--     commerce slices post through is the S17 SECDEF RPCs (issue_ar_doc/void_ar_doc),
+--     which stamp tenant_id AND append record_lot_event in the SAME txn. Clients hold
+--     NO INSERT/UPDATE/DELETE on any ledger — every write carries hash-chained audit.
 --   * AD-8/AD-9 grants — per-object `grant select … to authenticated`; on the RPC
 --     `revoke execute … from public` THEN `grant … to authenticated`. anon gets NOTHING.
 --   * Tenant seam — every new table carries tenant_id + current_tenant_id() default +
@@ -415,10 +417,12 @@ revoke execute on function fx_attribution(date, date) from public;
 grant   execute on function fx_attribution(date, date) to authenticated;
 
 -- ════════════════════════════════════════════════════════════════════════════
--- 9. RLS — tenant-scoped read on every new table (mirrors the P4-S0 idiom). The AR
---    instrument tables are RPC-only writes (P3-S17), so NO insert/update/delete
---    policy. revenue_entry mirrors cost_entry's append posture — a "tenant insert"
---    policy gives the commerce slices the direct journal-append door.
+-- 9. RLS — tenant-scoped read on every new table (mirrors the P4-S0 idiom). EVERY
+--    ledger here is RPC-only writes (revenue_entry via the S17 issue_ar_doc/void_ar_doc
+--    SECDEF RPCs; the AR instrument tables likewise), so NO insert/update/delete policy
+--    on any of them — the single write door is the SECDEF RPC, which runs as owner and
+--    bypasses these policies anyway. A client INSERT grant would only open an unaudited
+--    back door (no record_lot_event, no ar_doc linkage); it is therefore NOT granted.
 -- ════════════════════════════════════════════════════════════════════════════
 do $$
 declare t text;
@@ -434,16 +438,11 @@ begin
   end loop;
 end $$;
 
--- revenue_entry is the journal source the commerce slices append through (mirrors
--- cost_entry's INSERT posture) — a tenant-scoped insert policy + grant; the
--- immutability trigger blocks UPDATE/DELETE even for the owner.
-create policy "tenant append" on public.revenue_entry for insert to authenticated
-  with check (tenant_id = current_tenant_id());
-
 -- ════════════════════════════════════════════════════════════════════════════
 -- 10. GRANTS (AD-8) — per-object SELECT to authenticated on every table/view (one
---     statement each so the name-anchored static guard matches). revenue_entry also
---     gets INSERT (the one legal append). anon gets NOTHING.
+--     statement each so the name-anchored static guard matches). NO table gets a
+--     client INSERT — revenue_entry and the AR tables are written only through the
+--     S17 SECDEF RPCs (owner-run, audited). anon gets NOTHING.
 -- ════════════════════════════════════════════════════════════════════════════
 grant select on fx_rate            to authenticated;
 grant select on revenue_entry      to authenticated;
@@ -453,7 +452,5 @@ grant select on ar_payment         to authenticated;
 grant select on fx_gain_loss_entry to authenticated;
 grant select on v_ar_aging         to authenticated;
 grant select on v_lot_margin       to authenticated;
-
-grant insert on revenue_entry to authenticated;
 
 commit;

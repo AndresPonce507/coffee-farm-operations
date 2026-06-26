@@ -1,0 +1,74 @@
+{
+  "page": {
+    "title": "Margin & FX",
+    "subtitle": "Realized margin per kilo of green coffee, lot by lot. The number that closes the loop, over the canonical FX rate book."
+  },
+  "summary": {
+    "revenue": "Realized revenue",
+    "revenueSub": "Booked across {count} lots",
+    "margin": "Realized margin",
+    "marginSub": "Revenue minus true cost",
+    "avgMargin": "Avg margin / kg green",
+    "avgMarginSub": "Across costed lots",
+    "avgMarginNone": "No costed lots yet",
+    "lots": "Lots with margin",
+    "lotsSub": "{pending} awaiting cost"
+  },
+  "empty": {
+    "title": "No realized margin yet",
+    "description": "Once a lot earns revenue and its cost is on the books, its true per-kilo margin lands here."
+  },
+  "card": {
+    "variety": "{variety}",
+    "noVariety": "Green lot",
+    "marginTag": "Margin",
+    "belowCost": "Below cost",
+    "marginPending": "Cost pending",
+    "awaitingCost": "Awaiting cost",
+    "marginPendingNote": "Revenue is booked. Add this lot's cost in Costing to reveal its true margin.",
+    "marginPerKg": "Margin / kg green",
+    "perKg": "{value} / kg",
+    "revenuePerKg": "Revenue / kg green",
+    "costPerKg": "Cost / kg green",
+    "notBooked": "Not booked",
+    "marginUsd": "Total margin",
+    "greenKg": "{kg} kg green"
+  },
+  "fx": {
+    "title": "FX rate book",
+    "subtitle": "One place a rate lives, never hardcoded. The free ECB daily feed, with manual entry as the no-cost fallback.",
+    "empty": "No FX rates recorded. USD-settled lots need none. Record a rate the day a non-USD document is raised.",
+    "pair": "{base} → {quote}",
+    "asOf": "as of {date}",
+    "record": "Record FX rate"
+  },
+  "loading": {
+    "board": "Loading margins"
+  },
+  "form": {
+    "title": "Record an FX rate",
+    "intro": "The canonical daily rate the books use to value a non-USD document. A deliberate, human-entered figure, the no-cost fallback to the free ECB feed.",
+    "asOfLabel": "As of",
+    "baseLabel": "Base currency",
+    "basePlaceholder": "EUR",
+    "quoteLabel": "Quote currency",
+    "rateLabel": "Rate (base to quote)",
+    "rateHint": "One unit of the base in the quote currency, for example 1.08 USD per EUR.",
+    "sourceLabel": "Source",
+    "sourceManual": "Manual",
+    "sourceEcb": "ECB daily",
+    "cancel": "Cancel",
+    "submit": "Record rate",
+    "submitting": "Recording...",
+    "recorded": "Rate recorded."
+  },
+  "errors": {
+    "baseRequired": "Enter the base currency, for example EUR.",
+    "quoteRequired": "Enter the quote currency.",
+    "ratePositive": "The rate must be greater than zero.",
+    "dateRequired": "Pick the date the rate applies to.",
+    "duplicate": "A rate for that day and currency pair is already on the books.",
+    "access": "You do not have access to record FX rates.",
+    "generic": "Could not record that rate. Check the values and try again."
+  }
+}
