@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { cn, kg } from "@/lib/utils";
 
 export interface AtpMeterProps {
@@ -25,6 +27,7 @@ export interface AtpMeterProps {
  * the label contrast floor holds regardless of the living-aurora backdrop.
  */
 export function AtpMeter({ committedKg, availableKg, className }: AtpMeterProps) {
+  const t = useTranslations("ui");
   // Defend against negative inputs (an over-sold lot should never invert the
   // bar) and a zero-total lot (no divide-by-zero → NaN in the transform).
   const committed = Math.max(0, committedKg);
@@ -39,11 +42,14 @@ export function AtpMeter({ committedKg, availableKg, className }: AtpMeterProps)
       {/* The track: a recessed glass groove that the two slabs fill. */}
       <div
         role="meter"
-        aria-label="Available to promise"
+        aria-label={t("atpMeter.ariaLabel")}
         aria-valuemin={0}
         aria-valuemax={total}
         aria-valuenow={available}
-        aria-valuetext={`${kg(available)} available of ${kg(total)}`}
+        aria-valuetext={t("atpMeter.valueText", {
+          available: kg(available),
+          total: kg(total),
+        })}
         className={cn(
           "relative flex h-3.5 w-full overflow-hidden rounded-full",
           "border border-white/45 bg-muted",
@@ -103,14 +109,14 @@ export function AtpMeter({ committedKg, availableKg, className }: AtpMeterProps)
             className="h-2 w-2 rounded-full bg-forest-300"
           />
           <span className="tabular-nums">{kg(committed)}</span>
-          <span className="text-white/70">committed</span>
+          <span className="text-white/70">{t("atpMeter.committed")}</span>
         </span>
 
         <span
           data-testid="atp-readout-total"
           className="tabular-nums text-muted-fg"
         >
-          {kg(total)} total
+          {kg(total)} {t("atpMeter.total")}
         </span>
 
         <span
@@ -122,7 +128,9 @@ export function AtpMeter({ committedKg, availableKg, className }: AtpMeterProps)
         >
           <span aria-hidden className="h-2 w-2 rounded-full bg-honey" />
           <span className="tabular-nums">{kg(available)}</span>
-          <span className="font-medium text-honey-700/80">available</span>
+          <span className="font-medium text-honey-700/80">
+            {t("atpMeter.available")}
+          </span>
         </span>
       </div>
     </div>

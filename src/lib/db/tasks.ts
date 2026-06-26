@@ -11,6 +11,8 @@ export interface TaskRow {
   plot_id: string | null;
   plot_name: string | null;
   assignee: string;
+  /** FK to the workers table — forwarded by tasks_view from tasks.worker_id. */
+  worker_id: string | null;
   due: string;
   status: TaskStatus;
   priority: Priority;
@@ -24,6 +26,7 @@ export function mapTask(r: TaskRow): FarmTask {
     plotId: r.plot_id,
     plotName: r.plot_name,
     assignee: r.assignee,
+    workerId: r.worker_id,
     due: r.due,
     status: r.status,
     priority: r.priority,

@@ -1,0 +1,215 @@
+{
+  "page": {
+    "title": "Tostado",
+    "subtitle": "Perfiles dorados versionados, captura de .alog de Artisan y tostado → SKU — cada bolsa trazable hasta el árbol."
+  },
+  "summary": {
+    "profiles": "Perfiles",
+    "profilesSub": "{count} versionados",
+    "golden": "Dorados",
+    "goldenSub": "bloqueados, listos para tostar",
+    "openBatches": "Tandas abiertas",
+    "openBatchesSub": "en el tostador",
+    "roasted": "Tostado",
+    "roastedSub": "kg, histórico"
+  },
+  "library": {
+    "title": "Biblioteca de curvas doradas",
+    "subtitle": "Un borrador se bloquea en una sola dirección a dorado; un reajuste es una versión nueva, nunca una edición."
+  },
+  "batches": {
+    "title": "Tandas de tostado"
+  },
+  "empty": {
+    "profilesTitle": "Aún no hay perfiles de tostado",
+    "profilesDescription": "Crea un perfil de curva dorada y luego bloquéalo en dorado para tostar con él.",
+    "batchesTitle": "Aún no hay tandas de tostado",
+    "batchesDescription": "Bloquea un perfil dorado y luego abre una tanda contra un lote verde."
+  },
+  "status": {
+    "draft": "Borrador",
+    "golden": "Dorado",
+    "retired": "Retirado"
+  },
+  "batchStatus": {
+    "open": "Abierta",
+    "finalized": "Finalizada"
+  },
+  "profile": {
+    "version": "v{version}",
+    "anyVariety": "Cualquier variedad",
+    "charge": "Carga",
+    "drop": "Descarga",
+    "time": "Total",
+    "dtr": "DTR",
+    "tempValue": "{temp}°C",
+    "timeValue": "{time}",
+    "dtrValue": "{pct}%",
+    "noDtr": "—"
+  },
+  "batch": {
+    "greenLot": "Lote verde",
+    "profile": "Perfil",
+    "greenIn": "Verde entra",
+    "roastedOut": "Tostado sale",
+    "shrinkage": "Merma",
+    "kgValue": "{kg} kg",
+    "shrinkageValue": "{pct}% de merma",
+    "roastedLot": "→ {code}",
+    "view": "Abrir tanda →"
+  },
+  "console": {
+    "newProfile": "Nuevo perfil dorado",
+    "openBatch": "Abrir tanda de tostado",
+    "created": "Perfil borrador creado",
+    "opened": "Tanda abierta",
+    "profile": {
+      "title": "Crear un perfil de curva dorada",
+      "name": "Nombre del perfil",
+      "namePlaceholder": "Geisha Filtro v1",
+      "variety": "Variedad (opcional)",
+      "varietyPlaceholder": "p. ej. Geisha",
+      "roastLevel": "Nivel de tostado",
+      "charge": "Temp. de carga (°C)",
+      "drop": "Temp. de descarga (°C)",
+      "totalTime": "Tiempo total (segundos)",
+      "dtr": "Razón de tiempo de desarrollo (%)",
+      "hint": "Un perfil nuevo empieza como borrador — bloquéalo en dorado antes de tostar.",
+      "submit": "Crear borrador",
+      "submitting": "Creando…"
+    },
+    "batch": {
+      "title": "Abrir una tanda de tostado",
+      "greenLot": "Lote verde",
+      "greenLotPlaceholder": "Selecciona un lote verde",
+      "profile": "Perfil dorado",
+      "profilePlaceholder": "Selecciona un perfil dorado",
+      "roaster": "Tostador",
+      "kg": "Verde entra (kg)",
+      "atpLine": "{kg} kg disponibles para tostar",
+      "noGolden": "Bloquea primero un perfil en dorado — solo se puede tostar contra una curva dorada.",
+      "noGreen": "No hay lotes verdes con inventario disponible para tostar.",
+      "irreversible": "Esto retira inventario verde hacia el tostador (un reclamo de envío) — la protección contra sobreventa actúa aquí y no se puede revertir desde esta pantalla.",
+      "submit": "Abrir tanda",
+      "submitting": "Abriendo…"
+    }
+  },
+  "lock": {
+    "action": "Bloquear dorado",
+    "locking": "Bloqueando…",
+    "confirmTitle": "¿Bloquear este perfil en dorado?",
+    "confirmBody": "Bloquear {name} v{version} es de una sola dirección: una curva dorada se versiona, nunca se edita. El único paso siguiente es retirarla.",
+    "confirm": "Bloquear dorado",
+    "cancel": "Cancelar"
+  },
+  "detail": {
+    "back": "Todas las tandas",
+    "eyebrow": "Tanda de tostado",
+    "title": "Tanda n.º {id}",
+    "from": "desde {lot}",
+    "roastedLot": "→ {lot}",
+    "profileLine": "{name} v{version} · {level}",
+    "cogsLine": "El costo de tostado se registra en el COGS al finalizar.",
+    "greenIn": "Verde entra",
+    "roastedOut": "Tostado sale",
+    "shrinkage": "Merma",
+    "kgValue": "{kg} kg",
+    "pctValue": "{pct}%",
+    "pending": "pendiente"
+  },
+  "curve": {
+    "title": "Curva de tostado vs objetivo dorado",
+    "subtitle": "Temperatura del grano sobre la rampa dorada, carga → descarga.",
+    "empty": "Aún no hay curva capturada — importa un .alog de Artisan para superponerla sobre el objetivo dorado.",
+    "bt": "Temp. del grano",
+    "target": "Objetivo dorado",
+    "deviation": "Desviación máx. ±{c}°C"
+  },
+  "events": {
+    "title": "Marcadores de fase",
+    "empty": "Aún no hay marcadores de fase capturados.",
+    "timeValue": "{time}",
+    "tempValue": "{temp}°C"
+  },
+  "imports": {
+    "title": "Importaciones de .alog de Artisan",
+    "empty": "Aún no se ha importado ningún .alog.",
+    "deviationValue": "±{c}°C vs dorado",
+    "noDeviation": "desviación no calculada",
+    "points": "{count} puntos",
+    "noFile": "(pegado)"
+  },
+  "skus": {
+    "title": "SKU vinculados",
+    "empty": "Aún no hay SKU vinculado — finaliza la tanda y luego vincula una bolsa.",
+    "bagValue": "{g} g",
+    "priceValue": "{price}",
+    "noPrice": "—",
+    "inactive": "inactivo",
+    "gtin": "GTIN {gtin}"
+  },
+  "finalize": {
+    "importOpen": "Importar .alog",
+    "importTitle": "Importar un .alog de Artisan",
+    "payloadLabel": "JSON .alog normalizado",
+    "payloadHint": "Pega una exportación normalizada: { \"points\": [{ \"t\", \"bt\", \"et\", \"ror\" }], \"events\": [{ \"marker\", \"t\", \"temp\" }] }.",
+    "filenameLabel": "Nombre de archivo (opcional)",
+    "filenamePlaceholder": "tueste-2026-06-25.alog",
+    "importSubmit": "Importar",
+    "importing": "Importando…",
+    "invalidJson": "Eso no es un JSON válido.",
+    "imported": ".alog importado",
+    "finalizeOpen": "Finalizar tostado",
+    "finalizeTitle": "Finalizar la tanda de tostado",
+    "roastedKg": "Tostado sale (kg)",
+    "greenInLine": "{kg} kg verde entra",
+    "shrinkagePreview": "Merma ≈ {pct}%",
+    "cost": "Costo de tostado (USD)",
+    "location": "Ubicación (opcional)",
+    "locationPlaceholder": "Tostaduría",
+    "irreversible": "Finalizar acuña el lote tostado, enruta la arista de tostado conservada y registra el costo de tostado en el COGS. No se puede deshacer.",
+    "confirm": "Finalizar",
+    "finalizing": "Finalizando…",
+    "finalized": "Tostado finalizado → {lot}",
+    "linkOpen": "Vincular a SKU",
+    "linkTitle": "Vincular un SKU de bolsa",
+    "skuCode": "Código SKU",
+    "skuCodePlaceholder": "JC-GEISHA-250",
+    "bagSize": "Tamaño de bolsa (gramos)",
+    "price": "Precio por bolsa (USD, opcional)",
+    "gtin": "GTIN / código de barras (opcional)",
+    "notFinalized": "Finaliza la tanda antes de vincular un SKU.",
+    "linkSubmit": "Vincular SKU",
+    "linking": "Vinculando…",
+    "linked": "SKU vinculado"
+  },
+  "roastLevel": {
+    "light": "Claro",
+    "medium-light": "Medio-claro",
+    "medium": "Medio",
+    "medium-dark": "Medio-oscuro",
+    "dark": "Oscuro"
+  },
+  "loading": {
+    "board": "Cargando el panel de tostado",
+    "batch": "Cargando la tanda de tostado"
+  },
+  "errors": {
+    "generic": "Algo salió mal. Inténtalo de nuevo.",
+    "nameRequired": "Ingresa un nombre de perfil.",
+    "roastLevelRequired": "Elige un nivel de tostado.",
+    "tempPositive": "Las temperaturas de carga y descarga deben ser positivas.",
+    "timePositive": "El tiempo total debe ser positivo.",
+    "dtrRange": "La razón de tiempo de desarrollo debe estar entre 0 y 100.",
+    "lotRequired": "Elige un lote verde.",
+    "profileRequired": "Elige un perfil dorado.",
+    "roasterRequired": "Elige un tostador.",
+    "kgPositive": "Los kg de verde deben ser positivos.",
+    "batchRequired": "Falta la tanda de tostado.",
+    "payloadRequired": "Pega un payload .alog normalizado.",
+    "kgOut": "Los kg tostados deben ser cero o positivos.",
+    "costPositive": "El costo de tostado no puede ser negativo.",
+    "skuRequired": "Ingresa un código SKU.",
+    "bagPositive": "El tamaño de bolsa debe ser positivo."
+  }
+}

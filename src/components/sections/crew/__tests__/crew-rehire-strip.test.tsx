@@ -93,7 +93,7 @@ describe("CrewRehireStrip", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("opens the profile sheet (timeline + cert ledger) when a name is clicked", () => {
+  it("worker name is an EntityLink navigating to /workers/[id]", () => {
     render(
       <CrewRehireStrip
         members={[lucia]}
@@ -102,8 +102,23 @@ describe("CrewRehireStrip", () => {
         rehireAction={vi.fn(async () => undefined)}
       />,
     );
-    // the name button opens the dialog with the profile sheet.
-    fireEvent.click(screen.getByRole("button", { name: "Lucía" }));
+    // EntityLink renders an <a> whose aria-label is "Open worker <name>" (preferredName), localized via next-intl.
+    const link = screen.getByRole("link", { name: /open worker lucía/i });
+    expect(link).toHaveAttribute("href", "/workers/w-06");
+    expect(link).toHaveTextContent("Lucía");
+  });
+
+  it("opens the profile sheet (timeline + cert ledger) when Profile chip is clicked", () => {
+    render(
+      <CrewRehireStrip
+        members={[lucia]}
+        profiles={profiles}
+        season="2026-2027"
+        rehireAction={vi.fn(async () => undefined)}
+      />,
+    );
+    // the Profile chip still opens the dialog with the profile sheet.
+    fireEvent.click(screen.getByRole("button", { name: /Profile/i }));
     // the dialog surfaces the cert ledger content.
     expect(screen.getAllByText(/pesticide-handling/i).length).toBeGreaterThan(0);
   });

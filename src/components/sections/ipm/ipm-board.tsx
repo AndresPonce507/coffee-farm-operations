@@ -1,4 +1,5 @@
 import { Bug, SprayCan } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -28,6 +29,7 @@ import { SprayLogForm } from "./spray-log-form";
  * AA contrast, reduced-motion safe.
  */
 export async function IpmBoard() {
+  const t = await getTranslations("ipm");
   const [thresholds, phi, sprays, applicators, plots] = await Promise.all([
     getIpmThresholds(),
     getPlotPhiStatus(),
@@ -40,31 +42,33 @@ export async function IpmBoard() {
 
   return (
     <div className="space-y-6">
-      <section aria-label="PHI / REI safety windows">
+      <section aria-label={t("board.safetyWindowsLabel")}>
         <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-muted-fg">
-          Active safety windows (PHI / REI)
+          {t("board.safetyWindowsHeading")}
         </h2>
         <PhiChips rows={phi} />
       </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <section className="lg:col-span-3" aria-label="IPM scouting">
+        <section className="lg:col-span-3" aria-label={t("board.scoutingLabel")}>
           <h2 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold uppercase tracking-wide text-muted-fg">
             <Bug className="h-4 w-4" aria-hidden />
-            Scouting — {num(recommendCount)} plot{recommendCount === 1 ? "" : "s"} over threshold
+            {t("board.scoutingHeading", {
+              count: recommendCount,
+              countLabel: num(recommendCount),
+            })}
           </h2>
           <ScoutingBoard rows={thresholds} />
         </section>
 
-        <section className="lg:col-span-2" aria-label="Log a spray">
+        <section className="lg:col-span-2" aria-label={t("board.logSprayLabel")}>
           <h2 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold uppercase tracking-wide text-muted-fg">
-            <SprayCan className="h-4 w-4" aria-hidden /> Cert-gated spray log
+            <SprayCan className="h-4 w-4" aria-hidden /> {t("board.logSprayHeading")}
           </h2>
           <Card className="animate-rise">
             <CardContent>
               <p className="mb-4 text-xs text-muted-fg">
-                A spray is blocked at the data layer unless the applicator holds a
-                valid pesticide-handling cert and the PHI/REI windows are respected.
+                {t("board.logSprayHint")}
               </p>
               <SprayLogForm plots={plots} applicators={applicators} />
             </CardContent>
@@ -72,9 +76,9 @@ export async function IpmBoard() {
         </section>
       </div>
 
-      <section aria-label="Spray history">
+      <section aria-label={t("board.sprayHistoryLabel")}>
         <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-muted-fg">
-          Spray log
+          {t("board.sprayHistoryHeading")}
         </h2>
         <SprayHistory rows={sprays} />
       </section>

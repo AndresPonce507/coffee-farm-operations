@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/utils";
 
 export interface BarMiniDatum {
@@ -32,13 +34,20 @@ export function BarMini({
   height = 140,
   className,
 }: BarMiniProps) {
+  const t = useTranslations("ui");
   const max = data.reduce((acc, d) => Math.max(acc, d.value), 0);
   const lastIndex = data.length - 1;
 
   const ariaLabel =
     data.length > 0
-      ? `Bar chart of ${data.length} values, from ${data[0].label} (${data[0].value}) to ${data[lastIndex].label} (${data[lastIndex].value}).`
-      : "Bar chart with no data.";
+      ? t("barMini.ariaLabel", {
+          count: data.length,
+          firstLabel: data[0].label,
+          firstValue: data[0].value,
+          lastLabel: data[lastIndex].label,
+          lastValue: data[lastIndex].value,
+        })
+      : t("barMini.noDataAria");
 
   // Explicit empty state — a labelled, accessible placeholder rather than a
   // silently-empty plot, so a card with no harvest reads as "nothing yet" and
@@ -54,7 +63,7 @@ export function BarMini({
           className="flex items-center justify-center rounded-lg text-sm text-muted-fg"
           style={{ height: `${height}px` }}
         >
-          No harvest data yet.
+          {t("barMini.empty")}
         </div>
       </div>
     );

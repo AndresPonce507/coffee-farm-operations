@@ -1,18 +1,14 @@
 import { Sun, CloudRain } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { AtpMeter } from "@/components/ui/atp-meter";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import { Badge } from "@/components/ui/badge";
+import { STATION_KIND_KEY, weekdayKey } from "@/lib/drying/station-labels";
 import { cn, kg } from "@/lib/utils";
 import type { DryingWeatherRisk, StationOccupancy } from "@/lib/types";
-
-const KIND_LABEL: Record<string, string> = {
-  patio: "Patio",
-  "raised-bed": "Raised bed",
-  guardiola: "Guardiola",
-  parabolic: "Parabolic",
-};
 
 /**
  * StationOccupancyBoard — every drying station as a glass card with a dual-bar
@@ -31,6 +27,7 @@ export function StationOccupancyBoard({
   stations: StationOccupancy[];
   weatherRisk?: DryingWeatherRisk[];
 }) {
+  const t = useTranslations("drying");
   // The nearest cover-risk day per station (if any) drives its alert chip.
   const riskByStation = new Map<string, DryingWeatherRisk>();
   for (const r of weatherRisk) {
@@ -40,15 +37,15 @@ export function StationOccupancyBoard({
   return (
     <Card className="overflow-hidden">
       <CardHeader>
-        <CardTitle>Drying stations</CardTitle>
-        <Badge tone="neutral">{stations.length} stations</Badge>
+        <CardTitle>{t("stations.title")}</CardTitle>
+        <Badge tone="neutral">{t("stations.count", { count: stations.length })}</Badge>
       </CardHeader>
 
       <div className="px-5 pb-5 pt-3">
         {stations.length === 0 ? (
           <EmptyState
-            title="No drying stations"
-            description="Stations appear once configured."
+            title={t("stations.emptyTitle")}
+            description={t("stations.emptyDescription")}
           />
         ) : (
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -68,20 +65,33 @@ export function StationOccupancyBoard({
                 >
                   <div className="mb-3 flex items-start justify-between gap-2">
                     <div>
-                      <p className="font-display text-sm font-semibold text-ink">
+                      {/* The station name drills to its dossier (/drying-station/[id]) —
+                          the 8th connected entity (no cosmetic rows; PRINCIPLE Rule 1/3). */}
+                      <EntityLink
+                        kind="drying-station"
+                        id={s.stationId}
+                        name={s.name}
+                        className="font-display text-sm font-semibold text-ink underline-offset-2 transition-colors hover:text-forest-700 hover:underline focus-visible:text-forest-700 focus-visible:underline"
+                      >
                         {s.name}
-                      </p>
+                      </EntityLink>
                       <p className="text-[11px] text-muted-fg">
-                        {KIND_LABEL[s.kind] ?? s.kind} · {kg(s.capacityKg)} cap
+                        {t("stations.capacity", {
+                          kind: STATION_KIND_KEY[s.kind] ? t(STATION_KIND_KEY[s.kind]) : s.kind,
+                          cap: kg(s.capacityKg),
+                        })}
                       </p>
                     </div>
                     {risk ? (
                       <Badge tone="cherry" dot>
-                        <CloudRain aria-hidden className="h-3 w-3" /> Cover {risk.day}
+                        <CloudRain aria-hidden className="h-3 w-3" />{" "}
+                        {t("stations.cover", {
+                          day: weekdayKey(risk.day) ? t(weekdayKey(risk.day)!) : risk.day,
+                        })}
                       </Badge>
                     ) : (
                       <Badge tone="sky">
-                        <Sun aria-hidden className="h-3 w-3" /> Clear
+                        <Sun aria-hidden className="h-3 w-3" /> {t("stations.clear")}
                       </Badge>
                     )}
                   </div>
@@ -90,9 +100,9 @@ export function StationOccupancyBoard({
 
                   <p className="mt-2 text-right text-[11px] tabular-nums text-muted-fg">
                     {overSubscribed ? (
-                      <span className="font-semibold text-cherry">over capacity</span>
+                      <span className="font-semibold text-cherry">{t("stations.overCapacity")}</span>
                     ) : (
-                      <>{utilization}% full</>
+                      <>{t("stations.full", { pct: utilization })}</>
                     )}
                   </p>
                 </li>

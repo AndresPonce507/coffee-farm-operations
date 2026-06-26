@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { CheckCircle2, FlaskConical } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import {
   FERMENT_IDLE,
@@ -26,6 +27,7 @@ const FIELD =
 const LABEL = "text-xs font-medium text-muted-fg";
 
 export function LogReadingForm({ batchId }: { batchId: string }) {
+  const t = useTranslations("ferment");
   const [state, formAction, pending] = useActionState<
     FermentActionState,
     FormData
@@ -59,7 +61,7 @@ export function LogReadingForm({ batchId }: { batchId: string }) {
       <div className="grid grid-cols-[7rem_1fr] gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="reading-kind">
-            Kind
+            {t("logReadingForm.kindLabel")}
           </label>
           <select
             id="reading-kind"
@@ -69,15 +71,15 @@ export function LogReadingForm({ batchId }: { batchId: string }) {
             className={FIELD}
             aria-invalid={fieldError("kind") ? true : undefined}
           >
-            <option value="ph">pH</option>
-            <option value="temp">Temp °C</option>
-            <option value="brix">Brix °Bx</option>
+            <option value="ph">{t("logReadingForm.kindPh")}</option>
+            <option value="temp">{t("logReadingForm.kindTemp")}</option>
+            <option value="brix">{t("logReadingForm.kindBrix")}</option>
           </select>
         </div>
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="reading-value">
-            Reading value
+            {t("logReadingForm.valueLabel")}
           </label>
           <input
             id="reading-value"
@@ -85,7 +87,7 @@ export function LogReadingForm({ batchId }: { batchId: string }) {
             type="number"
             step="any"
             inputMode="decimal"
-            placeholder="e.g. 4.8"
+            placeholder={t("logReadingForm.valuePlaceholder")}
             required
             disabled={pending}
             className={FIELD}
@@ -117,7 +119,7 @@ export function LogReadingForm({ batchId }: { batchId: string }) {
         )}
         <Button type="submit" disabled={pending}>
           <FlaskConical className="h-4 w-4" aria-hidden />
-          {pending ? "Logging…" : "Log reading"}
+          {pending ? t("logReadingForm.logging") : t("logReadingForm.logReading")}
         </Button>
       </div>
     </form>

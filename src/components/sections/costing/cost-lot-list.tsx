@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { getCostBreakdownByRule, getLotCost } from "@/lib/db/cogs";
 import { getGreenLotAtp } from "@/lib/db/greenlots";
@@ -17,14 +19,14 @@ import { CostLotCard } from "./cost-lot-card";
  * per-rule breakdown is the same allocation, just split by rule.
  */
 export async function CostLotList() {
+  const t = await getTranslations("costing");
   const lots = await getGreenLotAtp();
 
   if (lots.length === 0) {
     return (
       <Card data-testid="costing-empty" className="animate-rise">
         <CardContent className="py-12 text-center text-sm text-muted-fg">
-          No green lots have been graded yet. Cost-per-kg-green appears here once
-          a lot reaches the green stage.
+          {t("lotList.emptyTitle")}
         </CardContent>
       </Card>
     );

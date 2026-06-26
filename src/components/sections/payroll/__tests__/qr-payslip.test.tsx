@@ -115,4 +115,23 @@ describe("QrPayslip", () => {
     expect(within(card).getByText("Lalo")).toBeInTheDocument();
     expect(within(card).getByText("Eduardo Bejarano")).toBeInTheDocument();
   });
+
+  it("wraps the headline in an EntityLink navigating to /workers/[workerId]", () => {
+    render(<QrPayslip payslip={basePayslip({ workerId: "w-7" })} />);
+    // WCAG 2.5.3: aria-label must contain the visible name (not slug).
+    // EntityLink renders aria-label="Open worker <headline>" where headline = workerName.
+    const link = screen.getByRole("link", { name: /worker Eduardo Bejarano/i });
+    expect(link).toHaveAttribute("href", "/workers/w-7");
+    expect(link).toHaveTextContent("Eduardo Bejarano");
+  });
+
+  it("wraps the preferred-name headline in the worker EntityLink when preferredName is set", () => {
+    render(
+      <QrPayslip payslip={basePayslip({ workerId: "w-7", preferredName: "Lalo" })} />,
+    );
+    // When preferredName is set, the headline IS the preferredName — use that in aria-label.
+    const link = screen.getByRole("link", { name: /worker Lalo/i });
+    expect(link).toHaveAttribute("href", "/workers/w-7");
+    expect(link).toHaveTextContent("Lalo");
+  });
 });

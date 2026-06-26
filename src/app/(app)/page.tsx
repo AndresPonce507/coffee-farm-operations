@@ -15,8 +15,10 @@ import { ProcessingPipelineCard } from "@/components/sections/dashboard/processi
  * with the yield trend then pair plot health with the processing pipeline,
  * while the right rail stacks the variety mix, weather, and recent activity.
  *
- * Pure server component — every section reads from canonical mock data and
- * requires no props or client-side state.
+ * Pure server component — every section derives live from the append-only
+ * truth (the Dashboard "today"/season headline reads season_summary_view, which
+ * sums `harvests` on the latest date), so a single weigh-in ripples here with
+ * zero re-entry. No props, no client-side state.
  */
 export default function DashboardPage() {
   return (

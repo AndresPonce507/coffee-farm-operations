@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import {
   recordCherryIntake,
@@ -28,8 +28,7 @@ export type IntakeActionState =
 export const INTAKE_IDLE: IntakeActionState = { status: "idle" };
 
 function refresh() {
-  revalidatePath("/harvests");
-  revalidatePath("/");
+  reactiveRefresh("cherry-intake");
 }
 
 // The offline node identity for the cherry-intake surface. Distinct from the

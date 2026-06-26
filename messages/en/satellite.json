@@ -1,0 +1,28 @@
+{
+  "page": {
+    "title": "Satellite",
+    "subtitle": "NDVI / SAR vegetation health with an honest confidence badge for Volcán's cloud"
+  },
+  "board": {
+    "mapAria": "Farm map — vegetation health",
+    "legendTitle": "NDVI / SAR confidence",
+    "windowsAria": "PHI / REI safety windows",
+    "windowsHeading": "Active safety windows (PHI / REI)",
+    "perPlotAria": "Per-plot vegetation health",
+    "perPlotHeading": "Plot vegetation health — NDVI / NDRE fused with SAR",
+    "seenClearly": "Seen clearly",
+    "seenClearlySub": "high-confidence optical",
+    "radarCarried": "Radar-carried",
+    "radarCarriedSub": "SAR fallback under cloud",
+    "honestlyUnknown": "Honestly unknown",
+    "honestlyUnknownLegendSub": "no clear signal",
+    "honestlyUnknownTileSub": "no clear signal — flagged, not hidden"
+  },
+  "grid": {
+    "emptyTitle": "No satellite reads yet",
+    "emptyDescription": "Ingest a Sentinel-2 / Sentinel-1 pass (or log a cached read) and each plot's vegetation health appears here with an honest confidence badge.",
+    "indexFallback": "index",
+    "indexAria": "{plotName} vegetation index",
+    "cloudSuffix": "{pct}% cloud"
+  }
+}

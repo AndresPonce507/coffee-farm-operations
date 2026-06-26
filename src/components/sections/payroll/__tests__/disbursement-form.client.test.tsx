@@ -166,6 +166,49 @@ describe("DisbursementForm", () => {
     );
     expect(document.querySelector("input[name='workerId']")).toHaveValue("w-42");
   });
+
+  it("mints a non-empty idempotencyKey hidden field so a double-submit dedupes", () => {
+    render(
+      <DisbursementForm
+        payPeriodId="pp-1"
+        worker={workerRow()}
+        action={noopAction}
+      />,
+    );
+    const idem = document.querySelector(
+      "input[name='idempotencyKey']",
+    ) as HTMLInputElement | null;
+    expect(idem).not.toBeNull();
+    // a fresh, non-empty key is minted (the RPC dedupes on it).
+    expect(idem?.value).toBeTruthy();
+  });
+
+  it("keeps the idempotencyKey STABLE across re-renders (one anchor per mount)", () => {
+    render(
+      <DisbursementForm
+        payPeriodId="pp-1"
+        worker={workerRow()}
+        action={noopAction}
+      />,
+    );
+    const key = (
+      document.querySelector(
+        "input[name='idempotencyKey']",
+      ) as HTMLInputElement
+    ).value;
+    // changing the method re-renders the form; the anchor must NOT be re-minted,
+    // otherwise a double-submit would carry two keys and book two records.
+    const method = document.querySelector(
+      "select[name='method']",
+    ) as HTMLSelectElement;
+    fireEvent.change(method, { target: { value: "cash-signed" } });
+    const after = (
+      document.querySelector(
+        "input[name='idempotencyKey']",
+      ) as HTMLInputElement
+    ).value;
+    expect(after).toBe(key);
+  });
 });
 
 /* ── DisbursementLedger — read of recorded payments ────────────────────── */
@@ -199,5 +242,21 @@ describe("DisbursementLedger", () => {
       <DisbursementLedger disbursements={[]} workerNames={{}} />,
     );
     expect(container.firstChild).toBeNull();
+  });
+
+  it("wraps the worker name in an EntityLink navigating to /workers/[id]", () => {
+    render(
+      <DisbursementLedger
+        disbursements={[disbursement({ id: 1, workerId: "w-7" })]}
+        workerNames={{ "w-7": "Rosa López" }}
+      />,
+    );
+    // WCAG 2.5.3: aria-label must contain the visible name (not slug).
+    // EntityLink renders aria-label="Open worker Rosa López" (the visible name from workerNames map).
+    const link = screen.getByRole("link", { name: /Open worker Rosa López/i });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/workers/w-7");
+    // The visible worker name text lives inside the link.
+    expect(link).toHaveTextContent("Rosa López");
   });
 });

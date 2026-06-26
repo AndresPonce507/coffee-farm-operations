@@ -5,18 +5,6 @@ the global `~/.claude/CLAUDE.md` (Andres's portable workflow, which applies to e
 automatically). Where they conflict, **this file wins** — it adapts the standard workflow
 for a **$0, no-CI practice project**.
 
-## 🚨 RULE #1 — ALWAYS MAXIMIZE PARALLELISM (Andres's number-one rule for this repo)
-
-**Literally always use the maximum number of agents in parallel that is safe to do so. Never
-forget this.** Every substantive task — investigation, design, build, review, fixing a batch of
-findings — fans out across as many concurrent agents / a Workflow as the work safely allows,
-never sequentially. "As is safe" = the standing safety rails still hold: writing agents are
-strictly file-disjoint or worktree-isolated, one author for migrations/seed (the schema lane),
-a reviewer pass closes every authoring fan-out, and a phased gate runs before anything lands.
-Within those rails, **default to the most parallelism possible, always.** A sequential pass on
-work that could have fanned out is a mistake in this repo. (Reinforces the global "always 20+
-agents" law — here it is Rule #1.)
-
 ## What this is
 A practice/portfolio app for **Janson Coffee** (real family farm, Volcán, Chiriquí, Panamá).
 Next.js 15 App Router + React 19 + TypeScript + Tailwind v4. In-repo **mock data** (`src/lib/data/*`),
@@ -63,8 +51,11 @@ no backend. See `README.md` for the design system and `HANDOFF.md` to resume the
   No production/UI code without a failing test demanding it; test behavior through the public surface,
   not implementation detail. Prereq: render/smoke tests need jsdom + @testing-library/react (vitest env
   is currently `node`) — set up before the first UI PR under this rule.
-- **Massive parallelism:** fan out **50+ agents** (or the max possible) for substantive work via the
-  Workflow tool — file-disjoint writers, one author for shared/contract files, reviewer pass to close.
+- **Parallelism — judicious, not maximal:** fan out concurrent agents only when work genuinely
+  decomposes into independent, file-disjoint slices and the speedup clearly outweighs the overhead;
+  otherwise work sequentially. Keep waves small, one author for shared/contract files, always close
+  with a reviewer pass. (The old "always maximize parallelism / 50+ agents" mandate was removed
+  2026-06-22 — no standing max-agents rule.)
 - Tests + docs ship with the feature; bug → regression test in the same commit.
 
 ## Contract — don't fork these

@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import {
   assignStation,
@@ -67,9 +67,7 @@ function nextDeviceSeq(): number {
 }
 
 function refresh() {
-  revalidatePath("/drying");
-  revalidatePath("/processing");
-  revalidatePath("/");
+  reactiveRefresh("drying");
 }
 
 /** A field wall-clock from the form, or now() when the form omits it. */

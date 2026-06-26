@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import {
   advanceProcessingStage,
@@ -44,22 +44,22 @@ export const PROCESSING_IDLE: ProcessingActionState = { status: "idle" };
 const PROCESSING_DEVICE_ID = "server-processing";
 
 /**
- * A strictly-increasing per-call `device_seq` (the Lamport column). `Date.now()`
- * alone collides on two advances within the same millisecond, breaking the
- * `lot_event (device_id, device_seq)` unique key; a process-monotonic counter
- * folded onto a ms time-base makes every call's seq distinct while staying a
- * non-negative SAFE integer. (The real exactly-once anchor is the idempotency
+ * A per-call `device_seq` (the Lamport column). A `Date.now()`-derived base
+ * collides across simultaneous serverless instances — each instance seeds its
+ * own counter from 0, so two instances booting in the same millisecond mint
+ * overlapping sequences and break the `lot_event (device_id, device_seq)`
+ * unique key. A CSPRNG draw (`crypto.getRandomValues`, a uint32 in
+ * `[0, 4294967295]`) is per-call, instance-independent, and always a
+ * non-negative SAFE integer, so collisions are vanishingly unlikely without any
+ * cross-instance coordination. (The real exactly-once anchor is the idempotency
  * key; this column just has to be unique-per-event.)
  */
-let advanceSeqCounter = 0;
-const ADVANCE_SEQ_BASE = Date.now() * 1000;
 function nextDeviceSeq(): number {
-  return ADVANCE_SEQ_BASE + advanceSeqCounter++;
+  return crypto.getRandomValues(new Uint32Array(1))[0];
 }
 
 function refresh() {
-  revalidatePath("/processing");
-  revalidatePath("/");
+  reactiveRefresh("processing-batch");
 }
 
 /** Map the advance command's friendly/labelled result onto the form's state. */
@@ -101,9 +101,10 @@ export async function advanceStageAction(
       occurredAt,
       // A processing-specific device namespace, distinct from intake's "server".
       deviceId: PROCESSING_DEVICE_ID,
-      // A strictly-increasing, collision-proof Lamport counter — two advances in
-      // the same millisecond no longer share a device_seq. The DB's exactly-once
-      // anchor remains the (stable, form-carried) idempotency key.
+      // A per-call CSPRNG draw for device_seq — collision-proof even across
+      // simultaneous serverless instances (a clock-derived seed is not). The
+      // DB's exactly-once anchor remains the (stable, form-carried) idempotency
+      // key.
       deviceSeq: nextDeviceSeq(),
       idempotencyKey,
     },

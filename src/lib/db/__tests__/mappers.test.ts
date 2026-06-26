@@ -93,13 +93,14 @@ describe("mapWorker", () => {
 });
 
 describe("mapHarvest", () => {
-  it("carries the re-joined plot_name + picker", () => {
+  it("carries the re-joined plot_name, picker, and worker_id→workerId", () => {
     const row: HarvestRow = {
       id: "h-0620-01",
       date: "2026-06-20",
       plot_id: "p-tizingal-alto",
       plot_name: "Tizingal Alto",
       picker: "Lucía Morales",
+      worker_id: "w-lucia-morales",
       cherries_kg: 88,
       ripeness_pct: 96,
       brix_avg: "23.4",
@@ -111,6 +112,7 @@ describe("mapHarvest", () => {
       plotId: "p-tizingal-alto",
       plotName: "Tizingal Alto",
       picker: "Lucía Morales",
+      workerId: "w-lucia-morales",
       cherriesKg: 88,
       ripenessPct: 96,
       brixAvg: 23.4,
@@ -151,7 +153,7 @@ describe("mapBatch", () => {
 });
 
 describe("mapTask", () => {
-  it("maps a plot-scoped task", () => {
+  it("maps a plot-scoped task and forwards worker_id→workerId", () => {
     const row: TaskRow = {
       id: "t-01",
       title: "Scout for broca (berry borer)",
@@ -159,6 +161,7 @@ describe("mapTask", () => {
       plot_id: "p-paso-ancho",
       plot_name: "Paso Ancho",
       assignee: "Janette Janson",
+      worker_id: "w-janette-janson",
       due: "2026-06-16",
       status: "in-progress",
       priority: "high",
@@ -170,13 +173,14 @@ describe("mapTask", () => {
       plotId: "p-paso-ancho",
       plotName: "Paso Ancho",
       assignee: "Janette Janson",
+      workerId: "w-janette-janson",
       due: "2026-06-16",
       status: "in-progress",
       priority: "high",
     });
   });
 
-  it("preserves null plot for farm-wide work", () => {
+  it("preserves null plot and null worker_id for farm-wide unassigned work", () => {
     const row: TaskRow = {
       id: "t-02",
       title: "Repair drying bed mesh on raised beds 4–7",
@@ -184,6 +188,7 @@ describe("mapTask", () => {
       plot_id: null,
       plot_name: null,
       assignee: "Néstor Gómez",
+      worker_id: null,
       due: "2026-06-17",
       status: "blocked",
       priority: "high",
@@ -191,6 +196,7 @@ describe("mapTask", () => {
     const mapped = mapTask(row);
     expect(mapped.plotId).toBeNull();
     expect(mapped.plotName).toBeNull();
+    expect(mapped.workerId).toBeNull();
   });
 });
 

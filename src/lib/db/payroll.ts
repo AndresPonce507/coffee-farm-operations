@@ -81,6 +81,25 @@ export const getPayPeriods = cache(async (): Promise<PayPeriodSummary[]> => {
   return (data as PayPeriodSummaryRow[]).map(mapPayPeriodSummary);
 });
 
+/**
+ * ONE pay period by its id — the /pay-period/[id] dossier anchor (Phase 5 L2,
+ * facet-02 §5/§11). Reads the SAME `v_pay_period_summary` view getPayPeriods()
+ * reads, narrowed to a single id (the same id getPayPeriods() exposes as the row
+ * key, so entityHref["pay-period"] links resolve here). Returns null for an
+ * unknown id so the dossier calls notFound() (no fabricated period). Read-only.
+ */
+export const getPayPeriodById = cache(
+  async (id: string): Promise<PayPeriodSummary | null> => {
+    const { data, error } = await (await getSupabase())
+      .from("v_pay_period_summary")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw new Error(`getPayPeriodById: ${error.message}`);
+    return data ? mapPayPeriodSummary(data as PayPeriodSummaryRow) : null;
+  },
+);
+
 /* ---------------------------------------------------------------------- */
 /* Per-worker calculated pay — v_worker_pay                               */
 /* ---------------------------------------------------------------------- */

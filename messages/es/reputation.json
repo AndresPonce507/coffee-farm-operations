@@ -1,0 +1,111 @@
+{
+  "page": {
+    "title": "Muro de honor",
+    "subtitle": "Cada puntaje de taza, premio y certificación, ligado al lote que lo ganó. Solo se agrega y la cadena queda verificada."
+  },
+  "summary": {
+    "lots": "Lotes premiados",
+    "lotsSub": "{count} con un logro registrado",
+    "awards": "Premios",
+    "awardsSub": "en toda la finca",
+    "certs": "Certificaciones",
+    "certsSub": "vigentes en los libros",
+    "topScore": "Mejor puntaje",
+    "topScoreSub": "el mejor de la finca"
+  },
+  "card": {
+    "ringLabel": "Puntaje de taza {score} de 100",
+    "noScore": "Sin puntaje de taza aún",
+    "qcReconcile": "Taza QC {score}",
+    "qcReconcileNone": "QC sin catar",
+    "ungraded": "Sin grado",
+    "awardsLabel": "{count} premios",
+    "certsLabel": "{count} certificaciones",
+    "pressLabel": "{count} menciones de prensa",
+    "open": "Ver el registro",
+    "ledger": "{count} en el libro"
+  },
+  "empty": {
+    "title": "Todavía no hay logros registrados",
+    "description": "Cata un lote, gana un premio o consigue una certificación y aparece aquí, ligado al lote que lo ganó e imposible de editar a escondidas."
+  },
+  "detail": {
+    "eyebrow": "Reputación",
+    "back": "Volver al muro",
+    "subtitle": "El libro de logros de este lote. Solo se agrega, cada entrada encadenada a la anterior.",
+    "qcTruth": "Verdad de QC",
+    "qcCup": "Taza {score}",
+    "qcNone": "Sin catar",
+    "grade": "{grade}",
+    "ungraded": "Sin grado",
+    "timeline": "El libro",
+    "timelineEmpty": "Este lote aún no tiene logros. Registra el primero a la derecha.",
+    "superseded": "Reemplazado por una revisión posterior",
+    "revisionOf": "Revisión de la entrada #{id}",
+    "evidence": "Evidencia",
+    "awardedBy": "por {who}",
+    "scoreLine": "Taza {score}"
+  },
+  "verify": {
+    "verified": "Cadena verificada",
+    "verifiedHint": "Cada entrada se encadena con la anterior. El historial cuadra de principio a fin.",
+    "broken": "Falló la integridad de la cadena",
+    "brokenHint": "El hash de una entrada no coincide. El libro fue alterado."
+  },
+  "kind": {
+    "cup-score": "Puntaje de taza",
+    "award": "Premio",
+    "certification": "Certificación",
+    "press-mention": "Mención de prensa",
+    "score-revision": "Revisión de puntaje"
+  },
+  "compose": {
+    "open": "Registrar logro",
+    "title": "Registrar un logro",
+    "kindLabel": "Qué tipo",
+    "titleLabel": "Título",
+    "titlePlaceholder": "Best of Panama 2025, Orgánico, ...",
+    "scoreLabel": "Puntaje de taza",
+    "scoreHint": "De 0 a 100, con un decimal",
+    "awardedByLabel": "Otorgado por",
+    "awardedByPlaceholder": "Jurado, certificador o publicación",
+    "yearLabel": "Año",
+    "evidenceLabel": "Enlace de evidencia",
+    "evidencePlaceholder": "https://...",
+    "submit": "Registrar",
+    "submitting": "Registrando...",
+    "recorded": "Logro registrado",
+    "another": "Registrar otro",
+    "cancel": "Cancelar",
+    "immutable": "Una vez registrado, un logro no se puede editar. Una corrección agrega una fila de revisión."
+  },
+  "revise": {
+    "open": "Revisar un puntaje",
+    "title": "Revisar un puntaje de taza",
+    "pickLabel": "Cuál puntaje",
+    "newScoreLabel": "Puntaje corregido",
+    "noteLabel": "Nota",
+    "notePlaceholder": "Por qué cambió el puntaje",
+    "submit": "Publicar revisión",
+    "submitting": "Publicando...",
+    "revised": "Revisión publicada",
+    "cancel": "Cancelar",
+    "supersedes": "Esto agrega una nueva fila de revisión. El original queda en el libro, marcado como reemplazado.",
+    "none": "Aún no hay puntaje de taza para revisar. Registra uno primero."
+  },
+  "loading": {
+    "wall": "Cargando el muro de honor",
+    "detail": "Cargando el libro de reputación"
+  },
+  "errors": {
+    "lotRequired": "Elige un lote para acreditar.",
+    "kindRequired": "Elige qué tipo de logro es.",
+    "titleRequired": "Ponle un título al logro.",
+    "scoreRequired": "Ingresa el puntaje de taza.",
+    "scoreRange": "Un puntaje de taza debe estar entre 0 y 100.",
+    "yearRange": "Ingresa un año de premio válido.",
+    "accoladeRequired": "Elige el puntaje de taza a revisar.",
+    "generic": "No se pudo registrar ese logro. Revisa la entrada e inténtalo de nuevo.",
+    "reviseGeneric": "No se pudo publicar esa revisión. Revisa el puntaje e inténtalo de nuevo."
+  }
+}

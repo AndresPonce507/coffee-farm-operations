@@ -1,6 +1,10 @@
+import { getTranslations } from "next-intl/server";
+
 import { getBatches } from "@/lib/db/processing";
+import { getFermentBatches } from "@/lib/db/ferment";
 import { Badge } from "@/components/ui/badge";
 import type { BadgeTone } from "@/components/ui/badge";
+import { EntityLink } from "@/components/ui/entity-link";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { cn, kg, pct } from "@/lib/utils";
 import type { BatchStage, ProcessMethod, ProcessingBatch } from "@/lib/types";
@@ -14,6 +18,9 @@ import type { BatchStage, ProcessMethod, ProcessingBatch } from "@/lib/types";
  * journey from cherry to green.
  */
 
+/** The bound `t` for the "processing" namespace, threaded into the sync children. */
+type Translator = Awaited<ReturnType<typeof getTranslations<"processing">>>;
+
 /** Stage order across the wet mill → drying → green pipeline. */
 const STAGE_ORDER: BatchStage[] = [
   "cherry",
@@ -24,25 +31,12 @@ const STAGE_ORDER: BatchStage[] = [
   "green",
 ];
 
-/** Human-friendly column titles. */
-const STAGE_LABEL: Record<BatchStage, string> = {
-  cherry: "Cherry",
-  fermentation: "Fermentation",
-  drying: "Drying",
-  parchment: "Parchment",
-  milled: "Milled",
-  green: "Green",
-};
+/** Human-friendly column title — resolved through the dictionary per stage. */
+const stageLabel = (t: Translator, stage: BatchStage) => t(`stages.${stage}`);
 
 /** One-line description of what happens at each stage — quiet context under the title. */
-const STAGE_SUB: Record<BatchStage, string> = {
-  cherry: "Intake & sorting",
-  fermentation: "Tanks & beds",
-  drying: "Raised beds / patio",
-  parchment: "Resting in pergamino",
-  milled: "Hulled & graded",
-  green: "Export-ready",
-};
+const stageSub = (t: Translator, stage: BatchStage) =>
+  t(`pipeline.stageSub.${stage}`);
 
 /**
  * Per-stage accent classes. Every value is a full literal class string so Tailwind's
@@ -138,9 +132,14 @@ function heroBatchId(batches: ProcessingBatch[]): string | undefined {
 function BatchTile({
   batch,
   heroId,
+  fermentId,
+  t,
 }: {
   batch: ProcessingBatch;
   heroId: string | undefined;
+  /** ferment_batches UUID for this lot, or undefined when no ferment run exists. */
+  fermentId: string | undefined;
+  t: Translator;
 }) {
   const accent = STAGE_ACCENT[batch.stage];
   const showMoisture = SHOW_MOISTURE[batch.stage];
@@ -154,9 +153,14 @@ function BatchTile({
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="font-mono text-sm font-semibold tracking-tight text-ink">
+        <EntityLink
+          kind="lot"
+          id={batch.lotCode}
+          name={batch.lotCode}
+          className="font-mono text-sm font-semibold tracking-tight text-ink underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
+        >
           {batch.lotCode}
-        </span>
+        </EntityLink>
         <span className="shrink-0 text-xs text-muted-fg">{batch.patio}</span>
       </div>
 
@@ -168,7 +172,7 @@ function BatchTile({
       <dl className="mt-3 flex items-end justify-between gap-2">
         <div>
           <dt className="text-[0.7rem] uppercase tracking-wide text-muted-fg">
-            Weight
+            {t("pipeline.weight")}
           </dt>
           <dd className="font-display text-base font-semibold text-ink">
             {kg(batch.currentKg)}
@@ -177,7 +181,7 @@ function BatchTile({
         {showMoisture && (
           <div className="text-right">
             <dt className="text-[0.7rem] uppercase tracking-wide text-muted-fg">
-              Moisture
+              {t("pipeline.moisture")}
             </dt>
             <dd className="text-sm font-medium text-coffee">
               {pct(batch.moisturePct)}
@@ -188,7 +192,7 @@ function BatchTile({
 
       <div className="mt-3">
         <div className="mb-1 flex items-center justify-between text-[0.7rem] text-muted-fg">
-          <span>Pipeline</span>
+          <span>{t("pipeline.pipelineProgress")}</span>
           <span className="font-medium text-ink">{pct(batch.progressPct)}</span>
         </div>
         <ProgressBar
@@ -197,6 +201,18 @@ function BatchTile({
           className="h-1.5"
         />
       </div>
+
+      {fermentId !== undefined && (
+        <div className="mt-2.5 flex justify-end">
+          <EntityLink
+            kind="batch"
+            id={fermentId}
+            className="rounded-md px-2 py-0.5 text-[0.68rem] font-medium text-muted-fg ring-1 ring-inset ring-white/40 transition-colors hover:bg-white/30 hover:text-ink focus-visible:text-ink focus-visible:ring-forest/60"
+          >
+            {t("pipeline.viewLot")}
+          </EntityLink>
+        </div>
+      )}
     </article>
   );
 }
@@ -205,10 +221,15 @@ function StageColumn({
   stage,
   batches,
   heroId,
+  fermentMap,
+  t,
 }: {
   stage: BatchStage;
   batches: ProcessingBatch[];
   heroId: string | undefined;
+  /** lotCode → ferment_batches UUID. Used to resolve the "Ver lote →" href. */
+  fermentMap: ReadonlyMap<string, string>;
+  t: Translator;
 }) {
   const accent = STAGE_ACCENT[stage];
   const items = batches.filter((b) => b.stage === stage);
@@ -219,7 +240,7 @@ function StageColumn({
         "flex min-w-[230px] flex-1 flex-col rounded-2xl border border-white/60 p-3 shadow-[0_8px_24px_-12px_rgba(31,41,37,0.18)]",
         accent.column
       )}
-      aria-label={`${STAGE_LABEL[stage]} stage`}
+      aria-label={t("pipeline.stageRegionLabel", { stage: stageLabel(t, stage) })}
     >
       <header className="px-1 pb-3">
         <div className="flex items-center justify-between gap-2">
@@ -229,12 +250,12 @@ function StageColumn({
               aria-hidden="true"
             />
             <h3 className="font-display text-sm font-semibold text-ink">
-              {STAGE_LABEL[stage]}
+              {stageLabel(t, stage)}
             </h3>
           </div>
           <Badge tone={accent.countTone}>{items.length}</Badge>
         </div>
-        <p className="mt-1 pl-4 text-xs text-muted-fg">{STAGE_SUB[stage]}</p>
+        <p className="mt-1 pl-4 text-xs text-muted-fg">{stageSub(t, stage)}</p>
         <div
           className={cn("mt-2 h-0.5 w-full rounded-full opacity-60", accent.rail)}
         />
@@ -242,10 +263,18 @@ function StageColumn({
 
       <div className="cv-auto flex flex-col gap-2.5">
         {items.length > 0 ? (
-          items.map((b) => <BatchTile key={b.id} batch={b} heroId={heroId} />)
+          items.map((b) => (
+            <BatchTile
+              key={b.id}
+              batch={b}
+              heroId={heroId}
+              fermentId={fermentMap.get(b.lotCode)}
+              t={t}
+            />
+          ))
         ) : (
           <p className="rounded-xl border border-dashed border-white/60 bg-white/40 px-3 py-6 text-center text-xs text-muted-fg">
-            No lots in this stage
+            {t("pipeline.emptyStage")}
           </p>
         )}
       </div>
@@ -254,7 +283,16 @@ function StageColumn({
 }
 
 export async function StagePipeline() {
-  const batches = await getBatches();
+  const t = await getTranslations("processing");
+  const [batches, fermentBatches] = await Promise.all([
+    getBatches(),
+    getFermentBatches(),
+  ]);
+
+  // Map lotCode → ferment_batches UUID so each BatchTile can link to the correct
+  // /ferment/[uuid] route. processing_batches.id is a slug, NOT the ferment UUID.
+  const fermentMap = new Map(fermentBatches.map((fb) => [fb.lotCode, fb.id]));
+
   const heroId = heroBatchId(batches);
 
   return (
@@ -262,14 +300,14 @@ export async function StagePipeline() {
       <div className="mb-4 flex items-baseline justify-between gap-3">
         <div>
           <h2 className="font-display text-lg font-semibold text-ink">
-            Processing pipeline
+            {t("pipeline.heading")}
           </h2>
           <p className="text-sm text-muted-fg">
-            Every active lot, from cherry intake to export-ready green coffee.
+            {t("pipeline.subtitle")}
           </p>
         </div>
         <span className="hidden shrink-0 text-xs text-muted-fg sm:block">
-          {batches.length} lots in process
+          {t("pipeline.lotsInProcess", { n: batches.length })}
         </span>
       </div>
 
@@ -281,6 +319,8 @@ export async function StagePipeline() {
               stage={stage}
               batches={batches}
               heroId={heroId}
+              fermentMap={fermentMap}
+              t={t}
             />
           ))}
         </div>

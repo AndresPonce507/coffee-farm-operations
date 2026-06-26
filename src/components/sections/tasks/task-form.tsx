@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 import type { FarmTask, Plot, Worker } from "@/lib/types";
 import { PRIORITIES, TASK_CATEGORIES, TASK_STATUSES } from "@/lib/enums";
@@ -28,6 +29,7 @@ export function TaskForm({
   submitLabel: string;
   onDone: () => void;
 }) {
+  const t = useTranslations("tasks");
   const [state, formAction, pending] = useActionState(action, IDLE);
 
   useEffect(() => {
@@ -48,13 +50,13 @@ export function TaskForm({
 
       <div className="space-y-1">
         <label className={LABEL} htmlFor="title">
-          Title
+          {t("form.title")}
         </label>
         <input
           id="title"
           name="title"
           defaultValue={task?.title}
-          placeholder="e.g. Scout for berry borer"
+          placeholder={t("form.titlePlaceholder")}
           className={FIELD}
         />
         {fieldError("title") && (
@@ -65,11 +67,11 @@ export function TaskForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="category">
-            Category
+            {t("form.category")}
           </label>
           <select id="category" name="category" defaultValue={task?.category ?? ""} className={FIELD}>
             <option value="" disabled>
-              Choose…
+              {t("form.choose")}
             </option>
             {TASK_CATEGORIES.map((c) => (
               <option key={c} value={c}>
@@ -81,7 +83,7 @@ export function TaskForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="priority">
-            Priority
+            {t("form.priority")}
           </label>
           <select id="priority" name="priority" defaultValue={task?.priority ?? "medium"} className={FIELD}>
             {PRIORITIES.map((p) => (
@@ -96,11 +98,11 @@ export function TaskForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="workerId">
-            Assignee
+            {t("form.assignee")}
           </label>
           <select id="workerId" name="workerId" defaultValue={assigneeId ?? ""} className={FIELD}>
             <option value="" disabled>
-              Choose…
+              {t("form.choose")}
             </option>
             {workers.map((w) => (
               <option key={w.id} value={w.id}>
@@ -112,10 +114,10 @@ export function TaskForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="plotId">
-            Plot
+            {t("form.plot")}
           </label>
           <select id="plotId" name="plotId" defaultValue={task?.plotId ?? ""} className={FIELD}>
-            <option value="">Farm-wide</option>
+            <option value="">{t("form.farmWide")}</option>
             {plots.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -128,7 +130,7 @@ export function TaskForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="due">
-            Due
+            {t("form.due")}
           </label>
           <input id="due" name="due" type="date" defaultValue={task?.due} className={FIELD} />
           {fieldError("due") && (
@@ -138,7 +140,7 @@ export function TaskForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="status">
-            Status
+            {t("form.status")}
           </label>
           <select id="status" name="status" defaultValue={task?.status ?? "todo"} className={FIELD}>
             {TASK_STATUSES.map((s) => (
@@ -158,10 +160,10 @@ export function TaskForm({
 
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="ghost" onClick={onDone}>
-          Cancel
+          {t("form.cancel")}
         </Button>
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : submitLabel}
+          {pending ? t("form.saving") : submitLabel}
         </Button>
       </div>
     </form>

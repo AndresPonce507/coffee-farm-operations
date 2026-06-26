@@ -1,0 +1,89 @@
+{
+  "page": {
+    "title": "Morning Dispatch",
+    "subtitle": "Per-crew plans based on ripeness, shared as a bilingual card — owner-initiated"
+  },
+  "dossier": {
+    "eyebrow": "Dispatch",
+    "backLabel": "All dispatches",
+    "subtitle": "{date} · {plots} · {season} season",
+    "plotOne": "plot",
+    "plotOther": "plots"
+  },
+  "board": {
+    "tiles": {
+      "crewsLabel": "Crews",
+      "crewsSub": "to dispatch this morning",
+      "draftedLabel": "Drafted",
+      "draftedSub": "ready to share",
+      "sharedLabel": "Shared",
+      "sharedSub": "out to the crew leads",
+      "acknowledgedLabel": "Acknowledged",
+      "acknowledgedSub": "crew lead confirmed"
+    },
+    "noCrews": "No crews on the roster yet — enroll a crew on the Crew page to dispatch.",
+    "crewSectionLabel": "Dispatch — {crewName}",
+    "noDispatch": "No dispatch yet — generate the ripeness-aware plan for {crewName}."
+  },
+  "run": {
+    "title": "The dispatch",
+    "season": "Season",
+    "plots": "Plots",
+    "ripenessThreshold": "Ripeness threshold"
+  },
+  "assignments": {
+    "title": "Assignments",
+    "noPlots": "No plots in this dispatch",
+    "target": "target {target} kg",
+    "assignedCrew": "Assigned crew",
+    "noWorkers": "No workers on the crew roster",
+    "ripeness": {
+      "high": "very ripe",
+      "medium": "ripe",
+      "low": "nearly ripe"
+    }
+  },
+  "lifecycle": {
+    "title": "Lifecycle",
+    "stages": {
+      "draftLabel": "Draft",
+      "draftHint": "Generated at dawn",
+      "sentLabel": "Sent",
+      "sentHint": "Shared with the crew",
+      "acknowledgedLabel": "Acknowledged",
+      "acknowledgedHint": "Received by the lead"
+    },
+    "via": "via {channel}",
+    "supersededNote": "This dispatch was replaced by a newer one (history).",
+    "idempotencyKey": "Unique key:"
+  },
+  "ack": {
+    "title": "Crew acknowledgment",
+    "confirmedTitle": "Confirmed by the crew lead",
+    "sentTitle": "Sent — awaiting confirmation",
+    "draftTitle": "Not sent yet",
+    "confirmedBody": "The lead marked the card as received in the group.",
+    "sentBody": "The card was shared; confirmation arrives when the lead replies.",
+    "draftBody": "This card is still a draft; share it to start the day.",
+    "injectionNote": "The acknowledgment is only proof of receipt. Inbound text from the crew never triggers an action — dispatch is outbound and owner-initiated."
+  },
+  "preview": {
+    "cardLabel": "Dispatch card for {crewName}"
+  },
+  "share": {
+    "shared": "Shared",
+    "sharing": "Sharing…",
+    "share": "Share",
+    "shareLabel": "Share dispatch for {crewName}",
+    "shareTitle": "Share · share",
+    "sharedAnnouncement": "Dispatch shared with the crew.",
+    "markSentError": "Couldn’t mark as sent. Try again."
+  },
+  "generate": {
+    "drafting": "Drafting…",
+    "redraft": "Re-draft",
+    "generate": "Generate dispatch",
+    "label": "{label} for {crewName}",
+    "error": "Could not draft the dispatch. Try again."
+  }
+}

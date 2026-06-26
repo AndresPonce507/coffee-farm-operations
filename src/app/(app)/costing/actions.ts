@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import { getSupabase } from "@/lib/supabase/server";
 
@@ -9,11 +9,12 @@ import { getSupabase } from "@/lib/supabase/server";
  * the `cost_entry` ledger from the /costing UI (until now costs were demo-seeded
  * only). Server Actions are the driving port (ADR-002 — only ever invoked by an
  * authenticated human submitting a form), so this validates the row shape the DB
- * CHECK constraints enforce BEFORE touching the network, INSERTs the one legal
- * append (the table grants INSERT-only to `authenticated`; UPDATE/DELETE are
- * physically blocked by the immutability trigger), then calls `refresh_lot_cost`
- * so the matview-backed cost-per-kg-green reflects the new entry immediately
- * (the same write-path seam the migration documents).
+ * CHECK constraints enforce BEFORE touching the network, appends the one legal row
+ * through the `book_cost_entry` SECURITY DEFINER RPC (cost_entry is an append-only
+ * ledger with NO insert policy after the P4-S0 tenant enforcement — the RPC stamps
+ * the session tenant_id and the immutability trigger blocks UPDATE/DELETE), then
+ * calls `refresh_lot_cost` so the matview-backed cost-per-kg-green reflects the new
+ * entry immediately (the same write-path seam the migration documents).
  *
  * SCOPE: booking NEW originals only (amount_usd >= 0). A correction is a
  * REVERSING entry (negative amount + reverses_id) — out of scope here; see the
@@ -171,14 +172,27 @@ export async function bookCostEntry(
     };
   }
 
-  const { error } = await sb.from("cost_entry").insert(parsed.row);
-  if (error) return { ok: false, error: friendlyInsertError(error) };
+  // cost_entry is an append-only ledger with NO insert policy after the P4-S0 tenant
+  // RLS enforcement — a direct insert is RLS-denied. Append through the SECDEF write
+  // door, which stamps the session tenant_id and self-clamps (book_cost_entry RPC,
+  // migration 20260702090000). The table CHECKs + immutability trigger still apply.
+  const { error } = await sb.rpc("book_cost_entry", {
+    p_driver: parsed.row.driver,
+    p_allocation_rule: parsed.row.allocation_rule,
+    p_target_kind: parsed.row.target_kind,
+    p_target_code: parsed.row.target_code,
+    p_amount_usd: parsed.row.amount_usd,
+    p_memo: parsed.row.memo,
+  });
+  if (error) {
+    return { ok: false, error: friendlyInsertError(error as { message: string; code?: string }) };
+  }
 
   // Bust the matview cache so the new cost is reflected immediately (D5 — the
   // write-path refresh seam). Best-effort: the append is the source of truth, so
   // a refresh hiccup must not fail the booking (the next refresh/read recovers).
   await sb.rpc("refresh_lot_cost");
 
-  revalidatePath("/costing");
+  reactiveRefresh("cost-entry");
   return { ok: true };
 }

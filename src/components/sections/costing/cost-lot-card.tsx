@@ -1,9 +1,10 @@
-import Link from "next/link";
 import { Receipt } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { CostWaterfall } from "@/components/charts/cost-waterfall";
 import { CostDecomposition } from "@/components/charts/cost-decomposition";
+import { EntityLink } from "@/components/ui/entity-link";
 import type { LotRuleCost } from "@/lib/types";
 import { cn, kg, num, usd } from "@/lib/utils";
 
@@ -55,6 +56,7 @@ export function CostLotCard({
   breakdown,
   className,
 }: CostLotCardProps) {
+  const t = useTranslations("costing");
   const figures = categoryFiguresFromAllocated(breakdown, greenKg);
 
   // Honest provenance: the count of cost DRIVERS actually contributing to this
@@ -76,27 +78,29 @@ export function CostLotCard({
     color: f.color,
   }));
 
-  // The provenance deep-link: the lot's lineage/audit surface where the
-  // append-only cost_entry ledger lives. (Nav wiring for a dedicated ledger
-  // route is S9's; today this resolves to the lot's traceability page.)
-  const provenanceHref = `/lots/${code}#cost-entries`;
-
   return (
     <Card className={cn("animate-rise overflow-hidden", className)}>
       <CardContent className="space-y-4">
         {/* Headline: lot code + true cost-per-kg-green. */}
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="font-mono text-sm font-semibold text-ink">{code}</p>
+            <EntityLink
+              kind="lot"
+              id={code}
+              name={code}
+              className="font-mono text-sm font-semibold text-ink underline-offset-2 transition-colors hover:text-forest-700 hover:underline focus-visible:text-forest-700 focus-visible:underline outline-none"
+            >
+              {code}
+            </EntityLink>
             <p className="mt-0.5 text-xs text-muted-fg">
               {greenKg > 0
-                ? `${kg(greenKg)} green`
-                : "green-kg not yet declared"}
+                ? t("lotCard.greenKg", { kg: kg(greenKg) })
+                : t("lotCard.greenNotDeclared")}
             </p>
           </div>
           <div className="text-right">
             <p className="text-[10px] uppercase tracking-wide text-muted-fg">
-              Cost / kg green
+              {t("lotCard.costPerKgGreen")}
             </p>
             <p
               data-testid={`cost-headline-${code}`}
@@ -141,16 +145,26 @@ export function CostLotCard({
         </ul>
 
         {/* AD-4 honest provenance: the count of cost drivers contributing to
-            this lot, linking through to the cost_entry audit trail behind them. */}
-        <Link
-          href={provenanceHref}
-          data-testid={`cost-provenance-${code}`}
+            this lot, linking through to the cost_entry audit trail behind them.
+            No `name` prop — the visible "N cost drivers · provenance" text IS the
+            accessible name (WCAG 2.5.3 Label-in-Name); a `name={code}` aria-label
+            would not contain that visible text and would violate it. */}
+        <EntityLink
+          kind="lot"
+          id={code}
+          anchor="cost-entries"
           className="inline-flex items-center gap-1.5 rounded-md px-1 py-0.5 text-xs font-medium text-forest transition-colors hover:bg-forest-100/60"
         >
-          <Receipt className="h-3.5 w-3.5" aria-hidden />
-          {num(driverCount)} cost {driverCount === 1 ? "driver" : "drivers"} ·
-          provenance
-        </Link>
+          <span
+            data-testid={`cost-provenance-${code}`}
+            className="inline-flex items-center gap-1.5"
+          >
+            <Receipt className="h-3.5 w-3.5" aria-hidden />
+            {driverCount === 1
+              ? t("lotCard.provenanceSingular", { count: num(driverCount) })
+              : t("lotCard.provenancePlural", { count: num(driverCount) })}
+          </span>
+        </EntityLink>
       </CardContent>
     </Card>
   );

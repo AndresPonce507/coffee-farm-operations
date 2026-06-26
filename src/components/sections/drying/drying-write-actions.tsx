@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Droplets, MapPin } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -28,6 +29,7 @@ export function DryingWriteActions({
   /** Drying stations with their live committed-vs-capacity headroom. */
   stations: StationOccupancy[];
 }) {
+  const t = useTranslations("drying");
   const [recording, setRecording] = useState(false);
   const [assigning, setAssigning] = useState(false);
 
@@ -35,17 +37,17 @@ export function DryingWriteActions({
     <>
       <Button variant="outline" onClick={() => setAssigning(true)}>
         <MapPin className="h-4 w-4" aria-hidden />
-        Assign station
+        {t("writeActions.assignStation")}
       </Button>
       <Button variant="primary" onClick={() => setRecording(true)}>
         <Droplets className="h-4 w-4" aria-hidden />
-        Record reading
+        {t("writeActions.recordReading")}
       </Button>
 
       <Dialog
         open={recording}
         onClose={() => setRecording(false)}
-        title="Record moisture reading"
+        title={t("writeActions.recordDialogTitle")}
       >
         <RecordMoistureForm lots={lots} onDone={() => setRecording(false)} />
       </Dialog>
@@ -53,7 +55,7 @@ export function DryingWriteActions({
       <Dialog
         open={assigning}
         onClose={() => setAssigning(false)}
-        title="Assign a lot to a station"
+        title={t("writeActions.assignDialogTitle")}
       >
         <AssignStationForm
           lots={lots}

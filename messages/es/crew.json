@@ -1,0 +1,102 @@
+{
+  "page": {
+    "title": "Cuadrillas",
+    "subtitle": "El sistema de registro de las personas — compañeros con nombre que regresan"
+  },
+  "dossier": {
+    "eyebrow": "Cuadrilla",
+    "backLabel": "Todas las cuadrillas",
+    "subtitle": "{members} · {present} hoy",
+    "memberOne": "integrante",
+    "memberOther": "integrantes",
+    "presentOne": "presente",
+    "presentOther": "presentes"
+  },
+  "summary": {
+    "crews": "Cuadrillas",
+    "members": "Integrantes",
+    "presentToday": "Presentes hoy"
+  },
+  "rosterBoard": {
+    "title": "Lista de cuadrillas",
+    "description": "Equipos de campo hoy · {present} de {total} presentes",
+    "crewCountOne": "{count} cuadrilla",
+    "crewCountOther": "{count} cuadrillas",
+    "crewLabel": "Cuadrilla: {crew}",
+    "presentOfTotal": "{present}/{total} presentes",
+    "certCountOne": "{count} certificación",
+    "certCountOther": "{count} certificaciones",
+    "attendancePresent": "Presente",
+    "attendanceRestDay": "Día de descanso",
+    "attendanceAbsent": "Ausente",
+    "emptyTitle": "Sin cuadrillas en la lista",
+    "emptyDescription": "Cuando se asigna a los trabajadores a una cuadrilla, aparecen aquí, agrupados por equipo."
+  },
+  "rehireStrip": {
+    "title": "Compañeros que regresan",
+    "description": "La cuadrilla de la temporada pasada — un toque para recontratar, con su identidad y certificaciones intactas",
+    "eligible": "{count} elegibles",
+    "validCertOne": "{count} certificación válida",
+    "validCertOther": "{count} certificaciones válidas",
+    "profile": "Perfil",
+    "workerFallback": "Trabajador/a"
+  },
+  "rehireButton": {
+    "welcomeBack": "Bienvenido de nuevo",
+    "rehireFor": "Recontratar para {season}",
+    "rehiring": "Recontratando…",
+    "rehire": "Recontratar",
+    "error": "No se pudo recontratar. Intentá de nuevo."
+  },
+  "workerProfileSheet": {
+    "chainVerified": "Cadena verificada",
+    "chainUnverified": "Cadena sin verificar",
+    "attendanceTimeline": "Línea de tiempo de asistencia",
+    "noAttendance": "Aún no hay asistencia registrada.",
+    "porObraContracts": "Contratos por obra",
+    "noContracts": "No hay contratos a destajo en archivo.",
+    "current": "actual",
+    "superseded": "Reemplazado",
+    "active": "Activo",
+    "certifications": "Certificaciones",
+    "noCertsTitle": "Sin certificaciones válidas",
+    "noCertsDescription": "Las certificaciones aparecen aquí mientras están vigentes; las vencidas se quitan automáticamente.",
+    "certTo": "· hasta {date}"
+  },
+  "rosterSection": {
+    "title": "Cuadrilla",
+    "empty": "Sin integrantes en esta cuadrilla todavía",
+    "presentOfTotal": "{present} de {total} presentes hoy",
+    "present": "Presente",
+    "restDay": "Descanso",
+    "absent": "Ausente",
+    "rehireEligible": "Elegible para recontratar"
+  },
+  "dispatchSection": {
+    "title": "Historial de despachos",
+    "empty": "Sin despachos registrados para esta cuadrilla",
+    "statusAcknowledged": "Confirmado",
+    "statusSent": "Enviado",
+    "statusDraft": "Borrador",
+    "statusSuperseded": "Reemplazado",
+    "dispatchOn": "Despacho del {date}",
+    "plotCountOne": "{count} parcela",
+    "plotCountOther": "{count} parcelas"
+  },
+  "plotsSection": {
+    "title": "Parcelas asignadas",
+    "empty": "Esta cuadrilla aún no ha sido despachada a ninguna parcela",
+    "masl": "{altitude} msnm",
+    "lastDispatch": "Último despacho: {date}",
+    "runCountOne": "{count} despacho",
+    "runCountOther": "{count} despachos"
+  },
+  "productivitySection": {
+    "title": "Productividad de hoy",
+    "empty": "Esta cuadrilla aún no ha pesado café hoy",
+    "totalToday": "Total hoy",
+    "latas": "Latas",
+    "pickerLataOne": "{kg} · {count} lata",
+    "pickerLataOther": "{kg} · {count} latas"
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "public": {
+    "meta": {
+      "title": "{product} — cultivado en Janson Coffee",
+      "description": "Sigue la huella de este lote de {product} desde nuestra finca en Volcán, Panamá, hasta tu taza."
+    },
+    "eyebrow": "De nuestra finca a tu taza",
+    "lotLine": "Lote {lot}",
+    "single": "Origen único",
+    "story": {
+      "heading": "La historia de esta bolsa"
+    },
+    "cup": {
+      "label": "Puntaje de taza",
+      "grade": "Grado SCA",
+      "scale": "de 100",
+      "unscored": "Todavía sin puntuar"
+    },
+    "origin": {
+      "heading": "Dónde creció",
+      "established": "Sembrado en {year}",
+      "geolocated": "Geolocalizado",
+      "deforestationFree": "Libre de deforestación",
+      "coords": "{lat}, {lng}",
+      "empty": "Estamos preparando el mapa de origen."
+    },
+    "eudr": {
+      "heading": "Revisión del bosque",
+      "compliant": "Este lote está geolocalizado y confirmado libre de deforestación.",
+      "incomplete": "Todavía estamos terminando el mapeo de origen de este lote.",
+      "no-origin": "El mapa de origen de este lote aún no está listo.",
+      "tag": {
+        "compliant": "Cumple EUDR",
+        "incomplete": "EUDR pendiente",
+        "no-origin": "Origen pendiente"
+      }
+    },
+    "crew": {
+      "heading": "Recogido a mano",
+      "body": "Recogido a mano en su punto de maduración por las familias que cultivan con nosotros.",
+      "empty": "Estamos agregando los datos de la cuadrilla."
+    },
+    "timeline": {
+      "heading": "Cómo se hizo",
+      "empty": "Estamos agregando las notas de proceso."
+    },
+    "reserve": {
+      "heading": "Doscientas hectáreas de bosque nuboso",
+      "body": "La mitad de la finca Janson se deja silvestre para el quetzal y el bosque nuboso donde anida. El café crece a la sombra de ese bosque, como desde 1990."
+    },
+    "cta": {
+      "heading": "¿Quieres este mismo café?",
+      "button": "Compra este café",
+      "sub": "Cada bolsa lleva el lote que acabas de conocer."
+    },
+    "trace": {
+      "gtin": "GTIN de la bolsa {gtin}",
+      "scan": "Escaneaste esta bolsa para seguir la huella de tu café. Gracias por tomarlo con nosotros."
+    },
+    "kind": {
+      "cherry_intake": "Cereza recibida",
+      "stage_advance": "Pasó a la siguiente etapa",
+      "ferment_start": "Comenzó la fermentación",
+      "ferment_reading": "Fermentación revisada",
+      "drying_reading": "Secado revisado",
+      "drying_station_assigned": "Pasó a una cama de secado",
+      "milled": "Trillado a verde",
+      "roasted": "Tostado",
+      "price_quoted": "Cotizado",
+      "provenance_published": "Historia publicada",
+      "fallback": "Paso registrado"
+    },
+    "error": {
+      "title": "No encontramos esa bolsa",
+      "description": "Este enlace de huella no está activo. Revisa el código de tu bolsa o visita nuestra tienda."
+    }
+  },
+  "admin": {
+    "page": {
+      "title": "Procedencia",
+      "subtitle": "Cura la página pública de huella detrás del QR de cada bolsa. Nada se hace público hasta que lo publiques."
+    },
+    "summary": {
+      "skus": "Bolsas",
+      "skusSub": "SKU ligados a lote",
+      "published": "Publicadas",
+      "publishedSub": "En vivo en el sitio",
+      "drafts": "Sin publicar",
+      "draftsSub": "Ocultas al público"
+    },
+    "empty": {
+      "title": "Aún no hay bolsas ligadas a lote",
+      "description": "Crea primero un SKU en el catálogo de la tienda y luego publica aquí su página de huella."
+    },
+    "card": {
+      "lot": "Lote {lot}",
+      "noGtin": "Sin GTIN",
+      "publishedTag": "Publicada",
+      "draftTag": "Sin publicar",
+      "slug": "/p/{slug}",
+      "view": "Abrir página",
+      "publish": "Publicar página de huella",
+      "edit": "Editar y volver a publicar",
+      "unpublish": "Bajarla"
+    },
+    "form": {
+      "title": "Publicar página de huella",
+      "lot": "Lote {lot}",
+      "slug": "Enlace público",
+      "slugHint": "La ruta después de /p/ . Minúsculas, palabras unidas con guiones.",
+      "slugPlaceholder": "janson-geisha-jc901",
+      "gtin": "GTIN de la bolsa (opcional)",
+      "gtinPlaceholder": "0840012345678",
+      "story": "Historia curada",
+      "storyHint": "Unas líneas cálidas sobre este lote. Es el único texto libre que ve el público.",
+      "storyPlaceholder": "Cultivado en Quetzal Ridge a 1,650m, recogido a mano en su punto.",
+      "cancel": "Cancelar",
+      "submit": "Publicar página",
+      "submitting": "Publicando...",
+      "published": "Publicada",
+      "unpublishTitle": "¿Bajar esta página?",
+      "unpublishBody": "Quien escanee la bolsa ya no verá la página de huella. Puedes volver a publicarla cuando quieras.",
+      "unpublishConfirm": "Bajarla",
+      "unpublishing": "Bajando..."
+    },
+    "errors": {
+      "slugRequired": "Agrega un enlace público antes de publicar.",
+      "skuRequired": "Elige una bolsa para publicar.",
+      "exists": "Otro lote ya usa ese enlace público.",
+      "unknownSku": "No encontramos esa bolsa en tu finca.",
+      "generic": "Algo salió mal. Inténtalo de nuevo."
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "page": {
+    "title": "Hedge",
+    "subtitle": "Lock the C leg on un-fixed commodity sales before the price moves"
+  },
+  "summary": {
+    "exposureLabel": "Unfixed price risk",
+    "exposureSub": "open commodity reservations at the live C",
+    "openLabel": "Open un-fixed",
+    "openSub": "{count} commodity reservation",
+    "openSubPlural": "{count} commodity reservations",
+    "kgLabel": "Un-fixed volume",
+    "kgSub": "green kg exposed to the C",
+    "refLabel": "Live C reference",
+    "refSub": "{month} ({source})",
+    "refNone": "No C mark entered yet"
+  },
+  "reserveNote": "Reserve lots are excluded. Only the commodity C leg can be hedged.",
+  "card": {
+    "monthLabel": "C month",
+    "kgLabel": "Un-fixed",
+    "currentCLabel": "Live C",
+    "exposureLabel": "Exposure",
+    "perLb": "{price} / lb",
+    "noMark": "No C mark for this month. Exposure is unknown until one is entered."
+  },
+  "empty": {
+    "title": "Nothing to hedge",
+    "description": "Every accepted commodity sale already has its C leg locked. Reserve lots are priced outright and never appear here."
+  },
+  "lock": {
+    "button": "Lock fixation",
+    "locked": "C leg locked",
+    "dialogTitle": "Lock the C leg",
+    "warning": "This is irreversible. It locks the C leg at the live mark and cannot be undone.",
+    "detail": "Lot {lot}, {kg} kg, C month {month}",
+    "atC": "Locking at C {price} / lb",
+    "noMark": "No live C mark for this month yet. Enter today's mark before locking.",
+    "pendingId": "This sale's quote reference is not available yet, so it cannot be locked from here. Lock it from the quote once the reference lands.",
+    "confirm": "Lock the C leg",
+    "cancel": "Cancel",
+    "locking": "Locking the C leg",
+    "error": "Could not lock the fixation. Check the entry and try again."
+  },
+  "loading": {
+    "label": "Loading the hedge fixation cockpit"
+  }
+}

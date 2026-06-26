@@ -19,6 +19,7 @@ const PICKER = Object.fromEntries(pickers.map((p) => [p.id, p.name])) as Record<
   string
 >;
 
+
 /** Plot name lookup, resolved from the canonical plots anchor. */
 const PLOT_NAME = Object.fromEntries(plots.map((p) => [p.id, p.name])) as Record<
   string,
@@ -33,6 +34,7 @@ export const harvests: Harvest[] = [
     plotId: "p-tizingal-alto",
     plotName: PLOT_NAME["p-tizingal-alto"],
     picker: PICKER["w-06"], // Lucía Morales
+    workerId: "w-06",
     cherriesKg: 88,
     ripenessPct: 96,
     brixAvg: 23.4,
@@ -44,6 +46,7 @@ export const harvests: Harvest[] = [
     plotId: "p-tizingal-alto",
     plotName: PLOT_NAME["p-tizingal-alto"],
     picker: PICKER["w-13"], // Iris Castillo
+    workerId: "w-13",
     cherriesKg: 71,
     ripenessPct: 94,
     brixAvg: 22.8,
@@ -55,6 +58,7 @@ export const harvests: Harvest[] = [
     plotId: "p-las-lagunas",
     plotName: PLOT_NAME["p-las-lagunas"],
     picker: PICKER["w-08"], // Ana Serrano
+    workerId: "w-08",
     cherriesKg: 76,
     ripenessPct: 97,
     brixAvg: 23.9,
@@ -66,6 +70,7 @@ export const harvests: Harvest[] = [
     plotId: "p-talamanca",
     plotName: PLOT_NAME["p-talamanca"],
     picker: PICKER["w-03"], // Eduardo Pérez
+    workerId: "w-03",
     cherriesKg: 92,
     ripenessPct: 90,
     brixAvg: 19.6,
@@ -77,6 +82,7 @@ export const harvests: Harvest[] = [
     plotId: "p-talamanca",
     plotName: PLOT_NAME["p-talamanca"],
     picker: PICKER["w-04"], // Rosa Quintero
+    workerId: "w-04",
     cherriesKg: 84,
     ripenessPct: 91,
     brixAvg: 19.9,
@@ -88,6 +94,7 @@ export const harvests: Harvest[] = [
     plotId: "p-nueva-suiza",
     plotName: PLOT_NAME["p-nueva-suiza"],
     picker: PICKER["w-14"], // Félix Rodríguez
+    workerId: "w-14",
     cherriesKg: 79,
     ripenessPct: 88,
     brixAvg: 20.4,
@@ -99,6 +106,7 @@ export const harvests: Harvest[] = [
     plotId: "p-baru-vista",
     plotName: PLOT_NAME["p-baru-vista"],
     picker: PICKER["w-05"], // Tomás Atencio
+    workerId: "w-05",
     cherriesKg: 64,
     ripenessPct: 93,
     brixAvg: 22.6,
@@ -110,6 +118,7 @@ export const harvests: Harvest[] = [
     plotId: "p-bambito",
     plotName: PLOT_NAME["p-bambito"],
     picker: PICKER["w-09"], // Pedro Caballero
+    workerId: "w-09",
     cherriesKg: 90,
     ripenessPct: 89,
     brixAvg: 19.2,
@@ -123,6 +132,7 @@ export const harvests: Harvest[] = [
     plotId: "p-tizingal-alto",
     plotName: PLOT_NAME["p-tizingal-alto"],
     picker: PICKER["w-06"], // Lucía Morales
+    workerId: "w-06",
     cherriesKg: 82,
     ripenessPct: 95,
     brixAvg: 23.1,
@@ -134,6 +144,7 @@ export const harvests: Harvest[] = [
     plotId: "p-las-lagunas",
     plotName: PLOT_NAME["p-las-lagunas"],
     picker: PICKER["w-13"], // Iris Castillo
+    workerId: "w-13",
     cherriesKg: 68,
     ripenessPct: 98,
     brixAvg: 23.7,
@@ -145,6 +156,7 @@ export const harvests: Harvest[] = [
     plotId: "p-talamanca",
     plotName: PLOT_NAME["p-talamanca"],
     picker: PICKER["w-03"], // Eduardo Pérez
+    workerId: "w-03",
     cherriesKg: 96,
     ripenessPct: 90,
     brixAvg: 19.4,
@@ -156,6 +168,7 @@ export const harvests: Harvest[] = [
     plotId: "p-palmira",
     plotName: PLOT_NAME["p-palmira"],
     picker: PICKER["w-14"], // Félix Rodríguez
+    workerId: "w-14",
     cherriesKg: 87,
     ripenessPct: 87,
     brixAvg: 20.1,
@@ -169,6 +182,7 @@ export const harvests: Harvest[] = [
     plotId: "p-baru-vista",
     plotName: PLOT_NAME["p-baru-vista"],
     picker: PICKER["w-05"], // Tomás Atencio
+    workerId: "w-05",
     cherriesKg: 73,
     ripenessPct: 92,
     brixAvg: 22.3,
@@ -180,6 +194,7 @@ export const harvests: Harvest[] = [
     plotId: "p-tizingal-alto",
     plotName: PLOT_NAME["p-tizingal-alto"],
     picker: PICKER["w-08"], // Ana Serrano
+    workerId: "w-08",
     cherriesKg: 79,
     ripenessPct: 94,
     brixAvg: 22.9,
@@ -191,6 +206,7 @@ export const harvests: Harvest[] = [
     plotId: "p-nueva-suiza",
     plotName: PLOT_NAME["p-nueva-suiza"],
     picker: PICKER["w-04"], // Rosa Quintero
+    workerId: "w-04",
     cherriesKg: 85,
     ripenessPct: 89,
     brixAvg: 20.6,
@@ -202,6 +218,7 @@ export const harvests: Harvest[] = [
     plotId: "p-bambito",
     plotName: PLOT_NAME["p-bambito"],
     picker: PICKER["w-09"], // Pedro Caballero
+    workerId: "w-09",
     cherriesKg: 94,
     ripenessPct: 88,
     brixAvg: 19.0,
@@ -215,6 +232,7 @@ export const harvests: Harvest[] = [
     plotId: "p-talamanca",
     plotName: PLOT_NAME["p-talamanca"],
     picker: PICKER["w-03"], // Eduardo Pérez
+    workerId: "w-03",
     cherriesKg: 101,
     ripenessPct: 91,
     brixAvg: 19.7,
@@ -226,6 +244,7 @@ export const harvests: Harvest[] = [
     plotId: "p-las-lagunas",
     plotName: PLOT_NAME["p-las-lagunas"],
     picker: PICKER["w-06"], // Lucía Morales
+    workerId: "w-06",
     cherriesKg: 62,
     ripenessPct: 97,
     brixAvg: 23.5,
@@ -237,6 +256,7 @@ export const harvests: Harvest[] = [
     plotId: "p-rio-sereno",
     plotName: PLOT_NAME["p-rio-sereno"],
     picker: PICKER["w-13"], // Iris Castillo
+    workerId: "w-13",
     cherriesKg: 70,
     ripenessPct: 86,
     brixAvg: 21.2,
@@ -250,6 +270,7 @@ export const harvests: Harvest[] = [
     plotId: "p-baru-vista",
     plotName: PLOT_NAME["p-baru-vista"],
     picker: PICKER["w-05"], // Tomás Atencio
+    workerId: "w-05",
     cherriesKg: 75,
     ripenessPct: 93,
     brixAvg: 22.5,
@@ -261,6 +282,7 @@ export const harvests: Harvest[] = [
     plotId: "p-palmira",
     plotName: PLOT_NAME["p-palmira"],
     picker: PICKER["w-14"], // Félix Rodríguez
+    workerId: "w-14",
     cherriesKg: 90,
     ripenessPct: 85,
     brixAvg: 19.8,
@@ -272,6 +294,7 @@ export const harvests: Harvest[] = [
     plotId: "p-nueva-suiza",
     plotName: PLOT_NAME["p-nueva-suiza"],
     picker: PICKER["w-04"], // Rosa Quintero
+    workerId: "w-04",
     cherriesKg: 83,
     ripenessPct: 90,
     brixAvg: 20.3,
@@ -285,6 +308,7 @@ export const harvests: Harvest[] = [
     plotId: "p-cuesta-piedra",
     plotName: PLOT_NAME["p-cuesta-piedra"],
     picker: PICKER["w-09"], // Pedro Caballero
+    workerId: "w-09",
     cherriesKg: 77,
     ripenessPct: 84,
     brixAvg: 20.0,
@@ -296,6 +320,7 @@ export const harvests: Harvest[] = [
     plotId: "p-tizingal-alto",
     plotName: PLOT_NAME["p-tizingal-alto"],
     picker: PICKER["w-08"], // Ana Serrano
+    workerId: "w-08",
     cherriesKg: 80,
     ripenessPct: 95,
     brixAvg: 23.0,
@@ -307,6 +332,7 @@ export const harvests: Harvest[] = [
     plotId: "p-bambito",
     plotName: PLOT_NAME["p-bambito"],
     picker: PICKER["w-03"], // Eduardo Pérez
+    workerId: "w-03",
     cherriesKg: 98,
     ripenessPct: 89,
     brixAvg: 19.3,
@@ -320,6 +346,7 @@ export const harvests: Harvest[] = [
     plotId: "p-talamanca",
     plotName: PLOT_NAME["p-talamanca"],
     picker: PICKER["w-04"], // Rosa Quintero
+    workerId: "w-04",
     cherriesKg: 89,
     ripenessPct: 90,
     brixAvg: 19.5,
@@ -331,6 +358,7 @@ export const harvests: Harvest[] = [
     plotId: "p-las-lagunas",
     plotName: PLOT_NAME["p-las-lagunas"],
     picker: PICKER["w-06"], // Lucía Morales
+    workerId: "w-06",
     cherriesKg: 66,
     ripenessPct: 96,
     brixAvg: 23.6,
@@ -342,6 +370,7 @@ export const harvests: Harvest[] = [
     plotId: "p-paso-ancho",
     plotName: PLOT_NAME["p-paso-ancho"],
     picker: PICKER["w-05"], // Tomás Atencio
+    workerId: "w-05",
     cherriesKg: 58,
     ripenessPct: 82,
     brixAvg: 21.4,
@@ -355,6 +384,7 @@ export const harvests: Harvest[] = [
     plotId: "p-baru-vista",
     plotName: PLOT_NAME["p-baru-vista"],
     picker: PICKER["w-13"], // Iris Castillo
+    workerId: "w-13",
     cherriesKg: 72,
     ripenessPct: 92,
     brixAvg: 22.2,
@@ -366,6 +396,7 @@ export const harvests: Harvest[] = [
     plotId: "p-palmira",
     plotName: PLOT_NAME["p-palmira"],
     picker: PICKER["w-14"], // Félix Rodríguez
+    workerId: "w-14",
     cherriesKg: 86,
     ripenessPct: 86,
     brixAvg: 19.9,
@@ -377,6 +408,7 @@ export const harvests: Harvest[] = [
     plotId: "p-rio-sereno",
     plotName: PLOT_NAME["p-rio-sereno"],
     picker: PICKER["w-08"], // Ana Serrano
+    workerId: "w-08",
     cherriesKg: 69,
     ripenessPct: 85,
     brixAvg: 21.0,

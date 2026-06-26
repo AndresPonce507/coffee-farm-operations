@@ -1,4 +1,5 @@
 import { CalendarCheck2, Users, UsersRound } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -31,10 +32,11 @@ export function CrewSummary({
   presentToday,
   className,
 }: CrewSummaryProps) {
+  const t = useTranslations("crew");
   const stats: Stat[] = [
-    { label: "Crews", value: crews, icon: UsersRound },
-    { label: "Members", value: members, icon: Users },
-    { label: "Present today", value: presentToday, icon: CalendarCheck2 },
+    { label: t("summary.crews"), value: crews, icon: UsersRound },
+    { label: t("summary.members"), value: members, icon: Users },
+    { label: t("summary.presentToday"), value: presentToday, icon: CalendarCheck2 },
   ];
 
   return (

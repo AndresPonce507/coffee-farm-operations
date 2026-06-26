@@ -108,7 +108,7 @@ describe("/crew page (smoke)", () => {
     render(ui);
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "Crew" }),
+      screen.getByRole("heading", { level: 1, name: "Crews" }),
     ).toBeInTheDocument();
 
     // summary derives: 2 distinct crews, 2 members, 1 present today.

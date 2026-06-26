@@ -1,0 +1,54 @@
+{
+  "page": {
+    "title": "Pesaje",
+    "subtitle": "El evento de campo de origen — registrar, pesar, madurez · funciona sin conexión"
+  },
+  "capture": {
+    "gpsFailed": "No se pudo ubicar con GPS — confirma la parcela a mano.",
+    "scaleFailed": "La balanza no conectó — ingresa el peso a mano.",
+    "checkEntry": "Revisa el dato.",
+    "saveFailed": "No se pudo guardar este pesaje.",
+    "stepPicker": "1 · Identifica al cosechero/a",
+    "stepPlot": "2 · Confirma la parcela",
+    "stepWeigh": "3 · Pesa la lata",
+    "stepRipeness": "4 · Madurez",
+    "plotLabel": "Parcela",
+    "gpsLocating": "Buscando GPS…",
+    "gpsSet": "GPS listo",
+    "gpsUse": "Usar GPS",
+    "captured": "Peso registrado — guardado en este dispositivo",
+    "nextLata": "Siguiente lata",
+    "captureLabel": "Registrar pesaje",
+    "saving": "Guardando…",
+    "capture": "Registrar"
+  },
+  "tally": {
+    "thisPicker": "Este cosechero/a",
+    "todaySuffix": "{name} · hoy",
+    "lataOne": "{count} lata",
+    "lataMany": "{count} latas",
+    "farmToday": "Finca · hoy"
+  },
+  "pickerGrid": {
+    "empty": "Aún no hay cosecheros activos en una cuadrilla.",
+    "ariaLabel": "Cosechero/a"
+  },
+  "numericPad": {
+    "deleteLabel": "Borrar último dígito",
+    "decimalLabel": "Punto decimal",
+    "digitLabel": "Dígito {digit}",
+    "scaleConnecting": "Conectando balanza…",
+    "scaleTry": "Probar una balanza Bluetooth"
+  },
+  "ripenessPad": {
+    "ariaLabel": "Madurez"
+  },
+  "rippleProof": {
+    "headline": "Tu peso se reflejó en…",
+    "subhead": "Sin volver a escribir nada — toca para ver el dato ya actualizado.",
+    "dashboard": "Tablero · hoy",
+    "lot": "Lote {code}",
+    "lotPending": "Tu lote · se confirma al sincronizar",
+    "consumerLabel": "{label} {delta}"
+  }
+}

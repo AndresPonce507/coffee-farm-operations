@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { DryingBoard } from "@/components/sections/drying/drying-board";
 import { StationOccupancyBoard } from "@/components/sections/drying/station-occupancy-board";
@@ -6,6 +8,7 @@ import {
   getDryingLots,
   getStationOccupancy,
   getDryingWeatherRisk,
+  getReposoBand,
 } from "@/lib/db/drying";
 
 /**
@@ -38,10 +41,12 @@ import {
  * from (app)/layout.tsx.
  */
 export default async function DryingPage() {
-  const [lots, stations, weatherRisk] = await Promise.all([
+  const t = await getTranslations("drying");
+  const [lots, stations, weatherRisk, band] = await Promise.all([
     getDryingLots(),
     getStationOccupancy(),
     getDryingWeatherRisk(),
+    getReposoBand(),
   ]);
 
   // Resting lot codes — the candidates a moisture reading / station assignment can
@@ -51,13 +56,13 @@ export default async function DryingPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Drying & reposo"
-        subtitle="The rest that defines the cup — moisture, stations, and the reposo gate"
+        title={t("page.title")}
+        subtitle={t("page.subtitle")}
       >
         <DryingWriteActions lots={lotCodes} stations={stations} />
       </PageHeader>
 
-      <DryingBoard lots={lots} />
+      <DryingBoard lots={lots} bandMin={band.min} bandMax={band.max} />
 
       <StationOccupancyBoard stations={stations} weatherRisk={weatherRisk} />
     </div>

@@ -1,4 +1,5 @@
 import { CloudOff, Radar, Satellite } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Tile } from "@/components/ui/tile";
@@ -30,13 +31,14 @@ import { VegetationGrid } from "./vegetation-grid";
  */
 
 /** The honest confidence key shown over the map — mirrors the headline strip. */
-const CONFIDENCE_LEGEND: { label: string; sub: string; color: string }[] = [
-  { label: "Seen clearly", sub: "high-confidence optical", color: PALETTE.forest500 },
-  { label: "Radar-carried", sub: "SAR fallback under cloud", color: PALETTE.honey },
-  { label: "Honestly unknown", sub: "no clear signal", color: PALETTE.coffee },
+const CONFIDENCE_LEGEND: { labelKey: string; subKey: string; color: string }[] = [
+  { labelKey: "board.seenClearly", subKey: "board.seenClearlySub", color: PALETTE.forest500 },
+  { labelKey: "board.radarCarried", subKey: "board.radarCarriedSub", color: PALETTE.honey },
+  { labelKey: "board.honestlyUnknown", subKey: "board.honestlyUnknownLegendSub", color: PALETTE.coffee },
 ];
 
 export async function SatelliteBoard() {
+  const t = await getTranslations("satellite");
   const [rows, phi, plots, reserve] = await Promise.all([
     getPlotVegetation(),
     getPlotPhiStatus(),
@@ -52,7 +54,7 @@ export async function SatelliteBoard() {
     <div className="space-y-6">
       {/* The headline view — the farm map tinted plot-by-plot, with the honest
           confidence key floating over it (AD-3: opaque inner chip). */}
-      <section aria-label="Farm map — vegetation health">
+      <section aria-label={t("board.mapAria")}>
         <div className="animate-rise relative h-[clamp(20rem,52vh,34rem)] w-full overflow-hidden rounded-2xl">
           <MapCanvas plots={plots} reserve={reserve} />
 
@@ -63,20 +65,20 @@ export async function SatelliteBoard() {
           >
             <div className="rounded-xl bg-card/95 px-3.5 py-3">
               <p className="text-[11px] font-medium uppercase tracking-wide text-forest-500">
-                NDVI / SAR confidence
+                {t("board.legendTitle")}
               </p>
               <ul className="mt-2 space-y-1.5">
-                {CONFIDENCE_LEGEND.map(({ label, sub, color }) => (
-                  <li key={label} className="flex items-start gap-2 text-xs text-ink">
+                {CONFIDENCE_LEGEND.map(({ labelKey, subKey, color }) => (
+                  <li key={labelKey} className="flex items-start gap-2 text-xs text-ink">
                     <span
                       aria-hidden
                       className="mt-0.5 h-3 w-3 shrink-0 rounded-[4px]"
                       style={{ background: color }}
                     />
                     <span>
-                      <span className="font-medium">{label}</span>
+                      <span className="font-medium">{t(labelKey)}</span>
                       <span className="block text-[10px] leading-tight text-muted-fg">
-                        {sub}
+                        {t(subKey)}
                       </span>
                     </span>
                   </li>
@@ -89,9 +91,9 @@ export async function SatelliteBoard() {
 
       {/* PHI/REI countdown chips — the safety windows, visible on the map surface
           too (not only on /scouting), per the P2-S12 "on every plot" wording. */}
-      <section aria-label="PHI / REI safety windows">
+      <section aria-label={t("board.windowsAria")}>
         <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-muted-fg">
-          Active safety windows (PHI / REI)
+          {t("board.windowsHeading")}
         </h2>
         <PhiChips rows={phi} />
       </section>
@@ -102,26 +104,26 @@ export async function SatelliteBoard() {
           <div className="stagger grid grid-cols-1 divide-y divide-white/50 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
             <div data-testid="sat-high-count">
               <Tile
-                label="Seen clearly"
+                label={t("board.seenClearly")}
                 value={num(high)}
-                sub="high-confidence optical"
+                sub={t("board.seenClearlySub")}
                 accent="forest"
                 icon={Satellite}
                 className="glass-hover"
               />
             </div>
             <Tile
-              label="Radar-carried"
+              label={t("board.radarCarried")}
               value={num(medium)}
-              sub="SAR fallback under cloud"
+              sub={t("board.radarCarriedSub")}
               accent="honey"
               icon={Radar}
               className="glass-hover"
             />
             <Tile
-              label="Honestly unknown"
+              label={t("board.honestlyUnknown")}
               value={num(low)}
-              sub="no clear signal — flagged, not hidden"
+              sub={t("board.honestlyUnknownTileSub")}
               accent="ink"
               icon={CloudOff}
               className="glass-hover"
@@ -131,9 +133,9 @@ export async function SatelliteBoard() {
       </Card>
 
       {/* Per-plot list — the no-JS summary/fallback beneath the spatial map. */}
-      <section aria-label="Per-plot vegetation health">
+      <section aria-label={t("board.perPlotAria")}>
         <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-wide text-muted-fg">
-          Plot vegetation health — NDVI / NDRE fused with SAR
+          {t("board.perPlotHeading")}
         </h2>
         <VegetationGrid rows={rows} />
       </section>

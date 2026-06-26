@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { Coffee, MapPin } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
+import { EntityLink } from "@/components/ui/entity-link";
 import { ReposoGateChip } from "./reposo-gate-chip";
 import { MoistureCurve } from "./moisture-curve";
 import { cn, kg } from "@/lib/utils";
@@ -28,25 +30,39 @@ import type { DryingLot } from "@/lib/types";
  *
  * Server component (no client JS): pure presentation over the composed read.
  */
-export function DryingBoard({ lots }: { lots: DryingLot[] }) {
+export function DryingBoard({
+  lots,
+  bandMin,
+  bandMax,
+}: {
+  lots: DryingLot[];
+  /**
+   * Reposo target-band edges (SSOT `farm_season_config.reposo_moisture_min/max_pct`),
+   * threaded down to each lot's <MoistureCurve> so the drawn band tracks the exact
+   * window the reposo gate enforces — never the component's literal default.
+   */
+  bandMin?: number;
+  bandMax?: number;
+}) {
+  const t = useTranslations("drying");
   const blocked = lots.filter((l) => !l.reposo.ready).length;
   const ready = lots.length - blocked;
 
   return (
     <Card className="overflow-hidden">
       <CardHeader>
-        <CardTitle>Resting lots · the reposo gate</CardTitle>
+        <CardTitle>{t("board.title")}</CardTitle>
         <div className="flex items-center gap-2">
-          {ready > 0 && <Badge tone="ok" dot>{ready} clear to mill</Badge>}
-          {blocked > 0 && <Badge tone="cherry" dot>{blocked} resting</Badge>}
+          {ready > 0 && <Badge tone="ok" dot>{t("board.clearToMill", { count: ready })}</Badge>}
+          {blocked > 0 && <Badge tone="cherry" dot>{t("board.resting", { count: blocked })}</Badge>}
         </div>
       </CardHeader>
 
       <div className="px-5 pb-5 pt-3">
         {lots.length === 0 ? (
           <EmptyState
-            title="No lots resting yet"
-            description="Lots appear here once they reach the drying stage and start their reposo rest."
+            title={t("board.emptyTitle")}
+            description={t("board.emptyDescription")}
           />
         ) : (
           <ul className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -65,10 +81,14 @@ export function DryingBoard({ lots }: { lots: DryingLot[] }) {
               >
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div>
-                    <p className="flex items-center gap-1.5 font-display text-base font-bold tracking-tight text-ink">
+                    <EntityLink
+                      kind="lot"
+                      id={lot.lotCode}
+                      className="flex items-center gap-1.5 font-display text-base font-bold tracking-tight text-ink transition-colors hover:text-forest-700"
+                    >
                       <Coffee aria-hidden className="h-4 w-4 text-honey-700" />
                       {lot.lotCode}
-                    </p>
+                    </EntityLink>
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted-fg">
                       {lot.variety && <span>{lot.variety}</span>}
                       {lot.currentKg != null && (
@@ -85,7 +105,12 @@ export function DryingBoard({ lots }: { lots: DryingLot[] }) {
                   <ReposoGateChip reposo={lot.reposo} />
                 </div>
 
-                <MoistureCurve curve={lot.curve} height={140} />
+                <MoistureCurve
+                  curve={lot.curve}
+                  bandMin={bandMin}
+                  bandMax={bandMax}
+                  height={140}
+                />
 
                 {/* The advance-to-mill affordance. Blocked: a disabled button
                     carrying the gate's reason (DB is the real gate; this is
@@ -97,28 +122,28 @@ export function DryingBoard({ lots }: { lots: DryingLot[] }) {
                   {lot.reposo.ready ? (
                     <Link
                       href="/processing"
-                      title="Advance this lot to milling on the Processing surface"
-                      aria-label={`Advance lot ${lot.lotCode} to milling`}
+                      title={t("board.advanceTitle")}
+                      aria-label={t("board.advanceAriaLabel", { code: lot.lotCode })}
                       className={cn(
                         "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
                         "bg-forest text-paper hover:bg-forest-600",
                         "outline-none focus-visible:ring-2 focus-visible:ring-forest/40",
                       )}
                     >
-                      Advance to mill →
+                      {t("board.advanceLink")}
                     </Link>
                   ) : (
                     <button
                       type="button"
                       disabled
                       aria-disabled
-                      title={`Blocked by the reposo gate: ${lot.reposo.reason}`}
+                      title={t("board.millLockedTitle", { reason: lot.reposo.reason })}
                       className={cn(
                         "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
                         "cursor-not-allowed bg-muted text-muted-fg",
                       )}
                     >
-                      Mill — locked
+                      {t("board.millLocked")}
                     </button>
                   )}
                 </div>

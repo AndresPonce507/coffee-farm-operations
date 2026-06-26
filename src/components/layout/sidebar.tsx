@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   LayoutDashboard,
   Sprout,
@@ -23,36 +24,87 @@ import {
   Satellite,
   Bug,
   Banknote,
+  TrendingUp,
+  Anchor,
+  Megaphone,
+  FileSignature,
+  Lock,
+  TestTube2,
+  Gavel,
+  Ship,
+  Factory,
+  Flame,
+  BarChart2,
+  Store,
+  ShoppingCart,
+  Repeat2,
+  QrCode,
+  CreditCard,
+  Receipt,
+  LineChart,
+  Trophy,
 } from "lucide-react";
 import { JansonLogo } from "./logo";
 import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
+/**
+ * NAV — the single source of truth for the app's primary navigation, shared by
+ * the desktop Sidebar, the MobileNav drawer, and the ⌘K CommandPalette. Each
+ * entry carries a stable `key` that resolves to a localized label via the
+ * `layout.nav.<key>` dictionary (consumers call `useTranslations("layout")`),
+ * so a route is reachable everywhere at once and its copy switches per locale.
+ */
 export const NAV = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/plots", label: "Plots", icon: Sprout },
-  { href: "/map", label: "Map", icon: Map },
-  { href: "/weigh", label: "Weigh", icon: Scale },
-  { href: "/harvests", label: "Harvests", icon: Coffee },
-  { href: "/plan", label: "Plan", icon: CalendarRange },
-  { href: "/dispatch", label: "Dispatch", icon: Send },
-  { href: "/processing", label: "Processing", icon: FlaskConical },
-  { href: "/ferment", label: "Ferment", icon: Beaker },
-  { href: "/drying", label: "Drying", icon: Wind },
-  { href: "/inventory", label: "Inventory", icon: Boxes },
-  { href: "/qc", label: "QC", icon: Award },
-  { href: "/satellite", label: "Satellite", icon: Satellite },
-  { href: "/scouting", label: "Scouting", icon: Bug },
-  { href: "/costing", label: "Costing", icon: Coins },
-  { href: "/eudr", label: "EUDR", icon: ShieldCheck },
-  { href: "/workers", label: "Workers", icon: Users },
-  { href: "/crew", label: "Crew", icon: HeartHandshake },
-  { href: "/payroll", label: "Payroll", icon: Banknote },
-  { href: "/tasks", label: "Tasks", icon: ListChecks },
+  { href: "/", key: "dashboard", icon: LayoutDashboard },
+  { href: "/plots", key: "plots", icon: Sprout },
+  { href: "/map", key: "map", icon: Map },
+  { href: "/weigh", key: "weigh", icon: Scale },
+  { href: "/harvests", key: "harvests", icon: Coffee },
+  { href: "/plan", key: "plan", icon: CalendarRange },
+  { href: "/dispatch", key: "dispatch", icon: Send },
+  { href: "/processing", key: "processing", icon: FlaskConical },
+  { href: "/ferment", key: "ferment", icon: Beaker },
+  { href: "/drying", key: "drying", icon: Wind },
+  // P3 Wave 2 — dry milling (post-drying), inventory, QC, then roasting + yields
+  { href: "/mill", key: "mill", icon: Factory },
+  { href: "/inventory", key: "inventory", icon: Boxes },
+  { href: "/qc", key: "qc", icon: Award },
+  { href: "/roast", key: "roast", icon: Flame },
+  { href: "/yields", key: "yields", icon: BarChart2 },
+  { href: "/pricing", key: "pricing", icon: TrendingUp },
+  { href: "/hedge", key: "hedge", icon: Anchor },
+  // P3 Wave 1 commerce cluster — offer board, contracts, fixation, samples, auctions, export
+  { href: "/sales/offers", key: "offers", icon: Megaphone },
+  { href: "/sales/contracts", key: "contracts", icon: FileSignature },
+  { href: "/sales/fixation", key: "fixation", icon: Lock },
+  { href: "/sales/samples", key: "samples", icon: TestTube2 },
+  { href: "/sales/auctions", key: "auctions", icon: Gavel },
+  { href: "/sales/shipments", key: "shipments", icon: Ship },
+  // P3 Wave 3 DTC commerce cluster — storefront SKUs, orders, Reserve Club, provenance, POS
+  { href: "/shop", key: "shop", icon: Store },
+  { href: "/orders", key: "orders", icon: ShoppingCart },
+  { href: "/subscriptions", key: "subscriptions", icon: Repeat2 },
+  { href: "/provenance", key: "provenance", icon: QrCode },
+  { href: "/pos", key: "pos", icon: CreditCard },
+  // P3 Wave 4 accounting cluster — AR / invoices and realized margin + FX
+  { href: "/finance", key: "finance", icon: Receipt },
+  { href: "/margins", key: "margins", icon: LineChart },
+  // P3 Wave 5 reputation cluster — lot accolades, wall of fame (S19)
+  { href: "/reputation", key: "reputation", icon: Trophy },
+  { href: "/satellite", key: "satellite", icon: Satellite },
+  { href: "/scouting", key: "scouting", icon: Bug },
+  { href: "/costing", key: "costing", icon: Coins },
+  { href: "/eudr", key: "eudr", icon: ShieldCheck },
+  { href: "/workers", key: "workers", icon: Users },
+  { href: "/crew", key: "crew", icon: HeartHandshake },
+  { href: "/payroll", key: "payroll", icon: Banknote },
+  { href: "/tasks", key: "tasks", icon: ListChecks },
 ] as const;
 
 export function Sidebar() {
   const pathname = usePathname();
+  const t = useTranslations("layout");
 
   return (
     <aside className="glass-forest sticky top-0 hidden h-screen w-64 shrink-0 flex-col text-paper md:flex">
@@ -63,7 +115,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 px-3">
-        {NAV.map(({ href, label, icon: Icon }) => {
+        {NAV.map(({ href, key, icon: Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
           return (
             <Link
@@ -83,7 +135,7 @@ export function Sidebar() {
                   active ? "text-honey" : "text-paper/55 group-hover:text-paper/80"
                 )}
               />
-              {label}
+              {t(`nav.${key}`)}
               {active && (
                 <span className="ml-auto h-1.5 w-1.5 rounded-full bg-honey" />
               )}

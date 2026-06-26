@@ -1,4 +1,5 @@
 import { Beaker, Clock } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type {
   FermentBatch,
@@ -8,6 +9,7 @@ import type {
   WaterPerKg,
 } from "@/lib/db/ferment";
 import { Badge } from "@/components/ui/badge";
+import { EntityLink } from "@/components/ui/entity-link";
 import {
   Card,
   CardContent,
@@ -20,6 +22,7 @@ import { longDate } from "@/lib/utils";
 import { CutpointAlert } from "./cutpoint-alert";
 import { FermentCurve } from "./ferment-curve";
 import { LogReadingForm } from "./log-reading-form";
+import { LogWaterForm } from "./log-water-form";
 import { WaterChip } from "./water-chip";
 
 /**
@@ -31,6 +34,7 @@ import { WaterChip } from "./water-chip";
 function latestReadout(
   curve: FermentCurvePoint[],
   kind: FermentReadingKind,
+  t: ReturnType<typeof useTranslations>,
 ): string | null {
   const series = curve
     .filter((p) => p.readingKind === kind)
@@ -39,11 +43,11 @@ function latestReadout(
   const v = series[series.length - 1].value;
   switch (kind) {
     case "ph":
-      return `pH ${v.toFixed(1)}`;
+      return t("readout.ph", { value: v.toFixed(1) });
     case "temp":
-      return `${v.toFixed(1)} °C`;
+      return t("readout.temp", { value: v.toFixed(1) });
     case "brix":
-      return `${v.toFixed(1)} °Bx`;
+      return t("readout.brix", { value: v.toFixed(1) });
   }
 }
 
@@ -86,12 +90,13 @@ export function FermentTracker({
   cutpoint: FermentCutpoint | null;
   water: WaterPerKg | null;
 }) {
+  const t = useTranslations("ferment");
   const live = batch.endedAt === null;
   const targetPh = cutpoint?.targetPh ?? null;
 
-  const latestPh = latestReadout(curve, "ph");
-  const latestTemp = latestReadout(curve, "temp");
-  const latestBrix = latestReadout(curve, "brix");
+  const latestPh = latestReadout(curve, "ph", t);
+  const latestTemp = latestReadout(curve, "temp", t);
+  const latestBrix = latestReadout(curve, "brix", t);
 
   return (
     <div className="space-y-6">
@@ -100,7 +105,14 @@ export function FermentTracker({
         <CardHeader>
           <div>
             <CardTitle>
-              <span className="font-mono">{batch.lotCode}</span> ferment
+              <EntityLink
+                kind="lot"
+                id={batch.lotCode}
+                className="font-mono underline-offset-4 transition-colors hover:text-forest hover:underline"
+              >
+                {batch.lotCode}
+              </EntityLink>{" "}
+              {t("tracker.ferment")}
             </CardTitle>
             <CardDescription>
               <span className="inline-flex items-center gap-1">
@@ -110,17 +122,17 @@ export function FermentTracker({
               <span className="mx-2 text-muted-fg/40">·</span>
               <span className="inline-flex items-center gap-1">
                 <Clock className="h-3.5 w-3.5" aria-hidden />
-                Started {longDate(batch.startedAt)}
+                {t("tracker.started", { date: longDate(batch.startedAt) })}
               </span>
             </CardDescription>
           </div>
           {live ? (
             <Badge tone="forest" dot>
-              Live
+              {t("tracker.live")}
             </Badge>
           ) : (
             <Badge tone="neutral" dot>
-              Finished
+              {t("tracker.finished")}
             </Badge>
           )}
         </CardHeader>
@@ -134,9 +146,9 @@ export function FermentTracker({
         <Card className="animate-rise xl:col-span-3">
           <CardHeader>
             <div>
-              <CardTitle>pH</CardTitle>
+              <CardTitle>{t("tracker.phTitle")}</CardTitle>
               <CardDescription>
-                Live acidity vs the recipe target band — the curve the cut is made on
+                {t("tracker.phDescription")}
               </CardDescription>
             </div>
             {latestPh && <LatestChip kind="ph" value={latestPh} />}
@@ -148,7 +160,7 @@ export function FermentTracker({
 
         <Card className="animate-rise xl:col-span-2">
           <CardHeader>
-            <CardTitle>Temperature</CardTitle>
+            <CardTitle>{t("tracker.temperatureTitle")}</CardTitle>
             {latestTemp && <LatestChip kind="temp" value={latestTemp} />}
           </CardHeader>
           <CardContent className="pt-2">
@@ -158,7 +170,7 @@ export function FermentTracker({
 
         <Card className="animate-rise">
           <CardHeader>
-            <CardTitle>Brix</CardTitle>
+            <CardTitle>{t("tracker.brixTitle")}</CardTitle>
             {latestBrix && <LatestChip kind="brix" value={latestBrix} />}
           </CardHeader>
           <CardContent className="pt-2">
@@ -172,9 +184,9 @@ export function FermentTracker({
         <Card className="animate-rise">
           <CardHeader>
             <div>
-              <CardTitle>Log a reading</CardTitle>
+              <CardTitle>{t("tracker.logReadingTitle")}</CardTitle>
               <CardDescription>
-                Manual tap now — a BLE pH/temp probe drops in later behind the same door
+                {t("tracker.logReadingDescription")}
               </CardDescription>
             </div>
           </CardHeader>
@@ -183,8 +195,21 @@ export function FermentTracker({
           </CardContent>
         </Card>
 
-        <div className="flex items-stretch">
+        <div className="flex flex-col gap-4">
           <WaterChip water={water} />
+          <Card className="animate-rise">
+            <CardHeader>
+              <div>
+                <CardTitle>{t("tracker.millWaterTitle")}</CardTitle>
+                <CardDescription>
+                  {t("tracker.millWaterDescription")}
+                </CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <LogWaterForm batchId={batch.id} />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

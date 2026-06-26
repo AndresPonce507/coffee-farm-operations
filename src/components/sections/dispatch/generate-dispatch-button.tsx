@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { RefreshCw, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,7 @@ export function GenerateDispatchButton({
   alreadyDrafted = false,
   className,
 }: GenerateDispatchButtonProps) {
+  const t = useTranslations("dispatch");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -59,13 +61,13 @@ export function GenerateDispatchButton({
       try {
         await action?.(fd);
       } catch {
-        setError("Could not draft the dispatch. Try again.");
+        setError(t("generate.error"));
       }
     });
   }
 
   const Icon = alreadyDrafted ? RefreshCw : Sparkles;
-  const label = alreadyDrafted ? "Re-draft" : "Generate dispatch";
+  const label = alreadyDrafted ? t("generate.redraft") : t("generate.generate");
 
   return (
     <div className="flex flex-col items-end gap-1">
@@ -74,11 +76,11 @@ export function GenerateDispatchButton({
         variant={alreadyDrafted ? "outline" : "primary"}
         onClick={onClick}
         disabled={pending}
-        aria-label={`${label} for ${crewName}`}
+        aria-label={t("generate.label", { label, crewName })}
         className={cn(className)}
       >
         <Icon className={cn("h-4 w-4", pending && "animate-spin motion-reduce:animate-none")} aria-hidden="true" />
-        {pending ? "Drafting…" : label}
+        {pending ? t("generate.drafting") : label}
       </Button>
       {error && (
         <p role="alert" className="text-xs text-cherry">

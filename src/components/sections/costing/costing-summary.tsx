@@ -1,7 +1,9 @@
 import { Coins, Layers, TrendingDown, Scale } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Tile } from "@/components/ui/tile";
+import { EntityLink } from "@/components/ui/entity-link";
 import { getLotCost } from "@/lib/db/cogs";
 import { getGreenLotAtp } from "@/lib/db/greenlots";
 import { kg, num, usd } from "@/lib/utils";
@@ -20,6 +22,7 @@ import { kg, num, usd } from "@/lib/utils";
  * from the average and the cheapest pick — never folded in as a fabricated 0.
  */
 export async function CostingSummary() {
+  const t = await getTranslations("costing");
   const lots = await getGreenLotAtp();
   const verdicts = await Promise.all(
     lots.map(async (lot) => ({
@@ -55,37 +58,54 @@ export async function CostingSummary() {
       <CardContent className="p-0">
         <div className="stagger grid grid-cols-2 divide-y divide-white/50 lg:grid-cols-4 lg:divide-x lg:divide-y-0">
           <Tile
-            label="Green priced"
+            label={t("summary.greenPriced")}
             value={kg(totalGreenKg)}
-            sub="cost denominator"
+            sub={t("summary.greenPricedSub")}
             accent="coffee"
             icon={Scale}
             className="glass-hover border-r border-white/50 lg:border-r-0"
           />
           <Tile
-            label="Lots costed"
+            label={t("summary.lotsCosted")}
             value={num(costed.length)}
-            sub={`of ${num(lots.length)} green`}
+            sub={t("summary.lotsCostedSub", { count: num(lots.length) })}
             accent="forest"
             icon={Layers}
             className="glass-hover"
           />
           <Tile
-            label="Avg cost / kg"
+            label={t("summary.avgCostPerKg")}
             value={avgCostPerKg == null ? "—" : usd(avgCostPerKg, 2)}
-            sub="green-kg weighted"
+            sub={t("summary.avgCostPerKgSub")}
             accent="honey"
             icon={Coins}
             className="glass-hover border-r border-white/50 lg:border-r-0"
           />
-          <Tile
-            label="Cheapest lot"
-            value={cheapest ? cheapest.code : "—"}
-            sub={cheapest ? `${usd(cheapest.cost, 2)}/kg` : "no costed lots"}
-            accent="sky"
-            icon={TrendingDown}
-            className="glass-hover"
-          />
+          {cheapest ? (
+            <EntityLink
+              kind="lot"
+              id={cheapest.code}
+              className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky/60 rounded-none"
+            >
+              <Tile
+                label={t("summary.cheapestLot")}
+                value={cheapest.code}
+                sub={t("summary.cheapestLotSub", { cost: usd(cheapest.cost, 2) })}
+                accent="sky"
+                icon={TrendingDown}
+                className="glass-hover"
+              />
+            </EntityLink>
+          ) : (
+            <Tile
+              label={t("summary.cheapestLot")}
+              value="—"
+              sub={t("summary.noCostedLots")}
+              accent="sky"
+              icon={TrendingDown}
+              className="glass-hover"
+            />
+          )}
         </div>
       </CardContent>
     </Card>

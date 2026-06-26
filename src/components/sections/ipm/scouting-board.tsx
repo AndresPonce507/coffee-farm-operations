@@ -1,8 +1,11 @@
+import Link from "next/link";
 import { Bug, CheckCircle2, ListTodo, ShieldAlert } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import { num } from "@/lib/utils";
 import type { IpmThresholdStatus } from "@/lib/types";
 
@@ -19,14 +22,15 @@ import type { IpmThresholdStatus } from "@/lib/types";
  * no motion beyond the shared stagger-in (reduced-motion safe).
  */
 export function ScoutingBoard({ rows }: { rows: IpmThresholdStatus[] }) {
+  const t = useTranslations("ipm");
   if (rows.length === 0) {
     return (
       <Card data-testid="scouting-empty" className="animate-rise">
         <CardContent>
           <EmptyState
             icon={Bug}
-            title="No plots scouted yet"
-            description="Log a broca or roya scouting read and the economic-threshold engine surfaces a recommend-or-hold call here — and fires a control task when it crosses."
+            title={t("scoutingBoard.emptyTitle")}
+            description={t("scoutingBoard.emptyDescription")}
           />
         </CardContent>
       </Card>
@@ -47,7 +51,14 @@ export function ScoutingBoard({ rows }: { rows: IpmThresholdStatus[] }) {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h3 className="truncate font-display text-base font-semibold text-ink">
-                    {r.plotName}
+                    <EntityLink
+                      kind="plot"
+                      id={r.plotId}
+                      name={r.plotName}
+                      className="rounded outline-none transition-colors hover:text-forest-700 focus-visible:ring-2 focus-visible:ring-forest-200"
+                    >
+                      {r.plotName}
+                    </EntityLink>
                   </h3>
                   <p className="mt-0.5 inline-flex items-center gap-1 text-xs capitalize text-muted-fg">
                     <Bug className="h-3.5 w-3.5" aria-hidden /> {r.pestKind}
@@ -55,11 +66,11 @@ export function ScoutingBoard({ rows }: { rows: IpmThresholdStatus[] }) {
                 </div>
                 {r.recommend ? (
                   <Badge tone="danger" className="inline-flex items-center gap-1 whitespace-nowrap">
-                    <ShieldAlert className="h-3 w-3" aria-hidden /> Recommend control
+                    <ShieldAlert className="h-3 w-3" aria-hidden /> {t("scoutingBoard.recommendControl")}
                   </Badge>
                 ) : (
                   <Badge tone="forest" className="inline-flex items-center gap-1 whitespace-nowrap">
-                    <CheckCircle2 className="h-3 w-3" aria-hidden /> Hold &amp; monitor
+                    <CheckCircle2 className="h-3 w-3" aria-hidden /> {t("scoutingBoard.holdAndMonitor")}
                   </Badge>
                 )}
               </div>
@@ -69,25 +80,29 @@ export function ScoutingBoard({ rows }: { rows: IpmThresholdStatus[] }) {
                   <p className="font-display text-2xl font-bold tabular-nums text-ink">
                     {num(r.incidencePct)}%
                   </p>
-                  <p className="text-[11px] text-muted-fg">observed incidence</p>
+                  <p className="text-[11px] text-muted-fg">{t("scoutingBoard.observedIncidence")}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-display text-sm font-semibold tabular-nums text-muted-fg">
                     {known ? `${num(r.threshold as number)}%` : "—"}
                   </p>
                   <p className="text-[11px] text-muted-fg">
-                    {known ? "action threshold" : "no threshold (unknown pest)"}
+                    {known ? t("scoutingBoard.actionThreshold") : t("scoutingBoard.noThreshold")}
                   </p>
                 </div>
               </div>
 
               {r.firedTaskId ? (
-                <p className="inline-flex items-center gap-1.5 text-xs font-medium text-cherry">
-                  <ListTodo className="h-3.5 w-3.5" aria-hidden /> Control task fired to the board
-                </p>
+                <Link
+                  href="/tasks"
+                  prefetch={false}
+                  className="inline-flex items-center gap-1.5 rounded text-xs font-medium text-cherry outline-none transition-colors hover:text-cherry/80 hover:underline focus-visible:ring-2 focus-visible:ring-forest-200"
+                >
+                  <ListTodo className="h-3.5 w-3.5" aria-hidden /> {t("scoutingBoard.controlTaskFired")}
+                </Link>
               ) : (
                 <p className="text-xs italic text-muted-fg">
-                  Below threshold — monitoring, no intervention warranted.
+                  {t("scoutingBoard.belowThreshold")}
                 </p>
               )}
             </CardContent>

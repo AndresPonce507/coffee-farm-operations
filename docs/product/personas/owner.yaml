@@ -1,0 +1,21 @@
+schema_version: 1
+persona:
+  id: owner
+  name: "Don Ricardo (the Owner)"
+  role: "Farm owner / operator, Janson Coffee, Volcán"
+  context: >
+    Runs the estate end to end. Lives the whole story in his head and a binder; reconciles
+    today's numbers across a paper notebook and three spreadsheets on Sundays. Desktop +
+    phone. Spanish-first (es-PA). Cares about: this morning's picking total, who is owed
+    what, whether a lot is clean for export, and what each bag actually cost to produce.
+  primary_jobs: [J1, J2, J4]
+  goals:
+    - "See the season headline reflect this morning's picking without re-keying."
+    - "Open one lot and show a buyer its full lineage + EUDR + cost + cup score."
+    - "Trust that every screen agrees."
+  frustrations:
+    - "Same weight typed into pay, mill, and traceability — and the numbers disagree."
+    - "Answering 'what happened to lot JC-712?' means visiting seven tabs."
+    - "Beautiful screens that show fake numbers."
+  constraints: ["es-PA first", "$0 / free-tier", "free project auto-pauses after 7 days idle"]
+  success_signal: "Glances at the dashboard after the morning pick and trusts the number."

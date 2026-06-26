@@ -1,0 +1,114 @@
+{
+  "page": {
+    "title": "Drying and rest",
+    "subtitle": "The rest that defines the cup — moisture, stations, and the reposo gate"
+  },
+  "writeActions": {
+    "assignStation": "Assign station",
+    "recordReading": "Record reading",
+    "recordDialogTitle": "Record moisture reading",
+    "assignDialogTitle": "Assign a lot to a station"
+  },
+  "board": {
+    "title": "Resting lots · the reposo gate",
+    "clearToMill": "{count} clear to mill",
+    "resting": "{count} resting",
+    "emptyTitle": "No lots resting yet",
+    "emptyDescription": "Lots appear here once they reach the drying stage and start their reposo rest.",
+    "advanceLink": "Advance to mill →",
+    "advanceTitle": "Advance this lot to milling on the Processing surface",
+    "advanceAriaLabel": "Advance to mill — lot {code}",
+    "millLocked": "Mill — locked",
+    "millLockedTitle": "Blocked by the reposo gate: {reason}"
+  },
+  "reposoChip": {
+    "gateOpen": "Reposo gate open: {reason}",
+    "gateClosed": "Reposo gate closed: {reason}",
+    "restStable": "Rest-stable",
+    "resting": "Resting",
+    "daySingular": "day",
+    "dayPlural": "days",
+    "clearToMill": "clear to mill",
+    "blocked": "blocked"
+  },
+  "moistureCurve": {
+    "ariaSummary": "Drying moisture curve, {count} readings, latest {latest}%, target band {min}–{max}%.",
+    "ariaSummaryEmpty": "Drying moisture curve with no readings yet.",
+    "targetChip": "target {min}–{max}%",
+    "noReadings": "No moisture readings yet",
+    "readingsCount": "{count} readings",
+    "latest": "latest {latest}%"
+  },
+  "stations": {
+    "title": "Drying stations",
+    "count": "{count} stations",
+    "emptyTitle": "No drying stations",
+    "emptyDescription": "Stations appear once configured.",
+    "kindPatio": "Patio",
+    "kindRaisedBed": "Raised bed",
+    "kindGuardiola": "Guardiola",
+    "kindParabolic": "Parabolic",
+    "capacity": "{kind} · {cap} cap",
+    "cover": "Cover {day}",
+    "clear": "Clear",
+    "overCapacity": "over capacity",
+    "full": "{pct}% full"
+  },
+  "recordForm": {
+    "hint": "Each reading feeds the lot’s moisture curve — the gate clears a lot to mill once its readings rest stable inside the 10.5–11.5% band.",
+    "successTitle": "Reading recorded",
+    "done": "Done",
+    "lotLabel": "Lot",
+    "choose": "Choose…",
+    "moistureLabel": "Moisture (%)",
+    "moisturePlaceholder": "e.g. 11.2",
+    "cancel": "Cancel",
+    "submit": "Record reading",
+    "submitting": "Recording…"
+  },
+  "assignForm": {
+    "hint": "Assign the lot to a bed — a full bed is rejected, so the committed weight can never exceed a station's capacity.",
+    "successTitle": "Lot assigned",
+    "done": "Done",
+    "lotLabel": "Lot",
+    "stationLabel": "Station",
+    "choose": "Choose…",
+    "stationOption": "{name} · {available} free",
+    "cancel": "Cancel",
+    "submit": "Assign to station",
+    "submitting": "Assigning…"
+  },
+  "stationDossier": {
+    "eyebrow": "Drying station",
+    "subtitle": "{kind} · {cap} capacity",
+    "backLabel": "All drying stations",
+    "capacityTitle": "Capacity",
+    "committed": "On the bed",
+    "available": "Free",
+    "capacity": "Capacity",
+    "utilization": "{pct}% full",
+    "overCapacity": "Over capacity",
+    "lotsTitle": "Lots resting here",
+    "lotsEmpty": "No lots are drying on this station right now.",
+    "lotMoisture": "{pct}% moisture",
+    "lotNoMoisture": "No moisture reading yet",
+    "lotResting": "{days}d resting",
+    "lotReady": "Clear to mill",
+    "lotRestingBadge": "Resting",
+    "weatherTitle": "Cover forecast",
+    "weatherEmpty": "No cover risk — this station is sheltered.",
+    "rainPct": "{pct}% rain",
+    "coverRiskDay": "Cover {day} · {pct}% rain",
+    "clearDay": "Clear {day} · {pct}% rain"
+  },
+  "weekday": {
+    "today": "Today",
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sun": "Sun"
+  }
+}

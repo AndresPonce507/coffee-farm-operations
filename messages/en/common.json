@@ -1,0 +1,47 @@
+{
+  "loading": {
+    "costing": "Loading costing",
+    "crew": "Loading crew",
+    "crewDetail": "Loading crew member",
+    "dispatchDetail": "Loading dispatch",
+    "drying": "Loading drying",
+    "eudr": "Loading EUDR",
+    "payroll": "Loading payroll",
+    "plan": "Loading harvest plan",
+    "processing": "Loading processing",
+    "weigh": "Loading weigh",
+    "dryingStationDetail": "Loading drying station"
+  },
+  "error": {
+    "app": {
+      "title": "We couldn't load the farm data right now",
+      "body": "The connection to the farm records dropped for a moment. This is usually temporary — give it another try.",
+      "retry": "Try again"
+    },
+    "crew": {
+      "title": "We couldn't load this crew",
+      "body": "The connection to the farm records dropped for a moment. This is usually temporary — give it another try.",
+      "retry": "Try again"
+    },
+    "dispatch": {
+      "title": "We couldn't load this dispatch",
+      "body": "The connection to the farm records dropped for a moment. This is usually temporary — give it another try.",
+      "retry": "Try again"
+    },
+    "payPeriod": {
+      "title": "We couldn't load this pay period",
+      "body": "The connection to the farm records dropped for a moment. This is usually temporary — give it another try.",
+      "retry": "Try again"
+    },
+    "worker": {
+      "title": "We couldn't load this worker",
+      "body": "The connection to the farm records dropped for a moment. This is usually temporary — give it another try.",
+      "retry": "Try again"
+    },
+    "dryingStation": {
+      "title": "We couldn't load this station",
+      "body": "The connection to the farm records dropped for a moment. This is usually temporary — give it another try.",
+      "retry": "Try again"
+    }
+  }
+}

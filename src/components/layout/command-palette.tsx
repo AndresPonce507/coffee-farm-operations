@@ -3,14 +3,36 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Search, CornerDownLeft, Hash } from "lucide-react";
+import { useTranslations } from "next-intl";
+import {
+  Search,
+  CornerDownLeft,
+  Hash,
+  Sprout,
+  Users,
+  HeartHandshake,
+  Send,
+  Banknote,
+  Beaker,
+  Award,
+} from "lucide-react";
 
 import { NAV } from "./sidebar";
+import { entityHref } from "@/lib/dossier/entity-href";
 import { cn } from "@/lib/utils";
 
-/** A resolved palette result — a nav destination or a jump-to-lot action. */
+/** A resolved palette result — a nav destination or an entity jump action. */
 interface Result {
-  kind: "nav" | "lot";
+  kind:
+    | "nav"
+    | "lot"
+    | "plot"
+    | "worker"
+    | "crew"
+    | "dispatch"
+    | "pay-period"
+    | "batch"
+    | "cup";
   href: string;
   label: string;
   Icon: typeof Search;
@@ -23,6 +45,123 @@ interface Result {
 function lotCodeFrom(query: string): string | null {
   const digits = query.replace(/\D/g, "");
   return digits.length >= 3 ? `JC-${digits}` : null;
+}
+
+/**
+ * Phase 5 orphan-wire (US-05) — the typed-shape recognizers that turn a raw query
+ * into candidate ENTITY destinations, every URL resolved through the `entityHref`
+ * SSOT (never hand-built here). Each recognizer mirrors the lot-code contract: it
+ * proposes a destination from the input's shape, and the destination route's own
+ * `notFound()` is the authority (a bad id routes, then 404s — the palette only
+ * shows "no matches" when NO recognizer fires). This is what makes the 5 new
+ * dossiers + the 3 existing orphan dossiers reachable from anywhere via ⌘K.
+ *
+ * Recognizers are intentionally prefix/keyword-anchored so a plain number stays a
+ * lot (the dominant use-case) and the other kinds need a light cue:
+ *   - `w-03` / `worker 3`        → /workers/<id>
+ *   - `p-tizingal-alto` / `plot …` → /plots/<id>
+ *   - `crew-norte` / `crew …`    → /crew/<id>
+ *   - `disp 42` / `dispatch 42`  → /dispatch/<id>  (numeric run)
+ *   - `pp 2026-w12` / `pay …`    → /pay-period/<id>
+ *   - `batch fb-118` / `ferment …` → /ferment/<id>
+ *   - a green-lot code (JC-NNN)  → ALSO offers /qc/cup/<code>
+ */
+function entityResultsFrom(
+  raw: string,
+  t: (key: string, vars?: Record<string, string>) => string,
+): Result[] {
+  const q = raw.trim();
+  if (q === "") return [];
+  const out: Result[] = [];
+
+  // worker — `w-03`, `w 03`, `worker 3`, `trabajador 3`
+  const worker = q.match(/^(?:w[-\s]?|trabajador\s+|worker\s+)0*([0-9]{1,3})$/i);
+  if (worker) {
+    const id = `w-${worker[1].padStart(2, "0")}`;
+    out.push({
+      kind: "worker",
+      href: entityHref.worker(id),
+      label: t("commandPalette.openWorker", { id }),
+      Icon: Users,
+    });
+  }
+
+  // crew — `crew-norte`, `crew norte`, `cuadrilla norte`
+  const crew = q.match(/^(?:crew|cuadrilla)[-\s]+([a-z0-9-]+)$/i);
+  if (crew) {
+    const id = `crew-${crew[1].replace(/^crew-/i, "")}`;
+    out.push({
+      kind: "crew",
+      href: entityHref.crew(id),
+      label: t("commandPalette.openCrew", { id }),
+      Icon: HeartHandshake,
+    });
+  }
+
+  // plot — `p-tizingal-alto`, `plot tizingal-alto`, `lote tizingal-alto`
+  const plot = q.match(/^(?:p-|plot\s+|lote\s+|parcela\s+)([a-z][a-z0-9-]+)$/i);
+  if (plot) {
+    const slug = plot[1].toLowerCase();
+    const id = slug.startsWith("p-") ? slug : `p-${slug}`;
+    out.push({
+      kind: "plot",
+      href: entityHref.plot(id),
+      label: t("commandPalette.openPlot", { id }),
+      Icon: Sprout,
+    });
+  }
+
+  // dispatch run — `disp 42`, `dispatch 42`, `despacho 42`, `#42`
+  const disp = q.match(/^(?:disp(?:atch)?|despacho|#)\s*([0-9]{1,9})$/i);
+  if (disp) {
+    const id = disp[1];
+    out.push({
+      kind: "dispatch",
+      href: entityHref.dispatch(id),
+      label: t("commandPalette.openDispatch", { id }),
+      Icon: Send,
+    });
+  }
+
+  // pay period — `pp 2026-w12`, `pay 2026-w12`, `nomina 2026-w12`
+  const pay = q.match(/^(?:pp|pay|n[oó]mina)[-\s]+([a-z0-9-]+)$/i);
+  if (pay) {
+    const id = pay[1].toLowerCase();
+    out.push({
+      kind: "pay-period",
+      href: entityHref["pay-period"](id),
+      label: t("commandPalette.openPayPeriod", { id }),
+      Icon: Banknote,
+    });
+  }
+
+  // ferment batch — `batch fb-118`, `ferment fb-118`, `lote-ferm fb-118`
+  const batch = q.match(/^(?:batch|ferment|fermento|tanda)[-\s]+([a-z0-9-]+)$/i);
+  if (batch) {
+    const id = batch[1].toLowerCase();
+    out.push({
+      kind: "batch",
+      href: entityHref.batch(id),
+      label: t("commandPalette.openBatch", { id }),
+      Icon: Beaker,
+    });
+  }
+
+  // green-lot CUP score — any lot code ALSO offers its cup scoresheet (a green
+  // lot's QC dossier lives at /qc/cup/<code>). Complements, never replaces, the
+  // lot. Cup is NOT one of the 7 entity dossiers, so it is intentionally absent
+  // from the `entityHref` SSOT; its route is the QC scoresheet path, built here.
+  const code = lotCodeFrom(q);
+  if (code) {
+    out.push({
+      kind: "cup",
+      href: `/qc/cup/${code}`,
+      label: t("commandPalette.viewCup", { code }),
+      Icon: Award,
+    });
+  }
+
+  return out;
 }
 
 /**
@@ -39,6 +178,7 @@ function lotCodeFrom(query: string): string | null {
  */
 export function CommandPalette() {
   const router = useRouter();
+  const t = useTranslations("layout");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -50,23 +190,30 @@ export function CommandPalette() {
 
   const results = useMemo<Result[]>(() => {
     const q = query.trim().toLowerCase();
-    const navHits: Result[] = NAV.filter((n) =>
-      q === "" ? true : n.label.toLowerCase().includes(q),
-    ).map((n) => ({ kind: "nav", href: n.href, label: n.label, Icon: n.icon }));
+    const navHits: Result[] = NAV.map((n) => ({
+      kind: "nav" as const,
+      href: n.href,
+      label: t(`nav.${n.key}`),
+      Icon: n.icon,
+    })).filter((r) => (q === "" ? true : r.label.toLowerCase().includes(q)));
 
     const code = lotCodeFrom(query);
     const lotHit: Result[] = code
       ? [
           {
             kind: "lot",
-            href: `/lots/${code}`,
-            label: `Go to lot ${code}`,
+            href: entityHref.lot(code),
+            label: t("commandPalette.goToLot", { code }),
             Icon: Hash,
           },
         ]
       : [];
-    return [...lotHit, ...navHits];
-  }, [query]);
+    // Phase 5 orphan-wire: the lot jump leads, then the other entity-kind jumps
+    // (worker/plot/crew/dispatch/pay-period/batch + the cup-of-this-lot drill),
+    // then the nav routes. Every entity href comes from the entityHref SSOT.
+    const entityHits = entityResultsFrom(query, t);
+    return [...lotHit, ...entityHits, ...navHits];
+  }, [query, t]);
 
   // Stable per-row ids so the input's aria-activedescendant can point at the
   // highlighted option (ARIA combobox pattern). Keyed by kind+href like the
@@ -122,12 +269,12 @@ export function CommandPalette() {
         type="button"
         onClick={() => setOpen(true)}
         data-testid="command-palette-trigger"
-        aria-label="Open command palette"
+        aria-label={t("commandPalette.triggerLabel")}
         aria-keyshortcuts="Meta+K Control+K"
         className="relative hidden h-9 max-w-sm flex-1 items-center gap-2 rounded-xl border border-line bg-card pl-9 pr-2 text-sm text-muted-fg/80 outline-none transition hover:border-forest-300 focus:border-forest-300 focus:ring-2 focus:ring-forest-100 md:flex"
       >
         <Search className="pointer-events-none absolute left-3 h-4 w-4 text-muted-fg" />
-        <span className="truncate">Search plots, lots, workers…</span>
+        <span className="truncate">{t("commandPalette.triggerPlaceholder")}</span>
         <kbd className="ml-auto hidden rounded border border-line bg-muted px-1.5 py-0.5 font-sans text-[10px] font-medium text-muted-fg lg:inline">
           ⌘K
         </kbd>
@@ -150,7 +297,7 @@ export function CommandPalette() {
             <div
               role="dialog"
               aria-modal="true"
-              aria-label="Command palette"
+              aria-label={t("commandPalette.dialogLabel")}
               data-testid="command-palette"
               onClick={(e) => e.stopPropagation()}
               className="animate-rise w-full max-w-lg overflow-hidden rounded-2xl border border-white/60 bg-white/90 shadow-2xl backdrop-blur-xl"
@@ -187,12 +334,12 @@ export function CommandPalette() {
                   // announces its expanded state + the currently-highlighted
                   // option so screen readers track arrow navigation.
                   role="combobox"
-                  aria-label="Search routes and lots"
+                  aria-label={t("commandPalette.inputLabel")}
                   aria-controls={LISTBOX_ID}
                   aria-expanded={results.length > 0}
                   aria-autocomplete="list"
                   aria-activedescendant={activeId}
-                  placeholder="Jump to a page, or type a lot number…"
+                  placeholder={t("commandPalette.inputPlaceholder")}
                   className="h-12 w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted-fg/70"
                 />
               </div>
@@ -200,7 +347,7 @@ export function CommandPalette() {
               <ul
                 id={LISTBOX_ID}
                 role="listbox"
-                aria-label="Results"
+                aria-label={t("commandPalette.resultsLabel")}
                 className="max-h-80 overflow-y-auto p-2"
               >
                 {results.length === 0 ? (
@@ -208,7 +355,7 @@ export function CommandPalette() {
                     data-testid="command-palette-empty"
                     className="px-3 py-6 text-center text-sm text-muted-fg"
                   >
-                    No matches — type a lot number like 701 to open its dossier.
+                    {t("commandPalette.empty")}
                   </li>
                 ) : (
                   results.map((r, i) => (

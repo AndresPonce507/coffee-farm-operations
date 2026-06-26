@@ -1,0 +1,48 @@
+{
+  "page": {
+    "title": "Cobertura",
+    "subtitle": "Fija el precio C de las ventas comerciales antes de que se mueva el mercado"
+  },
+  "summary": {
+    "exposureLabel": "Riesgo de precio sin fijar",
+    "exposureSub": "reservas comerciales abiertas al precio C en vivo",
+    "openLabel": "Abiertas sin fijar",
+    "openSub": "{count} reserva comercial",
+    "openSubPlural": "{count} reservas comerciales",
+    "kgLabel": "Volumen sin fijar",
+    "kgSub": "kg verde expuestos a la C",
+    "refLabel": "Referencia C en vivo",
+    "refSub": "{month} ({source})",
+    "refNone": "Aún no se ha ingresado un precio C"
+  },
+  "reserveNote": "Los lotes Reserva quedan excluidos. Solo se puede cubrir la pata comercial C.",
+  "card": {
+    "monthLabel": "Mes C",
+    "kgLabel": "Sin fijar",
+    "currentCLabel": "C en vivo",
+    "exposureLabel": "Exposición",
+    "perLb": "{price} / lb",
+    "noMark": "No hay precio C para este mes. La exposición no se conoce hasta que se ingrese uno."
+  },
+  "empty": {
+    "title": "Nada que cubrir",
+    "description": "Toda venta comercial aceptada ya tiene su pata C fijada. Los lotes Reserva se cotizan en firme y nunca aparecen aquí."
+  },
+  "lock": {
+    "button": "Fijar precio C",
+    "locked": "Pata C fijada",
+    "dialogTitle": "Fijar la pata C",
+    "warning": "Esto es irreversible. Fija la pata C al precio en vivo y no se puede deshacer.",
+    "detail": "Lote {lot}, {kg} kg, mes C {month}",
+    "atC": "Fijando a C {price} / lb",
+    "noMark": "Todavía no hay un precio C en vivo para este mes. Ingresa el precio de hoy antes de fijar.",
+    "pendingId": "La referencia de cotización de esta venta aún no está disponible, así que no se puede fijar desde aquí. Fíjala desde la cotización cuando llegue la referencia.",
+    "confirm": "Fijar la pata C",
+    "cancel": "Cancelar",
+    "locking": "Fijando la pata C",
+    "error": "No se pudo fijar la cobertura. Revisa los datos e inténtalo de nuevo."
+  },
+  "loading": {
+    "label": "Cargando el panel de cobertura"
+  }
+}

@@ -6,6 +6,8 @@ import type {
   TaskStatus,
   Worker,
 } from "@/lib/types";
+import { getTranslations } from "next-intl/server";
+
 import { getTasks } from "@/lib/db/tasks";
 import { TaskRowActions } from "./task-actions";
 import {
@@ -18,10 +20,8 @@ import {
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/data-table";
-import { longDate, relativeDay } from "@/lib/utils";
-
-/** Fixed "today" the mock data is anchored to (matches relativeDay default). */
-const TODAY = "2026-06-20";
+import { EntityLink } from "@/components/ui/entity-link";
+import { longDate, relativeDay, today } from "@/lib/utils";
 
 /** Category pills — each TaskCategory maps to a full, literal Badge tone. */
 const CATEGORY_TONE: Record<TaskCategory, BadgeTone> = {
@@ -42,10 +42,10 @@ const PRIORITY_TONE: Record<Priority, BadgeTone> = {
   low: "neutral",
 };
 
-const PRIORITY_LABEL: Record<Priority, string> = {
-  high: "High",
-  medium: "Medium",
-  low: "Low",
+const PRIORITY_LABEL_KEY: Record<Priority, string> = {
+  high: "table.priorityHigh",
+  medium: "table.priorityMedium",
+  low: "table.priorityLow",
 };
 
 /** Status pills — done ok, in-progress sky, blocked danger, todo neutral. */
@@ -56,11 +56,11 @@ const STATUS_TONE: Record<TaskStatus, BadgeTone> = {
   todo: "neutral",
 };
 
-const STATUS_LABEL: Record<TaskStatus, string> = {
-  done: "Done",
-  "in-progress": "In progress",
-  blocked: "Blocked",
-  todo: "To do",
+const STATUS_LABEL_KEY: Record<TaskStatus, string> = {
+  done: "table.statusDone",
+  "in-progress": "table.statusInProgress",
+  blocked: "table.statusBlocked",
+  todo: "table.statusTodo",
 };
 
 /** A task is overdue when its due date is before today and it is not finished. */
@@ -68,7 +68,7 @@ function isOverdue(task: FarmTask): boolean {
   if (task.status === "done") return false;
   return (
     new Date(task.due + "T00:00:00").getTime() <
-    new Date(TODAY + "T00:00:00").getTime()
+    new Date(today() + "T00:00:00").getTime()
   );
 }
 
@@ -84,16 +84,16 @@ export async function TaskTable({
   plots: Plot[];
   workers: Worker[];
 }) {
+  const t = await getTranslations("tasks");
   const tasks = await getTasks();
 
   return (
     <Card className="animate-rise overflow-hidden">
       <CardHeader>
         <div>
-          <CardTitle>All tasks</CardTitle>
+          <CardTitle>{t("table.title")}</CardTitle>
           <CardDescription>
-            {tasks.length} agronomy tasks across the farm — pruning, picking
-            prep, soil &amp; pest work.
+            {t("table.description", { count: tasks.length })}
           </CardDescription>
         </div>
       </CardHeader>
@@ -101,14 +101,14 @@ export async function TaskTable({
         <Table className="cv-auto">
           <THead>
             <TR className="hover:bg-transparent">
-              <TH>Task</TH>
-              <TH>Category</TH>
-              <TH>Plot</TH>
-              <TH>Assignee</TH>
-              <TH>Due</TH>
-              <TH>Priority</TH>
-              <TH>Status</TH>
-              <TH className="text-right">Actions</TH>
+              <TH>{t("table.task")}</TH>
+              <TH>{t("table.category")}</TH>
+              <TH>{t("table.plot")}</TH>
+              <TH>{t("table.assignee")}</TH>
+              <TH>{t("table.due")}</TH>
+              <TH>{t("table.priority")}</TH>
+              <TH>{t("table.status")}</TH>
+              <TH className="text-right">{t("table.actions")}</TH>
             </TR>
           </THead>
           <TBody>
@@ -116,7 +116,7 @@ export async function TaskTable({
               <TR className="hover:bg-transparent">
                 <TD colSpan={8} className="px-4 py-10 text-center">
                   <span className="inline-block rounded-xl border border-dashed border-line bg-white/40 px-4 py-3 text-sm text-muted-fg">
-                    No tasks.
+                    {t("table.noTasks")}
                   </span>
                 </TD>
               </TR>
@@ -136,7 +136,16 @@ export async function TaskTable({
                   </TD>
 
                   <TD className="whitespace-nowrap text-muted-fg">
-                    {task.plotName ?? (
+                    {task.plotId != null ? (
+                      <EntityLink
+                        kind="plot"
+                        id={task.plotId}
+                        name={task.plotName ?? undefined}
+                        className="text-muted-fg underline-offset-2 transition-colors hover:text-forest hover:underline"
+                      >
+                        {task.plotName}
+                      </EntityLink>
+                    ) : (
                       <span aria-hidden="true">—</span>
                     )}
                   </TD>
@@ -144,7 +153,18 @@ export async function TaskTable({
                   <TD>
                     <span className="flex items-center gap-2 whitespace-nowrap">
                       <Avatar name={task.assignee} size="sm" />
-                      <span className="text-ink">{task.assignee}</span>
+                      {task.workerId != null ? (
+                        <EntityLink
+                          kind="worker"
+                          id={task.workerId}
+                          name={task.assignee ?? undefined}
+                          className="text-ink underline-offset-2 transition-colors hover:text-forest hover:underline"
+                        >
+                          {task.assignee}
+                        </EntityLink>
+                      ) : (
+                        <span className="text-ink">{task.assignee}</span>
+                      )}
                     </span>
                   </TD>
 
@@ -159,7 +179,7 @@ export async function TaskTable({
                     <span
                       className={
                         overdue
-                          ? "ml-2 text-xs text-cherry/80"
+                          ? "ml-2 text-xs text-cherry"
                           : "ml-2 text-xs text-muted-fg"
                       }
                     >
@@ -169,13 +189,13 @@ export async function TaskTable({
 
                   <TD>
                     <Badge tone={PRIORITY_TONE[task.priority]} dot>
-                      {PRIORITY_LABEL[task.priority]}
+                      {t(PRIORITY_LABEL_KEY[task.priority])}
                     </Badge>
                   </TD>
 
                   <TD>
                     <Badge tone={STATUS_TONE[task.status]} dot>
-                      {STATUS_LABEL[task.status]}
+                      {t(STATUS_LABEL_KEY[task.status])}
                     </Badge>
                   </TD>
 

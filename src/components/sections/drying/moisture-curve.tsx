@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/utils";
 import type { MoistureReading } from "@/lib/types";
 
@@ -47,6 +49,7 @@ export function MoistureCurve({
   height = 200,
   className,
 }: MoistureCurveProps) {
+  const t = useTranslations("drying");
   const points = curve.length;
   const values = curve.map((d) => d.moisturePct);
 
@@ -89,8 +92,13 @@ export function MoistureCurve({
 
   const ariaSummary =
     points > 0
-      ? `Drying moisture curve, ${points} readings, latest ${last?.moisturePct.toFixed(1)}%, target band ${bandMin}–${bandMax}%.`
-      : "Drying moisture curve with no readings yet.";
+      ? t("moistureCurve.ariaSummary", {
+          count: points,
+          latest: last?.moisturePct.toFixed(1) ?? "",
+          min: bandMin,
+          max: bandMax,
+        })
+      : t("moistureCurve.ariaSummaryEmpty");
 
   return (
     <div className={cn("w-full", className)}>
@@ -178,13 +186,13 @@ export function MoistureCurve({
 
         {/* Band label chip — opaque, never sampling the aurora (AD-3). */}
         <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-honey-100 px-2 py-0.5 text-[10px] font-semibold text-honey-700">
-          target {bandMin}–{bandMax}%
+          {t("moistureCurve.targetChip", { min: bandMin, max: bandMax })}
         </span>
 
         {points === 0 && (
           <div className="absolute inset-0 flex items-center justify-center">
             <p className="rounded-full bg-muted px-3 py-1 text-xs text-muted-fg">
-              No moisture readings yet
+              {t("moistureCurve.noReadings")}
             </p>
           </div>
         )}
@@ -192,9 +200,11 @@ export function MoistureCurve({
 
       {points > 0 && (
         <div className="mt-2 flex justify-between text-[10px] text-muted-fg">
-          <span>{points} readings</span>
+          <span>{t("moistureCurve.readingsCount", { count: points })}</span>
           {last && (
-            <span className="tabular-nums">latest {last.moisturePct.toFixed(1)}%</span>
+            <span className="tabular-nums">
+              {t("moistureCurve.latest", { latest: last.moisturePct.toFixed(1) })}
+            </span>
           )}
         </div>
       )}

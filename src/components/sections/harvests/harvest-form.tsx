@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 import type { Harvest, Plot, Worker } from "@/lib/types";
 import { IDLE, type ActionState } from "@/lib/actions/harvests";
@@ -29,6 +30,7 @@ export function HarvestForm({
   submitLabel: string;
   onDone: () => void;
 }) {
+  const t = useTranslations("harvests");
   const [state, formAction, pending] = useActionState(action, IDLE);
 
   useEffect(() => {
@@ -50,7 +52,7 @@ export function HarvestForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="date">
-            Date
+            {t("harvestForm.date")}
           </label>
           <input
             id="date"
@@ -66,7 +68,7 @@ export function HarvestForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="lotCode">
-            Lot
+            {t("harvestForm.lot")}
           </label>
           <select
             id="lotCode"
@@ -75,7 +77,7 @@ export function HarvestForm({
             className={FIELD}
           >
             <option value="" disabled>
-              Choose…
+              {t("harvestForm.choose")}
             </option>
             {lots.map((code) => (
               <option key={code} value={code}>
@@ -92,7 +94,7 @@ export function HarvestForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="plotId">
-            Plot
+            {t("harvestForm.plot")}
           </label>
           <select
             id="plotId"
@@ -101,7 +103,7 @@ export function HarvestForm({
             className={FIELD}
           >
             <option value="" disabled>
-              Choose…
+              {t("harvestForm.choose")}
             </option>
             {plots.map((p) => (
               <option key={p.id} value={p.id}>
@@ -116,7 +118,7 @@ export function HarvestForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="workerId">
-            Picker
+            {t("harvestForm.picker")}
           </label>
           <select
             id="workerId"
@@ -125,7 +127,7 @@ export function HarvestForm({
             className={FIELD}
           >
             <option value="" disabled>
-              Choose…
+              {t("harvestForm.choose")}
             </option>
             {pickers.map((w) => (
               <option key={w.id} value={w.id}>
@@ -142,7 +144,7 @@ export function HarvestForm({
       <div className="grid grid-cols-3 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="cherriesKg">
-            Cherries (kg)
+            {t("harvestForm.cherries")}
           </label>
           <input
             id="cherriesKg"
@@ -160,7 +162,7 @@ export function HarvestForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="ripenessPct">
-            Ripeness %
+            {t("harvestForm.ripeness")}
           </label>
           <input
             id="ripenessPct"
@@ -178,7 +180,7 @@ export function HarvestForm({
 
         <div className="space-y-1">
           <label className={LABEL} htmlFor="brixAvg">
-            Brix
+            {t("harvestForm.brix")}
           </label>
           <input
             id="brixAvg"
@@ -203,10 +205,10 @@ export function HarvestForm({
 
       <div className="flex justify-end gap-2 pt-1">
         <Button type="button" variant="ghost" onClick={onDone}>
-          Cancel
+          {t("harvestForm.cancel")}
         </Button>
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : submitLabel}
+          {pending ? t("harvestForm.saving") : submitLabel}
         </Button>
       </div>
     </form>

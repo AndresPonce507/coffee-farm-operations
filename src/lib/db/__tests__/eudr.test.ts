@@ -177,3 +177,28 @@ describe("getLotEudrDossier", () => {
     expect(dossier.originPlots[0].plotId).toBe("p-baru-vista");
   });
 });
+
+describe("getEudrOriginPlotIds", () => {
+  it("returns {plotId, plotName} tuples derived from getLotOriginPlots — no new DB round-trip", async () => {
+    const { client } = makeClient<OriginPlotRow[]>({
+      data: [geoRow, ungeoRow],
+      error: null,
+    });
+    getSupabaseMock.mockReturnValue(client);
+
+    const { getEudrOriginPlotIds } = await import("@/lib/db/eudr");
+    const refs = await getEudrOriginPlotIds("JC-701");
+
+    expect(refs).toHaveLength(2);
+    expect(refs[0]).toEqual({ plotId: "p-baru-vista", plotName: "Barú Vista" });
+    expect(refs[1]).toEqual({ plotId: "p-mystery", plotName: "Mystery" });
+  });
+
+  it("returns an empty array when no origin plots exist for the lot", async () => {
+    const { client } = makeClient<OriginPlotRow[]>({ data: [], error: null });
+    getSupabaseMock.mockReturnValue(client);
+
+    const { getEudrOriginPlotIds } = await import("@/lib/db/eudr");
+    expect(await getEudrOriginPlotIds("JC-000")).toEqual([]);
+  });
+});

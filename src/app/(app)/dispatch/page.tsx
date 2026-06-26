@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { DispatchBoard } from "@/components/sections/dispatch/dispatch-board";
 
@@ -22,11 +24,12 @@ import { DispatchBoard } from "@/components/sections/dispatch/dispatch-board";
  * inside the board, wired to the route's Server Actions.
  */
 export default function DispatchPage() {
+  const t = useTranslations("dispatch");
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Morning Dispatch"
-        subtitle="Ripeness-aware per-crew plans, shared as a bilingual card — owner-initiated"
+        title={t("page.title")}
+        subtitle={t("page.subtitle")}
       />
 
       <DispatchBoard />

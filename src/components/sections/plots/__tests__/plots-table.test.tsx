@@ -47,4 +47,16 @@ describe("PlotsTable (smoke)", () => {
     expect(screen.getByText("Tizingal Alto")).toBeInTheDocument();
     expect(screen.getByText("Paso Ancho")).toBeInTheDocument();
   });
+
+  // Phase 5 D2 — the formerly-COSMETIC plot name cell now drills into /plots/[id].
+  it("links each table row's plot name to its plot dossier", async () => {
+    const ui = await PlotsTable();
+    render(ui);
+
+    // EntityLink carries an es-PA aria-label using the human-readable name, not the raw id.
+    // aria-label = "Open plot Tizingal Alto" (kind_es + plot.name).
+    const link = screen.getByRole("link", { name: /open plot tizingal alto/i });
+    expect(link).toHaveAttribute("href", "/plots/p1");
+    expect(link).toHaveTextContent("Tizingal Alto");
+  });
 });

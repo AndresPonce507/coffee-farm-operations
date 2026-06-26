@@ -5,6 +5,7 @@ import {
   ShieldAlert,
   ShieldCheck,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -104,6 +105,7 @@ export function WorkerProfileSheet({
   chainVerified,
   className,
 }: WorkerProfileSheetProps) {
+  const t = useTranslations("crew");
   const ngabere = speaksNgabere(languages);
   const VerifyIcon = chainVerified ? ShieldCheck : ShieldAlert;
 
@@ -132,7 +134,12 @@ export function WorkerProfileSheet({
               </span>
             ) : null}
             {ngabere ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky ring-1 ring-sky/15">
+              <span
+                // bg-muted/text-muted-fg (5.14:1) — clears WCAG-AA for 11px
+                // normal text and mirrors the chip in crew-roster-board.tsx.
+                // The prior bg-sky-100/text-sky pair measured only 4.11:1 (AA fail).
+                className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-fg ring-1 ring-line"
+              >
                 <Languages className="h-3 w-3" aria-hidden="true" />
                 es · ngäbere
               </span>
@@ -147,17 +154,21 @@ export function WorkerProfileSheet({
         <div data-testid="chain-badge" className="shrink-0">
           <Badge tone={chainVerified ? "forest" : "honey"} className="gap-1.5">
             <VerifyIcon className="h-3.5 w-3.5" aria-hidden="true" />
-            {chainVerified ? "Chain verified" : "Chain unverified"}
+            {chainVerified
+              ? t("workerProfileSheet.chainVerified")
+              : t("workerProfileSheet.chainUnverified")}
           </Badge>
         </div>
       </header>
 
       {/* ── Attendance timeline (append-only, newest-first) ─────────────── */}
       <section className="space-y-2.5">
-        <SectionTitle icon={CalendarClock}>Attendance timeline</SectionTitle>
+        <SectionTitle icon={CalendarClock}>
+          {t("workerProfileSheet.attendanceTimeline")}
+        </SectionTitle>
         {attendance.length === 0 ? (
           <p className="rounded-xl bg-card px-3 py-3 text-xs text-muted-fg ring-1 ring-black/5">
-            No attendance recorded yet.
+            {t("workerProfileSheet.noAttendance")}
           </p>
         ) : (
           <ol className="space-y-2" data-testid="attendance-timeline">
@@ -184,10 +195,12 @@ export function WorkerProfileSheet({
 
       {/* ── Por-obra contract history (superseded ones dimmed) ──────────── */}
       <section className="space-y-2.5">
-        <SectionTitle icon={FileSignature}>Por-obra contracts</SectionTitle>
+        <SectionTitle icon={FileSignature}>
+          {t("workerProfileSheet.porObraContracts")}
+        </SectionTitle>
         {contracts.length === 0 ? (
           <p className="rounded-xl bg-card px-3 py-3 text-xs text-muted-fg ring-1 ring-black/5">
-            No piece-rate contracts on file.
+            {t("workerProfileSheet.noContracts")}
           </p>
         ) : (
           <ul className="space-y-2" data-testid="por-obra-history">
@@ -216,13 +229,17 @@ export function WorkerProfileSheet({
                   <div className="mt-1 flex items-center justify-between gap-2">
                     <span className="text-[11px] text-muted-fg">
                       {longDate(c.effectiveFrom)}
-                      {c.effectiveTo ? ` → ${longDate(c.effectiveTo)}` : " → current"}
+                      {c.effectiveTo
+                        ? ` → ${longDate(c.effectiveTo)}`
+                        : ` → ${t("workerProfileSheet.current")}`}
                     </span>
                     {superseded ? (
-                      <Badge tone="neutral">Superseded</Badge>
+                      <Badge tone="neutral">
+                        {t("workerProfileSheet.superseded")}
+                      </Badge>
                     ) : (
                       <Badge tone="ok" dot>
-                        Active
+                        {t("workerProfileSheet.active")}
                       </Badge>
                     )}
                   </div>
@@ -235,11 +252,13 @@ export function WorkerProfileSheet({
 
       {/* ── Cert ledger (currently-valid only) ──────────────────────────── */}
       <section className="space-y-2.5">
-        <SectionTitle icon={ShieldCheck}>Certifications</SectionTitle>
+        <SectionTitle icon={ShieldCheck}>
+          {t("workerProfileSheet.certifications")}
+        </SectionTitle>
         {certs.length === 0 ? (
           <EmptyState
-            title="No valid certifications"
-            description="Certs appear here while in force; expired ones drop off automatically."
+            title={t("workerProfileSheet.noCertsTitle")}
+            description={t("workerProfileSheet.noCertsDescription")}
             className="py-6"
           />
         ) : (
@@ -254,7 +273,9 @@ export function WorkerProfileSheet({
                 {cert.certKind}
                 {cert.expiresAt ? (
                   <span className="font-normal opacity-70">
-                    · to {longDate(cert.expiresAt)}
+                    {t("workerProfileSheet.certTo", {
+                      date: longDate(cert.expiresAt),
+                    })}
                   </span>
                 ) : null}
               </Badge>

@@ -12,13 +12,22 @@ export interface SegmentedProps {
   value: string;
   onChange: (id: string) => void;
   className?: string;
+  /** Accessible name for the radiogroup. Required so a reused group is not mislabeled
+   *  "View mode" (e.g. a defect Band toggle). Defaults to "View mode" for legacy callers. */
+  ariaLabel?: string;
 }
 
-export function Segmented({ options, value, onChange, className }: SegmentedProps) {
+export function Segmented({
+  options,
+  value,
+  onChange,
+  className,
+  ariaLabel = "View mode",
+}: SegmentedProps) {
   return (
     <div
       role="group"
-      aria-label="View mode"
+      aria-label={ariaLabel}
       className={cn(
         "inline-flex rounded-xl border border-white/60 bg-white/50 p-1",
         className,

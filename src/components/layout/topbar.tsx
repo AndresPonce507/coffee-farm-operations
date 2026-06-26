@@ -1,9 +1,12 @@
+import Link from "next/link";
 import { Bell, CloudSun } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { getSupabase } from "@/lib/supabase/server";
 import { MobileNav } from "./mobile-nav";
 import { CommandPalette } from "./command-palette";
 import { SyncStatus } from "./sync-status-island";
+import { LanguageToggle } from "./language-toggle";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
 /**
@@ -12,6 +15,7 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
  * reads the session.
  */
 export async function Topbar() {
+  const t = await getTranslations("layout");
   const {
     data: { user },
   } = await (await getSupabase()).auth.getUser();
@@ -31,7 +35,7 @@ export async function Topbar() {
         <SyncStatus />
 
         <span className="hidden items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1.5 text-xs font-medium text-coffee sm:inline-flex">
-          Harvest season · 2026
+          {t("harvestSeason")}
         </span>
 
         <div className="hidden items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1.5 text-xs font-medium text-ink lg:inline-flex">
@@ -39,13 +43,15 @@ export async function Topbar() {
           22° · Volcán
         </div>
 
-        <button
-          aria-label="Notifications"
-          className="relative grid h-9 w-9 place-items-center rounded-xl border border-line bg-card text-muted-fg transition hover:text-ink"
+        {/* Recent activity — the estate's "what just happened" feed lives on the
+            dashboard. A real navigation (no fake unread dot, no inert button). */}
+        <Link
+          href="/"
+          aria-label={t("viewRecentActivity")}
+          className="grid h-9 w-9 place-items-center rounded-xl border border-line bg-card text-muted-fg outline-none transition hover:text-ink focus-visible:ring-2 focus-visible:ring-forest/40 focus-visible:ring-offset-2 focus-visible:ring-offset-paper"
         >
           <Bell className="h-[18px] w-[18px]" />
-          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-cherry" />
-        </button>
+        </Link>
 
         <div className="flex items-center gap-2.5 rounded-xl border border-line bg-card py-1 pl-1 pr-3">
           <div className="grid h-7 w-7 place-items-center rounded-lg bg-forest text-[11px] font-semibold text-paper">
@@ -55,9 +61,11 @@ export async function Topbar() {
             <div className="max-w-[160px] truncate text-xs font-semibold text-ink">
               {email}
             </div>
-            <div className="text-[10px] text-muted-fg">Owner</div>
+            <div className="text-[10px] text-muted-fg">{t("ownerRole")}</div>
           </div>
         </div>
+
+        <LanguageToggle />
 
         <SignOutButton />
       </div>

@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { MapPin, Sprout } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { CoffeeVariety, Plot, PlotStatus } from "@/lib/types";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
+import { EntityLink } from "@/components/ui/entity-link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -16,11 +18,11 @@ type VarietyFilter = "All" | CoffeeVariety;
 
 type ProgressTone = "forest" | "honey" | "cherry" | "coffee" | "sky";
 
-/** Status → badge tone + human label. */
-const STATUS_META: Record<PlotStatus, { tone: BadgeTone; label: string }> = {
-  healthy: { tone: "ok", label: "Healthy" },
-  watch: { tone: "warn", label: "Watch" },
-  "at-risk": { tone: "danger", label: "At risk" },
+/** Status → badge tone + its translation key under plots.status. */
+const STATUS_META: Record<PlotStatus, { tone: BadgeTone; key: string }> = {
+  healthy: { tone: "ok", key: "healthy" },
+  watch: { tone: "warn", key: "watch" },
+  "at-risk": { tone: "danger", key: "atRisk" },
 };
 
 /** Drive the harvest progress fill off how far along the plot is. */
@@ -31,8 +33,8 @@ const PROGRESS_TONE: Record<PlotStatus, ProgressTone> = {
 };
 
 const VIEW_OPTIONS = [
-  { id: "grid", label: "Grid" },
-  { id: "list", label: "List" },
+  { id: "grid", labelKey: "explorer.viewGrid" },
+  { id: "list", labelKey: "explorer.viewList" },
 ] as const;
 
 function harvestPct(plot: Plot): number {
@@ -76,6 +78,7 @@ interface PlotCardProps {
 }
 
 function PlotCard({ plot }: PlotCardProps) {
+  const t = useTranslations("plots");
   const status = STATUS_META[plot.status];
   const progress = harvestPct(plot);
 
@@ -89,12 +92,19 @@ function PlotCard({ plot }: PlotCardProps) {
             <span className="truncate">{plot.block}</span>
           </div>
           <h3 className="mt-1 truncate font-display text-lg font-semibold text-ink">
-            {plot.name}
+            <EntityLink
+              kind="plot"
+              id={plot.id}
+              name={plot.name}
+              className="rounded-md outline-none transition-colors hover:text-forest focus-visible:ring-2 focus-visible:ring-forest/40"
+            >
+              {plot.name}
+            </EntityLink>
           </h3>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <Badge tone="forest">{plot.variety}</Badge>
             <Badge tone={status.tone} dot>
-              {status.label}
+              {t(`status.${status.key}`)}
             </Badge>
           </div>
         </div>
@@ -102,17 +112,17 @@ function PlotCard({ plot }: PlotCardProps) {
 
       <CardContent className="flex flex-1 flex-col gap-4">
         <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
-          <Fact label="Altitude" value={`${num(plot.altitudeMasl)} masl`} />
-          <Fact label="Area" value={`${num(plot.areaHa, 1)} ha`} />
-          <Fact label="Trees" value={num(plot.trees)} />
-          <Fact label="Shade" value={pct(plot.shadePct)} />
+          <Fact label={t("explorer.altitude")} value={`${num(plot.altitudeMasl)} masl`} />
+          <Fact label={t("explorer.area")} value={`${num(plot.areaHa, 1)} ha`} />
+          <Fact label={t("explorer.trees")} value={num(plot.trees)} />
+          <Fact label={t("explorer.shade")} value={pct(plot.shadePct)} />
         </dl>
 
         <div className="mt-auto">
           <div className="mb-1.5 flex items-baseline justify-between gap-2">
             <span className="flex items-center gap-1.5 text-xs font-medium text-muted-fg">
               <Sprout className="h-3.5 w-3.5 text-forest-500" aria-hidden="true" />
-              Harvest progress
+              {t("explorer.harvestProgress")}
             </span>
             <span className="font-display text-sm font-semibold text-ink">
               {pct(progress)}
@@ -120,7 +130,10 @@ function PlotCard({ plot }: PlotCardProps) {
           </div>
           <ProgressBar value={progress} tone={PROGRESS_TONE[plot.status]} />
           <p className="mt-1.5 text-xs text-muted-fg">
-            {kg(plot.harvestedKg)} of {kg(plot.expectedYieldKg)}
+            {t("explorer.harvestedOf", {
+              harvested: kg(plot.harvestedKg),
+              expected: kg(plot.expectedYieldKg),
+            })}
           </p>
         </div>
       </CardContent>
@@ -133,6 +146,7 @@ interface PlotRowProps {
 }
 
 function PlotRow({ plot }: PlotRowProps) {
+  const t = useTranslations("plots");
   const status = STATUS_META[plot.status];
   const progress = harvestPct(plot);
 
@@ -148,7 +162,14 @@ function PlotRow({ plot }: PlotRowProps) {
         </span>
         <div className="min-w-0">
           <p className="truncate font-display text-sm font-semibold text-ink">
-            {plot.name}
+            <EntityLink
+              kind="plot"
+              id={plot.id}
+              name={plot.name}
+              className="rounded-md outline-none transition-colors hover:text-forest focus-visible:ring-2 focus-visible:ring-forest/40"
+            >
+              {plot.name}
+            </EntityLink>
           </p>
           <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-fg">
             <MapPin className="h-3 w-3" aria-hidden="true" />
@@ -161,7 +182,7 @@ function PlotRow({ plot }: PlotRowProps) {
       <div className="flex shrink-0 items-center gap-1.5">
         <Badge tone="forest">{plot.variety}</Badge>
         <Badge tone={status.tone} dot>
-          {status.label}
+          {t(`status.${status.key}`)}
         </Badge>
       </div>
 
@@ -174,17 +195,19 @@ function PlotRow({ plot }: PlotRowProps) {
           <span className="font-semibold text-ink">{num(plot.areaHa, 1)}</span> ha
         </span>
         <span>
-          <span className="font-semibold text-ink">{num(plot.trees)}</span> trees
+          <span className="font-semibold text-ink">{num(plot.trees)}</span>{" "}
+          {t("explorer.treesUnit")}
         </span>
         <span>
-          <span className="font-semibold text-ink">{pct(plot.shadePct)}</span> shade
+          <span className="font-semibold text-ink">{pct(plot.shadePct)}</span>{" "}
+          {t("explorer.shadeUnit")}
         </span>
       </div>
 
       {/* Harvest progress */}
       <div className="w-full shrink-0 sm:w-44">
         <div className="mb-1 flex items-baseline justify-between gap-2">
-          <span className="text-xs text-muted-fg">Harvest</span>
+          <span className="text-xs text-muted-fg">{t("explorer.harvest")}</span>
           <span className="font-display text-xs font-semibold text-ink">
             {pct(progress)}
           </span>
@@ -201,6 +224,7 @@ function PlotRow({ plot }: PlotRowProps) {
 /* ----------------------------- Main ----------------------------- */
 
 export function PlotsExplorer({ plots }: { plots: Plot[] }) {
+  const t = useTranslations("plots");
   const [activeVariety, setActiveVariety] = useState<VarietyFilter>("All");
   const [view, setView] = useState<ViewMode>("grid");
 
@@ -217,13 +241,13 @@ export function PlotsExplorer({ plots }: { plots: Plot[] }) {
         <div
           className="flex flex-wrap items-center gap-2"
           role="group"
-          aria-label="Filter plots by variety"
+          aria-label={t("explorer.filterByVariety")}
         >
           <Chip
             active={activeVariety === "All"}
             onClick={() => setActiveVariety("All")}
           >
-            All
+            {t("explorer.all")}
             <span className="ml-1.5 opacity-70">{plots.length}</span>
           </Chip>
           {varieties.map((variety) => {
@@ -242,7 +266,7 @@ export function PlotsExplorer({ plots }: { plots: Plot[] }) {
         </div>
 
         <Segmented
-          options={VIEW_OPTIONS.map((o) => ({ id: o.id, label: o.label }))}
+          options={VIEW_OPTIONS.map((o) => ({ id: o.id, label: t(o.labelKey) }))}
           value={view}
           onChange={(id) => setView(id as ViewMode)}
           className="self-start sm:self-auto"
@@ -251,13 +275,14 @@ export function PlotsExplorer({ plots }: { plots: Plot[] }) {
 
       {/* Result count */}
       <p className="text-sm text-muted-fg">
-        Showing{" "}
+        {t("explorer.showing")}{" "}
         <span className="font-semibold text-ink">{filtered.length}</span>{" "}
-        {filtered.length === 1 ? "plot" : "plots"}
+        {filtered.length === 1 ? t("explorer.plot") : t("explorer.plots")}
         {activeVariety !== "All" && (
           <>
             {" "}
-            of <span className="font-semibold text-ink">{activeVariety}</span>
+            {t("explorer.of")}{" "}
+            <span className="font-semibold text-ink">{activeVariety}</span>
           </>
         )}
         .

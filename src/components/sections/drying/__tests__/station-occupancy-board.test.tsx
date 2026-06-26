@@ -41,4 +41,16 @@ describe("StationOccupancyBoard (smoke)", () => {
     render(<StationOccupancyBoard stations={[]} />);
     expect(screen.getByText(/No drying stations/i)).toBeInTheDocument();
   });
+
+  /**
+   * The station name drills to its dossier — the 8th connected entity. No cosmetic
+   * rows (PRINCIPLE Rule 1/3): every station card is a real link to /drying-station/[id].
+   */
+  it("station name is an EntityLink to its /drying-station/[id] dossier (not /undefined)", () => {
+    render(<StationOccupancyBoard stations={stations} weatherRisk={[]} />);
+    const link = screen.getByRole("link", { name: /Open drying station Patio Norte/i });
+    expect(link).toHaveAttribute("href", "/drying-station/st-patio-1");
+    // never a fabricated /drying-station/undefined
+    expect(link.getAttribute("href")).not.toContain("undefined");
+  });
 });

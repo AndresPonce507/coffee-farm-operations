@@ -1,0 +1,66 @@
+{
+  "page": {
+    "title": "Scouting",
+    "subtitle": "Economic-threshold IPM scouting + a cert-gated, PHI/REI-safe spray log"
+  },
+  "board": {
+    "safetyWindowsLabel": "PHI / REI safety windows",
+    "safetyWindowsHeading": "Active safety windows (PHI / REI)",
+    "scoutingLabel": "IPM scouting",
+    "scoutingHeading": "Scouting — {countLabel} {count, plural, one {plot} other {plots}} over threshold",
+    "logSprayLabel": "Log a spray",
+    "logSprayHeading": "Cert-gated spray log",
+    "logSprayHint": "A spray is blocked at the data layer unless the applicator holds a valid pesticide-handling cert and the PHI/REI windows are respected.",
+    "sprayHistoryLabel": "Spray history",
+    "sprayHistoryHeading": "Spray log"
+  },
+  "phiChips": {
+    "emptyTitle": "No active PHI/REI windows",
+    "emptyDescription": "Every plot is clear to pick and safe to enter — no spray interval is currently open.",
+    "phiUntil": "PHI until {date}",
+    "reiActive": "REI active"
+  },
+  "scoutingBoard": {
+    "emptyTitle": "No plots scouted yet",
+    "emptyDescription": "Log a broca or roya scouting read and the economic-threshold engine surfaces a recommend-or-hold call here — and fires a control task when it crosses.",
+    "recommendControl": "Recommend control",
+    "holdAndMonitor": "Hold & monitor",
+    "observedIncidence": "observed incidence",
+    "actionThreshold": "action threshold",
+    "noThreshold": "no threshold (unknown pest)",
+    "controlTaskFired": "Control task fired to the board",
+    "belowThreshold": "Below threshold — monitoring, no intervention warranted."
+  },
+  "sprayHistory": {
+    "emptyTitle": "No sprays logged yet",
+    "emptyDescription": "A spray can only be logged by a certified applicator — once one is, it appears here immutably with its PHI/REI windows.",
+    "phiDays": "PHI {days}d",
+    "reiHours": "REI {hours}h"
+  },
+  "sprayForm": {
+    "noCertWarning": "No crew member holds a valid pesticide-handling cert — a spray cannot be logged until someone is certified.",
+    "plot": "Plot",
+    "product": "Product",
+    "productPlaceholder": "e.g. Verdadero 600",
+    "activeIngredient": "Active ingredient",
+    "activeIngredientPlaceholder": "e.g. cyproconazole",
+    "appliedAt": "Applied at",
+    "phi": "PHI (pre-harvest interval, days)",
+    "phiPlaceholder": "e.g. 21",
+    "rei": "REI (re-entry interval, hours)",
+    "reiPlaceholder": "e.g. 12",
+    "applicator": "Applicator",
+    "chooseApplicator": "Choose a certified applicator…",
+    "optionCertified": "{name} — certified",
+    "optionNoCert": "{name} — no valid cert",
+    "errorProductRequired": "A product is required.",
+    "errorChooseApplicator": "Choose the applicator.",
+    "errorNotCertified": "{name} does not hold a valid pesticide-handling certification — the spray cannot be logged.",
+    "errorThisWorker": "This worker",
+    "errorCouldNotLog": "The spray could not be logged.",
+    "errorUnreachable": "Could not reach the log — check your connection and retry.",
+    "success": "Spray logged — PHI/REI windows stamped; the planner will respect them.",
+    "submitLogging": "Logging…",
+    "submitLog": "Log spray"
+  }
+}

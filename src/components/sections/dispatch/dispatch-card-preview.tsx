@@ -1,4 +1,5 @@
 import { MapPin, Mountain } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { cn, num } from "@/lib/utils";
@@ -44,13 +45,14 @@ export function DispatchCardPreview({
   languages = [],
   className,
 }: DispatchCardPreviewProps) {
+  const t = useTranslations("dispatch");
   const cardText = renderDispatchCardText(card, { languages });
   const pickToday = bilingual(DISPATCH_TERMS.pickToday, languages, "A cosechar hoy");
 
   return (
     <article
       className={cn("glass-card rounded-2xl p-5", className)}
-      aria-label={`Dispatch card for ${card.crewName}`}
+      aria-label={t("preview.cardLabel", { crewName: card.crewName })}
     >
       {/* Header */}
       <header className="flex flex-wrap items-start justify-between gap-3 border-b border-line/70 pb-4">

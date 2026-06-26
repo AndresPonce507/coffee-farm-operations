@@ -1,4 +1,5 @@
 import { Droplets } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { WaterPerKg } from "@/lib/db/ferment";
 import { num } from "@/lib/utils";
@@ -10,6 +11,7 @@ import { num } from "@/lib/utils";
  * underived value renders a calm no-data state, never a misleading zero.
  */
 export function WaterChip({ water }: { water: WaterPerKg | null }) {
+  const t = useTranslations("ferment");
   const perKg = water?.litersPerKg ?? null;
 
   return (
@@ -19,17 +21,20 @@ export function WaterChip({ water }: { water: WaterPerKg | null }) {
       </span>
       <div>
         <p className="text-[11px] font-medium uppercase tracking-wide text-muted-fg">
-          Water use
+          {t("waterChip.waterUse")}
         </p>
         {perKg === null ? (
           <p className="font-display text-base font-semibold text-muted-fg">
-            — <span className="text-xs font-normal">no water logged yet</span>
+            — <span className="text-xs font-normal">{t("waterChip.noWater")}</span>
           </p>
         ) : (
           <p className="font-display text-base font-semibold tabular-nums text-ink">
-            {num(perKg, perKg < 10 ? 1 : 0)} L/kg
+            {t("waterChip.perKg", { value: num(perKg, perKg < 10 ? 1 : 0) })}
             <span className="ml-2 text-xs font-normal text-muted-fg">
-              {num(water!.totalLiters)} L over {num(water!.lotKg)} kg
+              {t("waterChip.totalOver", {
+                liters: num(water!.totalLiters),
+                kg: num(water!.lotKg),
+              })}
             </span>
           </p>
         )}

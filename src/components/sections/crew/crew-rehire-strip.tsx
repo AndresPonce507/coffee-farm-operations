@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { HeartHandshake, IdCard } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Dialog } from "@/components/ui/dialog";
+import { EntityLink } from "@/components/ui/entity-link";
 import { cn } from "@/lib/utils";
 import type {
   AttendanceEvent,
@@ -72,6 +74,7 @@ export function CrewRehireStrip({
   rehireAction,
   className,
 }: CrewRehireStripProps) {
+  const t = useTranslations("crew");
   const [openWorker, setOpenWorker] = useState<string | null>(null);
 
   if (members.length === 0) return null;
@@ -84,13 +87,13 @@ export function CrewRehireStrip({
     <Card className={cn("animate-rise overflow-hidden", className)}>
       <CardHeader>
         <div>
-          <CardTitle>Returning partners</CardTitle>
+          <CardTitle>{t("rehireStrip.title")}</CardTitle>
           <CardDescription>
-            Last season&rsquo;s crew — one tap to rehire, identity and certs carried forward
+            {t("rehireStrip.description")}
           </CardDescription>
         </div>
         <Badge tone="honey" dot>
-          {members.length} eligible
+          {t("rehireStrip.eligible", { count: members.length })}
         </Badge>
       </CardHeader>
 
@@ -107,13 +110,14 @@ export function CrewRehireStrip({
                 <div className="flex items-start gap-3">
                   <Avatar name={member.name} size="md" />
                   <div className="min-w-0 flex-1">
-                    <button
-                      type="button"
-                      onClick={() => setOpenWorker(member.workerId)}
+                    <EntityLink
+                      kind="worker"
+                      id={member.workerId}
+                      name={member.preferredName || member.name}
                       className="rounded text-left font-display text-sm font-semibold text-ink transition-colors hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-300"
                     >
                       {member.preferredName || member.name}
-                    </button>
+                    </EntityLink>
                     <p className="mt-0.5 truncate text-xs text-muted-fg">
                       {member.role} · {member.crewName}
                     </p>
@@ -131,7 +135,9 @@ export function CrewRehireStrip({
                   )}
                   {certCount > 0 && (
                     <Badge tone="ok" dot>
-                      {certCount} valid {certCount === 1 ? "cert" : "certs"}
+                      {certCount === 1
+                        ? t("rehireStrip.validCertOne", { count: certCount })
+                        : t("rehireStrip.validCertOther", { count: certCount })}
                     </Badge>
                   )}
                 </div>
@@ -139,7 +145,7 @@ export function CrewRehireStrip({
                 <div className="mt-auto flex items-center justify-between gap-2">
                   <Chip onClick={() => setOpenWorker(member.workerId)}>
                     <IdCard className="mr-1 inline h-3.5 w-3.5" aria-hidden />
-                    Profile
+                    {t("rehireStrip.profile")}
                   </Chip>
                   <RehireButton
                     workerId={member.workerId}
@@ -158,7 +164,7 @@ export function CrewRehireStrip({
       <Dialog
         open={active !== null}
         onClose={() => setOpenWorker(null)}
-        title={active ? `${active.preferredName || active.name}` : "Worker"}
+        title={active ? `${active.preferredName || active.name}` : t("rehireStrip.workerFallback")}
       >
         {active && (
           <WorkerProfileSheet

@@ -1,0 +1,152 @@
+{
+  "page": {
+    "title": "Plots",
+    "subtitle": "Growing blocks across the Janson farms in Volcán, Chiriquí"
+  },
+  "status": {
+    "healthy": "Healthy",
+    "watch": "Watch",
+    "atRisk": "At risk"
+  },
+  "summary": {
+    "totalArea": "Total area",
+    "totalAreaSub": "hectares",
+    "totalTrees": "Total trees",
+    "totalTreesSub": "coffee trees",
+    "avgAltitude": "Avg altitude",
+    "avgAltitudeSub": "masl",
+    "needAttention": "Need attention",
+    "needAttentionSub": "of {n} plots"
+  },
+  "explorer": {
+    "viewGrid": "Grid",
+    "viewList": "List",
+    "filterByVariety": "Filter plots by variety",
+    "all": "All",
+    "altitude": "Altitude",
+    "area": "Area",
+    "trees": "Trees",
+    "shade": "Shade",
+    "harvestProgress": "Harvest progress",
+    "harvestedOf": "{harvested} of {expected}",
+    "harvest": "Harvest",
+    "treesUnit": "trees",
+    "shadeUnit": "shade",
+    "showing": "Showing",
+    "plot": "plot",
+    "plots": "plots",
+    "of": "of"
+  },
+  "table": {
+    "allPlots": "All plots",
+    "colPlot": "Plot",
+    "colVariety": "Variety",
+    "colAltitude": "Altitude",
+    "colArea": "Area",
+    "colTrees": "Trees",
+    "colShade": "Shade",
+    "colEstablished": "Established",
+    "colStatus": "Status",
+    "colHarvested": "Harvested",
+    "colActions": "Actions",
+    "ofExpected": "{pct} of expected"
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "e.g. Tizingal Alto",
+    "block": "Block",
+    "blockPlaceholder": "e.g. Block A",
+    "variety": "Variety",
+    "choose": "Choose…",
+    "status": "Status",
+    "areaHa": "Area (ha)",
+    "altitudeMasl": "Altitude (masl)",
+    "trees": "Trees",
+    "shadePct": "Shade (%)",
+    "established": "Established",
+    "lastInspected": "Last inspected",
+    "expectedYieldKg": "Expected yield (kg)",
+    "cancel": "Cancel",
+    "saving": "Saving…"
+  },
+  "actions": {
+    "newPlot": "New plot",
+    "addPlot": "Add plot",
+    "editPlot": "Edit plot",
+    "saveChanges": "Save changes",
+    "editAria": "Edit {name}",
+    "deleteAria": "Delete {name}",
+    "deleteConfirm": "Delete \"{name}\"?",
+    "deleteFailed": "Couldn't delete the plot."
+  },
+  "identity": {
+    "title": "Identity and geometry",
+    "status": {
+      "healthy": "Healthy",
+      "watch": "Watch",
+      "atRisk": "At risk"
+    },
+    "variety": "Variety",
+    "area": "Area",
+    "altitude": "Altitude",
+    "trees": "Trees",
+    "shade": "Shade",
+    "established": "Established"
+  },
+  "yield": {
+    "title": "Season yield",
+    "ofTarget": "of {kg} kg target",
+    "progressAria": "Harvest progress"
+  },
+  "cost": {
+    "title": "Cost per kg",
+    "perKgGreen": "/ kg green",
+    "drillHint": "See the cost entries that produce this figure."
+  },
+  "harvests": {
+    "title": "Harvests from this plot",
+    "empty": "No harvests recorded yet"
+  },
+  "scouting": {
+    "title": "Pest scouting",
+    "empty": "No scouting recorded yet",
+    "incidence": "{pct} incidence",
+    "threshold": "(threshold {pct})",
+    "recommendControl": "Recommends control",
+    "hold": "Hold"
+  },
+  "sprays": {
+    "title": "Applications and PHI status",
+    "empty": "No applications recorded",
+    "activeInterval": "Active interval — do not harvest",
+    "untilDate": " until {date}",
+    "activeCountOne": "1 application with an active pre-harvest interval — see details below.",
+    "activeCountMany": "{n} applications with an active pre-harvest interval — see details below.",
+    "freeToHarvest": "No active intervals — the plot is clear to harvest",
+    "phiBadge": "PHI {days} d"
+  },
+  "eudr": {
+    "title": "EUDR origin",
+    "empty": "Doesn't feed any green lot — no due diligence yet",
+    "geolocated": "Geolocated",
+    "notGeolocated": "Not geolocated",
+    "deforestationFree": "Deforestation-free",
+    "noDeclaration": "No declaration",
+    "established": "Established",
+    "centroid": "Centroid",
+    "cutoff": "EUDR cutoff",
+    "feedsLots": "Green lots it feeds"
+  },
+  "satellite": {
+    "title": "Vegetation (NDVI)",
+    "empty": "No reliable reading right now (cloud / no signal)",
+    "indexFallback": "index",
+    "confidence": {
+      "high": "High confidence",
+      "medium": "Medium confidence",
+      "low": "Low confidence"
+    },
+    "optical": "Optical",
+    "cloud": "{pct}% cloud"
+  }
+}

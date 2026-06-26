@@ -64,4 +64,21 @@ describe("StatCard", () => {
     render(<StatCard label="Drying batches" value="3" />);
     expect(screen.queryByText(/derived from/i)).toBeNull();
   });
+
+  it("tints the honey sparkline with the AA-contrast honey-700 token (WCAG 1.4.11)", () => {
+    render(
+      <StatCard
+        label="YTD revenue"
+        value="$486,500"
+        accent="honey"
+        spark={[1, 4, 2, 6, 3, 7]}
+      />,
+    );
+    // The sparkline drives its stroke/fill from currentColor, so its text color
+    // must clear 3:1 against the card. text-honey (#c8922e ~2.67:1) is too low;
+    // text-honey-700 (#8a5a12 ~5.5:1) is the darker AA token.
+    const spark = screen.getByRole("img", { name: /trend sparkline/i });
+    expect(spark).toHaveClass("text-honey-700");
+    expect(spark).not.toHaveClass("text-honey");
+  });
 });

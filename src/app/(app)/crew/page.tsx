@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { CrewSummary } from "@/components/sections/crew/crew-summary";
 import { CrewRosterBoard } from "@/components/sections/crew/crew-roster-board";
@@ -36,6 +38,7 @@ const REHIRE_SEASON = "2026-2027";
  * here re-implements a projection.
  */
 export default async function CrewPage() {
+  const t = await getTranslations("crew");
   const roster = await getCrewRoster();
 
   // Per-worker valid certs, resolved in parallel and folded into a map the board
@@ -73,8 +76,8 @@ export default async function CrewPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Crew"
-        subtitle="The people system of record — named, returning partners"
+        title={t("page.title")}
+        subtitle={t("page.subtitle")}
       />
 
       <CrewSummary

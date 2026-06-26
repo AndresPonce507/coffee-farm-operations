@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { CheckCircle2, Droplets } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import {
   DRYING_IDLE,
@@ -39,6 +40,7 @@ export function RecordMoistureForm({
   /** Called after a successful record so the host (dialog) can offer to close. */
   onDone?: () => void;
 }) {
+  const t = useTranslations("drying");
   const [state, formAction, pending] = useActionState<
     DryingActionState,
     FormData
@@ -63,13 +65,13 @@ export function RecordMoistureForm({
         </span>
         <div className="space-y-1">
           <p className="font-display text-base font-semibold text-ink">
-            Reading recorded
+            {t("recordForm.successTitle")}
           </p>
           <p className="text-sm text-muted-fg">{state.message}</p>
         </div>
         {onDone && (
           <Button type="button" variant="ghost" size="sm" onClick={onDone}>
-            Done
+            {t("recordForm.done")}
           </Button>
         )}
       </div>
@@ -82,15 +84,12 @@ export function RecordMoistureForm({
 
       <p className="flex items-start gap-2 rounded-xl bg-forest-50/70 px-3 py-2 text-xs text-forest-700 ring-1 ring-forest-100">
         <Droplets className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-        <span>
-          Each reading feeds the lot&rsquo;s moisture curve — the gate clears a lot
-          to mill once its readings rest stable inside the 10.5&ndash;11.5% band.
-        </span>
+        <span>{t("recordForm.hint")}</span>
       </p>
 
       <div className="space-y-1">
         <label className={LABEL} htmlFor="moisture-lotCode">
-          Lot
+          {t("recordForm.lotLabel")}
         </label>
         <select
           id="moisture-lotCode"
@@ -102,7 +101,7 @@ export function RecordMoistureForm({
           aria-invalid={fieldError("lotCode") ? true : undefined}
         >
           <option value="" disabled>
-            Choose…
+            {t("recordForm.choose")}
           </option>
           {lots.map((code) => (
             <option key={code} value={code}>
@@ -117,7 +116,7 @@ export function RecordMoistureForm({
 
       <div className="space-y-1">
         <label className={LABEL} htmlFor="moisture-pct">
-          Moisture (%)
+          {t("recordForm.moistureLabel")}
         </label>
         <input
           id="moisture-pct"
@@ -127,7 +126,7 @@ export function RecordMoistureForm({
           max="100"
           step="0.1"
           inputMode="decimal"
-          placeholder="e.g. 11.2"
+          placeholder={t("recordForm.moisturePlaceholder")}
           required
           disabled={pending}
           className={FIELD}
@@ -147,11 +146,11 @@ export function RecordMoistureForm({
       <div className="flex justify-end gap-2 pt-1">
         {onDone && (
           <Button type="button" variant="ghost" onClick={onDone}>
-            Cancel
+            {t("recordForm.cancel")}
           </Button>
         )}
         <Button type="submit" disabled={pending}>
-          {pending ? "Recording…" : "Record reading"}
+          {pending ? t("recordForm.submitting") : t("recordForm.submit")}
         </Button>
       </div>
     </form>

@@ -1,0 +1,82 @@
+{
+  "page": {
+    "title": "Punto de venta",
+    "subtitle": "Caja de la tienda y el café. Cobra las bolsas, suma el ITBMS y sigue vendiendo aunque se caiga el wifi."
+  },
+  "summary": {
+    "sales": "Ventas",
+    "salesSub": "registradas hace poco",
+    "gross": "Bruto",
+    "grossSub": "incl. ITBMS",
+    "tax": "ITBMS cobrado",
+    "taxSub": "7% de ley",
+    "catalog": "En estante",
+    "catalogSub": "{count} SKU en existencia"
+  },
+  "empty": {
+    "noTerminals": {
+      "title": "Todavía no hay caja",
+      "description": "Registra una caja para la Tienda Janson o el Café Lagunas y empieza a cobrar."
+    },
+    "noSales": {
+      "title": "Aún no hay ventas hoy",
+      "description": "Toca una bolsa en la caja para registrar la primera venta del día."
+    }
+  },
+  "register": {
+    "heading": "Caja",
+    "terminalLabel": "Caja",
+    "catalogHeading": "Toca para agregar",
+    "noSkus": "No hay bolsas en existencia. Tuesta y abastece un SKU primero.",
+    "available": "{count} en existencia",
+    "outOfStock": "Agotado",
+    "addAria": "Agregar {name} a la venta",
+    "reserveTag": "Club Reserva",
+    "customerLabel": "Cliente (opcional)",
+    "customerPlaceholder": "Cliente de mostrador",
+    "cart": {
+      "heading": "Esta venta",
+      "empty": "Toca una bolsa para empezar la venta.",
+      "qtyDecAria": "Una menos de {name}",
+      "qtyIncAria": "Una más de {name}",
+      "removeAria": "Quitar {name} de la venta",
+      "subtotal": "Subtotal",
+      "tax": "ITBMS (7%)",
+      "total": "Total",
+      "previewNote": "La caja confirma el total final al registrar la venta."
+    },
+    "cobrar": "Cobrar",
+    "cobrando": "Registrando…",
+    "folio": "Venta {sale} registrada.",
+    "another": "Nueva venta",
+    "clear": "Limpiar",
+    "offlineQueued": "Guardada sin conexión. Se sincroniza cuando vuelva el wifi.",
+    "queuedBadge": "{count} por sincronizar",
+    "online": "En línea",
+    "offline": "Sin conexión",
+    "errors": {
+      "noTerminal": "Elige una caja primero.",
+      "emptyCart": "Agrega al menos una bolsa a la venta.",
+      "generic": "No se pudo registrar la venta. Intenta de nuevo."
+    }
+  },
+  "history": {
+    "heading": "Ventas recientes",
+    "units": "{count} bolsas",
+    "subtotal": "Subtotal",
+    "tax": "ITBMS",
+    "total": "Total",
+    "fiscalPending": "Recibo (no fiscal)",
+    "fiscalStamped": "Timbrada {cufe}"
+  },
+  "status": {
+    "pending": "Pendiente",
+    "paid": "Pagada",
+    "fulfilled": "Entregada",
+    "cancelled": "Anulada",
+    "refunded": "Reembolsada"
+  },
+  "loading": {
+    "board": "Cargando la caja"
+  }
+}

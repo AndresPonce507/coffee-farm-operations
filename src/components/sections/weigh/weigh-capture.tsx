@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { CheckCircle2, MapPin, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ import { PickerGrid, type PickerOption } from "./picker-grid";
 import { WeighNumericPad } from "./weigh-numeric-pad";
 import { RipenessPad, type RipenessValue } from "./ripeness-pad";
 import { WeighTally } from "./weigh-tally";
+import { RippleProof } from "./ripple-proof";
 
 /**
  * WeighCapture — the <3-second, glove-friendly, OFFLINE-FIRST genesis capture surface
@@ -62,7 +64,17 @@ export interface WeighCaptureDeps {
     occurredAt: string;
     deviceId: string;
     idempotencyKey: string;
-  }) => Promise<{ outcome: "queued" | "sent" | "rejected" | "error"; message?: string }>;
+  }) => Promise<{
+    outcome: "queued" | "sent" | "rejected" | "error";
+    message?: string;
+    /**
+     * The bound lot code (WeighInResult.lotCode) when the write reached the server
+     * online; `undefined` on the offline-queued path (the lot is minted server-side
+     * on drain). Threaded into <RippleProof> so the capture's downstream consumers
+     * become clickable; absent → the panel degrades to the /lots index until sync.
+     */
+    lotCode?: string;
+  }>;
 }
 
 export interface WeighCaptureProps {
@@ -95,6 +107,7 @@ export function WeighCapture({
   deps = {},
   className,
 }: WeighCaptureProps) {
+  const t = useTranslations("weigh");
   const mintKey = deps.mintKey ?? uuidv7;
   const now = deps.now ?? (() => new Date().toISOString());
   const readScale = deps.readScale ?? readWeightKg;
@@ -115,6 +128,12 @@ export function WeighCapture({
     {},
   );
   const [localFarmKg, setLocalFarmKg] = useState(0);
+
+  // The reactive-proof panel feed: the last successful capture's bound lot code
+  // (null offline, until the outbox drains) and the kg just captured. Derived
+  // entirely from the submit result — no re-fetch, no new getter (facet-01 §2).
+  const [proofLotCode, setProofLotCode] = useState<string | null>(null);
+  const [proofDeltaKg, setProofDeltaKg] = useState<number | null>(null);
 
   const deviceIdRef = useRef(deps.deviceId ?? `weigh-${mintKey()}`);
 
@@ -150,12 +169,13 @@ export function WeighCapture({
         });
       });
     setGpsBusy(true);
+    setError(null); // clear any stale error so a successful retry isn't contradicted.
     try {
       const pos = await getPos();
       if (!pos) {
         // Permission denied / timeout: tell the picker so they confirm by hand —
         // the plot <select> always works, so this is informative, never blocking.
-        setError("No se pudo ubicar con GPS — confirma la parcela a mano.");
+        setError(t("capture.gpsFailed"));
         return;
       }
       setFix(pos);
@@ -174,13 +194,14 @@ export function WeighCapture({
 
   const tryScale = useCallback(async () => {
     setScaleBusy(true);
+    setError(null); // clear any stale error so a successful retry isn't contradicted.
     try {
       const r = await readScale();
       if (r.ok) {
         setKg(r.reading.kg.toFixed(1));
         setSource("ble");
       } else if (r.reason === "error") {
-        setError("Scale didn’t connect — enter the weight by hand.");
+        setError(t("capture.scaleFailed"));
       }
       // unsupported / cancelled: silently fall back to the pad (no scary error).
     } finally {
@@ -224,7 +245,7 @@ export function WeighCapture({
     });
     if (!parsed.ok) {
       setPhase("error");
-      setError(Object.values(parsed.errors)[0] ?? "Check the entry.");
+      setError(Object.values(parsed.errors)[0] ?? t("capture.checkEntry"));
       return;
     }
 
@@ -245,7 +266,7 @@ export function WeighCapture({
       });
       if (res.outcome === "rejected" || res.outcome === "error") {
         setPhase("error");
-        setError(res.message ?? "Could not save this weigh-in.");
+        setError(res.message ?? t("capture.saveFailed"));
         return;
       }
       // queued (offline-safe) or sent — both are a success for the picker.
@@ -257,10 +278,17 @@ export function WeighCapture({
         ...Object.fromEntries(Object.entries(b).filter(([k]) => k !== pickerId)),
       }));
       setLocalFarmKg((f) => f + kgNum);
+      // Surface the ripple: the bound lot code (when an online send resolved one)
+      // and the captured Δ feed the proof panel below the tally. The default
+      // offline path (EnqueueResult) carries no lot code — the lot is minted
+      // server-side on drain — so the panel degrades to the /lots index until sync.
+      const lotCode = "lotCode" in res ? res.lotCode ?? null : null;
+      setProofLotCode(lotCode);
+      setProofDeltaKg(kgNum);
       setPhase("captured");
     } catch (e) {
       setPhase("error");
-      setError(e instanceof Error ? e.message : "Could not save this weigh-in.");
+      setError(e instanceof Error ? e.message : t("capture.saveFailed"));
     }
   }, [ready, pickerId, plotId, ripeness, kg, source, fix, now, mintKey, deps, kgNum]);
 
@@ -273,10 +301,14 @@ export function WeighCapture({
         farmKgToday={farmKgToday + localFarmKg}
       />
 
+      {/* Reactive proof: the downstream consumers the last capture just moved,
+          each a real link. Renders null until the first capture lands. */}
+      <RippleProof lotCode={proofLotCode} lastDeltaKg={proofDeltaKg} />
+
       {/* (1) badge the picker */}
       <section aria-labelledby="weigh-picker-h" className="space-y-2.5">
         <h2 id="weigh-picker-h" className="text-sm font-semibold text-ink">
-          1 · Badge the picker
+          {t("capture.stepPicker")}
         </h2>
         <PickerGrid pickers={pickers} selectedId={pickerId} onSelect={setPickerId} />
       </section>
@@ -284,11 +316,11 @@ export function WeighCapture({
       {/* (2) confirm the plot */}
       <section aria-labelledby="weigh-plot-h" className="space-y-2.5">
         <h2 id="weigh-plot-h" className="text-sm font-semibold text-ink">
-          2 · Confirm the plot
+          {t("capture.stepPlot")}
         </h2>
         <div className="flex flex-wrap items-center gap-2">
           <label className="sr-only" htmlFor="weigh-plot-select">
-            Plot
+            {t("capture.plotLabel")}
           </label>
           <select
             id="weigh-plot-select"
@@ -314,7 +346,11 @@ export function WeighCapture({
             ) : (
               <MapPin className="h-4 w-4" aria-hidden="true" />
             )}
-            {gpsBusy ? "Buscando GPS…" : fix ? "GPS set" : "Use GPS"}
+            {gpsBusy
+              ? t("capture.gpsLocating")
+              : fix
+                ? t("capture.gpsSet")
+                : t("capture.gpsUse")}
           </button>
           {selectedPlot && (
             <span className="text-xs text-muted-fg">{selectedPlot.name}</span>
@@ -325,7 +361,7 @@ export function WeighCapture({
       {/* (3) weigh */}
       <section aria-labelledby="weigh-kg-h" className="space-y-2.5">
         <h2 id="weigh-kg-h" className="text-sm font-semibold text-ink">
-          3 · Weigh the lata
+          {t("capture.stepWeigh")}
         </h2>
         <WeighNumericPad
           value={kg}
@@ -341,7 +377,7 @@ export function WeighCapture({
       {/* (4) ripeness */}
       <section aria-labelledby="weigh-ripe-h" className="space-y-2.5">
         <h2 id="weigh-ripe-h" className="text-sm font-semibold text-ink">
-          4 · Ripeness
+          {t("capture.stepRipeness")}
         </h2>
         <RipenessPad value={ripeness} onChange={setRipeness} />
       </section>
@@ -355,10 +391,10 @@ export function WeighCapture({
           >
             <span className="flex items-center gap-2 text-sm font-semibold text-forest">
               <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
-              Weight captured — safe on this device
+              {t("capture.captured")}
             </span>
             <Button type="button" variant="primary" onClick={reset}>
-              Next lata
+              {t("capture.nextLata")}
             </Button>
           </div>
         ) : (
@@ -368,14 +404,14 @@ export function WeighCapture({
             onClick={capture}
             disabled={!ready || phase === "saving"}
             className="h-14 w-full text-base"
-            aria-label="Capture weigh-in"
+            aria-label={t("capture.captureLabel")}
           >
             {phase === "saving" ? (
               <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
             ) : (
               <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
             )}
-            {phase === "saving" ? "Saving…" : "Capture"}
+            {phase === "saving" ? t("capture.saving") : t("capture.capture")}
           </Button>
         )}
         {error && (

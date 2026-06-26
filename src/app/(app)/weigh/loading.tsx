@@ -9,9 +9,12 @@
  * Pure server component: no data imports, no client JS. Glassy `animate-pulse`
  * placeholders float over the global LivingBackground.
  */
+import { useTranslations } from "next-intl";
+
 export default function WeighLoading() {
+  const t = useTranslations("common");
   return (
-    <div className="space-y-6" aria-busy="true" aria-label="Loading weigh">
+    <div className="space-y-6" aria-busy="true" aria-label={t("loading.weigh")}>
       {/* Header — mirrors PageHeader. */}
       <div className="animate-rise relative mb-6 pb-4">
         <div className="space-y-2.5">

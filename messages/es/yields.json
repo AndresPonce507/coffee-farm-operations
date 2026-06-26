@@ -1,0 +1,68 @@
+{
+  "page": {
+    "title": "Rendimiento",
+    "subtitle": "Cuánta masa sobrevive en cada paso, de la cereza al grano tostado. Los factores de la finca contra los que se mide cada trilla y cada tueste."
+  },
+  "summary": {
+    "stages": "Pasos medidos",
+    "stagesSub": "{count} pasos en la curva",
+    "millOutturn": "Rendimiento de trilla",
+    "millOutturnSub": "pergamino → verde",
+    "millOutturnNone": "Sin cargar",
+    "roastShrinkage": "Merma de tueste",
+    "roastShrinkageSub": "verde → tostado",
+    "roastShrinkageNone": "Sin cargar",
+    "cherryToGreen": "Cereza → verde",
+    "cherryToGreenSub": "lo que sobrevive de toda la cadena",
+    "cherryToGreenNone": "Cadena incompleta"
+  },
+  "kind": {
+    "process": "Beneficio húmedo",
+    "mill": "Trilla",
+    "roast": "Tueste",
+    "byproduct": "Subproducto"
+  },
+  "card": {
+    "flow": "{from} → {to}",
+    "retained": "queda {pct}",
+    "lost": "se pierde {pct}",
+    "factor": "factor × {factor}"
+  },
+  "legend": {
+    "title": "Nuevos bordes de transformación",
+    "subtitle": "Esta versión le enseña al grafo de lotes tres transformaciones nuevas que conservan la masa. Cada salida de trilla, cada tanda de tueste y cada subproducto es ahora su propio borde rastreado, y la guarda de conservación sigue cuadrando cada gramo.",
+    "millTitle": "Trilla",
+    "mill": "El pergamino se vuelve verde, la salida clasificada por zaranda y mesa densimétrica de la trilladora.",
+    "roastTitle": "Tueste",
+    "roast": "El verde se vuelve tostado y suelta humedad mientras se desarrolla.",
+    "byproductTitle": "Subproducto",
+    "byproduct": "Cascarilla, película, rechazos de zaranda y defectos, cada uno rastreado como su propio flujo para que nada se pierda en silencio."
+  },
+  "calc": {
+    "title": "Calculadora de rendimiento",
+    "subtitle": "Proyecta un lote de pergamino por la trilla y el tueste. Solo números, no se guarda nada.",
+    "inputLabel": "Pergamino que entra",
+    "unit": "kg",
+    "greenLabel": "Verde después de trillar",
+    "greenHint": "{pct} del pergamino",
+    "roastedLabel": "Tostado después de tostar",
+    "roastedHint": "{pct} del verde",
+    "note": "Un estimado de planeación tomado de la curva de la finca. La trilla real registra su propia masa medida y la guarda de conservación la cuadra."
+  },
+  "stage": {
+    "cherry": "Cereza",
+    "fermentation": "Fermentación",
+    "drying": "Secado",
+    "parchment": "Pergamino",
+    "milled": "Trillado",
+    "green": "Verde",
+    "roasted": "Tostado"
+  },
+  "empty": {
+    "title": "Todavía no hay factores de rendimiento",
+    "description": "La curva de la finca se siembra con el esquema de trilla y tueste. En cuanto aterrice, aquí aparece cada paso de la cereza al grano."
+  },
+  "loading": {
+    "board": "Cargando rendimiento"
+  }
+}

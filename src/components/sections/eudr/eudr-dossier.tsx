@@ -1,6 +1,8 @@
 import { Check, X, MapPin, FileText } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { EntityLink } from "@/components/ui/entity-link";
 import { EUDR_CUTOFF, type LotEudrDossier } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -55,6 +57,7 @@ export function EudrDossier({
   dossier: LotEudrDossier;
   className?: string;
 }) {
+  const t = useTranslations("eudr");
   const { code, status, originPlots } = dossier;
 
   return (
@@ -63,10 +66,10 @@ export function EudrDossier({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 className="text-sm font-semibold text-ink">
-              EUDR due-diligence dossier
+              {t("dossier.title")}
             </h3>
             <p className="mt-0.5 text-xs text-muted-fg">
-              Plots of origin · deforestation-free since {EUDR_CUTOFF}
+              {t("dossier.subtitle", { cutoff: EUDR_CUTOFF })}
             </p>
           </div>
           <EudrStatusBadge status={status} />
@@ -77,9 +80,7 @@ export function EudrDossier({
             data-testid="eudr-no-origin"
             className="rounded-lg bg-cherry-100/50 px-3 py-3 text-xs text-cherry ring-1 ring-cherry/15"
           >
-            This lot&apos;s lineage doesn&apos;t reach a harvested plot, so its
-            origin can&apos;t yet be substantiated. Link the source lots&apos;
-            harvests to place it under EUDR due diligence.
+            {t("dossier.noOrigin")}
           </p>
         ) : (
           <ul className="space-y-2" data-testid="eudr-origin-plots">
@@ -90,22 +91,30 @@ export function EudrDossier({
                 className="rounded-lg bg-card px-3 py-2 ring-1 ring-black/5"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="truncate text-sm font-medium text-ink">
+                  <EntityLink
+                    kind="plot"
+                    id={p.plotId}
+                    className="truncate text-sm font-medium text-ink underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-forest/30"
+                  >
                     {p.plotName}
-                  </span>
+                  </EntityLink>
                   <span className="shrink-0 text-[11px] text-muted-fg">
-                    est. {p.establishedYear}
+                    {t("dossier.established", { year: p.establishedYear })}
                   </span>
                 </div>
                 <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                   <FactChip ok={p.geolocated}>
                     <MapPin className="h-3 w-3" aria-hidden />
-                    {p.geolocated ? formatCentroid(p.centroid) : "Not geolocated"}
+                    {p.geolocated
+                      ? formatCentroid(p.centroid)
+                      : t("dossier.notGeolocated")}
                   </FactChip>
                   <FactChip ok={p.deforestationFree}>
                     {p.deforestationFree
-                      ? `Deforestation-free${p.declBasis ? ` · ${p.declBasis}` : ""}`
-                      : "Undeclared"}
+                      ? p.declBasis
+                        ? t("dossier.deforestationFreeWithBasis", { basis: p.declBasis })
+                        : t("dossier.deforestationFree")
+                      : t("dossier.undeclared")}
                   </FactChip>
                 </div>
                 {/* The owner's WRITE seam: declare an UNdeclared plot
@@ -125,8 +134,7 @@ export function EudrDossier({
 
         <p className="flex items-center gap-1.5 text-[11px] text-muted-fg">
           <FileText className="h-3.5 w-3.5" aria-hidden />
-          Geolocation + deforestation-free declaration per plot of production
-          (EU Regulation 2023/1115).
+          {t("dossier.footnote")}
         </p>
       </CardContent>
     </Card>

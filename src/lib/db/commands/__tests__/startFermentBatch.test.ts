@@ -55,10 +55,10 @@ describe("validateStartFermentBatch", () => {
     if (!r.ok) expect(r.errors.method).toMatch(/method/i);
   });
 
-  it("allows a null/empty recipe (a batch may start before a recipe is chosen)", () => {
+  it("rejects an empty recipe (a recipe version is required to start a batch)", () => {
     const r = validateStartFermentBatch({ ...validRaw(), recipeId: "" });
-    expect(r.ok).toBe(true);
-    if (r.ok) expect(r.data.recipeId).toBeNull();
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.recipeId).toMatch(/recipe/i);
   });
 });
 
@@ -87,11 +87,12 @@ describe("startFermentBatch", () => {
     if (result.ok) expect(result.batchId).toBe("batch-uuid");
   });
 
-  it("forwards null recipe id when none is chosen", async () => {
+  it("rejects an empty recipe WITHOUT calling the RPC (a recipe is required)", async () => {
     const { store, rpc } = fakeStore({ data: "batch-uuid", error: null });
-    await startFermentBatch(store, { ...validRaw(), recipeId: "" });
-    const args = rpc.mock.calls[0][1] as Record<string, unknown>;
-    expect(args.p_recipe_id).toBeNull();
+    const result = await startFermentBatch(store, { ...validRaw(), recipeId: "" });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errors?.recipeId).toMatch(/recipe/i);
+    expect(rpc).not.toHaveBeenCalled();
   });
 
   it("maps an unknown-lot foreign_key_violation to a FRIENDLY message", async () => {

@@ -13,7 +13,7 @@ describe("CupperDriftCard (smoke)", () => {
   it("renders the calibration card title", () => {
     render(<CupperDriftCard drift={DRIFT} />);
     expect(
-      screen.getByRole("heading", { name: /cupper.?drift/i }),
+      screen.getByRole("heading", { name: /cupper drift calibration/i }),
     ).toBeInTheDocument();
   });
 
@@ -30,7 +30,7 @@ describe("CupperDriftCard (smoke)", () => {
 
   it("shows an empty state when no calibration data exists", () => {
     render(<CupperDriftCard drift={[]} />);
-    expect(screen.getByText(/no calibration/i)).toBeInTheDocument();
+    expect(screen.getByText(/no calibration sessions yet/i)).toBeInTheDocument();
   });
 
   it("renders the human-readable cupper name as the primary identity when a name map is supplied", () => {

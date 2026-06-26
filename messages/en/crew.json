@@ -1,0 +1,102 @@
+{
+  "page": {
+    "title": "Crews",
+    "subtitle": "The system of record for people — named partners who return"
+  },
+  "dossier": {
+    "eyebrow": "Crew",
+    "backLabel": "All crews",
+    "subtitle": "{members} · {present} today",
+    "memberOne": "member",
+    "memberOther": "members",
+    "presentOne": "present",
+    "presentOther": "present"
+  },
+  "summary": {
+    "crews": "Crews",
+    "members": "Members",
+    "presentToday": "Present today"
+  },
+  "rosterBoard": {
+    "title": "Crew roster",
+    "description": "Field teams today · {present} of {total} present",
+    "crewCountOne": "{count} crew",
+    "crewCountOther": "{count} crews",
+    "crewLabel": "{crew} crew",
+    "presentOfTotal": "{present}/{total} present",
+    "certCountOne": "{count} cert",
+    "certCountOther": "{count} certs",
+    "attendancePresent": "Present",
+    "attendanceRestDay": "Rest day",
+    "attendanceAbsent": "Absent",
+    "emptyTitle": "No crews on the roster",
+    "emptyDescription": "Once workers are assigned to a crew they appear here, grouped by team."
+  },
+  "rehireStrip": {
+    "title": "Returning partners",
+    "description": "Last season’s crew — one tap to rehire, identity and certs carried forward",
+    "eligible": "{count} eligible",
+    "validCertOne": "{count} valid cert",
+    "validCertOther": "{count} valid certs",
+    "profile": "Profile",
+    "workerFallback": "Worker"
+  },
+  "rehireButton": {
+    "welcomeBack": "Welcome back",
+    "rehireFor": "Rehire for {season}",
+    "rehiring": "Rehiring…",
+    "rehire": "Rehire",
+    "error": "Couldn’t rehire. Try again."
+  },
+  "workerProfileSheet": {
+    "chainVerified": "Chain verified",
+    "chainUnverified": "Chain unverified",
+    "attendanceTimeline": "Attendance timeline",
+    "noAttendance": "No attendance recorded yet.",
+    "porObraContracts": "Por-obra contracts",
+    "noContracts": "No piece-rate contracts on file.",
+    "current": "current",
+    "superseded": "Superseded",
+    "active": "Active",
+    "certifications": "Certifications",
+    "noCertsTitle": "No valid certifications",
+    "noCertsDescription": "Certs appear here while in force; expired ones drop off automatically.",
+    "certTo": "· to {date}"
+  },
+  "rosterSection": {
+    "title": "Crew",
+    "empty": "No members in this crew yet",
+    "presentOfTotal": "{present} of {total} present today",
+    "present": "Present",
+    "restDay": "Rest day",
+    "absent": "Absent",
+    "rehireEligible": "Eligible for rehire"
+  },
+  "dispatchSection": {
+    "title": "Dispatch history",
+    "empty": "No dispatches recorded for this crew",
+    "statusAcknowledged": "Acknowledged",
+    "statusSent": "Sent",
+    "statusDraft": "Draft",
+    "statusSuperseded": "Superseded",
+    "dispatchOn": "Dispatch on {date}",
+    "plotCountOne": "{count} plot",
+    "plotCountOther": "{count} plots"
+  },
+  "plotsSection": {
+    "title": "Assigned plots",
+    "empty": "This crew hasn’t been dispatched to any plot yet",
+    "masl": "{altitude} masl",
+    "lastDispatch": "Last dispatch: {date}",
+    "runCountOne": "{count} dispatch",
+    "runCountOther": "{count} dispatches"
+  },
+  "productivitySection": {
+    "title": "Today’s productivity",
+    "empty": "This crew hasn’t weighed any coffee today",
+    "totalToday": "Total today",
+    "latas": "Latas",
+    "pickerLataOne": "{kg} · {count} lata",
+    "pickerLataOther": "{kg} · {count} latas"
+  }
+}

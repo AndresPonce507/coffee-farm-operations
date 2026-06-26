@@ -35,12 +35,14 @@
   --color-coffee-200: #d8c7ad;
 
   /* accents (coffee cherry red + honey gold + sky for water/weather) */
-  --color-cherry: #b5482e;
+  --color-cherry: #a8412a;         /* darkened from #b5482e → 4.69:1 on cherry-100 (WCAG AA; was 4.12:1) */
+  --color-cherry-700: #8f3522;     /* darker — for cherry TEXT on light bg / emphasis (6.0:1 on cherry-100) */
   --color-cherry-100: #f6ddd4;
   --color-honey: #c8922e;          /* fills, charts, icons */
   --color-honey-700: #8a5a12;      /* darker — for honey TEXT on light bg (WCAG AA) */
   --color-honey-100: #f6e7c8;
   --color-sky: #3b6ea5;
+  --color-sky-700: #2a527d;        /* darker — for sky TEXT on light bg (6.26:1 on sky-100) */
   --color-sky-100: #d8e4f0;
 
   /* status */

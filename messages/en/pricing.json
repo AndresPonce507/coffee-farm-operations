@@ -1,0 +1,123 @@
+{
+  "page": {
+    "title": "Pricing",
+    "subtitle": "What every green lot is worth. Reserve coffees on their own merit, commodity lots against the C"
+  },
+  "summary": {
+    "lots": "Priced lots",
+    "lotsSub": "{count} green in the book",
+    "reserve": "Reserve lots",
+    "reserveSub": "single-origin, off the C",
+    "commodity": "Commodity lots",
+    "commoditySub": "C plus a differential",
+    "atp": "Left to sell",
+    "atpSub": "kg across the book"
+  },
+  "regime": {
+    "reserve": "Reserve",
+    "commodity": "Commodity",
+    "reserveTag": "Reserve · {variety}",
+    "commodityTag": "Commodity · C + diff"
+  },
+  "card": {
+    "indicative": "Indicative price",
+    "perKg": "{price}/kg",
+    "cogsFloor": "Cost floor",
+    "cogsFloorValue": "{price}/kg green",
+    "cogsUnknown": "Cost not booked yet",
+    "margin": "Margin",
+    "marginUnknown": "Margin unknown",
+    "atpRemaining": "{kg} kg left",
+    "atpNone": "Fully committed",
+    "score": "Cup {score}",
+    "noScore": "Not cupped yet",
+    "compStory": "Nearest comp: {auction}",
+    "compStoryValue": "{price}/kg",
+    "compStorySub": "{variety} · {process} · {score} pts · {year}",
+    "noComp": "No auction comp on file yet",
+    "open": "Open composer",
+    "priceUnknown": "Price waiting on a C mark"
+  },
+  "empty": {
+    "title": "No green lots to price yet",
+    "description": "Grade a lot to green and it lands here. Reserve coffees get priced on cup and scarcity, commodity lots against the day's C."
+  },
+  "loading": {
+    "board": "Loading price book",
+    "composer": "Loading quote composer"
+  },
+  "composer": {
+    "eyebrow": "Quote composer",
+    "title": "Price {lot}",
+    "back": "Back to price book",
+    "reserveRegime": "Reserve coffee, priced on its own merit",
+    "commodityRegime": "Commodity coffee, priced against the C",
+    "atpLine": "{kg} kg left to sell",
+    "cogsLine": "Cost floor {price}/kg green",
+    "cogsUnknownLine": "Cost not booked, so margin shows as unknown",
+    "marginFloorLine": "Floor: you can't quote below {price}/kg ({pct} over cost)",
+    "kgLabel": "Kilograms to quote",
+    "currencyLabel": "Settlement currency",
+    "fxLabel": "FX to USD",
+    "indicativeLine": "Indicative {price}/kg",
+    "marginLine": "Margin {pct}",
+    "marginUnknownLine": "Margin unknown until a cost is booked",
+    "quote": "Save quote",
+    "quoting": "Saving…",
+    "quoted": "Quote saved",
+    "cancel": "Cancel"
+  },
+  "commodity": {
+    "story": "The C story",
+    "currentC": "Current C",
+    "currentCValue": "{price}/lb",
+    "contractMonth": "Contract {month}",
+    "differential": "Differential over C",
+    "differentialValue": "+{value}/lb",
+    "perLb": "{price}/lb",
+    "perKg": "{price}/kg",
+    "buildLine": "(C {c} + diff {diff})/lb × {factor} lb/kg",
+    "noMark": "No C mark entered yet. Type the morning close to quote.",
+    "sparkLabel": "C price, recent marks"
+  },
+  "reserve": {
+    "story": "The price build-up",
+    "base": "Base",
+    "coefficient": "Cup premium",
+    "coefficientLine": "{coef}/pt × ({score} − {pivot} pts)",
+    "scarcity": "Scarcity",
+    "modeled": "Modeled price",
+    "override": "Override price",
+    "overrideHint": "Leave blank to take the modeled price",
+    "comp": "Auction comp",
+    "compLine": "{auction} · {variety} · {score} pts ({year})",
+    "compValue": "{price}/kg",
+    "noModel": "No reserve model configured yet",
+    "noComp": "No auction comp on file yet"
+  },
+  "accept": {
+    "open": "Accept quote",
+    "title": "Accept this quote?",
+    "body": "Accepting reserves {kg} kg of {lot} for this buyer.",
+    "atpBefore": "Now",
+    "atpAfter": "After",
+    "atpUnit": "kg left",
+    "buyerLabel": "Buyer",
+    "buyerPlaceholder": "Roaster or importer name",
+    "confirm": "Accept and reserve",
+    "accepting": "Accepting…",
+    "cancel": "Not yet",
+    "accepted": "Quote accepted",
+    "irreversible": "This commits green inventory. The next buyer sees the lower number right away."
+  },
+  "errors": {
+    "kgRequired": "Enter how many kilograms to quote.",
+    "kgPositive": "Kilograms must be greater than zero.",
+    "currencyRequired": "Pick a settlement currency.",
+    "fxPositive": "The FX rate must be greater than zero.",
+    "contractRequired": "Pick the C contract month to quote against.",
+    "buyerRequired": "Enter the buyer's name to accept.",
+    "quoteRequired": "Pick the quote to accept.",
+    "generic": "Could not save that quote. Check the numbers and try again."
+  }
+}

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { CalendarPlus, CloudRain, Leaf } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import {
   recordMaturationSignal,
@@ -36,10 +37,10 @@ const FIELD =
   "h-10 w-full rounded-xl border border-line bg-white/70 px-3 text-sm text-ink outline-none transition focus:border-forest-300 focus:ring-2 focus:ring-forest-100 disabled:opacity-60";
 const LABEL = "text-xs font-medium text-muted-fg";
 
-const RIPENESS_BANDS: ReadonlyArray<{ value: RipenessTarget; label: string }> = [
-  { value: "low", label: "Low — early pass" },
-  { value: "medium", label: "Medium — ripe" },
-  { value: "high", label: "High — peak ripe" },
+const RIPENESS_BANDS: ReadonlyArray<{ value: RipenessTarget; labelKey: string }> = [
+  { value: "low", labelKey: "ripenessLow" },
+  { value: "medium", labelKey: "ripenessMedium" },
+  { value: "high", labelKey: "ripenessHigh" },
 ];
 
 type Mode = "schedule" | "replan" | "signal" | null;
@@ -60,6 +61,7 @@ export function PlanActions({
     Pick<PasadaPlan, "id" | "plotId" | "plotName" | "season" | "pasadaNumber">
   >;
 }) {
+  const t = useTranslations("planning");
   const [mode, setMode] = useState<Mode>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -96,7 +98,7 @@ export function PlanActions({
           onClick={() => setMode("schedule")}
         >
           <CalendarPlus className="h-4 w-4" aria-hidden />
-          Schedule pasada
+          {t("planActions.schedulePasada")}
         </Button>
         <Button
           variant="outline"
@@ -105,7 +107,7 @@ export function PlanActions({
           onClick={() => setMode("replan")}
         >
           <CloudRain className="h-4 w-4" aria-hidden />
-          Re-plan around rain
+          {t("planActions.replanAroundRain")}
         </Button>
         <Button
           variant="outline"
@@ -114,7 +116,7 @@ export function PlanActions({
           onClick={() => setMode("signal")}
         >
           <Leaf className="h-4 w-4" aria-hidden />
-          Log maturation signal
+          {t("planActions.logMaturationSignal")}
         </Button>
       </div>
 
@@ -122,7 +124,7 @@ export function PlanActions({
       <Dialog
         open={mode === "schedule"}
         onClose={close}
-        title="Schedule a pasada"
+        title={t("planActions.scheduleDialogTitle")}
       >
         <ScheduleForm
           plots={plots}
@@ -134,7 +136,7 @@ export function PlanActions({
       </Dialog>
 
       {/* Re-plan a pass around a rain front → replan_pasada (append-only supersede). */}
-      <Dialog open={mode === "replan"} onClose={close} title="Re-plan around rain">
+      <Dialog open={mode === "replan"} onClose={close} title={t("planActions.replanDialogTitle")}>
         <ReplanForm
           plans={plans}
           pending={pending}
@@ -148,7 +150,7 @@ export function PlanActions({
       <Dialog
         open={mode === "signal"}
         onClose={close}
-        title="Log a maturation signal"
+        title={t("planActions.signalDialogTitle")}
       >
         <SignalForm
           plots={plots}
@@ -186,10 +188,11 @@ function Actions({
   submitLabel: string;
   pendingLabel: string;
 }) {
+  const t = useTranslations("planning");
   return (
     <div className="flex justify-end gap-2 pt-1">
       <Button type="button" variant="ghost" onClick={onCancel}>
-        Cancel
+        {t("planActions.cancel")}
       </Button>
       <Button type="submit" disabled={pending}>
         {pending ? pendingLabel : submitLabel}
@@ -217,6 +220,7 @@ function ScheduleForm({
     ripenessTarget: RipenessTarget;
   }) => void;
 }) {
+  const t = useTranslations("planning");
   const [plotId, setPlotId] = useState("");
   const [season, setSeason] = useState(String(new Date().getFullYear()));
   const [pasadaNumber, setPasadaNumber] = useState(1);
@@ -238,11 +242,11 @@ function ScheduleForm({
       }}
     >
       <p className="rounded-xl bg-forest-50/70 px-3 py-2 text-xs text-forest-700 ring-1 ring-forest-100">
-        Scheduling a pass fires a task onto the Tasks board for the picking crew.
+        {t("planActions.scheduleHint")}
       </p>
       <div className="space-y-1">
         <label className={LABEL} htmlFor="sched-plot">
-          Plot
+          {t("planActions.plot")}
         </label>
         <select
           id="sched-plot"
@@ -253,7 +257,7 @@ function ScheduleForm({
           onChange={(e) => setPlotId(e.target.value)}
         >
           <option value="" disabled>
-            Choose…
+            {t("planActions.choose")}
           </option>
           {plots.map((p) => (
             <option key={p.plotId} value={p.plotId}>
@@ -265,7 +269,7 @@ function ScheduleForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="sched-season">
-            Season
+            {t("planActions.season")}
           </label>
           <input
             id="sched-season"
@@ -278,7 +282,7 @@ function ScheduleForm({
         </div>
         <div className="space-y-1">
           <label className={LABEL} htmlFor="sched-pasada">
-            Pasada #
+            {t("planActions.pasadaHash")}
           </label>
           <input
             id="sched-pasada"
@@ -296,7 +300,7 @@ function ScheduleForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="sched-date">
-            Predicted ready
+            {t("planActions.predictedReady")}
           </label>
           <input
             id="sched-date"
@@ -310,7 +314,7 @@ function ScheduleForm({
         </div>
         <div className="space-y-1">
           <label className={LABEL} htmlFor="sched-ripeness">
-            Ripeness target
+            {t("planActions.ripenessTarget")}
           </label>
           <select
             id="sched-ripeness"
@@ -321,7 +325,7 @@ function ScheduleForm({
           >
             {RIPENESS_BANDS.map((b) => (
               <option key={b.value} value={b.value}>
-                {b.label}
+                {t(`planActions.${b.labelKey}`)}
               </option>
             ))}
           </select>
@@ -331,8 +335,8 @@ function ScheduleForm({
       <Actions
         pending={pending}
         onCancel={onCancel}
-        submitLabel="Schedule pasada"
-        pendingLabel="Scheduling…"
+        submitLabel={t("planActions.scheduleSubmit")}
+        pendingLabel={t("planActions.schedulePending")}
       />
     </form>
   );
@@ -359,6 +363,7 @@ function ReplanForm({
     reason: string;
   }) => void;
 }) {
+  const t = useTranslations("planning");
   const [planId, setPlanId] = useState("");
   const [date, setDate] = useState(todayISO());
   const [reason, setReason] = useState("rain front");
@@ -381,12 +386,11 @@ function ReplanForm({
       }}
     >
       <p className="rounded-xl bg-honey-100/50 px-3 py-2 text-xs text-honey-700 ring-1 ring-honey/30">
-        Re-planning supersedes the current pass and appends a new version — the prior
-        plan is preserved as history.
+        {t("planActions.replanHint")}
       </p>
       <div className="space-y-1">
         <label className={LABEL} htmlFor="replan-plan">
-          Scheduled pass
+          {t("planActions.scheduledPass")}
         </label>
         <select
           id="replan-plan"
@@ -397,18 +401,22 @@ function ReplanForm({
           onChange={(e) => setPlanId(e.target.value)}
         >
           <option value="" disabled>
-            Choose…
+            {t("planActions.choose")}
           </option>
           {plans.map((p) => (
             <option key={p.id} value={String(p.id)}>
-              {p.plotName} — Pasada {p.pasadaNumber} ({p.season})
+              {t("planActions.scheduledPassOption", {
+                plotName: p.plotName,
+                pasadaNumber: p.pasadaNumber,
+                season: p.season,
+              })}
             </option>
           ))}
         </select>
       </div>
       <div className="space-y-1">
         <label className={LABEL} htmlFor="replan-date">
-          New ready date
+          {t("planActions.newReadyDate")}
         </label>
         <input
           id="replan-date"
@@ -422,13 +430,13 @@ function ReplanForm({
       </div>
       <div className="space-y-1">
         <label className={LABEL} htmlFor="replan-reason">
-          Reason
+          {t("planActions.reason")}
         </label>
         <input
           id="replan-reason"
           className={FIELD}
           required
-          placeholder="e.g. rain front"
+          placeholder={t("planActions.reasonPlaceholder")}
           value={reason}
           disabled={pending}
           onChange={(e) => setReason(e.target.value)}
@@ -438,8 +446,8 @@ function ReplanForm({
       <Actions
         pending={pending}
         onCancel={onCancel}
-        submitLabel="Re-plan pass"
-        pendingLabel="Re-planning…"
+        submitLabel={t("planActions.replanSubmit")}
+        pendingLabel={t("planActions.replanPending")}
       />
     </form>
   );
@@ -463,6 +471,7 @@ function SignalForm({
     ndviLatest: number | null;
   }) => void;
 }) {
+  const t = useTranslations("planning");
   const [plotId, setPlotId] = useState("");
   const [bloomDate, setBloomDate] = useState("");
   const [gdd, setGdd] = useState("");
@@ -485,12 +494,11 @@ function SignalForm({
       }}
     >
       <p className="rounded-xl bg-sky-100/50 px-3 py-2 text-xs text-sky ring-1 ring-sky/30">
-        Log a bloom, a GDD update, or an NDVI observation — the readiness model
-        re-derives from these inputs (leave a field blank to keep its prior value).
+        {t("planActions.signalHint")}
       </p>
       <div className="space-y-1">
         <label className={LABEL} htmlFor="signal-plot">
-          Plot
+          {t("planActions.plot")}
         </label>
         <select
           id="signal-plot"
@@ -501,7 +509,7 @@ function SignalForm({
           onChange={(e) => setPlotId(e.target.value)}
         >
           <option value="" disabled>
-            Choose…
+            {t("planActions.choose")}
           </option>
           {plots.map((p) => (
             <option key={p.plotId} value={p.plotId}>
@@ -512,7 +520,7 @@ function SignalForm({
       </div>
       <div className="space-y-1">
         <label className={LABEL} htmlFor="signal-bloom">
-          Bloom date
+          {t("planActions.bloomDate")}
         </label>
         <input
           id="signal-bloom"
@@ -526,7 +534,7 @@ function SignalForm({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <label className={LABEL} htmlFor="signal-gdd">
-            GDD accumulated
+            {t("planActions.gddAccumulated")}
           </label>
           <input
             id="signal-gdd"
@@ -534,7 +542,7 @@ function SignalForm({
             min={0}
             step="any"
             inputMode="decimal"
-            placeholder="e.g. 1200"
+            placeholder={t("planActions.gddPlaceholder")}
             className={FIELD}
             value={gdd}
             disabled={pending}
@@ -543,7 +551,7 @@ function SignalForm({
         </div>
         <div className="space-y-1">
           <label className={LABEL} htmlFor="signal-ndvi">
-            NDVI (0–1)
+            {t("planActions.ndvi")}
           </label>
           <input
             id="signal-ndvi"
@@ -552,7 +560,7 @@ function SignalForm({
             max={1}
             step="any"
             inputMode="decimal"
-            placeholder="e.g. 0.7"
+            placeholder={t("planActions.ndviPlaceholder")}
             className={FIELD}
             value={ndvi}
             disabled={pending}
@@ -564,8 +572,8 @@ function SignalForm({
       <Actions
         pending={pending}
         onCancel={onCancel}
-        submitLabel="Log signal"
-        pendingLabel="Logging…"
+        submitLabel={t("planActions.signalSubmit")}
+        pendingLabel={t("planActions.signalPending")}
       />
     </form>
   );

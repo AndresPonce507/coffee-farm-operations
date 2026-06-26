@@ -2,28 +2,24 @@
 
 import { useCallback, useRef, useState, type FormEvent } from "react";
 import { CheckCircle2, ShieldAlert, ShieldX, SprayCan } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
+import { refreshAfterSpray } from "@/app/(app)/scouting/actions";
 import { logSpray, type SprayStore } from "@/lib/db/commands/logSpray";
+import type {
+  CertifiedApplicator,
+  PlotOption,
+} from "@/lib/db/ipm-applicators";
 import { uuidv7 } from "@/lib/offline/uuidv7";
+
+// Domain types live in the lib read-port (`@/lib/db/ipm-applicators`); re-exported
+// here for the existing consumers/tests that import them from the form.
+export type { CertifiedApplicator, PlotOption };
 
 const FIELD =
   "h-11 w-full rounded-xl border border-line bg-white/70 px-3 text-sm text-ink outline-none transition focus:border-forest-300 focus:ring-2 focus:ring-forest-100 disabled:opacity-50 disabled:pointer-events-none";
 const LABEL = "text-xs font-medium text-muted-fg";
-
-/** A plot the spray can be logged against. */
-export interface PlotOption {
-  id: string;
-  name: string;
-}
-
-/** An applicator + whether they currently hold a VALID pesticide-handling cert.
- *  `certified` is computed server-side from v_worker_certs_valid (S1). */
-export interface CertifiedApplicator {
-  id: string;
-  name: string;
-  certified: boolean;
-}
 
 /** ISO-ish local datetime (yyyy-MM-ddTHH:mm) for the applied-at default = now. */
 function nowLocalDatetime(): string {
@@ -73,6 +69,7 @@ export function SprayLogForm({
   /** Injectable write port (tests pass a spy; production omits → real client). */
   store?: SprayStore;
 }) {
+  const t = useTranslations("ipm");
   const [plotId, setPlotId] = useState(plots[0]?.id ?? "");
   const [product, setProduct] = useState("");
   const [activeIngredient, setActiveIngredient] = useState("");
@@ -106,11 +103,11 @@ export function SprayLogForm({
       setError(null);
 
       if (!product.trim()) {
-        setError("A product is required.");
+        setError(t("sprayForm.errorProductRequired"));
         return;
       }
       if (!workerId) {
-        setError("Choose the applicator.");
+        setError(t("sprayForm.errorChooseApplicator"));
         return;
       }
       // THE CERT GATE (UI half) — refuse an uncertified applicator before the
@@ -118,10 +115,9 @@ export function SprayLogForm({
       // immediate refusal.
       if (!isCertified(workerId)) {
         const name =
-          applicators.find((a) => a.id === workerId)?.name ?? "This worker";
-        setError(
-          `${name} does not hold a valid pesticide-handling certification — the spray cannot be logged.`,
-        );
+          applicators.find((a) => a.id === workerId)?.name ??
+          t("sprayForm.errorThisWorker");
+        setError(t("sprayForm.errorNotCertified", { name }));
         return;
       }
 
@@ -150,6 +146,10 @@ export function SprayLogForm({
           // Mint a fresh exactly-once anchor so the next distinct spray is its own
           // event; a same-render double-submit reused the prior key and deduped.
           idempotencyKey.current = uuidv7();
+          // Best-effort: bust the cross-tab RSC caches (PHI gate on Plan, Scouting,
+          // Map, Satellite, plot listing + dossier) so the new spray shows on the next
+          // navigation. Fire-and-forget — never block or fail the offline-safe write.
+          void refreshAfterSpray().catch(() => {});
         } else {
           const firstFieldError = result.errors
             ? Object.values(result.errors)[0]
@@ -157,11 +157,11 @@ export function SprayLogForm({
           setError(
             result.message ??
               firstFieldError ??
-              "The spray could not be logged.",
+              t("sprayForm.errorCouldNotLog"),
           );
         }
       } catch {
-        setError("Could not reach the log — check your connection and retry.");
+        setError(t("sprayForm.errorUnreachable"));
       } finally {
         setPending(false);
       }
@@ -176,6 +176,7 @@ export function SprayLogForm({
       phiDays,
       reiHours,
       appliedAt,
+      t,
     ],
   );
 
@@ -187,14 +188,13 @@ export function SprayLogForm({
           className="flex items-start gap-2 rounded-xl border border-cherry-200 bg-cherry-50 px-3 py-2.5 text-xs font-medium text-cherry"
         >
           <ShieldX className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-          No crew member holds a valid pesticide-handling cert — a spray cannot be
-          logged until someone is certified.
+          {t("sprayForm.noCertWarning")}
         </p>
       ) : null}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className="space-y-1.5">
-          <span className={LABEL}>Plot</span>
+          <span className={LABEL}>{t("sprayForm.plot")}</span>
           <select
             className={FIELD}
             value={plotId}
@@ -210,31 +210,31 @@ export function SprayLogForm({
         </label>
 
         <label className="space-y-1.5">
-          <span className={LABEL}>Product</span>
+          <span className={LABEL}>{t("sprayForm.product")}</span>
           <input
             className={FIELD}
             type="text"
             value={product}
             disabled={pending}
-            placeholder="e.g. Verdadero 600"
+            placeholder={t("sprayForm.productPlaceholder")}
             onChange={(e) => setProduct(e.target.value)}
           />
         </label>
 
         <label className="space-y-1.5">
-          <span className={LABEL}>Active ingredient</span>
+          <span className={LABEL}>{t("sprayForm.activeIngredient")}</span>
           <input
             className={FIELD}
             type="text"
             value={activeIngredient}
             disabled={pending}
-            placeholder="e.g. cyproconazole"
+            placeholder={t("sprayForm.activeIngredientPlaceholder")}
             onChange={(e) => setActiveIngredient(e.target.value)}
           />
         </label>
 
         <label className="space-y-1.5">
-          <span className={LABEL}>Applied at</span>
+          <span className={LABEL}>{t("sprayForm.appliedAt")}</span>
           <input
             className={FIELD}
             type="datetime-local"
@@ -245,7 +245,7 @@ export function SprayLogForm({
         </label>
 
         <label className="space-y-1.5">
-          <span className={LABEL}>PHI (pre-harvest interval, days)</span>
+          <span className={LABEL}>{t("sprayForm.phi")}</span>
           <input
             className={FIELD}
             type="number"
@@ -254,13 +254,13 @@ export function SprayLogForm({
             inputMode="numeric"
             value={phiDays}
             disabled={pending}
-            placeholder="e.g. 21"
+            placeholder={t("sprayForm.phiPlaceholder")}
             onChange={(e) => setPhiDays(e.target.value)}
           />
         </label>
 
         <label className="space-y-1.5">
-          <span className={LABEL}>REI (re-entry interval, hours)</span>
+          <span className={LABEL}>{t("sprayForm.rei")}</span>
           <input
             className={FIELD}
             type="number"
@@ -269,13 +269,13 @@ export function SprayLogForm({
             inputMode="numeric"
             value={reiHours}
             disabled={pending}
-            placeholder="e.g. 12"
+            placeholder={t("sprayForm.reiPlaceholder")}
             onChange={(e) => setReiHours(e.target.value)}
           />
         </label>
 
         <label className="space-y-1.5 sm:col-span-2">
-          <span className={LABEL}>Applicator</span>
+          <span className={LABEL}>{t("sprayForm.applicator")}</span>
           <select
             className={FIELD}
             value={workerId}
@@ -286,11 +286,12 @@ export function SprayLogForm({
               setDone(false);
             }}
           >
-            <option value="">Choose a certified applicator…</option>
+            <option value="">{t("sprayForm.chooseApplicator")}</option>
             {applicators.map((a) => (
               <option key={a.id} value={a.id} disabled={!a.certified}>
-                {a.name}
-                {a.certified ? " — certified" : " — no valid cert"}
+                {a.certified
+                  ? t("sprayForm.optionCertified", { name: a.name })
+                  : t("sprayForm.optionNoCert", { name: a.name })}
               </option>
             ))}
           </select>
@@ -313,7 +314,7 @@ export function SprayLogForm({
             className="flex items-center gap-2 text-xs font-medium text-forest"
           >
             <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
-            Spray logged — PHI/REI windows stamped; the planner will respect them.
+            {t("sprayForm.success")}
           </p>
         ) : null}
       </div>
@@ -324,7 +325,7 @@ export function SprayLogForm({
         className="inline-flex items-center gap-2"
       >
         <SprayCan className="h-4 w-4" aria-hidden />{" "}
-        {pending ? "Logging…" : "Log spray"}
+        {pending ? t("sprayForm.submitLogging") : t("sprayForm.submitLog")}
       </Button>
     </form>
   );

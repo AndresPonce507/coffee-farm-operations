@@ -1,0 +1,215 @@
+{
+  "page": {
+    "title": "Roasting",
+    "subtitle": "Versioned golden profiles, Artisan .alog capture, and roast → SKU — every bag traceable to the tree."
+  },
+  "summary": {
+    "profiles": "Profiles",
+    "profilesSub": "{count} versioned",
+    "golden": "Golden",
+    "goldenSub": "locked, roast-ready",
+    "openBatches": "Open batches",
+    "openBatchesSub": "in the roaster",
+    "roasted": "Roasted out",
+    "roastedSub": "kg, lifetime"
+  },
+  "library": {
+    "title": "Golden-curve library",
+    "subtitle": "A draft locks one-way to golden; a re-tune is a new version, never a mutation."
+  },
+  "batches": {
+    "title": "Roast batches"
+  },
+  "empty": {
+    "profilesTitle": "No roast profiles yet",
+    "profilesDescription": "Author a golden-curve profile, then lock it golden to roast against it.",
+    "batchesTitle": "No roast batches yet",
+    "batchesDescription": "Lock a golden profile, then open a batch against a green lot."
+  },
+  "status": {
+    "draft": "Draft",
+    "golden": "Golden",
+    "retired": "Retired"
+  },
+  "batchStatus": {
+    "open": "Open",
+    "finalized": "Finalized"
+  },
+  "profile": {
+    "version": "v{version}",
+    "anyVariety": "Any variety",
+    "charge": "Charge",
+    "drop": "Drop",
+    "time": "Total",
+    "dtr": "DTR",
+    "tempValue": "{temp}°C",
+    "timeValue": "{time}",
+    "dtrValue": "{pct}%",
+    "noDtr": "—"
+  },
+  "batch": {
+    "greenLot": "Green lot",
+    "profile": "Profile",
+    "greenIn": "Green in",
+    "roastedOut": "Roasted out",
+    "shrinkage": "Shrinkage",
+    "kgValue": "{kg} kg",
+    "shrinkageValue": "{pct}% shrinkage",
+    "roastedLot": "→ {code}",
+    "view": "Open batch →"
+  },
+  "console": {
+    "newProfile": "New golden profile",
+    "openBatch": "Open roast batch",
+    "created": "Draft profile created",
+    "opened": "Batch opened",
+    "profile": {
+      "title": "Author a golden-curve profile",
+      "name": "Profile name",
+      "namePlaceholder": "Geisha Filter v1",
+      "variety": "Variety (optional)",
+      "varietyPlaceholder": "e.g. Geisha",
+      "roastLevel": "Roast level",
+      "charge": "Charge temp (°C)",
+      "drop": "Drop temp (°C)",
+      "totalTime": "Total time (seconds)",
+      "dtr": "Development time ratio (%)",
+      "hint": "A new profile starts as a draft — lock it golden before roasting.",
+      "submit": "Create draft",
+      "submitting": "Creating…"
+    },
+    "batch": {
+      "title": "Open a roast batch",
+      "greenLot": "Green lot",
+      "greenLotPlaceholder": "Select a green lot",
+      "profile": "Golden profile",
+      "profilePlaceholder": "Select a golden profile",
+      "roaster": "Roaster",
+      "kg": "Green in (kg)",
+      "atpLine": "{kg} kg available to roast",
+      "noGolden": "Lock a profile golden first — only a golden curve can be roasted against.",
+      "noGreen": "No green lots with available inventory to roast.",
+      "irreversible": "This draws green inventory to the roaster (a shipment claim) — the oversell guard fires here, and it can't be un-drawn from this screen.",
+      "submit": "Open batch",
+      "submitting": "Opening…"
+    }
+  },
+  "lock": {
+    "action": "Lock golden",
+    "locking": "Locking…",
+    "confirmTitle": "Lock this profile golden?",
+    "confirmBody": "Locking {name} v{version} is one-way: a golden curve is versioned, never edited. The only onward move is to retire it.",
+    "confirm": "Lock golden",
+    "cancel": "Cancel"
+  },
+  "detail": {
+    "back": "All roast batches",
+    "eyebrow": "Roast batch",
+    "title": "Batch #{id}",
+    "from": "from {lot}",
+    "roastedLot": "→ {lot}",
+    "profileLine": "{name} v{version} · {level}",
+    "cogsLine": "Roasting cost posts to COGS on finalize.",
+    "greenIn": "Green in",
+    "roastedOut": "Roasted out",
+    "shrinkage": "Shrinkage",
+    "kgValue": "{kg} kg",
+    "pctValue": "{pct}%",
+    "pending": "pending"
+  },
+  "curve": {
+    "title": "Roast curve vs golden target",
+    "subtitle": "Bean temp overlaid on the golden ramp, charge → drop.",
+    "empty": "No curve captured yet — import an Artisan .alog to overlay it on the golden target.",
+    "bt": "Bean temp",
+    "target": "Golden target",
+    "deviation": "Max deviation ±{c}°C"
+  },
+  "events": {
+    "title": "Phase markers",
+    "empty": "No phase markers captured yet.",
+    "timeValue": "{time}",
+    "tempValue": "{temp}°C"
+  },
+  "imports": {
+    "title": "Artisan .alog imports",
+    "empty": "No .alog imported yet.",
+    "deviationValue": "±{c}°C vs golden",
+    "noDeviation": "deviation not computed",
+    "points": "{count} points",
+    "noFile": "(pasted)"
+  },
+  "skus": {
+    "title": "Linked SKUs",
+    "empty": "No SKU linked yet — finalize the batch, then link a bag.",
+    "bagValue": "{g} g",
+    "priceValue": "{price}",
+    "noPrice": "—",
+    "inactive": "inactive",
+    "gtin": "GTIN {gtin}"
+  },
+  "finalize": {
+    "importOpen": "Import .alog",
+    "importTitle": "Import an Artisan .alog",
+    "payloadLabel": "Normalized .alog JSON",
+    "payloadHint": "Paste a normalized export: { \"points\": [{ \"t\", \"bt\", \"et\", \"ror\" }], \"events\": [{ \"marker\", \"t\", \"temp\" }] }.",
+    "filenameLabel": "Source filename (optional)",
+    "filenamePlaceholder": "roast-2026-06-25.alog",
+    "importSubmit": "Import",
+    "importing": "Importing…",
+    "invalidJson": "That isn't valid JSON.",
+    "imported": ".alog imported",
+    "finalizeOpen": "Finalize roast",
+    "finalizeTitle": "Finalize the roast batch",
+    "roastedKg": "Roasted out (kg)",
+    "greenInLine": "{kg} kg green in",
+    "shrinkagePreview": "Shrinkage ≈ {pct}%",
+    "cost": "Roast cost (USD)",
+    "location": "Location (optional)",
+    "locationPlaceholder": "Roastery",
+    "irreversible": "Finalizing mints the roasted lot, routes the conserved roast edge, and posts the roast cost into COGS. It can't be undone.",
+    "confirm": "Finalize",
+    "finalizing": "Finalizing…",
+    "finalized": "Roast finalized → {lot}",
+    "linkOpen": "Link to SKU",
+    "linkTitle": "Link a bag SKU",
+    "skuCode": "SKU code",
+    "skuCodePlaceholder": "JC-GEISHA-250",
+    "bagSize": "Bag size (grams)",
+    "price": "Price per bag (USD, optional)",
+    "gtin": "GTIN / barcode (optional)",
+    "notFinalized": "Finalize the batch before linking a SKU.",
+    "linkSubmit": "Link SKU",
+    "linking": "Linking…",
+    "linked": "SKU linked"
+  },
+  "roastLevel": {
+    "light": "Light",
+    "medium-light": "Medium-light",
+    "medium": "Medium",
+    "medium-dark": "Medium-dark",
+    "dark": "Dark"
+  },
+  "loading": {
+    "board": "Loading the roast board",
+    "batch": "Loading the roast batch"
+  },
+  "errors": {
+    "generic": "Something went wrong. Try again.",
+    "nameRequired": "Enter a profile name.",
+    "roastLevelRequired": "Pick a roast level.",
+    "tempPositive": "Charge and drop temps must be positive.",
+    "timePositive": "Total time must be positive.",
+    "dtrRange": "Development time ratio must be between 0 and 100.",
+    "lotRequired": "Pick a green lot.",
+    "profileRequired": "Pick a golden profile.",
+    "roasterRequired": "Pick a roaster.",
+    "kgPositive": "Green-in kg must be positive.",
+    "batchRequired": "Missing the roast batch.",
+    "payloadRequired": "Paste a normalized .alog payload.",
+    "kgOut": "Roasted-out kg must be zero or positive.",
+    "costPositive": "Roast cost can't be negative.",
+    "skuRequired": "Enter a SKU code.",
+    "bagPositive": "Bag size must be positive."
+  }
+}

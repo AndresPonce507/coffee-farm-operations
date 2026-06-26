@@ -79,6 +79,24 @@ describe("CostingSummary (smoke)", () => {
     expect(screen.getByText("$3.00/kg")).toBeInTheDocument();
   });
 
+  it("cheapest lot tile is a navigable link to /lots/JC-202", async () => {
+    const ui = await CostingSummary();
+    render(ui);
+    // The cheapest-lot code must be wrapped in an <a> pointing at the lot dossier.
+    const link = screen.getByRole("link", { name: /JC-202/ });
+    expect(link).toHaveAttribute("href", "/lots/JC-202");
+  });
+
+  it("cheapest lot tile stays inert (no link) when there are no costed lots", async () => {
+    const { getGreenLotAtp } = await import("@/lib/db/greenlots");
+    vi.mocked(getGreenLotAtp).mockResolvedValueOnce([]);
+    const ui = await CostingSummary();
+    render(ui);
+    // No link when cheapest is null — the tile shows "no costed lots" sub-text, no <a>.
+    expect(screen.queryByRole("link", { name: /JC-/i })).toBeNull();
+    expect(screen.getByText("no costed lots")).toBeInTheDocument();
+  });
+
   it("computes the green-kg-weighted average cost-per-kg", async () => {
     const ui = await CostingSummary();
     render(ui);

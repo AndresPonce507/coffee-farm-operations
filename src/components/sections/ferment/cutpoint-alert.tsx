@@ -1,4 +1,5 @@
 import { AlertTriangle, Beaker, Hourglass, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { FermentCutpoint } from "@/lib/db/ferment";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ import { cn } from "@/lib/utils";
  * `motion-safe:` so it is still on a reduced-motion device, just static.
  */
 export function CutpointAlert({ cutpoint }: { cutpoint: FermentCutpoint }) {
+  const t = useTranslations("ferment");
   const { targetPh, latestPh, hoursElapsed, cutReached } = cutpoint;
 
   // No recipe → nothing to cut against.
@@ -26,7 +28,7 @@ export function CutpointAlert({ cutpoint }: { cutpoint: FermentCutpoint }) {
         className="flex items-center gap-2 rounded-xl border border-white/60 bg-white/50 px-4 py-3 text-sm text-muted-fg"
       >
         <Beaker className="h-4 w-4 shrink-0 text-muted-fg/70" aria-hidden />
-        <span>No recipe applied — apply a recipe to project the cut-point.</span>
+        <span>{t("cutpoint.noRecipe")}</span>
       </div>
     );
   }
@@ -39,12 +41,15 @@ export function CutpointAlert({ cutpoint }: { cutpoint: FermentCutpoint }) {
         className="flex items-center gap-2 rounded-xl border border-white/60 bg-white/50 px-4 py-3 text-sm text-muted-fg"
       >
         <Hourglass className="h-4 w-4 shrink-0 text-muted-fg/70" aria-hidden />
-        <span>No readings yet — log a pH reading to start tracking the cut.</span>
+        <span>{t("cutpoint.noReadings")}</span>
       </div>
     );
   }
 
-  const hours = hoursElapsed !== null ? `${hoursElapsed.toFixed(1)}h in` : "";
+  const hours =
+    hoursElapsed !== null
+      ? t("cutpoint.hoursElapsed", { hours: hoursElapsed.toFixed(1) })
+      : "";
 
   if (cutReached) {
     return (
@@ -53,17 +58,17 @@ export function CutpointAlert({ cutpoint }: { cutpoint: FermentCutpoint }) {
         data-testid="cutpoint-cut-now"
         className={cn(
           "flex items-center gap-3 rounded-xl border border-cherry-100 bg-cherry-100/90 px-4 py-3",
-          // text-[#7a121e] = dark cherry: 8.57:1 on bg-cherry-100/90 (WCAG-AA, AAA for
-          // the main line) — keeps the red-alert semantic where text-cherry fails at 4.21:1.
-          "text-sm font-semibold text-[#7a121e] shadow-[0_12px_32px_-12px_rgba(122,18,30,0.4)]",
+          // cherry-700 (#8f3522) = dark cherry, strong AA on bg-cherry-100/90 — keeps the
+          // red-alert emphasis via the shared token instead of a one-off hex (mirrors honey-700).
+          "text-sm font-semibold text-cherry-700 shadow-[0_12px_32px_-12px_rgba(122,18,30,0.4)]",
           "motion-safe:animate-pulse",
         )}
       >
         <AlertTriangle className="h-5 w-5 shrink-0" aria-hidden />
         <div>
-          <p>Cut now — pH {latestPh} has reached the {targetPh} target.</p>
-          <p className="mt-0.5 text-xs font-normal text-[#7a121e]">
-            {hours} · the ferment window is closing.
+          <p>{t("cutpoint.cutNowTitle", { latest: latestPh, target: targetPh })}</p>
+          <p className="mt-0.5 text-xs font-normal text-cherry-700">
+            {t("cutpoint.cutNowSub", { hours })}
           </p>
         </div>
       </div>
@@ -77,9 +82,11 @@ export function CutpointAlert({ cutpoint }: { cutpoint: FermentCutpoint }) {
     >
       <Sparkles className="h-4 w-4 shrink-0 text-forest" aria-hidden />
       <div>
-        <p className="font-medium">Tracking — pH {latestPh}, target {targetPh}.</p>
+        <p className="font-medium">
+          {t("cutpoint.trackingTitle", { latest: latestPh, target: targetPh })}
+        </p>
         <p className="mt-0.5 text-xs text-forest-700/80">
-          {hours} · cut alert fires when pH reaches the target band.
+          {t("cutpoint.trackingSub", { hours })}
         </p>
       </div>
     </div>

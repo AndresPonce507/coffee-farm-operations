@@ -1,0 +1,119 @@
+{
+  "page": {
+    "back": "Back to milling",
+    "eyebrow": "Dry milling",
+    "title": "Finalize run #{run}",
+    "subtitleOpen": "Confirm the closed mass balance, then mint the green lot.",
+    "subtitleFinalized": "This run is finalized — the green lot is minted and costed.",
+    "subtitlePending": "This run is awaiting its reposo / spec readiness gate.",
+    "parchmentLot": "Parchment lot {lot}"
+  },
+  "status": {
+    "readiness_pending": "Readiness pending",
+    "open": "Open",
+    "finalized": "Finalized"
+  },
+  "summary": {
+    "parchmentIn": "Parchment in",
+    "greenOut": "Green out",
+    "outturn": "Outturn",
+    "status": "Status",
+    "pending": "Pending"
+  },
+  "balance": {
+    "title": "Closed mass balance",
+    "subtitle": "Every kilogram of parchment is accounted for before the run can finalize.",
+    "parchmentIn": "Parchment in",
+    "greenOut": "Green outturn",
+    "byproduct": "Byproducts",
+    "reject": "Rejects",
+    "moistureLoss": "Moisture loss",
+    "unaccounted": "Unaccounted loss",
+    "ceiling": "Loss ceiling",
+    "balancedTag": "Balanced",
+    "unbalancedTag": "Unbalanced",
+    "balancedNote": "The residual sits inside the per-variety ceiling — this run can be finalized.",
+    "unbalancedNote": "The unaccounted loss exceeds the per-variety ceiling. Record byproducts / rejects or re-weigh before finalizing.",
+    "noData": "No mass-balance data yet — record the machine passes first.",
+    "kg": "{kg} kg"
+  },
+  "form": {
+    "title": "Mint the green lot",
+    "greenKgLabel": "Green out (kg)",
+    "greenKgHint": "Defaults to the final machine-pass output.",
+    "cuppingLabel": "Cupping score (optional)",
+    "cuppingHint": "Sets the green lot's SCA band; leave blank if not yet cupped.",
+    "locationLabel": "Store location",
+    "locationPlaceholder": "e.g. Bodega A — Rack 3",
+    "costLabel": "Milling cost (USD)",
+    "costHint": "Flows straight into cost-per-kg-green via the costing ledger.",
+    "outturnPreview": "Outturn {pct}",
+    "outturnUnknown": "Outturn —",
+    "mint": "Mint green lot",
+    "blockedBalance": "The mass balance must close before this run can be minted."
+  },
+  "grade": {
+    "title": "SCA green grade",
+    "subtitle": "The prep band is derived from the defect counts — it can never drift from them.",
+    "cat1Label": "Category 1 defects (primary)",
+    "cat2Label": "Category 2 defects (secondary)",
+    "screenLabel": "Screen size (optional)",
+    "previewLabel": "Prep band",
+    "histogramTitle": "Defect histogram",
+    "primary": "Primary",
+    "secondary": "Secondary",
+    "totalDefects": "{count} full defects",
+    "prep": {
+      "EP-Specialty": "EP-Specialty",
+      "Premium": "Premium",
+      "Exchange": "Exchange",
+      "Below Standard": "Below Standard"
+    }
+  },
+  "confirm": {
+    "title": "Mint green lot — irreversible",
+    "body": "This mints a new green lot from {kg} kg of parchment lot {lot} and posts the milling cost into cost-per-kg-green. It cannot be undone.",
+    "balanceRow": "Mass balance",
+    "balanced": "Balanced",
+    "gradeRow": "Grade",
+    "outturnRow": "Outturn",
+    "irreversible": "A correction is a new run, never an edit — the green lot and its events are append-only.",
+    "cancel": "Cancel",
+    "confirm": "Mint green lot",
+    "minting": "Minting…"
+  },
+  "result": {
+    "title": "Green lot minted",
+    "mintedLine": "Minted {code} at {pct} outturn.",
+    "mintedNoPct": "Minted {code}.",
+    "gradeLine": "Auto-graded {prep}.",
+    "gradeLabel": "Auto-graded",
+    "costLine": "Milling cost is folded into cost-per-kg-green.",
+    "viewLot": "View lot dossier",
+    "regradeOpen": "Re-grade"
+  },
+  "regrade": {
+    "title": "Re-grade {code}",
+    "body": "Record a fresh SCA grade. The latest grade wins; the old one stays on the append-only ledger.",
+    "submit": "Save grade",
+    "saving": "Saving…",
+    "done": "Grade recorded.",
+    "cancel": "Cancel"
+  },
+  "errors": {
+    "generic": "Could not complete that. Check the details and try again.",
+    "greenKgPositive": "Enter the green outturn in kilograms.",
+    "locationRequired": "Enter where the green lot is stored.",
+    "defectsInvalid": "Defect counts must be zero or a positive whole number.",
+    "cuppingInvalid": "Cupping score must be a positive number.",
+    "costInvalid": "Milling cost can't be negative.",
+    "lotRequired": "This grade has no green lot to attach to."
+  },
+  "empty": {
+    "pendingTitle": "Readiness gate not cleared",
+    "pendingDescription": "Open the milling run from the reposo / spec gate before it can be finalized."
+  },
+  "loading": {
+    "finalize": "Loading the finalize panel…"
+  }
+}

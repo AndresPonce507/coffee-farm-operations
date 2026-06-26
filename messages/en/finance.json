@@ -1,0 +1,216 @@
+{
+  "page": {
+    "title": "Finance",
+    "subtitle": "Cash, what the estate is owed, and the runway from both ledgers."
+  },
+  "empty": {
+    "title": "Nothing on the books yet",
+    "description": "When you issue an invoice it lands here with its inventory commitment, payment timeline and realized margin."
+  },
+  "loading": {
+    "cockpit": "Loading finance cockpit",
+    "invoices": "Loading invoices",
+    "invoice": "Loading invoice",
+    "runway": "Loading cash runway",
+    "sync": "Loading sync console"
+  },
+  "status": {
+    "draft": "Draft",
+    "issued": "Issued",
+    "partially_paid": "Part-paid",
+    "paid": "Paid",
+    "void": "Void"
+  },
+  "kind": {
+    "proforma": "Proforma",
+    "commercial_invoice": "Commercial invoice",
+    "credit_note": "Credit note",
+    "dtc_receipt": "Receipt"
+  },
+  "method": {
+    "wire": "Wire",
+    "ach": "ACH",
+    "card": "Card",
+    "cash": "Cash",
+    "yappy": "Yappy",
+    "check": "Check"
+  },
+  "bucket": {
+    "0-30": "0-30 days",
+    "31-60": "31-60 days",
+    "61-90": "61-90 days",
+    "90+": "90+ days"
+  },
+  "summary": {
+    "net": { "label": "Net position", "sub": "Receivables minus committed cost" },
+    "ar": { "label": "AR outstanding", "sub": "Across {count} open docs" },
+    "cost": { "label": "Committed cost", "sub": "Booked COGS to date" },
+    "open": { "label": "Open invoices", "sub": "Awaiting payment" }
+  },
+  "aging": {
+    "title": "Receivables aging",
+    "viewAll": "All invoices",
+    "empty": "No invoices yet."
+  },
+  "health": {
+    "title": "Sync health",
+    "healthy": "All synced",
+    "alarm": "{count} failed",
+    "viewAll": "Sync console"
+  },
+  "invoices": {
+    "title": "Invoices",
+    "subtitle": "Every AR document, newest first. Each one is a real commitment of green inventory.",
+    "new": "New invoice",
+    "empty": {
+      "title": "No invoices yet",
+      "description": "When you issue a proforma or commercial invoice it lands here, with its inventory commitment and payment timeline."
+    },
+    "card": {
+      "balance": "Balance",
+      "total": "Total",
+      "paid": "Collected",
+      "days": "{days}d outstanding",
+      "open": "Open"
+    }
+  },
+  "invoice": {
+    "back": "All invoices",
+    "eyebrow": "Invoice",
+    "summary": {
+      "total": "Total",
+      "paid": "Paid",
+      "balance": "Balance",
+      "issued": "Issued {date}",
+      "incoterm": "Incoterm {incoterm}",
+      "buyer": "Buyer {buyer}",
+      "contract": "Contract {contract}",
+      "fx": "Issued at FX {rate}"
+    },
+    "lines": {
+      "title": "Line items",
+      "lot": "Lot {lot}",
+      "noLot": "No lot",
+      "kg": "{kg} kg",
+      "unit": "{price} / kg",
+      "provenance": "Provenance"
+    },
+    "margin": {
+      "title": "Realized margin",
+      "subtitle": "Revenue against true cost-per-kg-green, per lot on this doc.",
+      "revenuePerKg": "Revenue / kg",
+      "costPerKg": "Cost / kg",
+      "marginPerKg": "Margin / kg",
+      "unknown": "Cost not booked",
+      "empty": "No lot-linked lines to margin."
+    },
+    "payments": {
+      "title": "Payments",
+      "empty": "No payments recorded yet.",
+      "received": "Received {date}"
+    },
+    "actions": {
+      "recordPayment": "Record payment",
+      "void": "Void"
+    }
+  },
+  "pay": {
+    "title": "Record a payment",
+    "description": "This is a money-shaped action. Confirm the amount and method before it posts.",
+    "balanceLine": "Outstanding balance {balance}",
+    "amount": "Amount ({currency})",
+    "method": "Method",
+    "confirm": "Record payment",
+    "cancel": "Cancel",
+    "success": "Payment recorded."
+  },
+  "void": {
+    "title": "Void this invoice",
+    "description": "This reverses the revenue with a correcting row. It does not delete anything, and a doc with payments cannot be voided. Issue a credit note instead.",
+    "reason": "Reason",
+    "confirm": "Void invoice",
+    "cancel": "Keep invoice",
+    "success": "Invoice voided."
+  },
+  "runway": {
+    "title": "Cash runway",
+    "subtitle": "The only place both ledgers net, plus the pre-harvest financing gap.",
+    "net": { "label": "Net position" },
+    "ar": { "label": "AR due" },
+    "cost": { "label": "Committed cost" },
+    "waterfall": {
+      "title": "AR due against committed cost",
+      "sub": "A positive net means receivables cover booked cost.",
+      "arLabel": "AR due",
+      "costLabel": "Committed cost",
+      "netLabel": "Net"
+    },
+    "preharvest": {
+      "title": "Before the picking crew shows up",
+      "sub": "Pre-sold volume against the open por-obra labour liability, so the financing gap is visible early.",
+      "presold": "Pre-sold",
+      "presoldUnit": "{kg} kg",
+      "contracts": "Open por-obra contracts",
+      "laborRate": "Indicative labour rate"
+    }
+  },
+  "sync": {
+    "title": "Accounting sync",
+    "subtitle": "QuickBooks, Xero and the Panama DGI PAC bridge. We map our coffee-native ledger onto the buyer's books, we never rebuild them.",
+    "target": {
+      "qbo": "QuickBooks",
+      "xero": "Xero",
+      "dgi_pac": "DGI PAC"
+    },
+    "health": {
+      "pending": "Pending",
+      "inFlight": "In flight",
+      "failed": "Failed",
+      "synced": "Synced",
+      "alarm": "Sync stalled",
+      "healthy": "Healthy",
+      "oldest": "Oldest unsynced {date}",
+      "empty": "Nothing queued. Issue an invoice to start a sync.",
+      "retry": "Process queue",
+      "processing": "Processing"
+    },
+    "map": {
+      "title": "Account map",
+      "subtitle": "How each ledger key posts to the buyer's chart of accounts.",
+      "add": "Add mapping",
+      "target": "Target",
+      "entryKind": "Entry kind",
+      "matchKey": "Our key",
+      "accountCode": "Account code",
+      "accountName": "Account name",
+      "save": "Save mapping",
+      "cancel": "Cancel",
+      "empty": "No mappings yet.",
+      "kind": {
+        "cost": "Cost (allocation rule)",
+        "revenue": "Revenue (source kind)"
+      }
+    },
+    "failed": {
+      "title": "Failed posts",
+      "empty": "No failed posts.",
+      "attempts": "{n} attempts"
+    }
+  },
+  "errors": {
+    "generic": "Could not save that. Check the numbers and try again.",
+    "kindRequired": "Pick a document kind.",
+    "currencyRequired": "Set a currency.",
+    "linesRequired": "Add at least one line.",
+    "amountPositive": "Amount must be greater than zero.",
+    "kgPositive": "Kilograms must be greater than zero.",
+    "exportGate": "A commercial invoice needs a contract reference and an Incoterm.",
+    "docRequired": "No invoice selected.",
+    "methodRequired": "Pick a payment method.",
+    "reasonRequired": "Add a reason for the void.",
+    "targetRequired": "Pick a sync target.",
+    "entryKindRequired": "Pick cost or revenue.",
+    "matchKeyRequired": "Set the ledger key to map.",
+    "accountCodeRequired": "Set the account code."
+  }
+}

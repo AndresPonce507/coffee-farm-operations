@@ -1,0 +1,119 @@
+{
+  "page": {
+    "back": "Volver a la trilla",
+    "eyebrow": "Trilla en seco",
+    "title": "Finalizar corrida #{run}",
+    "subtitleOpen": "Confirma el balance de masa cerrado y luego acuña el lote verde.",
+    "subtitleFinalized": "Esta corrida ya está finalizada — el lote verde quedó acuñado y costeado.",
+    "subtitlePending": "Esta corrida espera su control de reposo / especificación.",
+    "parchmentLot": "Lote en pergamino {lot}"
+  },
+  "status": {
+    "readiness_pending": "Control pendiente",
+    "open": "Abierta",
+    "finalized": "Finalizada"
+  },
+  "summary": {
+    "parchmentIn": "Pergamino entrada",
+    "greenOut": "Verde salida",
+    "outturn": "Rendimiento",
+    "status": "Estado",
+    "pending": "Pendiente"
+  },
+  "balance": {
+    "title": "Balance de masa cerrado",
+    "subtitle": "Cada kilo de pergamino queda contabilizado antes de poder finalizar la corrida.",
+    "parchmentIn": "Pergamino entrada",
+    "greenOut": "Salida en verde",
+    "byproduct": "Subproductos",
+    "reject": "Rechazos",
+    "moistureLoss": "Pérdida por humedad",
+    "unaccounted": "Pérdida sin contabilizar",
+    "ceiling": "Tope de pérdida",
+    "balancedTag": "Cuadrado",
+    "unbalancedTag": "Descuadrado",
+    "balancedNote": "El residuo cabe dentro del tope por variedad — esta corrida se puede finalizar.",
+    "unbalancedNote": "La pérdida sin contabilizar supera el tope por variedad. Registra subproductos / rechazos o vuelve a pesar antes de finalizar.",
+    "noData": "Aún no hay datos de balance — registra primero los pases de máquina.",
+    "kg": "{kg} kg"
+  },
+  "form": {
+    "title": "Acuñar el lote verde",
+    "greenKgLabel": "Verde salida (kg)",
+    "greenKgHint": "Toma por defecto la salida del último pase de máquina.",
+    "cuppingLabel": "Puntaje de taza (opcional)",
+    "cuppingHint": "Fija la banda SCA del lote verde; déjalo en blanco si aún no se cata.",
+    "locationLabel": "Ubicación de almacén",
+    "locationPlaceholder": "ej. Bodega A — Estante 3",
+    "costLabel": "Costo de trilla (USD)",
+    "costHint": "Entra directo al costo por kilo verde por el libro de costos.",
+    "outturnPreview": "Rendimiento {pct}",
+    "outturnUnknown": "Rendimiento —",
+    "mint": "Acuñar lote verde",
+    "blockedBalance": "El balance de masa debe cerrar antes de acuñar esta corrida."
+  },
+  "grade": {
+    "title": "Grado verde SCA",
+    "subtitle": "La banda de preparación sale de los conteos de defectos — nunca puede contradecirlos.",
+    "cat1Label": "Defectos categoría 1 (primarios)",
+    "cat2Label": "Defectos categoría 2 (secundarios)",
+    "screenLabel": "Tamaño de zaranda (opcional)",
+    "previewLabel": "Banda de preparación",
+    "histogramTitle": "Histograma de defectos",
+    "primary": "Primarios",
+    "secondary": "Secundarios",
+    "totalDefects": "{count} defectos plenos",
+    "prep": {
+      "EP-Specialty": "EP-Especialidad",
+      "Premium": "Premium",
+      "Exchange": "Exchange",
+      "Below Standard": "Bajo estándar"
+    }
+  },
+  "confirm": {
+    "title": "Acuñar lote verde — irreversible",
+    "body": "Esto acuña un nuevo lote verde con {kg} kg del lote en pergamino {lot} y registra el costo de trilla en el costo por kilo verde. No se puede deshacer.",
+    "balanceRow": "Balance de masa",
+    "balanced": "Cuadrado",
+    "gradeRow": "Grado",
+    "outturnRow": "Rendimiento",
+    "irreversible": "Una corrección es una corrida nueva, nunca una edición — el lote verde y sus eventos son de solo agregar.",
+    "cancel": "Cancelar",
+    "confirm": "Acuñar lote verde",
+    "minting": "Acuñando…"
+  },
+  "result": {
+    "title": "Lote verde acuñado",
+    "mintedLine": "Acuñado {code} a {pct} de rendimiento.",
+    "mintedNoPct": "Acuñado {code}.",
+    "gradeLine": "Grado automático {prep}.",
+    "gradeLabel": "Grado automático",
+    "costLine": "El costo de trilla queda incluido en el costo por kilo verde.",
+    "viewLot": "Ver expediente del lote",
+    "regradeOpen": "Re-calificar"
+  },
+  "regrade": {
+    "title": "Re-calificar {code}",
+    "body": "Registra un grado SCA nuevo. Gana el grado más reciente; el anterior queda en el libro de solo agregar.",
+    "submit": "Guardar grado",
+    "saving": "Guardando…",
+    "done": "Grado registrado.",
+    "cancel": "Cancelar"
+  },
+  "errors": {
+    "generic": "No se pudo completar. Revisa los datos e intenta de nuevo.",
+    "greenKgPositive": "Ingresa la salida en verde en kilogramos.",
+    "locationRequired": "Indica dónde se guarda el lote verde.",
+    "defectsInvalid": "Los conteos de defectos deben ser cero o un entero positivo.",
+    "cuppingInvalid": "El puntaje de taza debe ser un número positivo.",
+    "costInvalid": "El costo de trilla no puede ser negativo.",
+    "lotRequired": "Este grado no tiene un lote verde al cual asociarse."
+  },
+  "empty": {
+    "pendingTitle": "Control de reposo sin aprobar",
+    "pendingDescription": "Abre la corrida de trilla desde el control de reposo / especificación antes de finalizarla."
+  },
+  "loading": {
+    "finalize": "Cargando el panel de finalización…"
+  }
+}

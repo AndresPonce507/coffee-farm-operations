@@ -60,10 +60,10 @@ describe("ReposoGateChip (smoke)", () => {
 
     // Background stays the cherry tint (red tone preserved)...
     expect(chip.className).toMatch(/bg-cherry-100/);
-    // ...but the text is the darkened, AA-safe shade — NOT the sub-floor `text-cherry`.
-    expect(chip.className).not.toMatch(/text-cherry(\b|[^-])/);
-    const textColor = chip.className.match(/text-\[(#[0-9a-fA-F]{6})\]/)?.[1];
-    expect(textColor, "blocked chip should carry an explicit AA-safe red text hex").toBeTruthy();
+    // ...but the text is the darkened, AA-safe token `text-cherry-700` (#8f3522),
+    // NOT a one-off hex and NOT the lighter base accent on its own.
+    expect(chip.className).toContain("text-cherry-700");
+    const textColor = "#8f3522"; // --color-cherry-700 (globals.css)
 
     // Independently verify the rendered pair clears AA on the real (opaque) background.
     const lin = (c: number) => {
@@ -101,5 +101,37 @@ describe("ReposoGateChip (smoke)", () => {
     const chip = screen.getByRole("status");
     // No moisture segment is rendered when latestMoisture is null.
     expect(chip).not.toHaveTextContent(/%/);
+  });
+});
+
+describe("ReposoGateChip (state icon)", () => {
+  // Regression: the blocked branch used to hardcode <Lock>, so the computed
+  // Hourglass / Droplets icons were dead code that never rendered. The icon must
+  // reflect WHY the gate is closed: hourglass when only rest-time remains (moisture
+  // already stable), droplets when the lot still needs to dry.
+  it("shows the HOURGLASS icon when blocked but moisture is already stable (waiting on rest days)", () => {
+    const { container } = render(
+      <ReposoGateChip reposo={{ ...blocked, moistureStable: true }} />,
+    );
+    expect(container.querySelector("svg.lucide-hourglass")).toBeInTheDocument();
+    expect(container.querySelector("svg.lucide-droplets")).not.toBeInTheDocument();
+    // Never falls back to the old hardcoded lock.
+    expect(container.querySelector("svg.lucide-lock")).not.toBeInTheDocument();
+  });
+
+  it("shows the DROPLETS icon when blocked and moisture is not yet stable (still drying)", () => {
+    const { container } = render(
+      <ReposoGateChip reposo={{ ...blocked, moistureStable: false }} />,
+    );
+    expect(container.querySelector("svg.lucide-droplets")).toBeInTheDocument();
+    expect(container.querySelector("svg.lucide-hourglass")).not.toBeInTheDocument();
+    expect(container.querySelector("svg.lucide-lock")).not.toBeInTheDocument();
+  });
+
+  it("shows the CHECK icon when the gate is open", () => {
+    const { container } = render(<ReposoGateChip reposo={open} />);
+    expect(container.querySelector("svg.lucide-circle-check")).toBeInTheDocument();
+    expect(container.querySelector("svg.lucide-hourglass")).not.toBeInTheDocument();
+    expect(container.querySelector("svg.lucide-droplets")).not.toBeInTheDocument();
   });
 });

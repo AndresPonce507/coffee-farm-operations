@@ -1,4 +1,5 @@
 import { Coffee, Sprout, Droplets, FlaskConical } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { Card } from "@/components/ui/card";
 import { Tile } from "@/components/ui/tile";
@@ -42,6 +43,7 @@ function avg(
  * computed deterministically from the {@link harvests} anchor.
  */
 export async function HarvestSummary() {
+  const t = await getTranslations("harvests");
   const harvests = await getHarvests();
   const todayRecords = harvests.filter((h) => h.date === TODAY);
   const weekRecords = harvests.filter((h) => LAST_7_DAYS.has(h.date));
@@ -55,31 +57,31 @@ export async function HarvestSummary() {
     <Card className="overflow-hidden animate-rise perf-contain">
       <div className="stagger grid grid-cols-1 divide-y divide-line/70 sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4 lg:divide-x">
         <Tile
-          label="Today"
+          label={t("summary.today")}
           value={kg(todayKg)}
-          sub={`${num(todayRecords.length)} lots picked`}
+          sub={t("summary.todaySub", { count: num(todayRecords.length) })}
           accent="forest"
           icon={Coffee}
         />
         <Tile
-          label="Last 7 days"
+          label={t("summary.last7Days")}
           value={kg(weekKg)}
-          sub="Trailing-week cherry intake"
+          sub={t("summary.last7DaysSub")}
           accent="coffee"
           icon={Droplets}
           className="sm:border-l sm:border-line/70 lg:border-l-0"
         />
         <Tile
-          label="Avg ripeness"
+          label={t("summary.avgRipeness")}
           value={pct(avgRipeness)}
-          sub="Across all logged lots"
+          sub={t("summary.avgRipenessSub")}
           accent="honey"
           icon={Sprout}
         />
         <Tile
-          label="Avg Brix"
+          label={t("summary.avgBrix")}
           value={`${avgBrix.toFixed(1)}°`}
-          sub="Sugar content at picking"
+          sub={t("summary.avgBrixSub")}
           accent="cherry"
           icon={FlaskConical}
           className="sm:border-l sm:border-line/70"

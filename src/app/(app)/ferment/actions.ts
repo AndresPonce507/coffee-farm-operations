@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import {
   recordFermentReading,
@@ -82,8 +82,7 @@ function withEnvelope(raw: Record<string, unknown>): Record<string, unknown> {
 }
 
 function refresh() {
-  revalidatePath("/ferment");
-  revalidatePath("/");
+  reactiveRefresh("ferment");
 }
 
 function toState(

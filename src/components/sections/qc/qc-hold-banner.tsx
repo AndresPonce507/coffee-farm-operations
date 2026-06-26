@@ -1,4 +1,5 @@
 import { ShieldAlert } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /**
  * QcHoldBanner — the prominent red glass QC-HOLD banner (P2-S6). A held green lot
@@ -13,6 +14,7 @@ export function QcHoldBanner({
   lotCode: string;
   reason: string | null;
 }) {
+  const t = useTranslations("qc");
   return (
     <div
       role="alert"
@@ -21,10 +23,10 @@ export function QcHoldBanner({
       <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
       <div className="min-w-0">
         <p className="text-sm font-semibold">
-          <span className="font-mono">{lotCode}</span> is on QC-HOLD — un-sellable
+          <span className="font-mono">{lotCode}</span> {t("holdBanner.onHold")}
         </p>
-        <p className="mt-0.5 truncate text-xs text-cherry/80">
-          {reason ? reason : "Quarantined pending QC review."}
+        <p className="mt-0.5 truncate text-xs text-cherry">
+          {reason ? reason : t("holdBanner.quarantined")}
         </p>
       </div>
     </div>

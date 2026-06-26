@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
@@ -12,6 +13,7 @@ const FIELD =
 
 export function LoginForm() {
   const router = useRouter();
+  const t = useTranslations("auth");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export function LoginForm() {
     });
 
     if (signInError) {
-      setError("That email or password doesn't match. Please try again.");
+      setError(t("loginForm.invalidCredentials"));
       setPending(false);
       return;
     }
@@ -45,7 +47,7 @@ export function LoginForm() {
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       <div className="space-y-1.5">
         <label htmlFor="email" className="text-xs font-medium text-muted-fg">
-          Username or email
+          {t("loginForm.usernameLabel")}
         </label>
         <input
           id="email"
@@ -61,7 +63,7 @@ export function LoginForm() {
 
       <div className="space-y-1.5">
         <label htmlFor="password" className="text-xs font-medium text-muted-fg">
-          Password
+          {t("loginForm.passwordLabel")}
         </label>
         <input
           id="password"
@@ -82,8 +84,8 @@ export function LoginForm() {
       )}
 
       <Button type="submit" disabled={pending} className="w-full">
-        {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-        {pending ? "Signing in…" : "Sign in"}
+        {pending && <Loader2 className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" />}
+        {pending ? t("loginForm.signingIn") : t("loginForm.signIn")}
       </Button>
     </form>
   );

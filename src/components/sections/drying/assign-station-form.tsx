@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { CheckCircle2, MapPin } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import {
   assignStationAction,
@@ -43,10 +44,16 @@ export function AssignStationForm({
   /** Called after a successful assignment so the host (dialog) can offer to close. */
   onDone?: () => void;
 }) {
+  const t = useTranslations("drying");
   const [state, formAction, pending] = useActionState<
     DryingActionState,
     FormData
   >(assignStationAction, DRYING_IDLE);
+
+  // Exactly-once anchor minted ONCE per mount: a double-submit carries the SAME key so
+  // the assign_drying_station RPC dedupes the replay (without it the action falls back
+  // to a fresh uuid each submit → two assignment events). Re-mount = a fresh draw.
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
 
   const fieldError = (key: string) =>
     state.status === "error" ? state.errors?.[key] : undefined;
@@ -62,13 +69,13 @@ export function AssignStationForm({
         </span>
         <div className="space-y-1">
           <p className="font-display text-base font-semibold text-ink">
-            Lot assigned
+            {t("assignForm.successTitle")}
           </p>
           <p className="text-sm text-muted-fg">{state.message}</p>
         </div>
         {onDone && (
           <Button type="button" variant="ghost" size="sm" onClick={onDone}>
-            Done
+            {t("assignForm.done")}
           </Button>
         )}
       </div>
@@ -77,17 +84,15 @@ export function AssignStationForm({
 
   return (
     <form action={formAction} className="space-y-4">
+      <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
       <p className="flex items-start gap-2 rounded-xl bg-forest-50/70 px-3 py-2 text-xs text-forest-700 ring-1 ring-forest-100">
         <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-        <span>
-          Commits the lot to a bed — a full bed is refused, so committed weight can
-          never exceed a station&rsquo;s capacity.
-        </span>
+        <span>{t("assignForm.hint")}</span>
       </p>
 
       <div className="space-y-1">
         <label className={LABEL} htmlFor="assign-lotCode">
-          Lot
+          {t("assignForm.lotLabel")}
         </label>
         <select
           id="assign-lotCode"
@@ -99,7 +104,7 @@ export function AssignStationForm({
           aria-invalid={fieldError("lotCode") ? true : undefined}
         >
           <option value="" disabled>
-            Choose…
+            {t("assignForm.choose")}
           </option>
           {lots.map((code) => (
             <option key={code} value={code}>
@@ -114,7 +119,7 @@ export function AssignStationForm({
 
       <div className="space-y-1">
         <label className={LABEL} htmlFor="assign-stationId">
-          Station
+          {t("assignForm.stationLabel")}
         </label>
         <select
           id="assign-stationId"
@@ -126,11 +131,14 @@ export function AssignStationForm({
           aria-invalid={fieldError("stationId") ? true : undefined}
         >
           <option value="" disabled>
-            Choose…
+            {t("assignForm.choose")}
           </option>
           {stations.map((s) => (
             <option key={s.stationId} value={s.stationId}>
-              {s.name} · {kg(s.availableKg)} free
+              {t("assignForm.stationOption", {
+                name: s.name,
+                available: kg(s.availableKg),
+              })}
             </option>
           ))}
         </select>
@@ -148,11 +156,11 @@ export function AssignStationForm({
       <div className="flex justify-end gap-2 pt-1">
         {onDone && (
           <Button type="button" variant="ghost" onClick={onDone}>
-            Cancel
+            {t("assignForm.cancel")}
           </Button>
         )}
         <Button type="submit" disabled={pending}>
-          {pending ? "Assigning…" : "Assign to station"}
+          {pending ? t("assignForm.submitting") : t("assignForm.submit")}
         </Button>
       </div>
     </form>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CheckCircle2, Coffee, PackageOpen, ShieldAlert } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { QcStatus } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { THead, TBody, TR, TH, TD } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import { num } from "@/lib/utils";
 import { QcHoldControl } from "./qc-hold-control";
 
@@ -33,37 +35,36 @@ function scoreLabel(score: number | null): string {
 }
 
 function HeldBadge({ held }: { held: boolean }) {
+  const t = useTranslations("qc");
   return held ? (
     <Badge tone="cherry" dot>
-      On hold
+      {t("statusTable.held")}
     </Badge>
   ) : (
     <Badge tone="ok" dot>
-      Clear
+      {t("statusTable.clear")}
     </Badge>
   );
 }
 
 export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
+  const t = useTranslations("qc");
   const heldCount = rows.filter((r) => r.held).length;
 
   return (
     <Card className="animate-rise overflow-hidden">
       <CardHeader>
         <div>
-          <CardTitle>Quality control</CardTitle>
-          <CardDescription>
-            Cup scores, green-grading defects, and the QC-HOLD quarantine — a held
-            lot is physically un-sellable until released
-          </CardDescription>
+          <CardTitle>{t("statusTable.title")}</CardTitle>
+          <CardDescription>{t("statusTable.description")}</CardDescription>
         </div>
         {heldCount > 0 ? (
           <Badge tone="cherry" dot>
-            {heldCount} on hold
+            {t("statusTable.onHoldBadge", { count: heldCount })}
           </Badge>
         ) : (
           <Badge tone="forest" dot>
-            all clear
+            {t("statusTable.allClearBadge")}
           </Badge>
         )}
       </CardHeader>
@@ -72,8 +73,8 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
         {rows.length === 0 ? (
           <EmptyState
             icon={PackageOpen}
-            title="No green lots to QC yet"
-            description="Grade a finished lot in Inventory to mint a green lot you can cup, grade for defects, and hold."
+            title={t("statusTable.emptyTitle")}
+            description={t("statusTable.emptyDescription")}
           />
         ) : (
           <>
@@ -82,27 +83,32 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
               <table className="w-full border-separate border-spacing-0 text-sm">
                 <THead>
                   <TR className="hover:bg-transparent">
-                    <TH>Lot</TH>
-                    <TH>QC state</TH>
-                    <TH className="text-right">Latest cup</TH>
-                    <TH className="text-right">Primary</TH>
-                    <TH className="text-right">Secondary</TH>
-                    <TH className="text-right">Actions</TH>
+                    <TH>{t("statusTable.colLot")}</TH>
+                    <TH>{t("statusTable.colState")}</TH>
+                    <TH className="text-right">{t("statusTable.colLatestCup")}</TH>
+                    <TH className="text-right">{t("statusTable.colPrimary")}</TH>
+                    <TH className="text-right">{t("statusTable.colSecondary")}</TH>
+                    <TH className="text-right">{t("statusTable.colActions")}</TH>
                   </TR>
                 </THead>
                 <TBody>
                   {rows.map((row) => (
                     <TR key={row.greenLotCode} className="group align-middle">
                       <TD>
-                        <span className="font-mono text-sm font-medium text-ink transition-colors group-hover:text-forest-700">
+                        <EntityLink
+                          kind="lot"
+                          id={row.greenLotCode}
+                          name={row.greenLotCode}
+                          className="font-mono text-sm font-medium text-ink underline-offset-4 transition-colors hover:text-forest-700 hover:underline group-hover:text-forest-700"
+                        >
                           {row.greenLotCode}
-                        </span>
+                        </EntityLink>
                       </TD>
                       <TD>
                         <div className="flex flex-col gap-0.5">
                           <HeldBadge held={row.held} />
                           {row.held && row.holdReason && (
-                            <span className="max-w-[16rem] truncate text-xs text-cherry/80">
+                            <span className="max-w-[16rem] truncate text-xs text-cherry">
                               {row.holdReason}
                             </span>
                           )}
@@ -126,10 +132,10 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
                           <Link
                             href={`/qc/cup/${encodeURIComponent(row.greenLotCode)}`}
                             className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white/60 px-2.5 py-1.5 text-xs font-medium text-ink transition hover:border-forest-300 hover:text-forest-700"
-                            aria-label={`Cup ${row.greenLotCode}`}
+                            aria-label={t("statusTable.cupAria", { lot: row.greenLotCode })}
                           >
                             <Coffee className="h-3.5 w-3.5" />
-                            Cup
+                            {t("statusTable.cup")}
                           </Link>
                           <QcHoldControl lot={row} />
                         </div>
@@ -148,9 +154,14 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
                   className="rounded-2xl border border-white/60 bg-white/55 p-4 shadow-[0_8px_24px_-16px_rgba(0,41,29,0.35)]"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <p className="font-mono text-sm font-medium text-ink">
+                    <EntityLink
+                      kind="lot"
+                      id={row.greenLotCode}
+                      name={row.greenLotCode}
+                      className="font-mono text-sm font-medium text-ink underline-offset-4 hover:text-forest-700 hover:underline"
+                    >
                       {row.greenLotCode}
-                    </p>
+                    </EntityLink>
                     <HeldBadge held={row.held} />
                   </div>
                   {row.held && row.holdReason && (
@@ -161,7 +172,7 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
                   )}
                   <div className="mt-3 flex items-center justify-between text-xs text-muted-fg">
                     <span>
-                      Cup{" "}
+                      {t("statusTable.cup")}{" "}
                       <span className="font-medium tabular-nums text-ink">
                         {scoreLabel(row.latestCupScore)}
                       </span>
@@ -174,10 +185,11 @@ export function QcStatusTable({ rows }: { rows: QcStatus[] }) {
                   <div className="mt-3 flex items-center justify-end gap-2">
                     <Link
                       href={`/qc/cup/${encodeURIComponent(row.greenLotCode)}`}
+                      aria-label={t("statusTable.cupAria", { lot: row.greenLotCode })}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-white/60 px-3 py-2 text-xs font-medium text-ink transition hover:border-forest-300 hover:text-forest-700"
                     >
                       <Coffee className="h-3.5 w-3.5" />
-                      Cup
+                      {t("statusTable.cup")}
                     </Link>
                     <QcHoldControl lot={row} />
                   </div>

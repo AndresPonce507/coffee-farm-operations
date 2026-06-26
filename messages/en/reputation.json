@@ -1,0 +1,111 @@
+{
+  "page": {
+    "title": "Wall of fame",
+    "subtitle": "Every cup score, award, and certification, bound to the lot that earned it. Append-only and chain-verified."
+  },
+  "summary": {
+    "lots": "Decorated lots",
+    "lotsSub": "{count} with an accolade on file",
+    "awards": "Awards",
+    "awardsSub": "across the estate",
+    "certs": "Certifications",
+    "certsSub": "live on the books",
+    "topScore": "Top cup score",
+    "topScoreSub": "the estate's best"
+  },
+  "card": {
+    "ringLabel": "Cup score {score} of 100",
+    "noScore": "No cup score yet",
+    "qcReconcile": "QC cup {score}",
+    "qcReconcileNone": "QC not cupped",
+    "ungraded": "Ungraded",
+    "awardsLabel": "{count} awards",
+    "certsLabel": "{count} certifications",
+    "pressLabel": "{count} press mentions",
+    "open": "See the record",
+    "ledger": "{count} on the ledger"
+  },
+  "empty": {
+    "title": "No accolades on the books yet",
+    "description": "Cup a lot, win an award, or earn a certification and it lands here, bound to the lot that earned it and impossible to quietly edit."
+  },
+  "detail": {
+    "eyebrow": "Reputation",
+    "back": "Back to the wall",
+    "subtitle": "This lot's accolade ledger. Append-only, every entry chained to the one before it.",
+    "qcTruth": "QC truth",
+    "qcCup": "Cup {score}",
+    "qcNone": "Not cupped",
+    "grade": "{grade}",
+    "ungraded": "Ungraded",
+    "timeline": "The ledger",
+    "timelineEmpty": "No accolades on this lot yet. Record the first one on the right.",
+    "superseded": "Superseded by a later revision",
+    "revisionOf": "Revision of entry #{id}",
+    "evidence": "Evidence",
+    "awardedBy": "by {who}",
+    "scoreLine": "Cup {score}"
+  },
+  "verify": {
+    "verified": "Chain-verified",
+    "verifiedHint": "Every entry hashes onto the last. The history checks out end to end.",
+    "broken": "Chain integrity failed",
+    "brokenHint": "An entry's hash does not match. The ledger has been tampered with."
+  },
+  "kind": {
+    "cup-score": "Cup score",
+    "award": "Award",
+    "certification": "Certification",
+    "press-mention": "Press mention",
+    "score-revision": "Score revision"
+  },
+  "compose": {
+    "open": "Record accolade",
+    "title": "Record an accolade",
+    "kindLabel": "What kind",
+    "titleLabel": "Title",
+    "titlePlaceholder": "Best of Panama 2025, Organic, ...",
+    "scoreLabel": "Cup score",
+    "scoreHint": "0 to 100, to one decimal",
+    "awardedByLabel": "Awarded by",
+    "awardedByPlaceholder": "Jury, certifier, or publication",
+    "yearLabel": "Year",
+    "evidenceLabel": "Evidence link",
+    "evidencePlaceholder": "https://...",
+    "submit": "Record",
+    "submitting": "Recording...",
+    "recorded": "Accolade recorded",
+    "another": "Record another",
+    "cancel": "Cancel",
+    "immutable": "Once recorded, an accolade can't be edited. A correction posts a revision row instead."
+  },
+  "revise": {
+    "open": "Revise a cup score",
+    "title": "Revise a cup score",
+    "pickLabel": "Which cup score",
+    "newScoreLabel": "Corrected score",
+    "noteLabel": "Note",
+    "notePlaceholder": "Why the score changed",
+    "submit": "Post revision",
+    "submitting": "Posting...",
+    "revised": "Revision posted",
+    "cancel": "Cancel",
+    "supersedes": "This posts a new revision row. The original stays on the ledger, marked superseded.",
+    "none": "No cup score to revise yet. Record one first."
+  },
+  "loading": {
+    "wall": "Loading the wall of fame",
+    "detail": "Loading the reputation ledger"
+  },
+  "errors": {
+    "lotRequired": "Pick a lot to credit.",
+    "kindRequired": "Pick what kind of accolade this is.",
+    "titleRequired": "Give the accolade a title.",
+    "scoreRequired": "Enter the cup score.",
+    "scoreRange": "A cup score must be between 0 and 100.",
+    "yearRange": "Enter a real award year.",
+    "accoladeRequired": "Pick the cup score to revise.",
+    "generic": "Could not record that accolade. Check the entry and try again.",
+    "reviseGeneric": "Could not post that revision. Check the score and try again."
+  }
+}

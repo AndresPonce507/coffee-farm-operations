@@ -1,7 +1,9 @@
 import { CalendarClock, Leaf, Mountain, Sprout } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import { cn, longDate, num } from "@/lib/utils";
 import type { PlotReadiness } from "@/lib/types";
 
@@ -26,14 +28,15 @@ import {
  * keyboard/AT-legible via role="progressbar" + aria-valuenow.
  */
 export function ReadinessList({ rows }: { rows: PlotReadiness[] }) {
+  const t = useTranslations("planning");
   if (rows.length === 0) {
     return (
       <Card data-testid="readiness-empty" className="animate-rise">
         <CardContent>
           <EmptyState
             icon={Sprout}
-            title="No plots to plan yet"
-            description="Log a bloom and the GDD feed for a plot and its readiness appears here, ranked and staggered down the altitude gradient."
+            title={t("readinessList.emptyTitle")}
+            description={t("readinessList.emptyDescription")}
           />
         </CardContent>
       </Card>
@@ -47,10 +50,16 @@ export function ReadinessList({ rows }: { rows: PlotReadiness[] }) {
         const styles = TONE_STYLES[tone];
         const pct = Math.round(Math.min(1, Math.max(0, r.readiness)) * 100);
         return (
-          <Card
+          <EntityLink
             key={r.plotId}
+            kind="plot"
+            id={r.plotId}
+            name={r.plotName}
+            className="group block rounded-2xl"
+          >
+          <Card
             data-testid={`readiness-${r.plotId}`}
-            className="glass-hover animate-rise overflow-hidden"
+            className="glass-hover animate-rise overflow-hidden transition group-hover:ring-1 group-hover:ring-forest/30"
           >
             <CardContent className="space-y-3">
               <div className="flex items-start justify-between gap-3">
@@ -70,7 +79,7 @@ export function ReadinessList({ rows }: { rows: PlotReadiness[] }) {
                     </span>
                     <span className="inline-flex items-center gap-1">
                       <Mountain className="h-3.5 w-3.5" aria-hidden />
-                      {num(r.altitudeMasl)} masl
+                      {t("readinessList.masl", { altitude: num(r.altitudeMasl) })}
                     </span>
                   </div>
                 </div>
@@ -90,7 +99,7 @@ export function ReadinessList({ rows }: { rows: PlotReadiness[] }) {
                 aria-valuenow={pct}
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-label={`${r.plotName} readiness`}
+                aria-label={t("readinessList.readinessAria", { plotName: r.plotName })}
                 className="h-2 w-full overflow-hidden rounded-full bg-ink/5"
               >
                 <div
@@ -106,9 +115,9 @@ export function ReadinessList({ rows }: { rows: PlotReadiness[] }) {
                 <span className="inline-flex items-center gap-1.5 text-muted-fg">
                   <CalendarClock className="h-3.5 w-3.5" aria-hidden />
                   {r.predictedReadyDate ? (
-                    <>Ready ~ {longDate(r.predictedReadyDate)}</>
+                    <>{t("readinessList.readyOn", { date: longDate(r.predictedReadyDate) })}</>
                   ) : (
-                    <span className="italic">No bloom logged — date unknown</span>
+                    <span className="italic">{t("readinessList.dateUnknown")}</span>
                   )}
                 </span>
                 <span
@@ -122,6 +131,7 @@ export function ReadinessList({ rows }: { rows: PlotReadiness[] }) {
               </div>
             </CardContent>
           </Card>
+          </EntityLink>
         );
       })}
     </div>

@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { reactiveRefresh } from "@/lib/revalidate";
 
 import { getSupabase } from "@/lib/supabase/server";
 import { formToRecord, trimmed } from "@/lib/validation/shared";
@@ -24,8 +24,7 @@ const toRow = (h: HarvestInput) => ({
 });
 
 function refresh() {
-  revalidatePath("/harvests");
-  revalidatePath("/");
+  reactiveRefresh("cherry-intake");
 }
 
 export async function createHarvest(

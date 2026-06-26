@@ -1,10 +1,11 @@
-import Link from "next/link";
 import { FlaskConical } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { FermentBatch, FermentRecipe } from "@/lib/db/ferment";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import { longDate } from "@/lib/utils";
 import { StartFermentButton } from "./start-ferment-button";
 
@@ -24,14 +25,15 @@ export function FermentBoard({
   lots: string[];
   recipes: FermentRecipe[];
 }) {
+  const t = useTranslations("ferment");
   if (batches.length === 0) {
     return (
       <Card className="animate-rise">
         <CardContent className="py-4">
           <EmptyState
             icon={FlaskConical}
-            title="Nothing fermenting yet"
-            description="Start a ferment on a milled-in lot to open the make-quality loop — live pH/temp/Brix curves and a cut-point alert before the window closes."
+            title={t("board.emptyTitle")}
+            description={t("board.emptyDescription")}
           />
           <div className="mt-4 flex justify-center">
             <StartFermentButton lots={lots} recipes={recipes} />
@@ -51,38 +53,57 @@ export function FermentBoard({
         {batches.map((b) => {
           const live = b.endedAt === null;
           return (
-            <Link
+            <Card
               key={b.id}
-              href={`/ferment/${b.id}`}
-              data-testid={`ferment-batch-${b.id}`}
-              className="block rounded-2xl outline-none ring-forest/30 transition focus-visible:ring-2"
+              data-testid={`ferment-card-${b.id}`}
+              className="h-full transition-transform hover:-translate-y-0.5"
             >
-              <Card className="h-full transition-transform hover:-translate-y-0.5">
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono text-sm font-semibold text-ink">
-                      {b.lotCode}
-                    </span>
-                    {live ? (
-                      <Badge tone="forest" dot>
-                        Live
-                      </Badge>
-                    ) : (
-                      <Badge tone="neutral" dot>
-                        Finished
-                      </Badge>
-                    )}
-                  </div>
+              <CardContent className="space-y-3">
+                {/*
+                  The lot code NAMES a Lot entity → it is its own dossier link
+                  (D2 — no entity-bearing row goes nowhere). It sits OUTSIDE the
+                  batch link so we never nest <a> in <a>: the body below is the
+                  batch-tracker link, this header chip is the lot link.
+                */}
+                <div className="flex items-center justify-between gap-2">
+                  <EntityLink
+                    kind="lot"
+                    id={b.lotCode}
+                    name={b.lotCode}
+                    className="font-mono text-sm font-semibold text-ink underline-offset-4 transition-colors hover:text-forest hover:underline"
+                  >
+                    {b.lotCode}
+                  </EntityLink>
+                  {live ? (
+                    <Badge tone="forest" dot>
+                      {t("board.live")}
+                    </Badge>
+                  ) : (
+                    <Badge tone="neutral" dot>
+                      {t("board.finished")}
+                    </Badge>
+                  )}
+                </div>
+
+                {/* The card body navigates to the live batch tracker. */}
+                <EntityLink
+                  kind="batch"
+                  id={b.id}
+                  name={b.lotCode}
+                  className="-m-1 block p-1 transition"
+                >
                   <p className="text-xs text-muted-fg">
                     {b.method}
-                    {b.recipeId ? " · recipe applied" : " · no recipe"}
+                    {b.recipeId
+                      ? t("board.recipeApplied")
+                      : t("board.noRecipe")}
                   </p>
-                  <p className="text-[11px] text-muted-fg/70">
-                    Started {longDate(b.startedAt)}
+                  <p className="mt-1 text-[11px] text-muted-fg/70">
+                    {t("board.started", { date: longDate(b.startedAt) })}
                   </p>
-                </CardContent>
-              </Card>
-            </Link>
+                </EntityLink>
+              </CardContent>
+            </Card>
           );
         })}
       </div>

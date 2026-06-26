@@ -6,9 +6,12 @@
  * stations board — so the layout never shifts. Pure server component: glassy
  * `animate-pulse` placeholders over the global LivingBackground, no data, no JS.
  */
+import { useTranslations } from "next-intl";
+
 export default function DryingLoading() {
+  const t = useTranslations("common");
   return (
-    <div className="space-y-6" aria-busy="true" aria-label="Loading drying">
+    <div className="space-y-6" aria-busy="true" aria-label={t("loading.drying")}>
       {/* Header — title + subtitle, hairline divider. */}
       <div className="animate-rise relative mb-6 pb-4">
         <div className="space-y-2.5">

@@ -1,0 +1,131 @@
+{
+  "page": {
+    "title": "Embarques de exportación",
+    "subtitle": "Cada consignación y su paquete de documentos. Un documento no se emite hasta cumplir sus requisitos."
+  },
+  "summary": {
+    "shipments": "Embarques",
+    "shipmentsSub": "{count} en el tablero",
+    "building": "En armado",
+    "buildingSub": "aún cargando sacos",
+    "docsIssued": "Documentos emitidos",
+    "docsIssuedSub": "paquetes en curso",
+    "bags": "Sacos cargados",
+    "bagsSub": "en todos los embarques"
+  },
+  "empty": {
+    "title": "Aún no hay embarques",
+    "description": "Arma una consignación desde un contrato firmado para iniciar su paquete de documentos de exportación."
+  },
+  "status": {
+    "building": "En armado",
+    "docs_issued": "Documentos emitidos",
+    "departed": "Zarpado",
+    "arrived": "Arribado",
+    "closed": "Cerrado"
+  },
+  "card": {
+    "contract": "Contrato",
+    "buyer": "Consignatario",
+    "noBuyer": "Sin asignar",
+    "bags": "Sacos",
+    "netKg": "Kg netos",
+    "lines": "Líneas",
+    "docs": "Documentos vivos",
+    "docsValue": "{issued} de 5",
+    "open": "Abrir paquete"
+  },
+  "build": {
+    "title": "Armar un embarque",
+    "subtitle": "Elige un contrato firmado. El número de consignación se genera solo.",
+    "contractLabel": "Contrato",
+    "contractPlaceholder": "Selecciona un contrato",
+    "portLabel": "Puerto de embarque",
+    "bagWeightLabel": "Peso del saco (kg)",
+    "submit": "Armar embarque",
+    "submitting": "Armando...",
+    "noContracts": "Aún no hay contratos firmados para embarcar. Firma un contrato primero.",
+    "contractOption": "{contractNo} · {buyer}"
+  },
+  "loading": {
+    "board": "Cargando embarques",
+    "detail": "Cargando embarque"
+  },
+  "detail": {
+    "back": "Todos los embarques",
+    "eyebrow": "Consignación de exportación",
+    "title": "Embarque {shipmentNo}",
+    "subtitle": "Carga las líneas del contrato y luego emite el paquete de cinco documentos en orden.",
+    "consignee": "Consignatario",
+    "noBuyer": "Sin asignar",
+    "contract": "Contrato",
+    "port": "Puerto de embarque",
+    "bagWeight": "Peso del saco",
+    "bagWeightValue": "{kg} kg / saco",
+    "totals": "{bags} sacos · {kg} kg netos"
+  },
+  "lines": {
+    "title": "Líneas cargadas",
+    "empty": "Aún no hay líneas cargadas. Agrega una línea del contrato para reclamar sus sacos.",
+    "lot": "Lote",
+    "bags": "Sacos",
+    "netKg": "Kg netos",
+    "lockedTitle": "Las líneas están bloqueadas",
+    "lockedNote": "Las líneas solo se cargan mientras el embarque está en armado.",
+    "addTitle": "Cargar una línea del contrato",
+    "pickLine": "Línea del contrato",
+    "linePlaceholder": "Selecciona un lote",
+    "lineOption": "{lot} · {kg} kg reservados",
+    "bagsLabel": "Sacos",
+    "add": "Cargar línea",
+    "adding": "Cargando...",
+    "noLoadable": "Todas las líneas del contrato ya están cargadas.",
+    "netHint": "{bags} sacos x {bagWeight} kg = {netKg} kg netos"
+  },
+  "pack": {
+    "title": "Paquete de documentos",
+    "subtitle": "Rojo significa un requisito sin cumplir. Verde significa emitido. El conocimiento de embarque se desbloquea solo después de los otros cuatro.",
+    "issueAll": "Emitir paquete completo",
+    "issuingAll": "Emitiendo paquete...",
+    "allClear": "Los cinco documentos están listos para emitir.",
+    "someBlocked": "Algunos documentos siguen bloqueados por sus requisitos.",
+    "noLines": "Carga al menos una línea del contrato antes de emitir documentos."
+  },
+  "doc": {
+    "commercial_invoice": "Factura comercial",
+    "certificate_of_origin": "Certificado de origen ICO",
+    "phytosanitary": "Fitosanitario MIDA",
+    "packing_list": "Lista de empaque",
+    "bill_of_lading": "Conocimiento de embarque"
+  },
+  "tile": {
+    "issuedTag": "Emitido",
+    "readyTag": "Listo",
+    "blockedTag": "Bloqueado",
+    "lockedTag": "Encadenado",
+    "docNo": "Doc {docNo}",
+    "issue": "Emitir",
+    "issuing": "Emitiendo...",
+    "reissue": "Reemitir",
+    "unmetTitle": "Bloqueado hasta:",
+    "ready": "Requisitos cumplidos. Listo para emitir.",
+    "issuedAt": "Emitido {date}"
+  },
+  "issued": {
+    "title": "Documentos emitidos",
+    "empty": "Aún no se emiten documentos.",
+    "docNo": "No. doc.",
+    "view": "Ver contenido"
+  },
+  "errors": {
+    "generic": "No se pudo completar. Revisa los datos e intenta de nuevo.",
+    "contractRequired": "Selecciona un contrato para armar el embarque.",
+    "bagsPositive": "Ingresa una cantidad de sacos mayor que cero.",
+    "bagWeightPositive": "El peso del saco debe ser mayor que cero.",
+    "shipmentRequired": "No se encontró ese embarque.",
+    "lineRequired": "Selecciona una línea del contrato para cargar.",
+    "docRequired": "Elige un documento para emitir.",
+    "access": "No tienes acceso a este embarque.",
+    "duplicate": "Eso ya fue registrado."
+  }
+}

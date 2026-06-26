@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { EudrSummary } from "@/components/sections/eudr/eudr-summary";
 
@@ -15,11 +17,12 @@ import { EudrSummary } from "@/components/sections/eudr/eudr-summary";
  * (app)/layout.tsx; this page renders only its inner content.
  */
 export default function EudrPage() {
+  const t = useTranslations("eudr");
   return (
     <div className="space-y-6">
       <PageHeader
-        title="EUDR"
-        subtitle="Deforestation-free due diligence — geolocated origin per green lot"
+        title={t("page.title")}
+        subtitle={t("page.subtitle")}
       />
 
       <EudrSummary />

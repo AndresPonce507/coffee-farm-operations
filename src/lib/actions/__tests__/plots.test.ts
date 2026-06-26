@@ -46,14 +46,16 @@ type DbResult = { data?: unknown; error: { message: string } | null };
  * chains each action drives:
  *   - createPlot:  .select("ord").order(...).limit(...) → {data,error} (ord lookup)
  *                  then .insert({...}) → {error}
- *   - updatePlot:  .update({...}).eq("id", id) → {error}
+ *   - updatePlot:  .update({...}).eq("id", id).select("id").maybeSingle() → {data,error}
  *   - deletePlot:  .delete().eq("id", id) → {error}
  * The select chain is a thenable so `await sb.from().select().order().limit()`
  * resolves to the ord result. The insert/update/delete/eq spies are captured so
- * tests can assert the payload + the id filter.
+ * tests can assert the payload + the id filter. The update chain ends in
+ * .select("id").maybeSingle() so updatePlot can detect a ghost-id no-row match.
  *
  * Defaults: ord lookup → {data:[{ord:4}],error:null} (so a new plot gets ord 5);
- * insert/update/delete all → {error:null}.
+ * insert/delete → {error:null}; update → {data:{id:'plot-1'},error:null} (a row
+ * matched, so the update reports success).
  */
 function makeClient(opts?: {
   ord?: DbResult;
@@ -63,7 +65,9 @@ function makeClient(opts?: {
 }) {
   const ordResult: DbResult = opts?.ord ?? { data: [{ ord: 4 }], error: null };
   const insertResult: DbResult = opts?.insert ?? { error: null };
-  const updateResult: DbResult = opts?.update ?? { error: null };
+  // update default: a row matched → {data:{id},error:null} (success path).
+  const updateResult: DbResult =
+    opts?.update ?? { data: { id: "plot-1" }, error: null };
   const deleteResult: DbResult = opts?.delete ?? { error: null };
 
   // .select("ord").order(...).limit(...) → a thenable resolving to ordResult.
@@ -73,7 +77,10 @@ function makeClient(opts?: {
 
   const insert = vi.fn(() => Promise.resolve(insertResult));
 
-  const updateEq = vi.fn(() => Promise.resolve(updateResult));
+  // .update({...}).eq("id", id).select("id").maybeSingle() → updateResult.
+  const updateMaybeSingle = vi.fn(() => Promise.resolve(updateResult));
+  const updateSelect = vi.fn(() => ({ maybeSingle: updateMaybeSingle }));
+  const updateEq = vi.fn(() => ({ select: updateSelect }));
   const update = vi.fn(() => ({ eq: updateEq }));
 
   const deleteEq = vi.fn(() => Promise.resolve(deleteResult));
@@ -95,6 +102,8 @@ function makeClient(opts?: {
     insert,
     update,
     updateEq,
+    updateSelect,
+    updateMaybeSingle,
     del,
     deleteEq,
   };
@@ -150,7 +159,7 @@ afterEach(() => {
 });
 
 describe("createPlot", () => {
-  it("runs the ord max-lookup, inserts the snake_case row at ord = max+1, and refreshes /plots + /", async () => {
+  it("runs the ord max-lookup, inserts the snake_case row at ord = max+1, and refreshes /plots + /map", async () => {
     const m = makeClient(); // ord default [{ord:4}] → new ord 5
     getSupabaseMock.mockReturnValue(m.client);
 
@@ -173,7 +182,7 @@ describe("createPlot", () => {
     expect(row).not.toHaveProperty("harvested_kg");
 
     expect(revalidatePathMock).toHaveBeenCalledWith("/plots");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/map");
   });
 
   it("rejects a blank name app-side (errors.name) without an insert or revalidate", async () => {
@@ -233,7 +242,7 @@ describe("createPlot", () => {
 });
 
 describe("updatePlot", () => {
-  it("updates by id with the snake_case toRow, then refreshes /plots + /", async () => {
+  it("updates by id with the snake_case toRow, then refreshes /plots + /map", async () => {
     const m = makeClient();
     getSupabaseMock.mockReturnValue(m.client);
 
@@ -247,9 +256,28 @@ describe("updatePlot", () => {
     // the update is scoped to the id (and never sends ord/id in the payload)
     expect(m.updateEq).toHaveBeenCalledWith("id", "plot-1");
     expect(row).not.toHaveProperty("id");
+    // the chain reads back the matched row id to detect a ghost-id no-row match
+    expect(m.updateSelect).toHaveBeenCalledWith("id");
+    expect(m.updateMaybeSingle).toHaveBeenCalledTimes(1);
 
     expect(revalidatePathMock).toHaveBeenCalledWith("/plots");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/map");
+  });
+
+  it("rejects a ghost id that matched no row with {status:'error', message:'Plot not found.'} — no revalidate", async () => {
+    // update succeeds (no DB error) but maybeSingle returns no row.
+    const m = makeClient({ update: { data: null, error: null } });
+    getSupabaseMock.mockReturnValue(m.client);
+
+    const result = await updatePlot(IDLE, validForm({ id: "ghost-id" }));
+
+    expect(result).toEqual({ status: "error", message: "Plot not found." });
+    // the update was attempted (scoped to the ghost id) and read back
+    expect(m.update).toHaveBeenCalledTimes(1);
+    expect(m.updateEq).toHaveBeenCalledWith("id", "ghost-id");
+    expect(m.updateMaybeSingle).toHaveBeenCalledTimes(1);
+    // no silent success: nothing revalidated
+    expect(revalidatePathMock).not.toHaveBeenCalled();
   });
 
   it("rejects a missing id with {status:'error', message:'Missing plot id.'} — no update", async () => {
@@ -286,7 +314,7 @@ describe("updatePlot", () => {
 });
 
 describe("deletePlot", () => {
-  it("deletes by id, then refreshes /plots + /", async () => {
+  it("deletes by id, then refreshes /plots + /map", async () => {
     const m = makeClient();
     getSupabaseMock.mockReturnValue(m.client);
 
@@ -296,7 +324,7 @@ describe("deletePlot", () => {
     expect(m.del).toHaveBeenCalledTimes(1);
     expect(m.deleteEq).toHaveBeenCalledWith("id", "plot-1");
     expect(revalidatePathMock).toHaveBeenCalledWith("/plots");
-    expect(revalidatePathMock).toHaveBeenCalledWith("/");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/map");
   });
 
   it("rejects an empty id with {status:'error', message:'Missing plot id.'} — no delete", async () => {

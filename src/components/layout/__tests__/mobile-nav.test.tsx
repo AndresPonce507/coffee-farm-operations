@@ -23,7 +23,7 @@ describe("MobileNav (the < md slide-in drawer)", () => {
     expect(trigger).toHaveAttribute("aria-expanded", "true");
     // The drawer panel (role=dialog) is present once opened.
     expect(
-      screen.getByRole("dialog", { name: /main navigation/i }),
+      screen.getByRole("dialog", { name: /primary navigation/i }),
     ).toBeInTheDocument();
   });
 
@@ -61,7 +61,7 @@ describe("MobileNav (the < md slide-in drawer)", () => {
     // The overlay (role=dialog drawer) is NOT nested inside the shell …
     expect(shell.querySelector('[role="dialog"]')).toBeNull();
     // … it is portaled out onto <body>.
-    const drawer = screen.getByRole("dialog", { name: /main navigation/i });
+    const drawer = screen.getByRole("dialog", { name: /primary navigation/i });
     // Walk up to the fixed overlay wrapper that the portal mounts on body.
     let node: HTMLElement | null = drawer;
     while (node && node.parentElement !== document.body) {

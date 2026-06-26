@@ -20,13 +20,20 @@ type SubmitFn = NonNullable<WeighCaptureDeps["submit"]>;
 type SubmitArg = Parameters<SubmitFn>[0];
 
 /** A deterministic deps bundle: a stub submit that records the command. */
-function depsWith(submitOutcome: "queued" | "rejected" = "queued") {
+function depsWith(
+  submitOutcome: "queued" | "rejected" = "queued",
+  lotCode?: string,
+) {
   const submit = vi.fn<SubmitFn>(async () => ({
     outcome: submitOutcome,
     message:
       submitOutcome === "rejected"
         ? "worker is not an active crew member"
         : undefined,
+    // An online send resolves the bound lot code; the offline-queued path leaves it
+    // undefined (the lot is minted server-side on drain). slice-01 threads it into
+    // the RippleProof panel so the capture's downstream consumers become clickable.
+    lotCode: submitOutcome === "rejected" ? undefined : lotCode,
   }));
   let n = 0;
   const deps: WeighCaptureDeps = {
@@ -85,6 +92,42 @@ describe("WeighCapture", () => {
     expect(screen.getByText("37.0")).toBeInTheDocument();
   });
 
+  it("threads the bound lot code into the RippleProof panel after a successful capture (Dashboard + /lots/<code>)", async () => {
+    // an online send that resolves a bound lot code → the proof panel links it.
+    const { deps } = depsWith("queued", "JC-712");
+    render(<WeighCapture pickers={PICKERS} plots={PLOTS} farmKgToday={100} deps={deps} />);
+
+    fillReady();
+    fireEvent.click(screen.getByRole("button", { name: /Capture weigh-in/i }));
+
+    // The reactive proof panel appears, naming ≥2 consumers, each a real link.
+    await waitFor(() =>
+      expect(screen.getByText(/showed up in/i)).toBeInTheDocument(),
+    );
+    const dash = screen.getByRole("link", { name: /Dashboard|today/i });
+    expect(dash).toHaveAttribute("href", "/");
+    const lot = screen.getByRole("link", { name: /JC-712/ });
+    expect(lot).toHaveAttribute("href", "/lots/JC-712");
+    // the captured Δ (12 kg) rides along on the panel.
+    expect(screen.getAllByText(/\+12\.0\s*kg/).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("degrades the proof panel offline (queued, no lot code yet) to the live /harvests tab", async () => {
+    // an offline-queued capture: the lot code is unknown until drain → the panel
+    // links the real downstream consumer (/harvests), never a bare /lots 404.
+    const { deps } = depsWith("queued"); // no lotCode
+    render(<WeighCapture pickers={PICKERS} plots={PLOTS} farmKgToday={100} deps={deps} />);
+
+    fillReady();
+    fireEvent.click(screen.getByRole("button", { name: /Capture weigh-in/i }));
+
+    await waitFor(() =>
+      expect(screen.getByText(/Your lot/i)).toBeInTheDocument(),
+    );
+    const lots = screen.getByRole("link", { name: /Your lot/i });
+    expect(lots).toHaveAttribute("href", "/harvests");
+  });
+
   it("surfaces a business rejection (the active-crew gate) without losing the entry", async () => {
     const { deps } = depsWith("rejected");
     render(<WeighCapture pickers={PICKERS} plots={PLOTS} farmKgToday={100} deps={deps} />);
@@ -138,9 +181,33 @@ describe("WeighCapture", () => {
 
     // The picker is told why the plot didn't auto-change — no silent failure.
     await waitFor(() =>
-      expect(screen.getByRole("alert")).toHaveTextContent(/GPS|parcela|plot/i),
+      expect(screen.getByRole("alert")).toHaveTextContent(/GPS|plot/i),
     );
     // …and the button is usable again (not stuck busy).
     expect(gps).toBeEnabled();
+  });
+
+  it("clears a stale GPS error after a successful retry (no contradictory UI)", async () => {
+    const { deps } = depsWith();
+    // First attempt fails (permission denied / timeout), the retry succeeds.
+    deps.getPosition = vi
+      .fn<NonNullable<WeighCaptureDeps["getPosition"]>>()
+      .mockResolvedValueOnce(null)
+      .mockResolvedValue({ lat: 8.777835, lng: -82.633982 });
+    render(<WeighCapture pickers={PICKERS} plots={PLOTS} farmKgToday={100} deps={deps} />);
+
+    const gps = screen.getByRole("button", { name: /GPS/i });
+
+    // First tap fails → the calm inline error surfaces.
+    fireEvent.click(gps);
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent(/GPS|plot/i),
+    );
+
+    // Second tap succeeds → the stale error must be gone (not contradicting success).
+    await waitFor(() => expect(gps).toBeEnabled());
+    fireEvent.click(gps);
+    await waitFor(() => expect(screen.getByText("GPS set")).toBeInTheDocument());
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

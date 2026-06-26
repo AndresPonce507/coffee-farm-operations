@@ -1,6 +1,8 @@
 import { CheckCircle2, Send, Sparkles, Users } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { EntityLink } from "@/components/ui/entity-link";
 import { Tile } from "@/components/ui/tile";
 import { getDispatchToday } from "@/lib/db/dispatch";
 import { getCrewRoster } from "@/lib/db/people";
@@ -77,6 +79,7 @@ interface CrewColumn {
 }
 
 export async function DispatchBoard() {
+  const t = await getTranslations("dispatch");
   const [cards, roster] = await Promise.all([getDispatchToday(), getCrewRoster()]);
 
   // distinct crews from the roster, each with its (most common) language set so the
@@ -133,9 +136,9 @@ export async function DispatchBoard() {
           <div className="stagger grid grid-cols-1 divide-y divide-white/50 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
             <div data-testid="dispatch-tile-crews">
               <Tile
-                label="Crews"
+                label={t("board.tiles.crewsLabel")}
                 value={num(columns.length)}
-                sub="to dispatch this morning"
+                sub={t("board.tiles.crewsSub")}
                 accent="forest"
                 icon={Users}
                 className="glass-hover"
@@ -143,9 +146,9 @@ export async function DispatchBoard() {
             </div>
             <div data-testid="dispatch-tile-drafted">
               <Tile
-                label="Drafted"
+                label={t("board.tiles.draftedLabel")}
                 value={num(draftedCount)}
-                sub="ready to share"
+                sub={t("board.tiles.draftedSub")}
                 accent="honey"
                 icon={Sparkles}
                 className="glass-hover"
@@ -153,9 +156,9 @@ export async function DispatchBoard() {
             </div>
             <div data-testid="dispatch-tile-shared">
               <Tile
-                label="Shared"
+                label={t("board.tiles.sharedLabel")}
                 value={num(sentCount)}
-                sub="out to the crew leads"
+                sub={t("board.tiles.sharedSub")}
                 accent="coffee"
                 icon={Send}
                 className="glass-hover"
@@ -163,9 +166,9 @@ export async function DispatchBoard() {
             </div>
             <div data-testid="dispatch-tile-acknowledged">
               <Tile
-                label="Acknowledged"
+                label={t("board.tiles.acknowledgedLabel")}
                 value={num(acknowledgedCount)}
-                sub="crew lead confirmed"
+                sub={t("board.tiles.acknowledgedSub")}
                 accent="forest"
                 icon={CheckCircle2}
                 className="glass-hover"
@@ -179,7 +182,7 @@ export async function DispatchBoard() {
       {columns.length === 0 ? (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-fg">
-            No crews on the roster yet — enroll a crew on the Crew page to dispatch.
+            {t("board.noCrews")}
           </CardContent>
         </Card>
       ) : (
@@ -187,13 +190,18 @@ export async function DispatchBoard() {
           {columns.map((col) => (
             <section
               key={col.crewId}
-              aria-label={`Dispatch — ${col.crewName}`}
+              aria-label={t("board.crewSectionLabel", { crewName: col.crewName })}
               className="space-y-3"
             >
               <header className="flex items-center justify-between gap-3">
-                <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-muted-fg">
+                <EntityLink
+                  kind="crew"
+                  id={col.crewId}
+                  name={col.crewName}
+                  className="font-display text-sm font-semibold uppercase tracking-wide text-muted-fg underline-offset-2 outline-none transition-colors hover:text-forest hover:underline focus-visible:text-forest focus-visible:underline"
+                >
                   {col.crewName}
-                </h2>
+                </EntityLink>
                 <GenerateDispatchButton
                   crewId={col.crewId}
                   crewName={col.crewName}
@@ -207,7 +215,13 @@ export async function DispatchBoard() {
 
               {col.card ? (
                 <div className="space-y-3">
-                  <DispatchCardPreview card={col.card} languages={col.languages} />
+                  <EntityLink
+                    kind="dispatch"
+                    id={String(col.card.id)}
+                    className="block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-forest/60"
+                  >
+                    <DispatchCardPreview card={col.card} languages={col.languages} />
+                  </EntityLink>
                   <div className="flex justify-end">
                     <DispatchShareButton
                       card={col.card}
@@ -219,8 +233,7 @@ export async function DispatchBoard() {
               ) : (
                 <Card>
                   <CardContent className="py-8 text-center text-sm text-muted-fg">
-                    No dispatch yet — generate the ripeness-aware plan for{" "}
-                    {col.crewName}.
+                    {t("board.noDispatch", { crewName: col.crewName })}
                   </CardContent>
                 </Card>
               )}

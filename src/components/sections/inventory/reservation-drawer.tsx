@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CheckCircle2, Lock, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { GreenLotAtp } from "@/lib/types";
 import {
@@ -36,7 +37,12 @@ const FIELD =
   "h-10 w-full rounded-xl border border-line bg-white/70 px-3 text-sm text-ink outline-none transition focus:border-forest-300 focus:ring-2 focus:ring-forest-100";
 const LABEL = "text-xs font-medium text-muted-fg";
 
+/** Elements that can hold keyboard focus inside the drawer, in DOM order. */
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function ReservationDrawer({ lot }: { lot: GreenLotAtp }) {
+  const t = useTranslations("inventory");
   const [open, setOpen] = useState(false);
   const soldOut = lot.atp <= 0;
 
@@ -50,17 +56,17 @@ export function ReservationDrawer({ lot }: { lot: GreenLotAtp }) {
         onClick={() => setOpen(true)}
         aria-label={
           soldOut
-            ? `${lot.greenLotCode} sold out`
-            : `Reserve ${lot.greenLotCode}`
+            ? t("reservation.soldOutLabel", { code: lot.greenLotCode })
+            : t("reservation.reserveLabel", { code: lot.greenLotCode })
         }
       >
         {soldOut ? (
           <>
             <Lock className="h-3.5 w-3.5" />
-            Sold out
+            {t("reservation.soldOut")}
           </>
         ) : (
-          "Reserve"
+          t("reservation.reserve")
         )}
       </Button>
 
@@ -76,11 +82,15 @@ function ReservationPanel({
   lot: GreenLotAtp;
   onClose: () => void;
 }) {
+  const t = useTranslations("inventory");
   const [state, formAction, pending] = useActionState<
     InventoryActionState,
     FormData
   >(reserveGreenLotAction, INVENTORY_IDLE);
 
+  const panelRef = useRef<HTMLDivElement>(null);
+  // The element focused right before the drawer opened, restored on close.
+  const restoreRef = useRef<HTMLElement | null>(null);
   // Portal target only exists on the client. Gate the portal on mount so SSR
   // renders nothing (this drawer is only ever opened by a client interaction).
   const [mounted, setMounted] = useState(false);
@@ -99,6 +109,29 @@ function ReservationPanel({
     };
   }, [onClose]);
 
+  // Focus management (WCAG 2.4.3 / 2.1.2) — mirrors the shared <Dialog> primitive.
+  // On open: remember the previously-focused element, then move focus to the
+  // first focusable inside the panel (or the panel itself). On close/unmount:
+  // restore focus to that remembered element so keyboard users land back on the
+  // Reserve trigger instead of resetting to <body>. `mounted` is a dep because the
+  // panel only exists once the portal has mounted on the client.
+  useEffect(() => {
+    restoreRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+
+    const panel = panelRef.current;
+    if (panel) {
+      const first = panel.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+      (first ?? panel).focus();
+    }
+
+    return () => {
+      restoreRef.current?.focus?.();
+    };
+  }, [mounted]);
+
   // A successful hold closes the drawer (the page revalidates server-side).
   useEffect(() => {
     if (state.status === "success") {
@@ -116,6 +149,34 @@ function ReservationPanel({
 
   if (!mounted) return null;
 
+  // Keep Tab/Shift+Tab inside the drawer by wrapping at the edges (focus trap).
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== "Tab") return;
+    const panel = panelRef.current;
+    if (!panel) return;
+    const focusables = Array.from(
+      panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+    );
+    if (focusables.length === 0) {
+      // Nothing focusable but the panel — keep focus pinned to it.
+      e.preventDefault();
+      panel.focus();
+      return;
+    }
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const activeEl = document.activeElement;
+    if (e.shiftKey) {
+      if (activeEl === first || !panel.contains(activeEl)) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else if (activeEl === last || !panel.contains(activeEl)) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+
   // Portal to <body> so the drawer escapes every page stacking context. The page
   // shell + cards carry lingering `transform`s (from `animate-rise`, whose end
   // state translateY(0) is still a transform → still a stacking context), which
@@ -126,23 +187,28 @@ function ReservationPanel({
       className="fixed inset-0 z-50 flex justify-end"
       role="dialog"
       aria-modal="true"
-      aria-label={`Reserve green lot ${lot.greenLotCode}`}
+      aria-label={t("reservation.dialogLabel", { code: lot.greenLotCode })}
+      onKeyDown={onKeyDown}
     >
       {/* Click-away scrim. */}
       <button
         type="button"
-        aria-label="Close"
+        aria-label={t("reservation.closeScrim")}
         tabIndex={-1}
         onClick={onClose}
         className="absolute inset-0 cursor-default bg-forest/40 backdrop-blur-sm"
       />
 
       {/* The drawer panel — slides in from the right (GPU transform). */}
-      <div className="animate-rise relative z-10 flex h-full w-full max-w-sm flex-col border-l border-white/60 bg-white/85 p-6 shadow-[0_24px_64px_-20px_rgba(0,41,29,0.45)] backdrop-blur-xl">
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        className="animate-rise relative z-10 flex h-full w-full max-w-sm flex-col border-l border-white/60 bg-white/85 p-6 shadow-[0_24px_64px_-20px_rgba(0,41,29,0.45)] backdrop-blur-xl outline-none"
+      >
         <div className="mb-1 flex items-start justify-between">
           <div>
             <h2 className="font-display text-lg font-semibold text-ink">
-              Reserve green lot
+              {t("reservation.title")}
             </h2>
             <p className="mt-0.5 font-mono text-sm text-forest-700">
               {lot.greenLotCode}
@@ -151,8 +217,8 @@ function ReservationPanel({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close drawer"
-            className="grid h-8 w-8 place-items-center rounded-lg text-muted-fg transition hover:bg-white/60 hover:text-ink"
+            aria-label={t("reservation.closeDrawer")}
+            className="grid h-8 w-8 place-items-center rounded-lg text-muted-fg transition hover:bg-white/60 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-100"
           >
             <X className="h-4 w-4" />
           </button>
@@ -162,14 +228,15 @@ function ReservationPanel({
             ceiling. The DB is the real ceiling; this is the human-readable one. */}
         <div className="mt-4 rounded-xl border border-white/60 bg-white/55 px-4 py-3">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-fg">
-            Available to promise
+            {t("reservation.availableToPromise")}
           </p>
           <p className="mt-0.5 font-display text-xl font-semibold tabular-nums text-honey-700">
             {kg(lot.atp)}
           </p>
           <p className="mt-0.5 text-xs text-muted-fg">
-            {kg(lot.currentKg)} on hand · {kg(lot.reservedKg + lot.shippedKg)}{" "}
-            committed · {lot.location}
+            {kg(lot.currentKg)} {t("reservation.onHand")} ·{" "}
+            {kg(lot.reservedKg + lot.shippedKg)} {t("reservation.committed")} ·{" "}
+            {lot.location}
           </p>
         </div>
 
@@ -178,12 +245,12 @@ function ReservationPanel({
 
           <div className="space-y-1">
             <label className={LABEL} htmlFor="reserve-buyer">
-              Buyer
+              {t("reservation.buyerLabel")}
             </label>
             <input
               id="reserve-buyer"
               name="buyer"
-              placeholder="e.g. Onyx Coffee Lab"
+              placeholder={t("reservation.buyerPlaceholder")}
               className={FIELD}
             />
             {fieldError("buyer") && (
@@ -193,7 +260,7 @@ function ReservationPanel({
 
           <div className="space-y-1">
             <label className={LABEL} htmlFor="reserve-kg">
-              Kilograms to reserve
+              {t("reservation.kgLabel")}
             </label>
             <input
               id="reserve-kg"
@@ -202,7 +269,7 @@ function ReservationPanel({
               min="0"
               max={lot.atp}
               step="any"
-              placeholder={`up to ${lot.atp}`}
+              placeholder={t("reservation.kgPlaceholder", { max: lot.atp })}
               className={FIELD}
             />
             {fieldError("kg") && (
@@ -212,10 +279,10 @@ function ReservationPanel({
 
           <div className="mt-auto flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={onClose}>
-              Cancel
+              {t("reservation.cancel")}
             </Button>
             <Button type="submit" disabled={pending}>
-              {pending ? "Holding…" : "Hold reservation"}
+              {pending ? t("reservation.holding") : t("reservation.submit")}
             </Button>
           </div>
         </form>
@@ -227,16 +294,17 @@ function ReservationPanel({
           aria-live="assertive"
           className="pointer-events-none absolute inset-x-4 bottom-4"
         >
+          {/* No inner role=status: the always-present outer aria-live region announces
+              the inserted toast (nesting two live regions double-announces). */}
           {state.status === "success" && (
             <div
-              role="status"
               className={cn(
                 "flex items-center gap-2 rounded-xl border border-forest-300 bg-forest-100/95 px-4 py-3",
                 "text-sm font-medium text-forest-700 shadow-[0_12px_32px_-12px_rgba(0,41,29,0.45)] backdrop-blur-md",
               )}
             >
               <CheckCircle2 className="h-4 w-4 shrink-0 text-forest" />
-              {state.message ?? "Reservation held."}
+              {state.message ?? t("reservation.heldFallback")}
             </div>
           )}
 

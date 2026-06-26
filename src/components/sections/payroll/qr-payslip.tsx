@@ -1,6 +1,8 @@
 import { ArrowDownToLine, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card } from "@/components/ui/card";
+import { EntityLink } from "@/components/ui/entity-link";
 import type { Payslip } from "@/lib/db/payroll";
 import { payslipQrSvg } from "@/lib/payroll/qr";
 import { cn, longDate } from "@/lib/utils";
@@ -90,6 +92,7 @@ function LineItem({
  * payslip). Pure presentation: the server wrapper resolves getPayslip() upstream.
  */
 export function QrPayslip({ payslip, deepLink }: QrPayslipProps) {
+  const t = useTranslations("payroll");
   const showNg = speaksNgabere(payslip.languages);
   const madeWhole = payslip.makeWholeUsd > 0;
   const headline = payslip.preferredName?.trim() || payslip.workerName;
@@ -114,7 +117,9 @@ export function QrPayslip({ payslip, deepLink }: QrPayslipProps) {
             {bilingual(PAYSLIP_TERMS.payslip, showNg)}
           </p>
           <h2 className="mt-1 truncate font-display text-lg font-semibold text-ink">
-            {headline}
+            <EntityLink kind="worker" id={payslip.workerId} name={headline}>
+              {headline}
+            </EntityLink>
           </h2>
           {hasDistinctLegalName ? (
             <p className="truncate text-xs text-muted-fg">
@@ -204,7 +209,7 @@ export function QrPayslip({ payslip, deepLink }: QrPayslipProps) {
           <div
             data-testid="payslip-qr"
             data-deep-link={link}
-            aria-label="Payslip QR code"
+            aria-label={t("payslip.qrAriaLabel")}
             className="grid aspect-square w-32 place-items-center overflow-hidden rounded-xl bg-card p-2 ring-1 ring-line"
             // A real, scannable, $0 QR encoding the deep-link — rendered from the
             // dependency-free encoder in src/lib/payroll/qr.ts as inline SVG.

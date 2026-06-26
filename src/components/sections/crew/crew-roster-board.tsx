@@ -1,4 +1,5 @@
 import { Languages, ShieldCheck, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EntityLink } from "@/components/ui/entity-link";
 import type { CrewRosterMember, WorkerCert } from "@/lib/db/people";
 import { cn } from "@/lib/utils";
 
@@ -40,46 +42,57 @@ export interface CrewRosterBoardProps {
   className?: string;
 }
 
+type Translator = ReturnType<typeof useTranslations>;
+
 /** Attendance → badge tone + a colour-independent label. */
-function attendanceMeta(attendance: string): {
+function attendanceMeta(
+  attendance: string,
+  t: Translator,
+): {
   tone: "ok" | "warn" | "neutral";
   short: string;
 } {
   switch (attendance) {
     case "present":
-      return { tone: "ok", short: "Present" };
+      return { tone: "ok", short: t("rosterBoard.attendancePresent") };
     case "rest-day":
-      return { tone: "warn", short: "Rest day" };
+      return { tone: "warn", short: t("rosterBoard.attendanceRestDay") };
     default:
-      return { tone: "neutral", short: "Absent" };
+      return { tone: "neutral", short: t("rosterBoard.attendanceAbsent") };
   }
 }
 
 /** Stable, deterministic grouping of members into crew columns (insertion order). */
 function groupByCrew(
   members: CrewRosterMember[],
-): { crewName: string; members: CrewRosterMember[] }[] {
+): { crewName: string; crewId: string | null; members: CrewRosterMember[] }[] {
   const order: string[] = [];
-  const byCrew = new Map<string, CrewRosterMember[]>();
+  const byCrew = new Map<string, { crewId: string | null; members: CrewRosterMember[] }>();
   for (const m of members) {
     if (!byCrew.has(m.crewName)) {
-      byCrew.set(m.crewName, []);
+      byCrew.set(m.crewName, { crewId: m.crewId ?? null, members: [] });
       order.push(m.crewName);
     }
-    byCrew.get(m.crewName)!.push(m);
+    byCrew.get(m.crewName)!.members.push(m);
   }
-  return order.map((crewName) => ({ crewName, members: byCrew.get(crewName)! }));
+  return order.map((crewName) => ({
+    crewName,
+    crewId: byCrew.get(crewName)!.crewId,
+    members: byCrew.get(crewName)!.members,
+  }));
 }
 
 /** One member's glass worker-card — the liftable, board-ready unit. */
 function WorkerCard({
   member,
   certs,
+  t,
 }: {
   member: CrewRosterMember;
   certs: WorkerCert[];
+  t: Translator;
 }) {
-  const att = attendanceMeta(member.attendance);
+  const att = attendanceMeta(member.attendance, t);
   const ngabere = speaksNgabere(member.languages);
   const attendanceText = bilingual(
     ATTENDANCE_LABELS[member.attendance],
@@ -100,17 +113,19 @@ function WorkerCard({
       )}
     >
       <div className="flex items-start gap-3">
-        <Avatar
-          name={member.name}
-          size="md"
-          className={member.attendance === "present" ? "" : "opacity-50"}
-        />
-        <div className="min-w-0 flex-1">
-          <h4 className="truncate font-display text-sm font-semibold text-ink">
-            {member.preferredName?.trim() || member.name}
-          </h4>
-          <p className="mt-0.5 truncate text-xs text-muted-fg">{member.role}</p>
-        </div>
+        <EntityLink kind="worker" id={member.workerId} name={member.preferredName?.trim() || member.name} className="flex min-w-0 flex-1 items-start gap-3">
+          <Avatar
+            name={member.name}
+            size="md"
+            className={member.attendance === "present" ? "" : "opacity-50"}
+          />
+          <div className="min-w-0 flex-1">
+            <h4 className="truncate font-display text-sm font-semibold text-ink">
+              {member.preferredName?.trim() || member.name}
+            </h4>
+            <p className="mt-0.5 truncate text-xs text-muted-fg">{member.role}</p>
+          </div>
+        </EntityLink>
         {/* Attendance dot — colour AND a text label so state survives mono. */}
         <Badge tone={att.tone} dot className="shrink-0 capitalize">
           {attendanceText}
@@ -143,7 +158,9 @@ function WorkerCard({
         {validCerts > 0 ? (
           <Badge tone="forest" className="gap-1">
             <ShieldCheck className="h-3 w-3" aria-hidden="true" />
-            {validCerts} {validCerts === 1 ? "cert" : "certs"}
+            {validCerts === 1
+              ? t("rosterBoard.certCountOne", { count: validCerts })
+              : t("rosterBoard.certCountOther", { count: validCerts })}
           </Badge>
         ) : null}
       </div>
@@ -156,6 +173,7 @@ export function CrewRosterBoard({
   certsByWorker = {},
   className,
 }: CrewRosterBoardProps) {
+  const t = useTranslations("crew");
   const columns = groupByCrew(members);
   const totalPresent = members.filter((m) => m.attendance === "present").length;
 
@@ -163,13 +181,18 @@ export function CrewRosterBoard({
     <Card className={cn("animate-rise overflow-hidden", className)}>
       <CardHeader>
         <div>
-          <CardTitle>Crew roster</CardTitle>
+          <CardTitle>{t("rosterBoard.title")}</CardTitle>
           <CardDescription>
-            Field teams today · {totalPresent} of {members.length} present
+            {t("rosterBoard.description", {
+              present: totalPresent,
+              total: members.length,
+            })}
           </CardDescription>
         </div>
         <Badge tone="forest" dot>
-          {columns.length} {columns.length === 1 ? "crew" : "crews"}
+          {columns.length === 1
+            ? t("rosterBoard.crewCountOne", { count: columns.length })
+            : t("rosterBoard.crewCountOther", { count: columns.length })}
         </Badge>
       </CardHeader>
 
@@ -177,8 +200,8 @@ export function CrewRosterBoard({
         {columns.length === 0 ? (
           <EmptyState
             icon={Users}
-            title="No crews on the roster"
-            description="Once workers are assigned to a crew they appear here, grouped by team."
+            title={t("rosterBoard.emptyTitle")}
+            description={t("rosterBoard.emptyDescription")}
           />
         ) : (
           <div
@@ -194,15 +217,23 @@ export function CrewRosterBoard({
                 <section
                   key={column.crewName}
                   role="listitem"
-                  aria-label={`${column.crewName} crew`}
+                  aria-label={t("rosterBoard.crewLabel", { crew: column.crewName })}
                   className="glass-card flex flex-col gap-3 rounded-2xl p-3"
                 >
                   <header className="flex items-center justify-between gap-2 px-1">
-                    <h3 className="font-display text-sm font-semibold text-ink">
-                      {column.crewName}
-                    </h3>
+                    {column.crewId ? (
+                      <EntityLink kind="crew" id={column.crewId} name={column.crewName}>
+                        <h3 className="font-display text-sm font-semibold text-ink">
+                          {column.crewName}
+                        </h3>
+                      </EntityLink>
+                    ) : (
+                      <h3 className="font-display text-sm font-semibold text-ink">
+                        {column.crewName}
+                      </h3>
+                    )}
                     <Badge tone={present === total ? "ok" : "warn"} dot>
-                      {present}/{total} present
+                      {t("rosterBoard.presentOfTotal", { present, total })}
                     </Badge>
                   </header>
 
@@ -212,6 +243,7 @@ export function CrewRosterBoard({
                         key={member.workerId}
                         member={member}
                         certs={certsByWorker[member.workerId] ?? []}
+                        t={t}
                       />
                     ))}
                   </div>

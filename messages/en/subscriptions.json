@@ -1,0 +1,105 @@
+{
+  "page": {
+    "title": "Reserve Club",
+    "subtitle": "Recurring boxes, the green-lot allocation behind each cycle, and the dunning queue."
+  },
+  "summary": {
+    "active": "Active",
+    "activeSub": "boxes shipping",
+    "paused": "Paused",
+    "pausedSub": "on hold",
+    "pastDue": "Past due",
+    "pastDueSub": "payment failed",
+    "allocatedKg": "Allocated",
+    "allocatedKgSub": "kg claimed against lots"
+  },
+  "status": {
+    "active": "Active",
+    "paused": "Paused",
+    "past_due": "Past due",
+    "cancelled": "Cancelled"
+  },
+  "cadence": {
+    "monthly": "Monthly",
+    "bi-monthly": "Every 2 months",
+    "quarterly": "Quarterly"
+  },
+  "card": {
+    "member": "Reserve Club member",
+    "customerFallback": "Unnamed member",
+    "cadenceLabel": "Cadence",
+    "allocated": "Allocated",
+    "allocatedValue": "{kg} kg",
+    "dunning": "Dunning",
+    "dunningValue": "{count}",
+    "since": "Member since {date}"
+  },
+  "controls": {
+    "manage": "Manage",
+    "pause": "Pause",
+    "resume": "Resume",
+    "skip": "Skip cycle",
+    "cancel": "Cancel",
+    "allocate": "Allocate cycle",
+    "dunning": "Log dunning",
+    "busy": "Working",
+    "allocateTitle": "Allocate this cycle",
+    "allocateBody": "Claim green coffee for {cust}'s next box. This reserves kg against the lot, so a scarce micro-lot can never be promised twice.",
+    "lotLabel": "Green lot",
+    "lotPlaceholder": "Pick a lot",
+    "lotOption": "{code} · {atp} kg free",
+    "kgLabel": "Kilograms",
+    "cycleLabel": "Cycle label",
+    "cyclePlaceholder": "e.g. 2026-Q1",
+    "atpBefore": "Free now",
+    "atpAfter": "Free after",
+    "atpUnit": "kg available to promise",
+    "irreversible": "This claims green inventory. Correct it later with a superseding entry, not a delete.",
+    "allocateCancel": "Cancel",
+    "allocateConfirm": "Allocate",
+    "allocating": "Allocating",
+    "allocated": "Allocated",
+    "skipTitle": "Skip a cycle",
+    "skipBody": "Skip one delivery for {cust}. The subscription stays active.",
+    "skipCycleLabel": "Cycle label",
+    "skipCancel": "Cancel",
+    "skipConfirm": "Skip",
+    "skipping": "Skipping",
+    "skipped": "Skipped",
+    "cancelTitle": "Cancel this subscription",
+    "cancelBody": "End {cust}'s Reserve Club box. Existing allocations stay on the books.",
+    "cancelKeep": "Keep it",
+    "cancelConfirm": "Cancel subscription",
+    "cancelling": "Cancelling",
+    "dunningTitle": "Log a dunning step",
+    "dunningBody": "Record a failed-payment follow-up for {cust}. A final step marks the subscription past due.",
+    "stageLabel": "Stage",
+    "stageSoft": "First notice",
+    "stageReminder": "Reminder",
+    "stageFinal": "Final notice",
+    "dunningCancel": "Cancel",
+    "dunningConfirm": "Log it",
+    "dunningSaving": "Saving",
+    "dunningSaved": "Logged"
+  },
+  "dunningQueue": {
+    "title": "Dunning queue",
+    "description": "Subscriptions with a failed payment that need a follow-up.",
+    "empty": "No payments need chasing right now."
+  },
+  "empty": {
+    "title": "No subscriptions yet",
+    "description": "Reserve Club boxes show up here with their allocation board and dunning queue."
+  },
+  "loading": {
+    "board": "Loading subscriptions"
+  },
+  "errors": {
+    "generic": "Could not save that change. Try again.",
+    "subRequired": "Pick a subscription first.",
+    "kgPositive": "Kilograms must be greater than zero.",
+    "lotRequired": "Choose a green lot to allocate.",
+    "cycleRequired": "Enter a cycle label.",
+    "stageRequired": "Choose a dunning stage."
+  }
+}

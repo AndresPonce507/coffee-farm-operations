@@ -55,6 +55,35 @@ describe("DryingBoard (smoke)", () => {
     expect(screen.getByText("African Bed 1")).toBeInTheDocument();
   });
 
+  it("links each lot's code to its /lots/[code] dossier (entity-bearing row → dossier)", () => {
+    render(<DryingBoard lots={[restingLot, readyLot]} />);
+    // The visible lot-code text IS the accessible name (WCAG 2.5.3 Label-in-Name):
+    // no `name` prop is passed, so the link's accessible name is its visible "JC-571"
+    // text, not an "Open lot …" slug-label that would mask it. Match by href to
+    // disambiguate from the "Advance lot … to milling" links that also name the code.
+    const link = screen.getByRole("link", { name: "JC-571" });
+    expect(link).toHaveAttribute("href", "/lots/JC-571");
+    expect(link).toHaveTextContent("JC-571");
+    // The other lot's code is also a dossier link.
+    expect(
+      screen.getByRole("link", { name: "JC-572" }),
+    ).toHaveAttribute("href", "/lots/JC-572");
+  });
+
+  it("does NOT override the EntityLink focus ring (MED-10: no rounded-sm / per-call focus-visible:ring on the lot link)", () => {
+    render(<DryingBoard lots={[restingLot]} />);
+    const link = screen.getByRole("link", { name: "JC-571" });
+    // The centralized FOCUS_RING (rounded-xl + ring) is the SOLE radius/ring source.
+    // The call site must NOT re-declare its own rounded-sm — which would fight the
+    // primitive's rounded-xl and produce two conflicting radius utilities.
+    expect(link.className).not.toMatch(/rounded-sm/);
+    // Exactly one radius utility remains — the primitive's rounded-xl.
+    expect(link.className.match(/rounded-\S+/g)).toEqual(["rounded-xl"]);
+    // The primitive's ring is present and is the only focus-visible:ring source.
+    expect(link.className).toMatch(/focus-visible:ring-2/);
+    expect(link.className.match(/focus-visible:ring-forest\/40/g)).toHaveLength(1);
+  });
+
   it("DISABLES the advance-to-mill button on a blocked lot with the gate reason in the title", () => {
     render(<DryingBoard lots={[restingLot]} />);
     const card = screen.getByTestId("drying-lot-card");
@@ -70,8 +99,9 @@ describe("DryingBoard (smoke)", () => {
     // Processing surface where AdvanceStageControl performs the real advance —
     // never an enabled primary CTA with no handler. It carries a per-lot
     // accessible name so multiple advance links on the board are distinguishable.
+    // WCAG 2.5.3 Label in Name: the accessible name contains the visible "Advance to mill".
     const advance = within(card).getByRole("link", {
-      name: /Advance lot JC-572 to milling/i,
+      name: /Advance to mill — lot JC-572/i,
     });
     expect(advance).toHaveAttribute("href", "/processing");
     expect(advance).toHaveTextContent(/Advance to mill/i);
@@ -79,6 +109,21 @@ describe("DryingBoard (smoke)", () => {
     expect(
       within(card).queryByRole("button", { name: /Advance to mill/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("threads the config-derived reposo band down into each lot's MoistureCurve (not the hardcoded 10.5–11.5 default)", () => {
+    // CRIT-5: the band edges MUST flow from farm_season_config (via getReposoBand),
+    // through DryingBoard's bandMin/bandMax, into the curve — never the literal
+    // default. Use a window the family TUNED to (9.8–12.2) so a hardcoded default
+    // would visibly fail.
+    render(<DryingBoard lots={[restingLot]} bandMin={9.8} bandMax={12.2} />);
+    // The curve renders the band edges in its target-band chip and SVG aria-summary.
+    expect(screen.getByText(/target 9\.8–12\.2%/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: /target band 9\.8–12\.2%/ }),
+    ).toBeInTheDocument();
+    // And the hardcoded default window must NOT appear.
+    expect(screen.queryByText(/target 10\.5–11\.5%/)).not.toBeInTheDocument();
   });
 
   it("summarizes how many lots are clear vs resting in the header", () => {

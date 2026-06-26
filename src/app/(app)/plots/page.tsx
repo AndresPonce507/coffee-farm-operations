@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { PlotsSummary } from "@/components/sections/plots/plots-summary";
 import { PlotsExplorer } from "@/components/sections/plots/plots-explorer";
@@ -11,12 +13,13 @@ import { getPlots } from "@/lib/db/plots";
  * the header carries the live "New plot" action.
  */
 export default async function PlotsPage() {
+  const t = await getTranslations("plots");
   const plots = await getPlots();
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Plots"
-        subtitle="Growing lots across Janson’s farms in Volcán, Chiriquí"
+        title={t("page.title")}
+        subtitle={t("page.subtitle")}
       >
         <AddPlotButton />
       </PageHeader>

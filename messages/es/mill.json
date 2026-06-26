@@ -1,0 +1,82 @@
+{
+  "page": {
+    "title": "Molienda",
+    "subtitle": "La compuerta de listo para trillar y el esqueleto de la corrida. Un lote de pergamino no abre corrida hasta estar reposado y en especificación."
+  },
+  "summary": {
+    "stages": "Etapas del tren",
+    "stagesSub": "del trillo a la clasificadora óptica",
+    "cleared": "Listos para trillar",
+    "clearedSub": "reposados y en especificación",
+    "open": "Corridas abiertas",
+    "openSub": "trillando ahora",
+    "finalized": "Corridas finalizadas",
+    "finalizedSub": "rendimiento en verde anotado"
+  },
+  "chain": {
+    "title": "Tren de trilla",
+    "subtitle": "Cinco etapas, de pergamino a verde de exportación.",
+    "hours": "{hours} h de uso",
+    "calibrationDue": "Calibración para el {date}",
+    "calibrationOk": "Sin calibración pendiente",
+    "empty": "Aún no hay máquinas registradas."
+  },
+  "status": {
+    "finalized": "Finalizada",
+    "milling": "Trillando",
+    "ready": "Listo para trillar",
+    "blocked": "Compuerta cerrada"
+  },
+  "card": {
+    "reposo": "Reposo",
+    "reading": "Última lectura {moisture}% humedad, aw {aw}",
+    "noReading": "Aún sin lectura de especificación",
+    "passed": "En especificación",
+    "failed": "Fuera de especificación",
+    "run": "Corrida #{id}",
+    "kgIn": "{kg} kg de pergamino",
+    "outturn": "{out} kg verde, rendimiento {pct}",
+    "gateNote": "Registra una lectura en especificación (humedad 10.5-11.5%, aw bajo 0.60, reposado) para abrir una corrida."
+  },
+  "empty": {
+    "title": "No hay lotes de pergamino en el trillo",
+    "description": "Cuando un lote termina de secar y reposa como pergamino aparece aquí, listo para la compuerta de especificación."
+  },
+  "loading": {
+    "board": "Cargando el tablero de molienda"
+  },
+  "gate": {
+    "open": "Abrir corrida de trilla",
+    "title": "Compuerta de reposo / especificación",
+    "noLots": "No hay lotes de pergamino esperando trillo en este momento.",
+    "lotLabel": "Lote de pergamino",
+    "reposoLabel": "Despeje de reposo",
+    "reposoReady": "Reposado, listo para trillar",
+    "reposoNotReady": "Aún sin despeje de reposo",
+    "moistureLabel": "Humedad %",
+    "moistureHint": "En especificación de 10.5% a 11.5%.",
+    "awLabel": "Actividad de agua (aw)",
+    "awHint": "En especificación bajo 0.60.",
+    "previewPass": "Esta lectura pasa la compuerta.",
+    "previewFail": "Esta lectura todavía no pasa la compuerta.",
+    "previewReposo": "Bloqueado aguas arriba: el lote no tiene despeje de reposo.",
+    "record": "Registrar lectura",
+    "recording": "Registrando...",
+    "recorded": "Lectura registrada.",
+    "kgLabel": "Pergamino kg que entra",
+    "kgHint": "La masa de pergamino que entra al tren.",
+    "openRun": "Abrir corrida",
+    "opening": "Abriendo...",
+    "opened": "Corrida de trilla abierta.",
+    "another": "Trillar otro lote",
+    "cancel": "Cerrar",
+    "blockedNote": "La corrida queda cerrada hasta que una lectura pase la compuerta. La base de datos es el muro, no solo este formulario."
+  },
+  "errors": {
+    "lotRequired": "Elige un lote de pergamino.",
+    "moisturePositive": "Ingresa una lectura de humedad.",
+    "awPositive": "Ingresa una lectura de actividad de agua.",
+    "kgPositive": "Ingresa los kilos de pergamino.",
+    "generic": "No se pudo guardar. Inténtalo de nuevo."
+  }
+}

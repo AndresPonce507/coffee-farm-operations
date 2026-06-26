@@ -1,0 +1,50 @@
+{
+  "page": {
+    "title": "Pedidos",
+    "subtitle": "Cada pedido directo, su total calculado en el servidor y el costo mínimo del lote que despacha."
+  },
+  "summary": {
+    "orders": "Pedidos",
+    "ordersSub": "{count} en el libro",
+    "paid": "Pagados",
+    "paidSub": "cobrados por Stripe",
+    "revenue": "Cobrado bruto",
+    "revenueSub": "total de pedidos pagados",
+    "pending": "Por cobrar",
+    "pendingSub": "aún sin liquidar"
+  },
+  "channel": {
+    "web": "Web",
+    "pos": "Tienda",
+    "wholesale": "Mayoreo"
+  },
+  "status": {
+    "pending": "Pendiente",
+    "paid": "Pagado",
+    "fulfilled": "Despachado",
+    "cancelled": "Cancelado",
+    "refunded": "Reembolsado"
+  },
+  "card": {
+    "order": "Pedido #{id}",
+    "noCustomer": "Compra de invitado",
+    "lines": "Líneas",
+    "linesValue": "{count}",
+    "subtotal": "Subtotal",
+    "tax": "ITBMS 7%",
+    "total": "Total",
+    "fiscalFolio": "Folio fiscal {cufe}",
+    "fiscalPending": "Sello fiscal pendiente",
+    "cogsTitle": "Costo mínimo por lote",
+    "cogsValue": "{price}/kg verde",
+    "cogsUnknown": "Costo aún sin registrar",
+    "qty": "{qty} unidades"
+  },
+  "empty": {
+    "title": "Todavía no hay pedidos",
+    "description": "Cuando un cliente paga, el pedido aparece aquí con el costo mínimo de cada lote."
+  },
+  "loading": {
+    "board": "Cargando pedidos"
+  }
+}

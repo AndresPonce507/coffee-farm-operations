@@ -1,0 +1,94 @@
+{
+  "page": {
+    "title": "Fermentation",
+    "subtitle": "Wet-mill fermentation — live curves, cut-point alerts, eco-mill water tracking"
+  },
+  "dossier": {
+    "title": "Lot {lotCode}",
+    "eyebrow": "Lot in fermentation",
+    "subtitle": "Per-lot quality cockpit — pH/temp/Brix curves, cut point, and water per kg",
+    "backLabel": "All fermentations",
+    "trackerTitle": "Fermentation tracker"
+  },
+  "board": {
+    "emptyTitle": "Nothing fermenting yet",
+    "emptyDescription": "Start a ferment on a milled-in lot to open the make-quality loop — live pH/temp/Brix curves and a cut-point alert before the window closes.",
+    "live": "Live",
+    "finished": "Finished",
+    "recipeApplied": " · recipe applied",
+    "noRecipe": " · no recipe",
+    "started": "Started {date}"
+  },
+  "cutpoint": {
+    "noRecipe": "No recipe applied — apply a recipe to project the cut point.",
+    "noReadings": "No readings — log a pH reading to track the cut.",
+    "hoursElapsed": "{hours}h elapsed",
+    "cutNowTitle": "Cut now — pH {latest} hit the target of {target}.",
+    "cutNowSub": "{hours} · the fermentation window is closing.",
+    "trackingTitle": "Tracking — pH {latest}, target {target}.",
+    "trackingSub": "{hours} · the cut alert fires when pH reaches the target band."
+  },
+  "curve": {
+    "empty": "No {label} readings yet",
+    "emptySub": "Log a reading to start the live curve.",
+    "ariaSummary": "{label} ferment curve, {count} readings over {hours} hours, from {min} to {max}.",
+    "target": "target {target}"
+  },
+  "tracker": {
+    "ferment": "ferment",
+    "started": "Started {date}",
+    "live": "Live",
+    "finished": "Finished",
+    "phTitle": "pH",
+    "phDescription": "Live acidity vs the recipe target band — the curve the cut is made on",
+    "temperatureTitle": "Temperature",
+    "brixTitle": "Brix",
+    "logReadingTitle": "Log a reading",
+    "logReadingDescription": "Manual tap now — a BLE pH/temp probe drops in later behind the same door",
+    "millWaterTitle": "Mill water",
+    "millWaterDescription": "Log every draw of mill water — feeds the per-kilo consumption"
+  },
+  "readout": {
+    "ph": "pH {value}",
+    "temp": "{value} °C",
+    "brix": "{value} °Bx"
+  },
+  "logReadingForm": {
+    "kindLabel": "Kind",
+    "kindPh": "pH",
+    "kindTemp": "Temp °C",
+    "kindBrix": "Brix °Bx",
+    "valueLabel": "Reading value",
+    "valuePlaceholder": "e.g. 4.8",
+    "logging": "Logging…",
+    "logReading": "Log reading"
+  },
+  "logWaterForm": {
+    "litersLabel": "Liters of water",
+    "litersPlaceholder": "e.g. 45",
+    "recording": "Recording…",
+    "recordWater": "Record mill water"
+  },
+  "startButton": {
+    "startFerment": "Start ferment",
+    "dialogTitle": "Start a ferment"
+  },
+  "startForm": {
+    "lotLabel": "Lot",
+    "lotPlaceholder": "Choose a lot…",
+    "recipeLabel": "Recipe",
+    "recipePlaceholder": "Choose a recipe…",
+    "recipeOption": "{name} · v{version}",
+    "methodLabel": "Method",
+    "cancel": "Cancel",
+    "starting": "Starting…",
+    "startFerment": "Start ferment",
+    "done": "Done"
+  },
+  "waterChip": {
+    "waterUse": "Water use",
+    "noWater": "no water logged yet",
+    "perKg": "{value} L/kg",
+    "totalOver": "{liters} L over {kg} kg"
+  }
+}

@@ -36,4 +36,34 @@ describe("SprayHistory (render/smoke)", () => {
     render(<SprayHistory rows={[]} />);
     expect(screen.getByTestId("spray-empty")).toBeInTheDocument();
   });
+
+  it("wires the plot name to the plot dossier (was COSMETIC)", () => {
+    render(<SprayHistory rows={[entry]} />);
+    // EntityLink sets aria-label="Open plot <name>" (localized) when name prop is provided
+    const link = screen.getByRole("link", { name: /open plot talamanca/i });
+    expect(link).toHaveAttribute("href", "/plots/p-talamanca");
+  });
+
+  it("wires the applicator name to the worker dossier (was COSMETIC)", () => {
+    render(<SprayHistory rows={[entry]} />);
+    // EntityLink sets aria-label="Open worker <name>" (localized) when name prop is provided
+    const link = screen.getByRole("link", { name: /open worker lucía mendez/i });
+    expect(link).toHaveAttribute("href", "/workers/w-agro");
+  });
+
+  it("plot link carries link-affordance classes (underline, hover, focus-visible)", () => {
+    render(<SprayHistory rows={[entry]} />);
+    const link = screen.getByRole("link", { name: /open plot talamanca/i });
+    expect(link.className).toMatch(/underline-offset-2/);
+    expect(link.className).toMatch(/hover:text-forest/);
+    expect(link.className).toMatch(/focus-visible:text-forest/);
+  });
+
+  it("worker link carries link-affordance classes (underline, hover, focus-visible)", () => {
+    render(<SprayHistory rows={[entry]} />);
+    const link = screen.getByRole("link", { name: /open worker lucía mendez/i });
+    expect(link.className).toMatch(/underline-offset-2/);
+    expect(link.className).toMatch(/hover:text-forest/);
+    expect(link.className).toMatch(/focus-visible:text-forest/);
+  });
 });

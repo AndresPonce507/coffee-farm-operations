@@ -1,0 +1,125 @@
+{
+  "page": {
+    "title": "Workers",
+    "subtitle": "Crews, attendance, and daily payroll"
+  },
+  "dossier": {
+    "eyebrow": "Worker",
+    "backLabel": "All workers",
+    "subtitle": "{role} · {crew}"
+  },
+  "summary": {
+    "headcount": "Headcount",
+    "headcountSub": "On the payroll",
+    "presentToday": "Present today",
+    "presentSub": "{n} off",
+    "dailyPayroll": "Daily payroll",
+    "dailyPayrollSub": "Present workers",
+    "crews": "Crews",
+    "crewsSub": "Active teams"
+  },
+  "attendance": {
+    "title": "Attendance",
+    "present": "Present",
+    "restDay": "Rest day",
+    "absent": "Absent",
+    "centerSub": "present"
+  },
+  "crewBoard": {
+    "title": "Crews",
+    "description": "Field teams and today’s presence on the farm",
+    "crewCount": "{n} crews",
+    "member": "member",
+    "members": "members",
+    "present": "{present}/{total} present",
+    "noneAssigned": "No one assigned",
+    "onGroundToday": "on the ground today",
+    "off": " · {n} off"
+  },
+  "roster": {
+    "title": "Payroll",
+    "description": "{n} crew members on the farm",
+    "colWorker": "Worker",
+    "colRole": "Role",
+    "colCrew": "Crew",
+    "colSince": "Since",
+    "colDailyRate": "Daily rate",
+    "colToday": "Today",
+    "colAttendance": "Attendance",
+    "colActions": "Actions",
+    "empty": "No workers yet.",
+    "noCherriesToday": "No cherries picked today",
+    "attendancePresent": "Present",
+    "attendanceRestDay": "Rest day",
+    "attendanceAbsent": "Absent"
+  },
+  "actions": {
+    "newWorker": "New worker",
+    "addWorker": "Add worker",
+    "editWorker": "Edit worker",
+    "saveChanges": "Save changes",
+    "edit": "Edit {name}",
+    "delete": "Delete {name}",
+    "confirmDelete": "Delete \"{name}\"?",
+    "deleteFailed": "Couldn’t delete the worker."
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "e.g. Rosa Quintero",
+    "role": "Role",
+    "crew": "Crew",
+    "choose": "Choose…",
+    "dayRate": "Day rate (USD)",
+    "startedYear": "Started year",
+    "attendance": "Attendance",
+    "phone": "Phone",
+    "cancel": "Cancel",
+    "saving": "Saving…"
+  },
+  "identity": {
+    "sectionTitle": "Identity & certifications",
+    "crewLabel": "Crew",
+    "rehireable": "Rehireable",
+    "factRole": "Role",
+    "factComarca": "Home comarca",
+    "factLanguages": "Languages",
+    "factSince": "Since",
+    "factDayRate": "Day rate",
+    "currentCerts": "Current certifications",
+    "noCerts": "No current certifications",
+    "certNoExpiry": "No expiry",
+    "certExpiresIn": "Expires in {n} d",
+    "certValid": "Valid"
+  },
+  "attendanceSection": {
+    "sectionTitle": "Attendance",
+    "emptyLabel": "No attendance events yet",
+    "chainVerified": "Chain verified ✓",
+    "chainNotVerified": "Chain not verified",
+    "kindClockIn": "Clock in",
+    "kindClockOut": "Clock out",
+    "kindRestDay": "Rest day",
+    "kindAbsent": "Absent"
+  },
+  "productivity": {
+    "sectionTitle": "Weigh-ins & productivity",
+    "emptyLabel": "No weigh-ins recorded yet",
+    "today": "Today",
+    "latas": "Latas",
+    "ripenessRipe": "Ripe",
+    "ripenessUnderripe": "Underripe",
+    "ripenessOverripe": "Overripe"
+  },
+  "contracts": {
+    "sectionTitle": "Piece-rate contracts",
+    "emptyLabel": "No piece-rate contracts yet",
+    "active": "Active",
+    "superseded": "Superseded"
+  },
+  "pay": {
+    "sectionTitle": "Payment history",
+    "emptyLabel": "No payments calculated yet",
+    "madeWhole": "Minimum-wage adjustment",
+    "gross": "Gross ${amount}"
+  }
+}

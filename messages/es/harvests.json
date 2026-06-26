@@ -1,0 +1,81 @@
+{
+  "page": {
+    "title": "Cosechas",
+    "subtitle": "Ingreso diario de cerezas y rendimiento de cosecheros"
+  },
+  "summary": {
+    "today": "Hoy",
+    "todaySub": "{count} lotes cosechados",
+    "last7Days": "Últimos 7 días",
+    "last7DaysSub": "Ingreso de cerezas de la semana",
+    "avgRipeness": "Madurez promedio",
+    "avgRipenessSub": "En todos los lotes registrados",
+    "avgBrix": "Brix promedio",
+    "avgBrixSub": "Contenido de azúcar al cosechar"
+  },
+  "trendCard": {
+    "title": "Cosecha diaria (kg)",
+    "bestDay": "Mejor día",
+    "empty": "Aún no hay cosecha registrada."
+  },
+  "topPickersCard": {
+    "title": "Mejores cosecheros hoy",
+    "description": "Cerezas cosechadas desde la mañana",
+    "noActivity": "Sin actividad hoy"
+  },
+  "logTable": {
+    "title": "Registro de cosecha",
+    "description": "Los {count} registros de cosecha más recientes, del más nuevo al más antiguo",
+    "date": "Fecha",
+    "lot": "Lote",
+    "plot": "Parcela",
+    "picker": "Cosechero/a",
+    "cherries": "Cerezas",
+    "ripeness": "Madurez",
+    "brix": "Brix",
+    "actions": "Acciones"
+  },
+  "actions": {
+    "logHarvest": "Registrar cosecha",
+    "addHarvest": "Agregar cosecha",
+    "editHarvest": "Editar cosecha",
+    "saveChanges": "Guardar cambios",
+    "editHarvestLabel": "Editar cosecha {code}",
+    "deleteHarvestLabel": "Eliminar cosecha {code}",
+    "deleteConfirm": "¿Eliminar cosecha {code}?"
+  },
+  "recordIntakeButton": {
+    "label": "Registrar ingreso",
+    "dialogTitle": "Registrar ingreso de cerezas"
+  },
+  "harvestForm": {
+    "date": "Fecha",
+    "lot": "Lote",
+    "plot": "Parcela",
+    "picker": "Cosechero/a",
+    "choose": "Elegir…",
+    "cherries": "Cerezas (kg)",
+    "ripeness": "Madurez %",
+    "brix": "Brix",
+    "cancel": "Cancelar",
+    "saving": "Guardando…"
+  },
+  "cherryIntakeForm": {
+    "minted": "Lote de cereza creado",
+    "mintedBefore": "Este ingreso ya es un lote trazable —",
+    "mintedAfter": "— enlazando cada métrica desde la cereza hasta el saco.",
+    "viewLot": "Ver lote {code}",
+    "done": "Listo",
+    "intakeNoteBefore": "Registra esta lata como un lote",
+    "intakeNoteAfter": "numerado por el sistema y listo para auditoría — el origen de su trazabilidad.",
+    "plot": "Parcela",
+    "picker": "Cosechero/a",
+    "choose": "Elegir…",
+    "cherries": "Cerezas (kg)",
+    "cherriesPlaceholder": "ej. 88",
+    "variety": "Variedad",
+    "cancel": "Cancelar",
+    "mintingLot": "Creando lote…",
+    "recordIntake": "Registrar ingreso"
+  }
+}

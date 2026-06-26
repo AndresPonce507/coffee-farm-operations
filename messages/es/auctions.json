@@ -1,0 +1,145 @@
+{
+  "page": {
+    "title": "Subastas",
+    "subtitle": "Tu canal de mayor múltiplo. Inscribís un lote, capturás al jurado y lo ves cerrar por encima de la C."
+  },
+  "summary": {
+    "total": "Subastas",
+    "totalSub": "{count} en el calendario",
+    "live": "En juego",
+    "liveSub": "inscritas o en puntaje",
+    "sold": "Cerradas",
+    "soldSub": "resultados publicados",
+    "bestMultiplier": "Mejor múltiplo",
+    "bestMultiplierSub": "sobre la C comercial"
+  },
+  "status": {
+    "entered": "Inscrita",
+    "scored": "En puntaje",
+    "live": "En vivo",
+    "sold": "Cerrada",
+    "withdrawn": "Retirada"
+  },
+  "platform": {
+    "best_of_panama": "Best of Panama",
+    "cup_of_excellence": "Cup of Excellence",
+    "algrano": "Algrano",
+    "private": "Subasta privada"
+  },
+  "card": {
+    "entries": "{count} lotes inscritos",
+    "entriesOne": "1 lote inscrito",
+    "noEntries": "Aún no hay lotes inscritos",
+    "cleared": "Cerró {price}/kg",
+    "multiplier": "{mult}× la C",
+    "multiplierPending": "Múltiplo pendiente de una marca de C",
+    "deadlineEntry": "Inscripciones cierran {date}",
+    "deadlineScoring": "Puntaje para {date}",
+    "noDeadline": "Sin fecha límite",
+    "open": "Abrir subasta"
+  },
+  "empty": {
+    "title": "Aún no hay subastas",
+    "description": "Empezá una subasta, inscribí un lote de verde, y el puntaje del jurado y el precio de cierre salen aquí. El resultado siembra el precio de reserva del próximo Geisha."
+  },
+  "loading": {
+    "board": "Cargando subastas",
+    "detail": "Cargando subasta"
+  },
+  "new": {
+    "open": "Nueva subasta",
+    "title": "Empezar una subasta",
+    "platformLabel": "Plataforma",
+    "nameLabel": "Nombre de la subasta",
+    "namePlaceholder": "Best of Panama 2026",
+    "entryDeadlineLabel": "Inscripciones cierran",
+    "scoringDeadlineLabel": "Puntaje para",
+    "create": "Crear subasta",
+    "creating": "Creando…",
+    "cancel": "Cancelar"
+  },
+  "detail": {
+    "eyebrow": "Subasta",
+    "back": "Volver a subastas",
+    "lotsHeading": "Lotes en esta ronda",
+    "noEntries": "Aún no hay lotes inscritos. Inscribí uno para empezar la ronda.",
+    "entryDeadline": "Inscripciones cierran {date}",
+    "scoringDeadline": "Puntaje para {date}"
+  },
+  "enter": {
+    "heading": "Inscribir un lote",
+    "subheading": "Elegí un lote de verde y el peso a comprometer. Inscribirlo lo reserva, así no se vende dos veces.",
+    "lotLabel": "Lote de verde",
+    "lotPlaceholder": "Elegí un lote",
+    "lotOption": "{lot} · {variety} · taza {score}",
+    "kgLabel": "Kilogramos a inscribir",
+    "atpHint": "{kg} kg disponibles",
+    "noLots": "No hay lotes de verde con peso libre para inscribir.",
+    "submit": "Inscribir lote",
+    "confirmTitle": "¿Inscribir este lote?",
+    "confirmBody": "Inscribirlo reserva {kg} kg de {lot} para {auction}. Sale del pool disponible de una vez.",
+    "atpBefore": "Ahora",
+    "atpAfter": "Después",
+    "atpUnit": "kg libres",
+    "irreversible": "Esto compromete inventario de verde. El próximo comprador ve el número más bajo.",
+    "confirm": "Inscribir y reservar",
+    "entering": "Inscribiendo…",
+    "cancel": "Todavía no",
+    "entered": "Lote inscrito"
+  },
+  "entry": {
+    "farmScore": "Taza de finca",
+    "juryScore": "Puntaje del jurado",
+    "panelScore": "Promedio del panel",
+    "notScored": "Aún sin puntaje",
+    "kg": "{kg} kg inscritos",
+    "cleared": "Cerró en",
+    "clearedValue": "{price}/kg",
+    "multiplier": "{mult}× la C comercial",
+    "baseline": "Base comercial {price}/kg",
+    "noBaseline": "Aún sin marca de C, así que el múltiplo queda pendiente",
+    "winner": "Ganó {bidder}",
+    "open": "Abierta",
+    "marks": "{count} marcas · {jurors} jurados",
+    "noMarks": "Aún sin marcas del jurado"
+  },
+  "score": {
+    "heading": "Puntuar este lote",
+    "jurorLabel": "Jurado",
+    "jurorPlaceholder": "Nombre del jurado",
+    "attributeLabel": "Atributo",
+    "attributePlaceholder": "Aroma, sabor, acidez…",
+    "scoreLabel": "Puntaje",
+    "dialLabel": "Puntaje, de 0 a 100",
+    "submit": "Agregar marca",
+    "adding": "Agregando…",
+    "added": "Marca agregada"
+  },
+  "result": {
+    "open": "Registrar resultado",
+    "title": "Registrar el resultado de la subasta",
+    "body": "Esto publica el precio de cierre de {lot}, siembra la biblioteca de comparables y registra la venta. Asegurate de que los números sean finales.",
+    "juryLabel": "Puntaje final del jurado",
+    "clearingLabel": "Precio de cierre (USD/kg)",
+    "bidderLabel": "Comprador ganador",
+    "bidderPlaceholder": "Tostador o importador",
+    "yearLabel": "Año del resultado",
+    "irreversible": "Esto es final. El precio de cierre se vuelve un comparable para el próximo Geisha y registra una venta de reserva.",
+    "confirm": "Registrar resultado",
+    "recording": "Registrando…",
+    "recorded": "Resultado registrado",
+    "cancel": "Cancelar"
+  },
+  "errors": {
+    "nameRequired": "Ponele nombre a la subasta.",
+    "platformRequired": "Elegí una plataforma.",
+    "lotRequired": "Elegí un lote de verde para inscribir.",
+    "kgPositive": "Los kilogramos tienen que ser mayores que cero.",
+    "jurorRequired": "Poné el nombre del jurado.",
+    "attributeRequired": "Nombrá el atributo puntuado.",
+    "scoreRange": "El puntaje tiene que estar entre 0 y 100.",
+    "clearingPositive": "Poné un precio de cierre mayor que cero.",
+    "entryRequired": "Elegí la inscripción a registrar.",
+    "generic": "No se pudo guardar. Revisá los números y volvé a intentar."
+  }
+}

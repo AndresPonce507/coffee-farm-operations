@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { cn, pct, usd } from "@/lib/utils";
 
 export interface CostSlice {
@@ -56,6 +58,7 @@ export function CostDecomposition({
   asCurrency = false,
   className,
 }: CostDecompositionProps) {
+  const t = useTranslations("ui");
   const total = slices.reduce((sum, s) => sum + (s.value > 0 ? s.value : 0), 0);
 
   const built = slices.map((s) => {
@@ -72,10 +75,15 @@ export function CostDecomposition({
 
   const ariaLabel =
     built.length > 0
-      ? `Cost decomposition. ${built
-          .map((b) => `${b.label}: ${pct(b.share * 100)}`)
+      ? `${t("costDecomposition.ariaPrefix")} ${built
+          .map((b) =>
+            t("costDecomposition.ariaSlice", {
+              label: b.label,
+              share: pct(b.share * 100),
+            }),
+          )
           .join(", ")}.`
-      : "Cost decomposition with no data.";
+      : t("costDecomposition.noDataAria");
 
   return (
     <div className={cn("flex flex-col", className)}>
@@ -189,12 +197,12 @@ export function CostDecomposition({
 
       {/* Visually-hidden data table — SR-legible provenance of every slice. */}
       <table className="sr-only">
-        <caption>Cost decomposition by category</caption>
+        <caption>{t("costDecomposition.tableCaption")}</caption>
         <thead>
           <tr>
-            <th scope="col">Category</th>
-            <th scope="col">Share</th>
-            <th scope="col">Value</th>
+            <th scope="col">{t("costDecomposition.tableCategory")}</th>
+            <th scope="col">{t("costDecomposition.tableShare")}</th>
+            <th scope="col">{t("costDecomposition.tableValue")}</th>
           </tr>
         </thead>
         <tbody>

@@ -1,0 +1,134 @@
+{
+  "public": {
+    "meta": {
+      "title": "{product} — grown at Janson Coffee",
+      "description": "Trace this exact lot of {product} from our farm in Volcán, Panama, all the way to your cup."
+    },
+    "eyebrow": "From our farm to your cup",
+    "lotLine": "Lot {lot}",
+    "single": "Single origin",
+    "story": {
+      "heading": "The story of this bag"
+    },
+    "cup": {
+      "label": "Cup score",
+      "grade": "SCA grade",
+      "scale": "out of 100",
+      "unscored": "Not yet scored"
+    },
+    "origin": {
+      "heading": "Where it grew",
+      "established": "Planted in {year}",
+      "geolocated": "Geolocated",
+      "deforestationFree": "Deforestation-free",
+      "coords": "{lat}, {lng}",
+      "empty": "Origin map is being prepared."
+    },
+    "eudr": {
+      "heading": "Forest check",
+      "compliant": "This lot is geolocated and confirmed deforestation-free.",
+      "incomplete": "We are still finishing the origin mapping for this lot.",
+      "no-origin": "The origin map for this lot is not ready yet.",
+      "tag": {
+        "compliant": "EUDR compliant",
+        "incomplete": "EUDR pending",
+        "no-origin": "Origin pending"
+      }
+    },
+    "crew": {
+      "heading": "Picked by hand",
+      "body": "Hand-picked at peak ripeness by the families who farm with us.",
+      "empty": "Picking crew details are being added."
+    },
+    "timeline": {
+      "heading": "How it was made",
+      "empty": "Processing notes are being added."
+    },
+    "reserve": {
+      "heading": "Two hundred hectares of cloud forest",
+      "body": "Half of the Janson estate is left wild for the quetzal and the cloud forest it nests in. The coffee grows in the shade of that forest, the way it has since 1990."
+    },
+    "cta": {
+      "heading": "Want this exact coffee?",
+      "button": "Shop this coffee",
+      "sub": "Every bag carries the lot you just read about."
+    },
+    "trace": {
+      "gtin": "Bag GTIN {gtin}",
+      "scan": "You scanned this bag to trace your coffee. Thank you for drinking it with us."
+    },
+    "kind": {
+      "cherry_intake": "Cherries received",
+      "stage_advance": "Moved to the next stage",
+      "ferment_start": "Fermentation started",
+      "ferment_reading": "Fermentation checked",
+      "drying_reading": "Drying checked",
+      "drying_station_assigned": "Moved to a drying bed",
+      "milled": "Milled to green",
+      "roasted": "Roasted",
+      "price_quoted": "Priced",
+      "provenance_published": "Story published",
+      "fallback": "Step recorded"
+    },
+    "error": {
+      "title": "We could not find that bag",
+      "description": "This trace link is not active. Check the code on your bag, or visit our shop."
+    }
+  },
+  "admin": {
+    "page": {
+      "title": "Provenance",
+      "subtitle": "Curate the public trace page behind each bag's QR. Nothing goes public until you publish it."
+    },
+    "summary": {
+      "skus": "Bags",
+      "skusSub": "Lot-linked SKUs",
+      "published": "Published",
+      "publishedSub": "Live on the site",
+      "drafts": "Not published",
+      "draftsSub": "Hidden from the public"
+    },
+    "empty": {
+      "title": "No lot-linked bags yet",
+      "description": "Create a SKU in the shop catalog first, then publish its trace page here."
+    },
+    "card": {
+      "lot": "Lot {lot}",
+      "noGtin": "No GTIN set",
+      "publishedTag": "Published",
+      "draftTag": "Not published",
+      "slug": "/p/{slug}",
+      "view": "Open page",
+      "publish": "Publish trace page",
+      "edit": "Edit and republish",
+      "unpublish": "Take it down"
+    },
+    "form": {
+      "title": "Publish trace page",
+      "lot": "Lot {lot}",
+      "slug": "Public link",
+      "slugHint": "The path after /p/ . Lowercase, words joined by dashes.",
+      "slugPlaceholder": "janson-geisha-jc901",
+      "gtin": "Bag GTIN (optional)",
+      "gtinPlaceholder": "0840012345678",
+      "story": "Curated story",
+      "storyHint": "A few warm lines about this lot. This is the only free text shown to the public.",
+      "storyPlaceholder": "Grown on Quetzal Ridge at 1,650m, hand-picked at peak ripeness.",
+      "cancel": "Cancel",
+      "submit": "Publish page",
+      "submitting": "Publishing...",
+      "published": "Published",
+      "unpublishTitle": "Take this page down?",
+      "unpublishBody": "Visitors who scan the bag will no longer see the trace page. You can publish it again any time.",
+      "unpublishConfirm": "Take it down",
+      "unpublishing": "Taking down..."
+    },
+    "errors": {
+      "slugRequired": "Add a public link before publishing.",
+      "skuRequired": "Pick a bag to publish.",
+      "exists": "That public link is already used by another bag.",
+      "unknownSku": "We could not find that bag for your farm.",
+      "generic": "Something went wrong. Please try again."
+    }
+  }
+}

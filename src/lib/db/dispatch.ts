@@ -142,9 +142,21 @@ export const getDispatchToday = cache(
       .order("crew_name", { ascending: true });
     if (cardError) throw new Error(`getDispatchToday: ${cardError.message}`);
 
+    // Scope the plot read to ONLY the runs this morning's cards reference.
+    // v_dispatch_card_plots carries no dispatch_date (it joins assignment→plot,
+    // not the run), so an unfiltered select would load EVERY historical run's
+    // plot lines on each board render — a board that grows without bound. The
+    // card query already pins to one dispatch_date; narrowing the plots to those
+    // runs' ids keeps the two reads consistent (and short-circuits when there are
+    // no cards). RLS (security_invoker) still applies — this only narrows, it
+    // never widens, so it stays tenant-safe.
+    const runIds = (cardData as DispatchCardRow[]).map((c) => Number(c.id));
+    if (runIds.length === 0) return [];
+
     const { data: plotData, error: plotError } = await client
       .from("v_dispatch_card_plots")
-      .select("*");
+      .select("*")
+      .in("dispatch_run_id", runIds);
     if (plotError) throw new Error(`getDispatchToday: ${plotError.message}`);
 
     // Group the plot lines by their run id once (avoids a per-card query).
@@ -159,5 +171,45 @@ export const getDispatchToday = cache(
     return (cardData as DispatchCardRow[]).map((cardRow) =>
       mapDispatchCard(cardRow, plotsByRun.get(Number(cardRow.id)) ?? []),
     );
+  },
+);
+
+/**
+ * ONE dispatch run by its numeric id — the /dispatch/[id] dossier anchor (Phase 5
+ * L2, facet-02 §5/§11). Unlike getDispatchToday this is NOT date-pinned: a dossier
+ * link may open any morning's run, so the read is keyed purely on the run id. The
+ * route param arrives as a string, so the id is coerced to a number (the public
+ * handle is v_dispatch_card.id, not idempotency_key); a non-numeric id resolves to
+ * null without a query. Returns null when no run matches (the dossier calls
+ * notFound() — no fabricated run). Read-only.
+ */
+export const getDispatchRunById = cache(
+  async (id: string | number): Promise<DispatchCard | null> => {
+    const runId = Number(id);
+    if (!Number.isFinite(runId)) return null;
+
+    const client = await getSupabase();
+
+    const { data: cardData, error: cardError } = await client
+      .from("v_dispatch_card")
+      .select("*")
+      .eq("id", runId);
+    if (cardError) throw new Error(`getDispatchRunById: ${cardError.message}`);
+
+    const cardRow = (cardData as DispatchCardRow[])[0];
+    if (!cardRow) return null;
+
+    const { data: plotData, error: plotError } = await client
+      .from("v_dispatch_card_plots")
+      .select("*")
+      .eq("dispatch_run_id", runId);
+    if (plotError) throw new Error(`getDispatchRunById: ${plotError.message}`);
+
+    // Belt-and-braces: keep only THIS run's plot lines (the query is already
+    // scoped, but mapDispatchCard must never receive another run's plots).
+    const plots = (plotData as DispatchCardPlotRow[]).filter(
+      (p) => Number(p.dispatch_run_id) === runId,
+    );
+    return mapDispatchCard(cardRow, plots);
   },
 );

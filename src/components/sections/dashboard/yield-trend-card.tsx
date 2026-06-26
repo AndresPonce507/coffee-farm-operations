@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendLine } from "@/components/charts/trend-line";
 import { getDailyCherries } from "@/lib/db/trends";
@@ -14,6 +16,7 @@ const LINE_COLOR = "#1A6B4D";
  * Server component: pure presentation, no hooks or handlers.
  */
 export async function YieldTrendCard() {
+  const t = await getTranslations("dashboard");
   const dailyCherries = await getDailyCherries();
 
   const days = dailyCherries.length;
@@ -24,15 +27,15 @@ export async function YieldTrendCard() {
     <Card className="animate-rise glass-hover">
       <CardHeader>
         <div>
-          <CardTitle>Daily cherry intake</CardTitle>
-          <p className="mt-0.5 text-sm text-muted-fg">Last 14 days, kilograms</p>
+          <CardTitle>{t("yieldTrend.title")}</CardTitle>
+          <p className="mt-0.5 text-sm text-muted-fg">{t("yieldTrend.caption")}</p>
         </div>
         <div className="text-right">
           <p className="font-display text-2xl font-semibold leading-none text-ink">
             {num(totalKg)}
             <span className="ml-1 text-sm font-normal text-muted-fg">kg</span>
           </p>
-          <p className="mt-1 text-xs text-muted-fg">{num(avgPerDay)} kg avg / day</p>
+          <p className="mt-1 text-xs text-muted-fg">{t("yieldTrend.avgPerDay", { kg: num(avgPerDay) })}</p>
         </div>
       </CardHeader>
       <CardContent>

@@ -80,6 +80,90 @@ export const getCrewRoster = cache(async (): Promise<CrewRosterMember[]> => {
 });
 
 /* ---------------------------------------------------------------------- */
+/* Crews — derived from v_crew_roster (Phase 5 L2; NO migration)           */
+/* ---------------------------------------------------------------------- */
+
+/** A crew summary derived by grouping the live roster — the live replacement for
+ *  the hardcoded CREWS mock (src/lib/data/workers.ts). One row per crew. */
+export interface Crew {
+  crewId: string | null;
+  crewName: string;
+  memberCount: number;
+  presentCount: number;
+}
+
+/** A crew's full dossier anchor — the summary header plus its roster members
+ *  (each linkable to a /workers/[id] dossier). `null` from getCrewById when the
+ *  crew id matches no roster member (the dossier 404s — no fabricated crew). */
+export interface CrewDossier extends Crew {
+  members: CrewRosterMember[];
+}
+
+/** Bucket key for grouping the roster: prefer the real crew_id; fall back to the
+ *  crew_name when crew_id is null (unassigned/legacy rows still group cleanly). */
+function crewKey(m: CrewRosterMember): string {
+  return m.crewId ?? `name:${m.crewName}`;
+}
+
+/** Group roster members into per-crew dossiers, ordered by crew name. Pure — the
+ *  grouping logic both crew getters share. */
+function groupCrews(members: CrewRosterMember[]): CrewDossier[] {
+  const byKey = new Map<string, CrewDossier>();
+  for (const m of members) {
+    const key = crewKey(m);
+    let crew = byKey.get(key);
+    if (!crew) {
+      crew = {
+        crewId: m.crewId,
+        crewName: m.crewName,
+        memberCount: 0,
+        presentCount: 0,
+        members: [],
+      };
+      byKey.set(key, crew);
+    }
+    crew.members.push(m);
+    crew.memberCount += 1;
+    if (m.attendance === "present") crew.presentCount += 1;
+  }
+  return Array.from(byKey.values()).sort((a, b) =>
+    a.crewName.localeCompare(b.crewName),
+  );
+}
+
+/**
+ * Every crew — derived live from `v_crew_roster` by grouping on crew_id/crew_name.
+ * The live, mock-free replacement for the hardcoded `CREWS` constant: one row per
+ * crew with its member + present counts, ordered by crew name. Read-only.
+ */
+export const getCrews = cache(async (): Promise<Crew[]> => {
+  const members = await getCrewRoster().catch((e: unknown) => {
+    // Re-label the error under this getter's name (the roster getter labels with
+    // its own name; the dossier expects a getCrews-labelled failure).
+    throw new Error(`getCrews: ${(e as Error).message.replace(/^getCrewRoster: /, "")}`);
+  });
+  return groupCrews(members).map(({ members: _members, ...crew }) => crew);
+});
+
+/**
+ * One crew's dossier anchor (Phase 5 L2) — the crew summary header plus its full
+ * roster members (each linkable to /workers/[id]), derived from `v_crew_roster`.
+ * Returns null when the crew id matches no roster member (the /crew/[id] dossier
+ * calls notFound() — no fabricated crew). Read-only.
+ */
+export const getCrewById = cache(
+  async (crewId: string): Promise<CrewDossier | null> => {
+    const members = await getCrewRoster().catch((e: unknown) => {
+      throw new Error(
+        `getCrewById: ${(e as Error).message.replace(/^getCrewRoster: /, "")}`,
+      );
+    });
+    const crew = groupCrews(members).find((c) => c.crewId === crewId);
+    return crew ?? null;
+  },
+);
+
+/* ---------------------------------------------------------------------- */
 /* Attendance today — worker_attendance_today                             */
 /* ---------------------------------------------------------------------- */
 

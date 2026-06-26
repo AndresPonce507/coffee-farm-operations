@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { PageHeader } from "@/components/ui/page-header";
 import { FermentBoard } from "@/components/sections/ferment/ferment-board";
 import { getActiveRecipes, getFermentBatches } from "@/lib/db/ferment";
@@ -16,6 +18,7 @@ import { getLots } from "@/lib/db/lots";
  * main) comes from (app)/layout.tsx; this page renders only its inner content.
  */
 export default async function FermentPage() {
+  const t = await getTranslations("ferment");
   const [batches, lots, recipes] = await Promise.all([
     getFermentBatches(),
     getLots(),
@@ -25,8 +28,8 @@ export default async function FermentPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Ferment"
-        subtitle="Wet-mill fermentation — live curves, cut-point alerts, eco-mill water"
+        title={t("page.title")}
+        subtitle={t("page.subtitle")}
       />
 
       <FermentBoard batches={batches} lots={lots} recipes={recipes} />

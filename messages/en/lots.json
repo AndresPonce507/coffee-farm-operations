@@ -1,0 +1,36 @@
+{
+  "genealogyGraph": {
+    "empty": "No lineage to display.",
+    "unknownStage": "Unknown",
+    "ariaLabel": "Lot genealogy graph: {nodes} lots, {edges} mass transfers.",
+    "yieldLossTitle": "{code}: {kg} yield loss",
+    "treeAriaLabel": "Lot genealogy outline",
+    "alreadyShown": "(already shown)",
+    "soldLot": "(sold lot)"
+  },
+  "costEntries": {
+    "title": "Cost entries (journal)",
+    "empty": "No cost entries assigned directly to this lot",
+    "note": "Journal entries tagged directly to this lot. Overhead and agronomy costs are distributed via the cost-per-green-kg calculation shown above.",
+    "reversal": "(reversal #{id})",
+    "ruleDirectLabor": "Labor",
+    "ruleProcessing": "Processing",
+    "ruleAgronomy": "Agronomy",
+    "ruleOverhead": "Overhead"
+  },
+  "graphInteractive": {
+    "panZoomGroup": "{label} (pan and zoom)",
+    "panZoom": "Pan and zoom",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "resetView": "Reset view"
+  },
+  "page": {
+    "title": "Lot {code}",
+    "eyebrow": "Lot",
+    "subtitle": "Farm-to-bag traceability — mass flow from cherry to sold green lot",
+    "backLabel": "All lots",
+    "lineageSection": "Lineage (farm to bag)",
+    "eudrSection": "EUDR due diligence"
+  }
+}

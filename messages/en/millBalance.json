@@ -1,0 +1,113 @@
+{
+  "page": {
+    "eyebrow": "Dry milling",
+    "title": "Mill Balance",
+    "subtitle": "Run {run} · parchment lot {lot}"
+  },
+  "back": "Back to mill",
+  "status": {
+    "readiness_pending": "Readiness pending",
+    "open": "Open",
+    "finalized": "Finalized"
+  },
+  "balanceBadge": {
+    "ok": "Mass balance closed",
+    "off": "Mass unaccounted",
+    "pending": "Awaiting green out"
+  },
+  "summary": {
+    "parchmentIn": "Parchment in",
+    "parchmentInSub": "{variety} into the chain",
+    "greenOut": "Green out",
+    "greenOutSub": "clean green recovered",
+    "greenOutPending": "not yet recorded",
+    "outturn": "Outturn",
+    "outturnSub": "green over parchment",
+    "outturnPending": "pending finalize",
+    "byproducts": "Byproducts",
+    "byproductsSub": "husk, chaff, screen rejects"
+  },
+  "sankey": {
+    "title": "Mass balance",
+    "subtitle": "Where every kilo of parchment went",
+    "green": "Green",
+    "byproduct": "Byproduct",
+    "reject": "Reject",
+    "moisture": "Moisture loss",
+    "unaccounted": "Unaccounted",
+    "kgValue": "{kg} kg",
+    "balanced": "Balanced. Every kilo is accounted for.",
+    "unbalanced": "{kg} kg unaccounted, over the {ceiling} kg ceiling.",
+    "pendingGreen": "Record the final pass or finalize the run to close the balance.",
+    "ceilingNote": "Loss ceiling {kg} kg, derived from the variety yield curve."
+  },
+  "chain": {
+    "title": "Machine chain",
+    "subtitle": "Parchment runs the huller, polisher and graders in order",
+    "empty": "No passes recorded yet",
+    "pass": "Pass {no}",
+    "inLabel": "In",
+    "outLabel": "Out",
+    "rejectLabel": "Reject"
+  },
+  "machine": {
+    "huller": "Huller",
+    "polisher": "Polisher",
+    "screen_grader": "Screen grader",
+    "gravity_table": "Gravity table",
+    "optical_sorter": "Optical sorter"
+  },
+  "byproducts": {
+    "title": "Byproducts",
+    "subtitle": "Each stream is its own sellable, traceable lot",
+    "empty": "No byproducts recorded",
+    "kgValue": "{kg} kg"
+  },
+  "byproductKind": {
+    "husk": "Husk",
+    "chaff": "Chaff",
+    "screen_rejects": "Screen rejects",
+    "defects": "Defects"
+  },
+  "empty": {
+    "title": "Nothing milled on this run yet",
+    "description": "Record the first machine pass to start the closed mass balance."
+  },
+  "loading": {
+    "workspace": "Loading mill balance"
+  },
+  "record": {
+    "passTitle": "Record a machine pass",
+    "byproductTitle": "Record a byproduct",
+    "passNo": "Pass number",
+    "machine": "Machine",
+    "machinePlaceholder": "Pick a machine",
+    "inputKg": "Input (kg)",
+    "outputKg": "Clean output (kg)",
+    "rejectKg": "Reject (kg)",
+    "submitPass": "Record pass",
+    "recordingPass": "Recording",
+    "passRecorded": "Pass recorded",
+    "massHint": "Clean output plus reject can never exceed the input.",
+    "kind": "Byproduct kind",
+    "kindPlaceholder": "Pick a stream",
+    "kg": "Kilograms",
+    "submitByproduct": "Record byproduct",
+    "recordingByproduct": "Recording",
+    "byproductRecorded": "Byproduct lot {code} minted",
+    "byproductHint": "Mints a sellable, traceable byproduct lot and draws from the parchment mass.",
+    "closedRun": "This run is {status}. Passes can only be recorded while it is open.",
+    "passContinuity": "Input is pre-filled from the prior pass output so the clean stream stays continuous."
+  },
+  "errors": {
+    "generic": "Something went wrong. Try again.",
+    "passNo": "Pass number must be a whole number of 1 or more.",
+    "machine": "Pick a machine for this pass.",
+    "inputPositive": "Input must be greater than 0 kg.",
+    "outputNonNeg": "Clean output cannot be negative.",
+    "rejectNonNeg": "Reject cannot be negative.",
+    "massBalance": "Clean output plus reject cannot exceed the input.",
+    "kind": "Pick a byproduct stream.",
+    "kgPositive": "Kilograms must be greater than 0."
+  }
+}

@@ -1,9 +1,48 @@
 import { Coffee, FlaskConical, ListChecks, Users, Truck } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { EntityLink } from "@/components/ui/entity-link";
 import { getActivity } from "@/lib/db/activity";
 import type { ActivityItem } from "@/lib/types";
 import { relativeDay } from "@/lib/utils";
+
+/**
+ * Lot codes (`JC-NNN`) are embedded in the free-text activity copy. We surface the
+ * first one as a real link to its lot dossier so an event that NAMES a lot is no
+ * longer dead UI — the rest of the text stays as written. Events that name no lot
+ * (e.g. a crew clock-in) render as plain text, never a fabricated link.
+ */
+const LOT_CODE = /\b(JC-\d+)\b/;
+
+/**
+ * Render activity text, turning the first `JC-NNN` lot code into an `<EntityLink>`
+ * while preserving the surrounding prose verbatim. Returns the plain string when no
+ * lot code is present.
+ */
+function renderActivityText(text: string): React.ReactNode {
+  const match = LOT_CODE.exec(text);
+  if (!match) return text;
+
+  const code = match[1];
+  const start = match.index;
+  const before = text.slice(0, start);
+  const after = text.slice(start + code.length);
+
+  return (
+    <>
+      {before}
+      <EntityLink
+        kind="lot"
+        id={code}
+        className="font-medium text-forest underline-offset-2 transition-colors hover:underline"
+      >
+        {code}
+      </EntityLink>
+      {after}
+    </>
+  );
+}
 
 type Icon = React.ComponentType<{ className?: string }>;
 type ActivityKind = ActivityItem["kind"];
@@ -34,12 +73,13 @@ const KIND_CHIP: Record<ActivityKind, string> = {
  * A vertical, divider-separated timeline of the most recent farm events.
  */
 export async function ActivityFeedCard() {
+  const t = await getTranslations("dashboard");
   const activity = await getActivity();
 
   return (
     <Card className="animate-rise">
       <CardHeader>
-        <CardTitle>Recent activity</CardTitle>
+        <CardTitle>{t("activity.title")}</CardTitle>
       </CardHeader>
       <CardContent className="pt-2">
         <ul className="stagger -mx-2 divide-y divide-line">
@@ -57,7 +97,7 @@ export async function ActivityFeedCard() {
                   <Icon className="h-4.5 w-4.5" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm text-ink">{item.text}</p>
+                  <p className="text-sm text-ink">{renderActivityText(item.text)}</p>
                   <p className="mt-0.5 text-xs text-muted-fg">{relativeDay(item.at)}</p>
                 </div>
               </li>
