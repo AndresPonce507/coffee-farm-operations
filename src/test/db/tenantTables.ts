@@ -68,6 +68,11 @@ export const DIRECT_TENANT_TABLES = [
   // P3-S14 offline POS — the till is a physical farm asset, tenant_id default
   // current_tenant_id() (no tenant-carrying parent FK), like products/customers.
   "pos_terminals", // pos.sql — registered POS terminals (Janson Farm Store / Lagunas Café)
+  // P3-S16 accounting spine — the FX SSOT + the revenue journal source. No
+  // tenant-carrying parent FK; tenant_id default current_tenant_id().
+  "fx_rate", // accounting_sales.sql — canonical daily rate SSOT (append-only, RPC-only write)
+  "revenue_entry", // accounting_sales.sql — revenue-side mirror of cost_entry; green_lot_code un-FK'd (DIRECT, like cost_entry)
+  "ar_doc", // accounting_sales.sql — AR instrument header; soft-refs to buyer/contract, no tenant-parent FK
 ] as const;
 
 /**
@@ -179,6 +184,12 @@ export const INHERITED_TENANT_TABLES = [
   // P3-S14 offline POS — a POS sale is 1:1 with its channel='pos' order; inherits via
   // order_id -> orders (and terminal_id -> pos_terminals). RPC-only-write (record_pos_sale).
   "pos_sales", // pos.sql — via orders (offline exactly-once on (device_id, device_seq))
+  // P3-S16 accounting spine — AR lines, inbound cash, and realized FX all inherit
+  // tenant via the composite (ar_doc_id, tenant_id) -> ar_doc FK. RPC-only-write
+  // (issue_ar_doc / settle_ar_payment, P3-S17); all append-only ledgers.
+  "ar_doc_line", // accounting_sales.sql — via ar_doc
+  "ar_payment", // accounting_sales.sql — via ar_doc (append-only inbound cash; cap + status triggers)
+  "fx_gain_loss_entry", // accounting_sales.sql — via ar_doc (append-only realized FX, two-rate CHECK)
 ] as const;
 
 /**
