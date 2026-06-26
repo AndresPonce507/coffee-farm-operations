@@ -38,8 +38,8 @@ export const NAMESPACES = [
   "shop", "orders", "subscriptions", "provenance", "pos",
   // P3 Wave 4 accounting cluster (S16 accounting spine / AR, S17 accounting sync + margin view)
   "finance", "margins",
-  // P3 Wave 5 reputation cluster (S19 lot accolades / wall of fame)
-  "reputation",
+  // P3 Wave 5 — CRM contacts (S18), lot accolades / reputation (S19), storage + marketing campaigns (S20)
+  "crm", "reputation", "storage", "marketing",
 ] as const;
 
 export function isLocale(value: unknown): value is Locale {

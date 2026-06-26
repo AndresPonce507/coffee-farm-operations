@@ -1,0 +1,102 @@
+{
+  "page": {
+    "title": "Almacenamiento",
+    "subtitle": "Mantén cada lote verde en especificación desde la bodega hasta la venta."
+  },
+  "summary": {
+    "locations": "Ubicaciones",
+    "locationsSub": "{count, plural, one {# bodega monitoreada} other {# bodegas monitoreadas}}",
+    "inBand": "En rango",
+    "inBandSub": "dentro del objetivo",
+    "excursions": "Fuera de rango",
+    "excursionsSub": "hay que revisar",
+    "certs": "Certificados",
+    "certsSub": "emitidos a la fecha"
+  },
+  "empty": {
+    "title": "Aún no hay ubicaciones",
+    "description": "Agrega una bodega o cuarto frío a la derecha y luego registra una lectura de temperatura, humedad y actividad de agua para empezar a monitorearla."
+  },
+  "loading": {
+    "board": "Cargando almacenamiento"
+  },
+  "metric": {
+    "temp": "Temp",
+    "rh": "Humedad",
+    "aw": "Actividad de agua"
+  },
+  "status": {
+    "inBand": "En rango",
+    "excursion": "Fuera de rango",
+    "noData": "Sin lecturas aún"
+  },
+  "card": {
+    "target": "Objetivo {min} a {max}",
+    "lastReading": "Última lectura {when}",
+    "noReadings": "Aún no hay lecturas",
+    "reading": "{value}",
+    "noValue": "—"
+  },
+  "certs": {
+    "title": "Certificados de almacenamiento",
+    "subtitle": "Cada uno queda ligado a las lecturas exactas que lo respaldan.",
+    "empty": "Aún no se han emitido certificados. Elige un lote almacenado arriba y emite uno cuando tenga lecturas registradas.",
+    "window": "{start} a {end}",
+    "readings": "{count, plural, one {# lectura} other {# lecturas}}",
+    "inBandPct": "{pct}% en rango",
+    "verdict": {
+      "in-band": "En rango",
+      "excursion": "Excursión",
+      "insufficient-data": "Datos insuficientes"
+    }
+  },
+  "console": {
+    "title": "Registrar y certificar",
+    "subtitle": "Las lecturas manuales son la vía de $0. Un sensor futuro registra en el mismo lugar.",
+    "addLocation": "Agregar ubicación",
+    "logReading": "Registrar lectura",
+    "issueCert": "Emitir certificado",
+    "fields": {
+      "location": "Ubicación",
+      "locationCode": "Código corto",
+      "locationCodeHint": "Aparece en el certificado, por ejemplo BOD-1",
+      "locationName": "Nombre",
+      "tempBand": "Rango de temperatura (°C)",
+      "rhBand": "Rango de humedad (%)",
+      "awMax": "Actividad de agua máxima (aw)",
+      "min": "Mín",
+      "max": "Máx",
+      "temp": "Temperatura (°C)",
+      "rh": "Humedad (%)",
+      "aw": "Actividad de agua (aw)",
+      "readingAt": "Leído el",
+      "greenLot": "Lote verde",
+      "windowStart": "Desde",
+      "windowEnd": "Hasta",
+      "pickLocation": "Elige una ubicación",
+      "pickLot": "Elige un lote verde"
+    },
+    "save": "Guardar ubicación",
+    "saving": "Guardando...",
+    "log": "Registrar lectura",
+    "logging": "Registrando...",
+    "issue": "Emitir certificado",
+    "issuing": "Emitiendo...",
+    "savedLocation": "Ubicación guardada.",
+    "loggedReading": "Lectura registrada.",
+    "issuedCert": "Certificado emitido. Está en el registro abajo.",
+    "awHint": "El café verde está seguro a aw 0.65 o menos."
+  },
+  "errors": {
+    "locationCodeRequired": "Dale un código corto a la ubicación.",
+    "locationNameRequired": "Dale un nombre a la ubicación.",
+    "bandOrder": "El mínimo no puede ser mayor que el máximo.",
+    "awRange": "La actividad de agua va de 0 a 1.",
+    "locationRequired": "Elige una ubicación primero.",
+    "readingEmpty": "Ingresa al menos temperatura, humedad o actividad de agua.",
+    "lotRequired": "Elige un lote verde para certificar.",
+    "windowRequired": "Define las fechas desde y hasta de la ventana.",
+    "windowOrder": "El fin de la ventana tiene que ser posterior a su inicio.",
+    "generic": "No se pudo guardar. Revisa los datos e intenta de nuevo."
+  }
+}

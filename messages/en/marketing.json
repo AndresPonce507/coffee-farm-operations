@@ -1,0 +1,129 @@
+{
+  "page": {
+    "title": "Marketing",
+    "subtitle": "Draft a lot launch from the real harvest and cup numbers, then you click send."
+  },
+  "summary": {
+    "campaigns": "Campaigns",
+    "campaignsSub": "{count, plural, one {# on the board} other {# on the board}}",
+    "audience": "Audience",
+    "audienceSub": "opted in to hear from us",
+    "queued": "Queued",
+    "queuedSub": "drafted, waiting to send",
+    "sent": "Sent",
+    "sentSub": "delivered to date"
+  },
+  "empty": {
+    "title": "No campaigns yet",
+    "description": "A campaign drafts itself when a lot launches, ships low, or a sample goes out. You can also write one by hand on the right."
+  },
+  "loading": {
+    "console": "Loading marketing"
+  },
+  "triggers": {
+    "title": "What drafts a campaign",
+    "subtitle": "Each one writes a draft from real rows. Nothing goes out until you send it.",
+    "lot-launch": {
+      "label": "Lot launch",
+      "desc": "Drafts the moment a green lot is minted."
+    },
+    "replenishment": {
+      "label": "Replenishment",
+      "desc": "Drafts when a buyer's lot ships and runs low."
+    },
+    "sample-follow-up": {
+      "label": "Sample follow-up",
+      "desc": "Drafts after a sample goes out the door."
+    },
+    "drafted": "{count, plural, one {# draft} other {# drafts}}"
+  },
+  "board": {
+    "title": "Campaigns",
+    "trigger": {
+      "lot-launch": "Lot launch",
+      "replenishment": "Replenishment",
+      "sample-follow-up": "Sample follow-up",
+      "manual": "By hand"
+    }
+  },
+  "status": {
+    "draft": "Draft",
+    "queued": "Queued",
+    "sent": "Sent",
+    "archived": "Archived"
+  },
+  "card": {
+    "lot": "Lot {code}",
+    "noLot": "No lot attached",
+    "queued": "{count} queued",
+    "sent": "{count} sent",
+    "updated": "Updated {when}",
+    "open": "Open"
+  },
+  "console": {
+    "title": "Compose & send",
+    "compose": "Compose",
+    "send": "Queue & send",
+    "newCampaign": "Write a campaign",
+    "fields": {
+      "name": "Campaign name",
+      "trigger": "Type",
+      "lot": "Green lot",
+      "noLot": "No lot",
+      "subject": "Subject",
+      "body": "Message"
+    },
+    "mergeTags": "Merge tags",
+    "mergeTagsHint": "Click one to drop it in. It fills from the lot you pick.",
+    "preview": "Preview",
+    "previewEmpty": "Pick a lot to see the merge tags fill in.",
+    "draft": "Save draft",
+    "drafting": "Saving...",
+    "savedDraft": "Draft saved.",
+    "pickCampaign": "Pick a campaign",
+    "queueLabel": "Build the send list",
+    "queue": "Build send list",
+    "queuing": "Building...",
+    "queued": "{count, plural, one {# contact queued} other {# contacts queued}}.",
+    "queueHint": "Builds one message per opted-in contact. Still a draft. Nothing sends.",
+    "sendBtn": "Send",
+    "sendNone": "Build the send list first.",
+    "audienceTitle": "Audience",
+    "audienceCount": "{count, plural, one {# opted-in contact} other {# opted-in contacts}}",
+    "audienceHint": "You can only reach a contact who opted in. The list is the gate.",
+    "noAudience": "No one has opted in yet. Get consent first, then they show up here.",
+    "unsubscribe": "Unsubscribe",
+    "unsubscribed": "Removed from the audience."
+  },
+  "sendDialog": {
+    "title": "Send this campaign",
+    "body": "You're about to send \"{name}\" to {count, plural, one {# opted-in contact} other {# opted-in contacts}}. This goes out for real.",
+    "noQueue": "There's nothing queued to send. Build the send list first.",
+    "humanNote": "You are signing this send. The app drafts the copy, you decide it goes.",
+    "cancel": "Cancel",
+    "confirm": "Send it",
+    "sending": "Sending...",
+    "sent": "Sent to {count, plural, one {# contact} other {# contacts}}."
+  },
+  "delivery": {
+    "title": "Delivery log",
+    "subtitle": "Every message that left, with its status.",
+    "empty": "Nothing has gone out yet.",
+    "to": "to {name}",
+    "status": {
+      "queued": "Queued",
+      "sent": "Sent",
+      "failed": "Failed",
+      "suppressed": "Suppressed"
+    }
+  },
+  "errors": {
+    "nameRequired": "Give the campaign a name.",
+    "bodyRequired": "Write a subject or a message before saving.",
+    "campaignRequired": "Pick a campaign first.",
+    "contactRequired": "Pick a contact first.",
+    "generic": "Could not save that. Try again.",
+    "queueGeneric": "Could not build the send list. Try again.",
+    "sendGeneric": "Could not send that. Try again."
+  }
+}

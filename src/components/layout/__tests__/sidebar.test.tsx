@@ -214,4 +214,20 @@ describe("Sidebar", () => {
       "/reputation",
     );
   });
+
+  it("surfaces the P3 Wave 5 S18/S20 routes in the nav (Contacts, Storage, Marketing)", () => {
+    render(<Sidebar />);
+    expect(screen.getByRole("link", { name: /Contacts/ })).toHaveAttribute(
+      "href",
+      "/crm",
+    );
+    expect(screen.getByRole("link", { name: /Storage/ })).toHaveAttribute(
+      "href",
+      "/storage",
+    );
+    expect(screen.getByRole("link", { name: /Marketing/ })).toHaveAttribute(
+      "href",
+      "/marketing",
+    );
+  });
 });

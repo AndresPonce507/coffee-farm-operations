@@ -1,0 +1,129 @@
+{
+  "page": {
+    "title": "Marketing",
+    "subtitle": "Redacta un lanzamiento de lote con los números reales de cosecha y catación, y tú das al enviar."
+  },
+  "summary": {
+    "campaigns": "Campañas",
+    "campaignsSub": "{count, plural, one {# en el tablero} other {# en el tablero}}",
+    "audience": "Audiencia",
+    "audienceSub": "dieron consentimiento",
+    "queued": "En cola",
+    "queuedSub": "redactadas, listas para enviar",
+    "sent": "Enviadas",
+    "sentSub": "entregadas a la fecha"
+  },
+  "empty": {
+    "title": "Aún no hay campañas",
+    "description": "Una campaña se redacta sola cuando se lanza un lote, cuando un envío baja el inventario o cuando sale una muestra. También puedes escribir una a mano a la derecha."
+  },
+  "loading": {
+    "console": "Cargando marketing"
+  },
+  "triggers": {
+    "title": "Qué redacta una campaña",
+    "subtitle": "Cada una escribe un borrador con filas reales. Nada sale hasta que tú lo envías.",
+    "lot-launch": {
+      "label": "Lanzamiento de lote",
+      "desc": "Se redacta apenas se crea un lote verde."
+    },
+    "replenishment": {
+      "label": "Reposición",
+      "desc": "Se redacta cuando el lote de un comprador se envía y baja."
+    },
+    "sample-follow-up": {
+      "label": "Seguimiento de muestra",
+      "desc": "Se redacta después de que sale una muestra."
+    },
+    "drafted": "{count, plural, one {# borrador} other {# borradores}}"
+  },
+  "board": {
+    "title": "Campañas",
+    "trigger": {
+      "lot-launch": "Lanzamiento de lote",
+      "replenishment": "Reposición",
+      "sample-follow-up": "Seguimiento de muestra",
+      "manual": "A mano"
+    }
+  },
+  "status": {
+    "draft": "Borrador",
+    "queued": "En cola",
+    "sent": "Enviada",
+    "archived": "Archivada"
+  },
+  "card": {
+    "lot": "Lote {code}",
+    "noLot": "Sin lote adjunto",
+    "queued": "{count} en cola",
+    "sent": "{count} enviados",
+    "updated": "Actualizada {when}",
+    "open": "Abrir"
+  },
+  "console": {
+    "title": "Redactar y enviar",
+    "compose": "Redactar",
+    "send": "Encolar y enviar",
+    "newCampaign": "Escribir una campaña",
+    "fields": {
+      "name": "Nombre de la campaña",
+      "trigger": "Tipo",
+      "lot": "Lote verde",
+      "noLot": "Sin lote",
+      "subject": "Asunto",
+      "body": "Mensaje"
+    },
+    "mergeTags": "Etiquetas de combinación",
+    "mergeTagsHint": "Haz clic en una para insertarla. Se llena con el lote que elijas.",
+    "preview": "Vista previa",
+    "previewEmpty": "Elige un lote para ver las etiquetas llenarse.",
+    "draft": "Guardar borrador",
+    "drafting": "Guardando...",
+    "savedDraft": "Borrador guardado.",
+    "pickCampaign": "Elige una campaña",
+    "queueLabel": "Armar la lista de envío",
+    "queue": "Armar lista de envío",
+    "queuing": "Armando...",
+    "queued": "{count, plural, one {# contacto en cola} other {# contactos en cola}}.",
+    "queueHint": "Arma un mensaje por cada contacto que dio consentimiento. Sigue siendo borrador. No envía nada.",
+    "sendBtn": "Enviar",
+    "sendNone": "Arma primero la lista de envío.",
+    "audienceTitle": "Audiencia",
+    "audienceCount": "{count, plural, one {# contacto con consentimiento} other {# contactos con consentimiento}}",
+    "audienceHint": "Solo puedes alcanzar a un contacto que dio consentimiento. La lista es la barrera.",
+    "noAudience": "Nadie ha dado consentimiento aún. Consíguelo primero y aparecerán aquí.",
+    "unsubscribe": "Dar de baja",
+    "unsubscribed": "Quitado de la audiencia."
+  },
+  "sendDialog": {
+    "title": "Enviar esta campaña",
+    "body": "Estás por enviar \"{name}\" a {count, plural, one {# contacto con consentimiento} other {# contactos con consentimiento}}. Esto sale de verdad.",
+    "noQueue": "No hay nada en cola para enviar. Arma primero la lista de envío.",
+    "humanNote": "Tú firmas este envío. La app redacta el texto, tú decides que salga.",
+    "cancel": "Cancelar",
+    "confirm": "Enviar",
+    "sending": "Enviando...",
+    "sent": "Enviado a {count, plural, one {# contacto} other {# contactos}}."
+  },
+  "delivery": {
+    "title": "Registro de entregas",
+    "subtitle": "Cada mensaje que salió, con su estado.",
+    "empty": "Aún no ha salido nada.",
+    "to": "a {name}",
+    "status": {
+      "queued": "En cola",
+      "sent": "Enviado",
+      "failed": "Falló",
+      "suppressed": "Suprimido"
+    }
+  },
+  "errors": {
+    "nameRequired": "Dale un nombre a la campaña.",
+    "bodyRequired": "Escribe un asunto o un mensaje antes de guardar.",
+    "campaignRequired": "Elige una campaña primero.",
+    "contactRequired": "Elige un contacto primero.",
+    "generic": "No se pudo guardar. Intenta de nuevo.",
+    "queueGeneric": "No se pudo armar la lista de envío. Intenta de nuevo.",
+    "sendGeneric": "No se pudo enviar. Intenta de nuevo."
+  }
+}

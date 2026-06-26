@@ -1,0 +1,102 @@
+{
+  "page": {
+    "title": "Storage",
+    "subtitle": "Keep every green lot in spec from the bodega to the sale."
+  },
+  "summary": {
+    "locations": "Locations",
+    "locationsSub": "{count, plural, one {# bodega tracked} other {# bodegas tracked}}",
+    "inBand": "In band",
+    "inBandSub": "holding target",
+    "excursions": "Out of band",
+    "excursionsSub": "need a look",
+    "certs": "Certificates",
+    "certsSub": "issued to date"
+  },
+  "empty": {
+    "title": "No storage locations yet",
+    "description": "Add a bodega or cold room on the right, then log a temperature, humidity, and water-activity reading to start tracking it."
+  },
+  "loading": {
+    "board": "Loading storage"
+  },
+  "metric": {
+    "temp": "Temp",
+    "rh": "Humidity",
+    "aw": "Water activity"
+  },
+  "status": {
+    "inBand": "In band",
+    "excursion": "Out of band",
+    "noData": "No readings yet"
+  },
+  "card": {
+    "target": "Target {min} to {max}",
+    "lastReading": "Last reading {when}",
+    "noReadings": "No readings logged yet",
+    "reading": "{value}",
+    "noValue": "—"
+  },
+  "certs": {
+    "title": "Storage certificates",
+    "subtitle": "Each one is bound to the exact readings behind it.",
+    "empty": "No certificates issued yet. Pick a stored lot above and issue one once it has readings on file.",
+    "window": "{start} to {end}",
+    "readings": "{count, plural, one {# reading} other {# readings}}",
+    "inBandPct": "{pct}% in band",
+    "verdict": {
+      "in-band": "In band",
+      "excursion": "Excursion",
+      "insufficient-data": "Not enough data"
+    }
+  },
+  "console": {
+    "title": "Log & certify",
+    "subtitle": "Manual readings are the $0 path. A future sensor posts to the same place.",
+    "addLocation": "Add a location",
+    "logReading": "Log a reading",
+    "issueCert": "Issue a certificate",
+    "fields": {
+      "location": "Location",
+      "locationCode": "Short code",
+      "locationCodeHint": "Used on the certificate, e.g. BOD-1",
+      "locationName": "Name",
+      "tempBand": "Temperature band (°C)",
+      "rhBand": "Humidity band (%)",
+      "awMax": "Max water activity (aw)",
+      "min": "Min",
+      "max": "Max",
+      "temp": "Temperature (°C)",
+      "rh": "Humidity (%)",
+      "aw": "Water activity (aw)",
+      "readingAt": "Read at",
+      "greenLot": "Green lot",
+      "windowStart": "From",
+      "windowEnd": "To",
+      "pickLocation": "Pick a location",
+      "pickLot": "Pick a green lot"
+    },
+    "save": "Save location",
+    "saving": "Saving...",
+    "log": "Log reading",
+    "logging": "Logging...",
+    "issue": "Issue certificate",
+    "issuing": "Issuing...",
+    "savedLocation": "Location saved.",
+    "loggedReading": "Reading logged.",
+    "issuedCert": "Certificate issued. It's in the log below.",
+    "awHint": "Green coffee is safe at aw 0.65 or below."
+  },
+  "errors": {
+    "locationCodeRequired": "Give the location a short code.",
+    "locationNameRequired": "Give the location a name.",
+    "bandOrder": "The minimum can't be above the maximum.",
+    "awRange": "Water activity runs from 0 to 1.",
+    "locationRequired": "Pick a location first.",
+    "readingEmpty": "Enter at least one of temperature, humidity, or water activity.",
+    "lotRequired": "Pick a green lot to certify.",
+    "windowRequired": "Set the from and to dates for the window.",
+    "windowOrder": "The window's end has to be after its start.",
+    "generic": "Could not save that. Check the numbers and try again."
+  }
+}

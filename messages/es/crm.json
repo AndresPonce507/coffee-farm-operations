@@ -1,0 +1,191 @@
+{
+  "page": {
+    "title": "Contactos",
+    "subtitle": "Tus relaciones de comercio directo: tostadores, importadores y la gente detrás de cada lote."
+  },
+  "summary": {
+    "total": "Contactos",
+    "totalSub": "{count} en ficha",
+    "consenting": "Con consentimiento",
+    "consentingSub": "Permiso de marketing",
+    "active": "Activos",
+    "activeSub": "Negocios en curso",
+    "value": "Valor de por vida",
+    "valueSub": "De cotizaciones aceptadas"
+  },
+  "segment": {
+    "label": "Filtrar por etapa",
+    "all": "Todos",
+    "lead": "Posibles",
+    "prospect": "Prospectos",
+    "active": "Activos",
+    "dormant": "Inactivos",
+    "lost": "Perdidos"
+  },
+  "kind": {
+    "roaster": "Tostador",
+    "importer": "Importador",
+    "agent": "Agente",
+    "distributor": "Distribuidor",
+    "retailer": "Minorista",
+    "press": "Prensa",
+    "individual": "Individual",
+    "other": "Otro"
+  },
+  "status": {
+    "lead": "Posible",
+    "prospect": "Prospecto",
+    "active": "Activo",
+    "dormant": "Inactivo",
+    "lost": "Perdido"
+  },
+  "channel": {
+    "email": "Correo",
+    "phone": "Teléfono",
+    "whatsapp": "WhatsApp",
+    "meeting": "Reunión",
+    "event": "Evento",
+    "other": "Otro"
+  },
+  "card": {
+    "events": "{count} interacciones",
+    "noEvents": "Sin actividad aún",
+    "touchpoints": "Interacciones",
+    "lastContact": "Último contacto",
+    "lastActivity": "Último contacto {when}",
+    "noLastActivity": "Sin contactar",
+    "value": "Valor de por vida",
+    "consentOn": "Con consentimiento",
+    "consentOff": "Sin consentimiento",
+    "buyer": "Comprador: {name}",
+    "open": "Abrir"
+  },
+  "empty": {
+    "title": "Aún no hay contactos",
+    "description": "Agrega tu primer tostador o importador para empezar a seguir la relación."
+  },
+  "newContact": {
+    "button": "Nuevo contacto",
+    "title": "Nuevo contacto",
+    "name": "Nombre",
+    "namePlaceholder": "Nombre del tostador o importador",
+    "kind": "Tipo",
+    "status": "Etapa",
+    "email": "Correo",
+    "phone": "Teléfono",
+    "country": "Código de país",
+    "countryPlaceholder": "US, JP, PA...",
+    "consent": "Tiene consentimiento de marketing",
+    "consentSource": "Origen del consentimiento",
+    "consentSourcePlaceholder": "Dónde se dio el consentimiento",
+    "save": "Guardar contacto",
+    "saving": "Guardando...",
+    "cancel": "Cancelar"
+  },
+  "sheet": {
+    "back": "Todos los contactos",
+    "eyebrow": "Contacto",
+    "chainVerified": "Cadena verificada",
+    "chainBroken": "Falló la verificación de cadena",
+    "email": "Correo",
+    "phone": "Teléfono",
+    "country": "País",
+    "channel": "Canal preferido",
+    "buyer": "Comprador vinculado",
+    "consentOn": "Consentimiento de marketing en ficha",
+    "consentOff": "Sin consentimiento de marketing",
+    "consentSince": "desde {when}",
+    "unsubscribed": "Dado de baja {when}",
+    "value": "Valor de por vida",
+    "lastActivity": "Último contacto {when}",
+    "timelineTitle": "Línea de tiempo de la relación",
+    "timelineSub": "Solo se agrega. Cada interacción está encadenada por hash.",
+    "timelineEmpty": "Aún no hay eventos. Registra la primera interacción a la derecha.",
+    "samplesTitle": "Flujo de muestras",
+    "samplesEmpty": "Aún no se han enviado muestras."
+  },
+  "event": {
+    "inquiry": "Consulta",
+    "sample_requested": "Muestra solicitada",
+    "sample_sent": "Muestra enviada",
+    "sample_feedback": "Opinión de la muestra",
+    "quote_sent": "Cotización enviada",
+    "meeting": "Reunión",
+    "call": "Llamada",
+    "note": "Nota",
+    "consent_granted": "Consentimiento otorgado",
+    "consent_withdrawn": "Consentimiento retirado"
+  },
+  "sample": {
+    "grams": "{grams} g",
+    "verdictPending": "Esperando cata",
+    "verdictApproved": "Aprobada",
+    "verdictRejected": "Rechazada",
+    "verdictCounter": "Contraoferta",
+    "noGrade": "Sin grado",
+    "score": "Cata {score}"
+  },
+  "actions": {
+    "logTitle": "Registrar actividad",
+    "logKind": "Qué pasó",
+    "logNote": "Nota",
+    "logNotePlaceholder": "Una nota corta para el registro",
+    "log": "Registrar",
+    "logging": "Registrando...",
+    "sampleTitle": "Enviar una muestra",
+    "sampleHint": "Una muestra saca verde real del inventario. Confirmas antes de enviarla.",
+    "sampleButton": "Enviar muestra",
+    "feedbackButton": "Registrar opinión"
+  },
+  "dispatch": {
+    "title": "Enviar una muestra",
+    "body": "Envía verde de un lote a este contacto. Esto compromete {grams} g del disponible para promesa del lote.",
+    "lot": "Lote verde",
+    "lotPlaceholder": "Elige un lote con existencia",
+    "grams": "Gramos",
+    "courier": "Mensajería",
+    "courierPlaceholder": "DHL, FedEx...",
+    "tracking": "Número de guía",
+    "trackingPlaceholder": "Opcional",
+    "atpBefore": "ATP ahora",
+    "atpAfter": "ATP después",
+    "atpUnit": "kg disponibles",
+    "noLots": "Ningún lote verde tiene existencia para muestrear.",
+    "irreversible": "Esto compromete inventario verde y queda registrado en la cadena de procedencia del lote.",
+    "confirm": "Confirmar envío",
+    "dispatching": "Enviando...",
+    "cancel": "Cancelar"
+  },
+  "feedback": {
+    "title": "Registrar opinión de la muestra",
+    "for": "Opinión de la muestra del lote {lot}.",
+    "score": "Puntaje de cata",
+    "scorePlaceholder": "0 a 100",
+    "verdict": "Veredicto",
+    "verdictApproved": "Aprobada",
+    "verdictRejected": "Rechazada",
+    "verdictCounter": "Contraoferta",
+    "notes": "Notas",
+    "notesPlaceholder": "Qué dijo el comprador",
+    "record": "Registrar opinión",
+    "recording": "Registrando...",
+    "cancel": "Cancelar"
+  },
+  "errors": {
+    "nameRequired": "Escribe el nombre del contacto.",
+    "kindRequired": "Elige el tipo de contacto.",
+    "consentSourceRequired": "El consentimiento de marketing necesita un origen como base legal.",
+    "eventKindRequired": "Elige qué pasó.",
+    "consentKindForbidden": "Los cambios de consentimiento se hacen editando el contacto, no como actividad.",
+    "contactRequired": "Se requiere un contacto.",
+    "lotRequired": "Elige un lote verde para muestrear.",
+    "gramsPositive": "Los gramos deben ser mayores que cero.",
+    "verdictRequired": "Elige un veredicto.",
+    "sampleRequired": "Se requiere una muestra.",
+    "generic": "No se pudo guardar. Revisa los datos e intenta de nuevo."
+  },
+  "loading": {
+    "board": "Cargando contactos",
+    "sheet": "Cargando contacto"
+  }
+}

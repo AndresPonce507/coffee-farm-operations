@@ -42,7 +42,10 @@
     "tasks": "Tareas",
     "finance": "Finanzas",
     "margins": "Margen y FX",
-    "reputation": "Reputación"
+    "crm": "Contactos",
+    "reputation": "Reputación",
+    "storage": "Almacenamiento",
+    "marketing": "Marketing"
   },
   "mobileNav": {
     "openMenu": "Abrir menú de navegación",

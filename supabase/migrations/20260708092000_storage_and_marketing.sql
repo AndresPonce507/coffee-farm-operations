@@ -680,6 +680,17 @@ begin
     raise exception 'unknown campaign % for tenant', p_campaign_id using errcode = 'foreign_key_violation';
   end if;
 
+  -- DEFENSE IN DEPTH: re-validate live consent at SEND time. Suppress any queued row
+  -- whose contact has since opted out (consent withdrawn / unsubscribed) BEFORE the
+  -- send flip, so the keystone promise holds even if a queued row slipped past the
+  -- unsubscribe suppressor. status-only flip (guard permits 'queued' → 'suppressed').
+  update marketing_outbound o set status = 'suppressed'
+    from contacts c
+   where c.id = o.contact_id and c.tenant_id = o.tenant_id
+     and o.tenant_id = v_tenant and o.campaign_id = p_campaign_id and o.status = 'queued'
+     and (c.consent_marketing is not true or c.unsubscribed_at is not null);
+
+  -- now only still-consenting queued rows remain to be sent.
   update marketing_outbound set status = 'sent', sent_at = now()
    where tenant_id = v_tenant and campaign_id = p_campaign_id and status = 'queued';
   get diagnostics v_n = row_count;
@@ -727,6 +738,13 @@ begin
     unsubscribed_at   = coalesce(unsubscribed_at, now()),
     consent_marketing = false
    where id = p_contact_id and tenant_id = v_tenant;
+
+  -- SUPPRESS any pending sends for this contact: the opt-out must reach already-queued
+  -- rows, not just future enqueues — otherwise a contact queued while consenting could
+  -- still be emailed by mark_campaign_sent after withdrawing. status-only flip; the
+  -- _marketing_outbound_guard_mutation trigger permits 'queued' → 'suppressed'.
+  update marketing_outbound set status = 'suppressed'
+   where tenant_id = v_tenant and contact_id = p_contact_id and status = 'queued';
 
   -- log the withdrawal once (idempotent on the tenant-qualified key).
   if v_was is distinct from false then

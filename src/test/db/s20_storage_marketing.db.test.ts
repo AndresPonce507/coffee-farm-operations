@@ -299,6 +299,96 @@ describe("P3-S20 unsubscribe suppression + human-confirmed send", () => {
 });
 
 // ──────────────────────────────────────────────────────────────────────────
+// 3b. CONSENT GAP REGRESSION — unsubscribe AFTER queue must suppress the pending
+//     send. The keystone legal promise: a code path physically cannot email a
+//     contact who has since opted out. (CAN-SPAM/GDPR as DB enforcement.)
+// ──────────────────────────────────────────────────────────────────────────
+describe("P3-S20 unsubscribe-after-queue suppresses the pending send", () => {
+  let h: Harness;
+  let contact: number;
+  let campaign: number;
+  beforeAll(async () => {
+    h = await freshDb();
+    await seedGreen(h, { source: "JC-530", green: "JC-534", kg: 100, score: 92 });
+    contact = await seedContact(h, "c-gap", { consent: true, name: "Late Optout Co" });
+    const c = await h.query<{ id: number }>(
+      `select draft_campaign('Gap', 'manual', 'JC-534', 'Re: {{lot_code}}',
+          'Restock {{lot_code}}', 'camp-3') as id;`,
+    );
+    campaign = Number(c[0].id);
+    // queue WHILE consenting → the contact gets a 'queued' outbound row.
+    await h.query(`select queue_campaign_send(${campaign}, 'gq-1')::int;`);
+  });
+  afterAll(async () => h.close());
+
+  it("the contact is queued before opting out", async () => {
+    const rows = await h.query<{ status: string }>(
+      `select status from marketing_outbound where campaign_id = ${campaign} and contact_id = ${contact};`,
+    );
+    expect(rows[0].status).toBe("queued");
+  });
+
+  it("record_unsubscribe suppresses the already-queued row", async () => {
+    await h.query(`select record_unsubscribe(${contact}, 'gap-unsub-1');`);
+    const rows = await h.query<{ status: string }>(
+      `select status from marketing_outbound where campaign_id = ${campaign} and contact_id = ${contact};`,
+    );
+    expect(rows[0].status).toBe("suppressed");
+  });
+
+  it("mark_campaign_sent does NOT send the opted-out contact (sent count 0)", async () => {
+    const sent = await h.query<{ n: number }>(
+      `select mark_campaign_sent(${campaign}, 'gap-send-1')::int as n;`,
+    );
+    expect(Number(sent[0].n)).toBe(0); // nobody still-consenting was queued
+    const after = await h.query<{ status: string; sent_at: string | null }>(
+      `select status, sent_at from marketing_outbound where campaign_id = ${campaign} and contact_id = ${contact};`,
+    );
+    expect(after[0].status).toBe("suppressed");
+    expect(after[0].sent_at).toBeNull();
+  });
+});
+
+// ──────────────────────────────────────────────────────────────────────────
+// 3c. Defense in depth — even if a row stays 'queued', a contact who opts out
+//     before the human clicks send is suppressed AT send time, never emailed.
+// ──────────────────────────────────────────────────────────────────────────
+describe("P3-S20 mark_campaign_sent re-validates live consent at send time", () => {
+  let h: Harness;
+  let contact: number;
+  let campaign: number;
+  beforeAll(async () => {
+    h = await freshDb();
+    await seedGreen(h, { source: "JC-540", green: "JC-544", kg: 100, score: 92 });
+    contact = await seedContact(h, "c-send-gap", { consent: true, name: "Sendtime Optout Co" });
+    const c = await h.query<{ id: number }>(
+      `select draft_campaign('SendGap', 'manual', 'JC-544', 'Re: {{lot_code}}',
+          'Restock {{lot_code}}', 'camp-4') as id;`,
+    );
+    campaign = Number(c[0].id);
+    await h.query(`select queue_campaign_send(${campaign}, 'sg-1')::int;`);
+    // withdraw consent DIRECTLY (simulating a path that leaves the queued row in place),
+    // so mark_campaign_sent is the layer under test.
+    await h.query(
+      `update contacts set consent_marketing = false, unsubscribed_at = now() where id = ${contact};`,
+    );
+  });
+  afterAll(async () => h.close());
+
+  it("a still-queued but now-opted-out contact is suppressed, not sent", async () => {
+    const sent = await h.query<{ n: number }>(
+      `select mark_campaign_sent(${campaign}, 'sg-send-1')::int as n;`,
+    );
+    expect(Number(sent[0].n)).toBe(0);
+    const after = await h.query<{ status: string; sent_at: string | null }>(
+      `select status, sent_at from marketing_outbound where campaign_id = ${campaign} and contact_id = ${contact};`,
+    );
+    expect(after[0].status).toBe("suppressed");
+    expect(after[0].sent_at).toBeNull();
+  });
+});
+
+// ──────────────────────────────────────────────────────────────────────────
 // 4. lot-launch trigger — drafts a campaign the moment a green node is minted.
 // ──────────────────────────────────────────────────────────────────────────
 describe("P3-S20 lot-launch trigger — minting a green lot drafts a campaign", () => {

@@ -1,0 +1,191 @@
+{
+  "page": {
+    "title": "Contacts",
+    "subtitle": "Your direct-trade relationships: roasters, importers and the people behind every lot."
+  },
+  "summary": {
+    "total": "Contacts",
+    "totalSub": "{count} on file",
+    "consenting": "Opted in",
+    "consentingSub": "Marketing consent",
+    "active": "Active",
+    "activeSub": "Working deals",
+    "value": "Lifetime value",
+    "valueSub": "From accepted quotes"
+  },
+  "segment": {
+    "label": "Filter by stage",
+    "all": "All",
+    "lead": "Leads",
+    "prospect": "Prospects",
+    "active": "Active",
+    "dormant": "Dormant",
+    "lost": "Lost"
+  },
+  "kind": {
+    "roaster": "Roaster",
+    "importer": "Importer",
+    "agent": "Agent",
+    "distributor": "Distributor",
+    "retailer": "Retailer",
+    "press": "Press",
+    "individual": "Individual",
+    "other": "Other"
+  },
+  "status": {
+    "lead": "Lead",
+    "prospect": "Prospect",
+    "active": "Active",
+    "dormant": "Dormant",
+    "lost": "Lost"
+  },
+  "channel": {
+    "email": "Email",
+    "phone": "Phone",
+    "whatsapp": "WhatsApp",
+    "meeting": "Meeting",
+    "event": "Event",
+    "other": "Other"
+  },
+  "card": {
+    "events": "{count} touchpoints",
+    "noEvents": "No activity yet",
+    "touchpoints": "Touchpoints",
+    "lastContact": "Last contact",
+    "lastActivity": "Last contact {when}",
+    "noLastActivity": "Never contacted",
+    "value": "Lifetime value",
+    "consentOn": "Opted in",
+    "consentOff": "No consent",
+    "buyer": "Buyer: {name}",
+    "open": "Open"
+  },
+  "empty": {
+    "title": "No contacts yet",
+    "description": "Add your first roaster or importer to start tracking the relationship."
+  },
+  "newContact": {
+    "button": "New contact",
+    "title": "New contact",
+    "name": "Name",
+    "namePlaceholder": "Roaster or importer name",
+    "kind": "Type",
+    "status": "Stage",
+    "email": "Email",
+    "phone": "Phone",
+    "country": "Country code",
+    "countryPlaceholder": "US, JP, PA...",
+    "consent": "Has marketing consent",
+    "consentSource": "Consent source",
+    "consentSourcePlaceholder": "Where consent was given",
+    "save": "Save contact",
+    "saving": "Saving...",
+    "cancel": "Cancel"
+  },
+  "sheet": {
+    "back": "All contacts",
+    "eyebrow": "Contact",
+    "chainVerified": "Chain verified",
+    "chainBroken": "Chain check failed",
+    "email": "Email",
+    "phone": "Phone",
+    "country": "Country",
+    "channel": "Preferred channel",
+    "buyer": "Linked buyer",
+    "consentOn": "Marketing consent on file",
+    "consentOff": "No marketing consent",
+    "consentSince": "since {when}",
+    "unsubscribed": "Unsubscribed {when}",
+    "value": "Lifetime value",
+    "lastActivity": "Last contact {when}",
+    "timelineTitle": "Relationship timeline",
+    "timelineSub": "Append-only. Every touchpoint is hash chained.",
+    "timelineEmpty": "No events logged yet. Log the first touchpoint on the right.",
+    "samplesTitle": "Sample pipeline",
+    "samplesEmpty": "No samples dispatched yet."
+  },
+  "event": {
+    "inquiry": "Inquiry",
+    "sample_requested": "Sample requested",
+    "sample_sent": "Sample sent",
+    "sample_feedback": "Sample feedback",
+    "quote_sent": "Quote sent",
+    "meeting": "Meeting",
+    "call": "Call",
+    "note": "Note",
+    "consent_granted": "Consent granted",
+    "consent_withdrawn": "Consent withdrawn"
+  },
+  "sample": {
+    "grams": "{grams} g",
+    "verdictPending": "Awaiting cup",
+    "verdictApproved": "Approved",
+    "verdictRejected": "Rejected",
+    "verdictCounter": "Counter offer",
+    "noGrade": "Ungraded",
+    "score": "Cup {score}"
+  },
+  "actions": {
+    "logTitle": "Log activity",
+    "logKind": "What happened",
+    "logNote": "Note",
+    "logNotePlaceholder": "A short note for the record",
+    "log": "Log it",
+    "logging": "Logging...",
+    "sampleTitle": "Send a sample",
+    "sampleHint": "A sample draws real green from inventory. You confirm before it ships.",
+    "sampleButton": "Dispatch sample",
+    "feedbackButton": "Record feedback"
+  },
+  "dispatch": {
+    "title": "Dispatch a sample",
+    "body": "Send green from a lot to this contact. This commits {grams} g against the lot's available-to-promise.",
+    "lot": "Green lot",
+    "lotPlaceholder": "Choose a lot with stock",
+    "grams": "Grams",
+    "courier": "Courier",
+    "courierPlaceholder": "DHL, FedEx...",
+    "tracking": "Tracking number",
+    "trackingPlaceholder": "Optional",
+    "atpBefore": "ATP now",
+    "atpAfter": "ATP after",
+    "atpUnit": "kg available",
+    "noLots": "No green lots have stock to sample.",
+    "irreversible": "This commits green inventory and is logged on the lot's provenance chain.",
+    "confirm": "Confirm dispatch",
+    "dispatching": "Dispatching...",
+    "cancel": "Cancel"
+  },
+  "feedback": {
+    "title": "Record sample feedback",
+    "for": "Feedback on the sample for lot {lot}.",
+    "score": "Cup score",
+    "scorePlaceholder": "0 to 100",
+    "verdict": "Verdict",
+    "verdictApproved": "Approved",
+    "verdictRejected": "Rejected",
+    "verdictCounter": "Counter offer",
+    "notes": "Notes",
+    "notesPlaceholder": "What the buyer said",
+    "record": "Record feedback",
+    "recording": "Recording...",
+    "cancel": "Cancel"
+  },
+  "errors": {
+    "nameRequired": "Enter the contact's name.",
+    "kindRequired": "Choose the contact type.",
+    "consentSourceRequired": "Marketing consent needs a source for lawful basis.",
+    "eventKindRequired": "Choose what happened.",
+    "consentKindForbidden": "Consent changes are made by editing the contact, not as an activity.",
+    "contactRequired": "A contact is required.",
+    "lotRequired": "Choose a green lot to sample.",
+    "gramsPositive": "Grams must be greater than zero.",
+    "verdictRequired": "Choose a verdict.",
+    "sampleRequired": "A sample is required.",
+    "generic": "Could not save that. Check the details and try again."
+  },
+  "loading": {
+    "board": "Loading contacts",
+    "sheet": "Loading contact"
+  }
+}
