@@ -41,6 +41,22 @@ const INTENTIONALLY_OWNER_ONLY = new Set<string>([
   "mv_lot_cost_by_rule",
 ]);
 
+// Caller-facing SECURITY DEFINER fns that are DELIBERATELY service_role-ONLY (never
+// browser/authenticated-callable) and therefore exempt from the (c) "grant execute to
+// authenticated" check. These are webhook/edge-function entry points: a browser must
+// never reach them (a §1 money rail). They are NOT the "forgot to lock down" trap — (d)
+// still enforces revoke-from-public, and they carry an explicit grant to service_role,
+// which check (c) verifies for this set instead of the authenticated grant.
+//
+//  - mark_order_paid / issue_dgi_cufe (P3-S12): called only from the Stripe-webhook /
+//    fiscal-stamp Edge Functions under the service_role key — settling an order or
+//    stamping a CUFE from a browser session would be a payment-integrity hole.
+const SERVICE_ROLE_ONLY = new Set<string>([
+  "mark_order_paid",
+  "issue_dgi_cufe",
+  "stamp_pos_dgi_cufe",
+]);
+
 function stripComments(sql: string): string {
   return sql
     .split("\n")
@@ -152,6 +168,19 @@ describe("AD-8 migration grant/RLS static guard", () => {
 
       it(`${m.name}: each caller-facing security definer fn grants execute to authenticated`, () => {
         for (const fn of definerFns) {
+          // service_role-ONLY webhook/edge fns are explicitly locked to service_role,
+          // never authenticated — verify THAT grant instead (still not a PUBLIC forge door).
+          if (SERVICE_ROLE_ONLY.has(fn)) {
+            const grantedSvc = new RegExp(
+              `grant\\s+execute\\s+on\\s+function\\s+(?:public\\.)?"?${fn}"?\\b[^;]*\\bto\\b[^;]*\\bservice_role\\b`,
+            ).test(m.sql);
+            expect(
+              grantedSvc,
+              `${m.name} defines service_role-only SECURITY DEFINER fn "${fn}" without an ` +
+                `explicit grant execute ... to service_role.`,
+            ).toBe(true);
+            continue;
+          }
           const granted = new RegExp(
             `grant\\s+execute\\s+on\\s+function\\s+(?:public\\.)?"?${fn}"?\\b[^;]*\\bto\\b[^;]*\\bauthenticated\\b`,
           ).test(m.sql);

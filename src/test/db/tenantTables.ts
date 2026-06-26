@@ -55,6 +55,19 @@ export const DIRECT_TENANT_TABLES = [
   // tenant-carrying parent FK; tenant_id default current_tenant_id(), RPC/seed writes.
   "roasters", // roasting.sql — per-tenant roaster registry (seeded, read-only)
   "roast_profiles", // roasting.sql — versioned golden-curve library (one-way status lock)
+  // P3-S11 storefront catalog — the roasted-SKU master. No tenant-carrying parent FK;
+  // tenant_id default current_tenant_id(), RPC-only writes.
+  "products", // storefront_skus.sql — roasted-SKU product master
+  // P3-S12 DTC orders — the customer book is the retail CRM root (no tenant-carrying
+  // parent FK; tenant_id default current_tenant_id(), RPC-only writes).
+  "customers", // storefront_orders_subs.sql — DTC contact book
+  // P3-S13 provenance microsite — the per-SKU curation record. tenant_id default
+  // current_tenant_id(), tenant-scoped read policy, RPC-only writes (publish/unpublish).
+  // anon never reads this table — only the published sku_provenance_public view.
+  "provenance_pages", // provenance_microsite.sql — per-SKU public-page curation gate
+  // P3-S14 offline POS — the till is a physical farm asset, tenant_id default
+  // current_tenant_id() (no tenant-carrying parent FK), like products/customers.
+  "pos_terminals", // pos.sql — registered POS terminals (Janson Farm Store / Lagunas Café)
 ] as const;
 
 /**
@@ -144,6 +157,28 @@ export const INHERITED_TENANT_TABLES = [
   "roast_events", // roasting.sql — roast phase markers (append-only)
   "roast_alog_imports", // roasting.sql — .alog receipt + deviation-vs-golden (append-only)
   "roast_skus", // roasting.sql — roast→product link for the per-bag QR
+  // P3-S11 storefront catalog — the lot-linked SKU inherits via the green lot composite
+  // (tenant_id, green_lot_code) -> green_lots; finished_goods (aggregate, one per SKU)
+  // and fg_ledger (append-only movements) inherit via sku_id -> product_skus. All
+  // RPC-only-write (create_sku / record_fg_movement); finished_goods is mutated only by
+  // the fg_ledger trigger.
+  "product_skus", // storefront_skus.sql — via green_lots (tenant,lot_code) composite FK
+  "finished_goods", // storefront_skus.sql — per-SKU retail inventory aggregate (available GENERATED)
+  "fg_ledger", // storefront_skus.sql — append-only finished-goods movement ledger
+  // P3-S12 DTC orders + Reserve-Club subs — orders inherit via customer_id -> customers;
+  // order_lines + webhook_events via orders; subscriptions via customers;
+  // subscription_lines + sub_events via subscriptions; sub_allocations via subscriptions
+  // (+ the green_lots composite FK). All RPC-only-write; the ledgers are append-only.
+  "orders", // storefront_orders_subs.sql — via customers
+  "order_lines", // storefront_orders_subs.sql — via orders (captures green_lot_code)
+  "webhook_events", // storefront_orders_subs.sql — via orders (Stripe exactly-once PK)
+  "subscriptions", // storefront_orders_subs.sql — via customers
+  "subscription_lines", // storefront_orders_subs.sql — via subscriptions
+  "sub_allocations", // storefront_orders_subs.sql — via subscriptions + green_lots (append-only claim)
+  "sub_events", // storefront_orders_subs.sql — via subscriptions (append-only lifecycle ledger)
+  // P3-S14 offline POS — a POS sale is 1:1 with its channel='pos' order; inherits via
+  // order_id -> orders (and terminal_id -> pos_terminals). RPC-only-write (record_pos_sale).
+  "pos_sales", // pos.sql — via orders (offline exactly-once on (device_id, device_seq))
 ] as const;
 
 /**
